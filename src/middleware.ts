@@ -6,7 +6,7 @@ import {
 } from "@convex-dev/auth/nextjs/server";
 
 // Define public pages (like login)
-const isPublicPage = createRouteMatcher(["/auth"]);
+const isPublicPage = createRouteMatcher(["/", "/auth"]);
 
 export default convexAuthNextjsMiddleware(async (request) => {
   // Await the authentication check
@@ -19,7 +19,7 @@ export default convexAuthNextjsMiddleware(async (request) => {
 
   // Redirect authenticated users away from public pages (login)
   if (isPublicPage(request) && authenticated) {
-    return nextjsMiddlewareRedirect(request as any, "/");
+    return nextjsMiddlewareRedirect(request as any, "/dashboard");
   }
 
   // Allow the request to continue

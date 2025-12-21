@@ -1,15 +1,21 @@
-"use client"
 
-import { Button } from "@/components/ui/button"
-import { useAuthActions } from "@convex-dev/auth/react"
 
-export default function Home(){
-  const {signOut} = useAuthActions()
+import Hero from '@/components/Hero'
+import Navbar from '@/components/Navbar'
+import TimelineDemo from '@/components/Timeline'
+import WhyChooseUs from '@/components/WhyChooseus'
 
-  return(
-    <div className="flex flex-col">
-      Logged In!
-      <Button onClick={() => signOut()} className="w-1/2 cursor-pointer">Sign Out</Button>
-    </div>
-  )
-}
+    const page = () => {
+    return (
+        <div className='flex justify-between items-center mb-0 flex-col'>
+            <Navbar/>
+            <Hero/>
+            <WhyChooseUs/>
+            <TimelineDemo/>
+           
+            
+        </div>
+    )
+    }
+
+    export default page
