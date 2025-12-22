@@ -44,19 +44,14 @@ const Hero: React.FC = () => {
   }, [charIndex, deleting, phraseIndex, phrases]);
 
   return (
-    <section className="container w-full px-4 md:px-16 flex flex-col md:flex-row items-center justify-between py-20 md:py-48 gap-8 bg-orange-500/10 rounded-4xl shadow-sm mt-8">
+    <section className="container w-full px-4 md:px-16 flex flex-col md:flex-row items-center justify-between py-20 md:py-48 gap-8 bg-orange-500/20 rounded-4xl shadow-sm mt-8">
       {/* Left Side Text */}
       <div className="flex-1 flex flex-col gap-6 overflow-hidden">
         {/* Fixed height container for phrases */}
         <div className="h-24 md:h-32 flex items-center">
           <h2
-            className="text-4xl md:text-5xl font-extrabold tracking-wide leading-tight wrap-break-word w-full"
-            style={{
-              color: "transparent",
-              WebkitTextStroke: "1px #FF6D24",
-              wordWrap: "break-word",
-              wordBreak: "break-word",
-            }}
+            className="text-4xl md:text-5xl font-extrabold tracking-wide leading-tight wrap-break-word w-full text-black"
+        
           >
             {currentText}
             <span className="blinking-cursor">|</span>
@@ -64,8 +59,8 @@ const Hero: React.FC = () => {
         </div>
 
         {/* Paragraph */}
-        <p className="text-lg md:text-xl text-gray-900 max-w-full md:max-w-2xl wrap-break-word leading-relaxed">
-  The all-in-one productivity platform for creators and teams. <span className="font-bold text-lg bg-red-400 py-1 rounded-lg text-white">BUILD
+        <p className="text-lg md:text-xl text-gray-700 max-w-full md:max-w-2xl wrap-break-word leading-relaxed">
+  The all-in-one productivity platform for creators and teams. <span className="font-bold text-lg bg-orange-400 py-1 rounded-lg text-white">BUILD
   COLLABORATE AUTOMATE </span>   your workflow like a pro. Stay organized, track
   progress effortlessly, and turn ideas into action seamlessly.
 </p>
@@ -76,7 +71,7 @@ const Hero: React.FC = () => {
           <Button className="flex items-center gap-2 text-white bg-orange-500 hover:bg-orange-600 px-6 py-3 rounded-lg font-semibold cursor-pointer">
             Get Started Free <HiArrowNarrowRight size={20} />
           </Button>
-          <Button className="flex items-center gap-2 text-orange-500 bg-transparent border border-orange-500 hover:bg-orange-600 cursor-pointer hover:text-white px-6 py-3 rounded-lg font-semibold">
+          <Button className="flex items-center gap-2 text-black bg-transparent border border-orange-500 hover:bg-orange-600 cursor-pointer hover:text-white px-6 py-3 rounded-lg font-semibold">
             Learn More <HiArrowNarrowRight size={20} />
           </Button>
         </div>
