@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { SignInFlow } from "../types/types"
+import { SignInFlow } from "../../types/types"
 import { SignInCard } from "./SignInCard"
 import { SignUpCard } from "./SignUpCard"
 

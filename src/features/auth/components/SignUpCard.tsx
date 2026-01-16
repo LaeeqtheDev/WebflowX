@@ -2,10 +2,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@radix-ui/react-separator'
-import React, {useState} from 'react'
+import React, {use, useState} from 'react'
 import {FcGoogle} from 'react-icons/fc'
 import {FaGithub} from 'react-icons/fa'
-import { SignInFlow } from '../types/types'
+import { SignInFlow } from '../../types/types'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { TriangleAlert } from 'lucide-react'
 
@@ -18,6 +18,7 @@ interface SignUpCardProps {
 
 export const SignUpCard = ({setState}: SignUpCardProps) => {
 
+  const [name, setName]= useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -35,7 +36,7 @@ export const SignUpCard = ({setState}: SignUpCardProps) => {
     }
 
     setPending(true);
-    signIn("password", {email, password, flow: "signUp"}).catch((error) => setError("Failed to sign up. Please try again.")).finally(() =>{
+    signIn("password", {name, email, password, flow: "signUp"}).catch((error) => setError("Failed to sign up. Please try again.")).finally(() =>{
       setPending(false)
     })
   }
@@ -74,6 +75,14 @@ export const SignUpCard = ({setState}: SignUpCardProps) => {
       <CardContent className='space-y-5 px-0 pb-0'>
         {/* Sign in form elements will go here */}
         <form onSubmit={onPasswordSignUp} className='space-y-2.5'>
+        <Input
+          disabled={pending}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder='Full Name'
+          required
+          />
+
           <Input
           disabled={pending}
           value={email}
