@@ -16,8 +16,8 @@ export function WorldMapSection({
   return (
     <section className="py-10 w-full bg-white dark:bg-black relative overflow-hidden container">
       {/* Heading */}
-      <div className="max-w-7xl mx-auto text-center px-4">
-        <h2 className="text-4xl md:text-6xl font-bold text-black dark:text-white bg-clip-text bg-linear-to-b from-neutral-50 to-neutral-400">
+      <div className="max-w-4xl mx-auto text-center px-4">
+        <h2 className="text-4xl md:text-4xl font-bold text-black dark:text-white bg-clip-text bg-linear-to-b from-neutral-50 to-neutral-400">
           {title.split(" ").map((word, idx) => (
             <motion.span
               key={idx}

@@ -53,11 +53,10 @@ export const SignUpCard = ({setState}: SignUpCardProps) => {
     <Card className='w-full h-full p-12 border-2 drop-shadow-2xl'>
      <div className='flex gap-3 mx-auto items-center justify-center'>
 
-     <div className='w-14 h-14 rounded-full bg-black items-center justify-center mx-auto flex'>
-      <img src={'/flash.png'} alt='Logo' className='w-12 h-12 mb-0 mt-0 mx-auto'/>
+     <div className='w-24 h-24 rounded-full  items-center justify-center mx-auto flex'>
+      <img src={'/logo.png'} alt='Logo' className='w-24 h-24 mb-0 mt-0 mx-auto'/>
       </div>
 
-      <h1>Webflow<span className='font-extrabold text-2xl text-orange-500'>X</span></h1>
      </div>
      
       <CardHeader className='px-0 pt-8'>

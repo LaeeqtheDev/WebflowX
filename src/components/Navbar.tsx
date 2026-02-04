@@ -14,26 +14,23 @@ const Navbar: React.FC = () => {
   const menuItems = ["Home", "Features", "Pricing", "Docs", "About", "Contact"];
 
   return (
-    <nav className="container w-full z-50 top-0 left-0 ">
+    <nav className="container w-full z-50 top-0 left-0  ">
       <div className="max-w-7xl flex flex-wrap items-center justify-between mx-auto p-4 relative">
         {/* Logo */}
         <div
-          className="flex gap-3 items-center cursor-pointer"
-          onClick={() => router.push("/")}
-        >
-          <div className="w-14 h-14 rounded-full bg-black flex items-center justify-center">
-            <img
-              src="/flash.png"
-              alt="Logo"
-              className="w-12 h-12 mx-auto my-0"
-            />
-          </div>
-          <h1 className="text-heading">
-            Webflow
-            <span className="font-extrabold text-2xl text-orange-500">X</span>
-          </h1>
-        </div>
+  onClick={() => router.push("/")}
+  className="inline-flex items-center cursor-pointer justify-center"
+>
+  <span className="text-xl font-semibold text-heading leading-none -mr-3">
+    Webflow
+  </span>
 
+  <img
+    src="/logo.png"
+    alt="Logo"
+    className="w-20 h-20 block -ml-4"
+  />
+</div>
         {/* Desktop button & Hamburger */}
         <div className="flex items-center md:order-2 space-x-3">
           {/* Desktop only */}
@@ -42,7 +39,7 @@ const Navbar: React.FC = () => {
               className="text-white flex gap-2 bg-black hover:bg-brand-strong border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-3 py-2 focus:outline-none cursor-pointer"
               onClick={() => router.push("/auth")}
             >
-                <HiUser className="text-orange-400"/>
+                <img src="/arrow.svg" className="h-4 w-4"/>
               Login
             </Button>
           </div>

@@ -7,6 +7,7 @@ import { useCreateWorkspaceModal } from "../store/use-create-workspace-modal"
 import { useCreateWorkspace } from "../api/use-create-workspace"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 export const CreateWorkspaceModal = () => {
   const [open, setOpen] = useCreateWorkspaceModal()
@@ -24,6 +25,7 @@ export const CreateWorkspaceModal = () => {
     e.preventDefault()
   mutate({name},{
     onSuccess(id){
+      toast.success("Workspace created successfully")
       router.push(`/dashboard/workspace/${id}`)
       handleClose()
     }

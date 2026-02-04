@@ -26,7 +26,7 @@ export function TeamGrowthChartSection() {
       
       {/* Header */}
       <div className="max-w-3xl mx-auto text-center mb-16">
-        <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
+        <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
           Teams Scale Faster with WebflowX
         </h2>
         <p className="mt-4 text-neutral-500 dark:text-neutral-400 text-base md:text-lg">

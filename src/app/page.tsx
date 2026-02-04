@@ -11,6 +11,7 @@ import TestimonialSection16 from '@/components/Testimonials'
 import { FeaturesWobbleSection } from '@/components/Featurewobble'
 import { TeamGrowthChartSection } from '@/components/Teamgrowth'
 import WorldMapSection from '@/components/WorldMap'
+import FeaturesSection from '@/components/Features'
 
 
     const page = () => {
@@ -21,8 +22,9 @@ import WorldMapSection from '@/components/WorldMap'
         
             <WhyChooseUs/>
             <FeaturesWobbleSection/>
-            <WorldMapSection/>
-            <TeamGrowthChartSection/>
+            <FeaturesSection/>
+            {/* <WorldMapSection/>
+            <TeamGrowthChartSection/> */}
             <TimelineDemo/>
             <AppleCardsCarouselDemo/>
             <TestimonialSection16/> 
