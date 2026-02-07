@@ -94,7 +94,7 @@ const Hero: React.FC = () => {
               src="/extra.jpg"
               alt="Hero Dashboard"
               className="w-full object-cover rounded-br-full  "
-            />
+            />                                                               
           </div>
         </div>
       </div>

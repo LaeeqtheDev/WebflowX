@@ -12,30 +12,34 @@ import { FeaturesWobbleSection } from '@/components/Featurewobble'
 import { TeamGrowthChartSection } from '@/components/Teamgrowth'
 import WorldMapSection from '@/components/WorldMap'
 import FeaturesSection from '@/components/Features'
+import Footer from '@/components/Footer'
+import { FAQSection } from '@/components/FAQ'
+import { NewsletterSignup } from '@/components/newslettersignup'
+
+
 
 
     const page = () => {
     return (
         <div className='flex justify-between items-center mb-0 flex-col '>
-            <Navbar/>
-            <Hero/>
-        
-            <WhyChooseUs/>
-            <FeaturesWobbleSection/>
-            <FeaturesSection/>
-            {/* <WorldMapSection/>
-            <TeamGrowthChartSection/> */}
-            <TimelineDemo/>
-            <AppleCardsCarouselDemo/>
-            <TestimonialSection16/> 
-           
-            
-             
-            <GoogleGeminiEffectDemo/> 
-          
+    <Navbar />
 
-          
-           
+<Hero />                     
+<WhyChooseUs />              
+
+<FeaturesWobbleSection />   
+<FeaturesSection />         
+
+<TimelineDemo />             
+<TestimonialSection16 />     
+
+<AppleCardsCarouselDemo /> 
+<FAQSection/>
+<NewsletterSignup/>
+  
+<Footer/>
+{/* <GoogleGeminiEffectDemo/>
+            */}
             
         </div>
     )

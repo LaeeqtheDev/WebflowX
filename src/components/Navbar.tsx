@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
-import {HiUser} from "react-icons/hi";
 
 const Navbar: React.FC = () => {
   const router = useRouter();
@@ -14,23 +13,20 @@ const Navbar: React.FC = () => {
   const menuItems = ["Home", "Features", "Pricing", "Docs", "About", "Contact"];
 
   return (
-    <nav className="container w-full z-50 top-0 left-0  ">
+    <nav className="container w-full z-50 top-0 left-0">
       <div className="max-w-7xl flex flex-wrap items-center justify-between mx-auto p-4 relative">
         {/* Logo */}
         <div
-  onClick={() => router.push("/")}
-  className="inline-flex items-center cursor-pointer justify-center"
->
-  <span className="text-xl font-semibold text-heading leading-none -mr-3">
-    Webflow
-  </span>
+          onClick={() => router.push("/")}
+          className="inline-flex items-center cursor-pointer justify-center"
+        >
+          <span className="text-xl font-semibold text-heading leading-none -mr-3">
+            Webflow
+          </span>
 
-  <img
-    src="/logo.png"
-    alt="Logo"
-    className="w-20 h-20 block -ml-4"
-  />
-</div>
+          <img src="/logo.png" alt="Logo" className="w-10 h-10 block ml-1" />
+        </div>
+
         {/* Desktop button & Hamburger */}
         <div className="flex items-center md:order-2 space-x-3">
           {/* Desktop only */}
@@ -39,7 +35,7 @@ const Navbar: React.FC = () => {
               className="text-white flex gap-2 bg-black hover:bg-brand-strong border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-3 py-2 focus:outline-none cursor-pointer"
               onClick={() => router.push("/auth")}
             >
-                <img src="/arrow.svg" className="h-4 w-4"/>
+              <img src="/arrow.svg" className="h-4 w-4" />
               Login
             </Button>
           </div>
@@ -50,7 +46,7 @@ const Navbar: React.FC = () => {
             className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-body rounded-base md:hidden hover:bg-neutral-secondary-soft hover:text-heading focus:outline-none focus:ring-2 focus:ring-neutral-tertiary"
             onClick={toggleMenu}
           >
-            <span className="sr-only">Open main menu</span>
+            <span className="sr-only">{isOpen ? "Close menu" : "Open menu"}</span>
             <svg
               className="w-6 h-6"
               aria-hidden="true"
@@ -70,22 +66,30 @@ const Navbar: React.FC = () => {
           </button>
         </div>
 
-        {/* Menu Items */}
+        {/* Menu Items / Sidebar */}
         <div
-          className={`items-center justify-between w-full md:flex md:w-auto md:order-1 transition-all duration-300 ease-in-out ${
-            isOpen
-              ? "flex bg-white flex-col mt-0 bg-neutral-primary absolute top-full left-0 w-full px-4 py-6 space-y-4 md:static md:flex-row md:bg-transparent md:space-y-0 md:mt-0 shadow-lg md:shadow-none z-50 animate-slideDown"
-              : "hidden md:flex"
+          className={`fixed top-0 right-0 h-full w-64 bg-white z-50 transform transition-transform duration-300 md:static md:flex md:w-auto md:h-auto md:translate-x-0 ${
+            isOpen ? "translate-x-0 shadow-lg" : "translate-x-full"
           }`}
         >
-          <ul className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-8 w-full">
+          {/* Close button for mobile */}
+          <div className="flex justify-end p-4 md:hidden">
+            <button
+              onClick={toggleMenu}
+              className="text-gray-600 hover:text-gray-900 text-2xl font-bold"
+              aria-label="Close menu"
+            >
+              ✕
+            </button>
+          </div>
+
+          <ul className="flex flex-col md:flex-row md:space-x-8 w-full mt-20 md:mt-0 px-4 py-6 md:p-0 space-y-4 md:space-y-0">
             {menuItems.map((item) => (
               <li key={item}>
                 <a
                   href="#"
-                  className={`block py-2 px-3 rounded text-heading md:text-fg-brand md:p-0 relative md:after:absolute md:after:left-0 md:after:-bottom-1 md:after:h-0.5 md:after:w-0 md:after:bg-orange-400 md:after:transition-all md:after:duration-300 md:hover:after:w-full ${
-                    isOpen ? "hover:bg-orange-500/20" : "md:hover:bg-transparent"
-                  }`}
+                  className={`block py-2 px-3 rounded text-heading md:text-fg-brand md:p-0 relative md:after:absolute md:after:left-0 md:after:-bottom-1 md:after:h-0.5 md:after:w-0 md:after:bg-orange-400 md:after:transition-all md:after:duration-300 md:hover:after:w-full hover:bg-orange-500/20 md:hover:bg-transparent`}
+                  onClick={() => setIsOpen(false)}
                 >
                   {item}
                 </a>

@@ -126,3 +126,20 @@ body,
     @apply bg-background text-foreground;
   }
 }
+
+
+
+@keyframes scroll-webflowx {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll-webflowx {
+  display: flex;
+  animation: scroll-webflowx 35s linear infinite;
+  will-change: transform;
+}

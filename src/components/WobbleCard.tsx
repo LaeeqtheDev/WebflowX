@@ -23,7 +23,7 @@ export function WobbleCardDemo() {
             </p>
           </div>
           <img
-            src="https://cdn.dribbble.com/userupload/16257829/file/original-cd7d265456814a706e4ef4c43a69e3d9.png?resize=1024x768&vertical=center"
+            src="hr2.png"
             width={500}
             height={500}
             alt="WebflowX demo image"
@@ -50,7 +50,7 @@ export function WobbleCardDemo() {
             </p>
           </div>
           <img
-            src="https://cdn.dribbble.com/userupload/46089237/file/44f6e5f45e52b445367fd99adf9624b1.png?resize=1024x768&vertical=center "
+            src="/hr11.png "
             width={500}
             height={500}
             alt="WebflowX wrapper demo"

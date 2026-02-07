@@ -1,138 +1,106 @@
 "use client";
 
-import React from "react";
-import {
-  Card,
-  CardBody,
-  Typography,
-} from "@material-tailwind/react";
+import React, { FC } from "react";
+import Image from "next/image";
 
-import {FaHeart} from 'react-icons/fa'
-
-interface TestimonialCardPropsType {
-  img: string;
+interface Testimonial {
   client: string;
-  title: string;
-  clientInfo: string;
+  role: string;
+  testimonial: string;
 }
 
-function TestimonialCard({
-  img,
-  client,
-  title,
-  clientInfo,
-}: TestimonialCardPropsType) {
-  return (
-    <Card shadow={false} className="bg-gray-100/50 rounded-2xl p-6">
-      <Typography
-        color="blue-gray"
-        className="lg:mb-20 mb-4 text-2xl font-bold"
-      >
-        &quot;{title}&quot;
-      </Typography>
-
-      <CardBody className="px-4 py-0 flex flex-wrap-reverse gap-x-6 justify-between items-center">
-        <div>
-          <Typography variant="h6" color="blue-gray">
-            {client}
-          </Typography>
-          <Typography
-            variant="paragraph"
-            className="font-normal text-gray-500"
-          >
-            {clientInfo}
-          </Typography>
-        </div>
-        <img src={img} className="max-w-32" alt={client} />
-      </CardBody>
-    </Card>
-  );
-}
-
-const testimonials = [
+const testimonials: Testimonial[] = [
   {
-    title:
-      "The team went above and beyond to ensure my issue was resolved quickly and efficiently. Truly outstanding!",
-    client: "Jessica Devis",
-    clientInfo: "Full Stack Developer @Netflix",
-    img: "/image/netflix.svg",
+    client: "Ammar Khan",
+    role: "Frontend Engineer",
+    testimonial:
+      "We started using WebflowX internally while it was still rough. The task flow and real-time collaboration genuinely saved us hours every week.",
   },
   {
-    title:
-      "It has broadened my horizons and helped me advance my career. The community is incredibly supportive.",
-    client: "Marcell Glock",
-    clientInfo: "Graphic Designer @Coinbase",
-    img: "/image/Logo-coinbase.svg",
+    client: "Sarah Malik",
+    role: "Product Designer",
+    testimonial:
+      "What stood out was how fast the team shipped improvements. Features we requested actually showed up in the next iteration.",
+  },
+  {
+    client: "Usman R.",
+    role: "Startup Founder",
+    testimonial:
+      "WebflowX helped us keep product discussions, tasks, and meetings in one place. It reduced the chaos more than we expected.",
+  },
+  {
+    client: "Hassan Ali",
+    role: "Remote Team Lead",
+    testimonial:
+      "We used WebflowX during beta with a distributed team. The real-time updates and clarity around ownership made a huge difference.",
   },
 ];
 
-export function TestimonialSection16() {
+// Duplicate for seamless scroll
+const repeatedTestimonials = [...testimonials, ...testimonials];
+
+const ClientTestimonials: FC = () => {
   return (
-    <section className="px-8 py-10 lg:py-28">
-      <div className="container mx-auto">
-        <Typography
-          variant="h2"
-          color="blue-gray"
-          className="mb-4 text-2xl lg:text-4xl justify-center text-center items-center mx-auto "
-        >
-The{" "}
-<span className="text-red-400 font-semibold inline-flex items-center gap-2">
-  Heartfelt <FaHeart />
-</span>{" "}
-testimonials of our{" "}
-<span className="underline decoration-amber-500 underline-offset-8">
-  {" "}
-  <span className="text-orange-500">{" "}C</span>ommunity
-</span>
+    <section className="py-20">
+      <div className="max-w-7xl mx-auto px-6 md:px-8">
+        {/* Header */}
+        <header className="text-center mb-14">
+         <div className=" inline-flex">
+         <h2 className="flex items-center justify-center gap-3 text-3xl md:text-4xl font-bold text-black mb-3">
+  <span>Teams Building with</span>
+  <img
+    src="/logo.png"
+    alt="Webflow logo"
+    className="h-24 w-24 object-contain -ml-10"
+  />
+</h2>
+         </div>
+          <p className="text-neutral-600 max-w-2xl mx-auto">
+            Early users, real feedback, and lessons learned while building WebflowX
+            in production environments.
+          </p>
+        </header>
 
-        </Typography>
-
-        <Typography
-          variant="lead"
-          className="max-w-3xl text-gray-500 mb-10 lg:mb-20 justify-center text-center items-center mx-auto"
-        >
-          From enterprise-grade tooling to reliable performance and thoughtful
-          design teams trust WebflowX to move faster without compromise.
-        </Typography>
-
-        <div className="grid gap-8 grid-cols-1 lg:grid-cols-2">
-          {testimonials.map((props, key) => (
-            <TestimonialCard key={key} {...props} />
-          ))}
-        </div>
-
-        <Card
-          shadow={false}
-          className="mt-8 bg-gray-100/50 text-center rounded-2xl p-6"
-        >
-          <Typography
-            color="blue-gray"
-            className="mb-4 text-2xl lg:text-3xl max-w-4xl leading-snug mx-auto font-bold"
-          >
-            &quot;Its intuitive workflows and production-ready architecture make
-            it indispensable. We scaled faster than ever with WebflowX.&quot;
-          </Typography>
-
-          <CardBody className="items-center mx-auto py-2">
-            <img
-              src="/image/spotify.svg"
-              className="max-w-32 mx-auto grayscale"
-              alt="spotify"
+        <div className="flex flex-col md:flex-row items-center gap-12">
+          {/* Left: Image */}
+          <div className="relative w-full md:w-1/2 h-64 md:h-105">
+            <Image
+              src="/clients.png"
+              alt="Teams using WebflowX"
+              fill
+              className="object-cover rounded-2xl"
+              priority
             />
-            <Typography variant="h6" color="blue-gray">
-              Emma Roberts
-            </Typography>
-            <Typography
-              variant="paragraph"
-              className="font-normal text-gray-500"
-            >
-              Chief Executive @Spotify
-            </Typography>
-          </CardBody>
-        </Card>
+          </div>
+
+          {/* Right: Marquee */}
+          <div className="w-full md:w-1/2 overflow-hidden">
+            <div className="flex w-max animate-scroll-webflowx">
+              {repeatedTestimonials.map((item, index) => (
+                <div
+                  key={`${item.client}-${index}`}
+                  className="min-w-[320px] max-w-sm bg-white rounded-2xl border border-neutral-200 p-6 m-4"
+                >
+                  <p className="text-neutral-700 text-sm leading-relaxed mb-5">
+                    “{item.testimonial}”
+                  </p>
+
+                  <div>
+                    <p className="text-sm font-semibold text-black">
+                      {item.client}
+                    </p>
+                    <p className="text-xs text-neutral-500">
+                      {item.role}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
-}
+};
 
-export default TestimonialSection16;
+export default ClientTestimonials;
