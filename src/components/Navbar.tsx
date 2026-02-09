@@ -24,7 +24,7 @@ const Navbar: React.FC = () => {
             Webflow
           </span>
 
-          <img src="/logo.png" alt="Logo" className="w-10 h-10 block ml-1" />
+          <img src="/logo.png" alt="Logo" className="w-10 h-10 block ml-1 " />
         </div>
 
         {/* Desktop button & Hamburger */}

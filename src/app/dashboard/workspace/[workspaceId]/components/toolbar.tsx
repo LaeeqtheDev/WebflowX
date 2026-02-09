@@ -15,9 +15,9 @@ export const Toolbar = () => {
         <Image
           src="/logo.png"
           alt="Logo"
-          width={60}
-          height={60}
-          className="-ml-1 mt-2"
+          width={45}
+          height={45}
+          className="ml-2 mt-1 object-contain"
         />
       </div>
 
