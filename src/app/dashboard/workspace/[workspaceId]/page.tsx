@@ -4,8 +4,9 @@
 const WorkspaceId = () =>{
 
   return(
-    <div className="">
-     WorkSpaceId Page
+    <div className=" h-screen">
+      WORKSPACE
+     
     </div>
   )
 }

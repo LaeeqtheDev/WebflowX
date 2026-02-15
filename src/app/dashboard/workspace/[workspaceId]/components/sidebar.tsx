@@ -5,6 +5,7 @@ import { Bell, Camera, CheckSquare, FileText, Home, MessageSquare, MoreHorizonta
 import {  FaSpotify } from "react-icons/fa"
 
 import { usePathname } from "next/navigation"
+import { IconInvoice, IconPlayerTrackNextFilled } from "@tabler/icons-react"
 
 export const Sidebar = () => {
     const pathname = usePathname()
@@ -21,6 +22,7 @@ export const Sidebar = () => {
             <SidebarButton icon={FileText} label="Notes" />
 
             <SidebarButton icon={FaSpotify} label="Jam" />
+            
 
 <SidebarButton icon={MoreHorizontal} label="More" />
            <div className="flex flex-col items-center justify-center gap-y-1 mt-auto">

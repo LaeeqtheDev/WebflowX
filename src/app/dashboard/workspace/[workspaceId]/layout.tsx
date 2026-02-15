@@ -25,8 +25,8 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => (
       <main className="flex-1 flex overflow-hidden">
         <ResizablePanelGroup autoSave="ca-workspace-layout" dir="horizontal">
           <ResizablePanel
-            defaultSize={250}  // percentage of total width
-            minSize={250}      // min width percentage
+            defaultSize={280}  // percentage of total width
+            minSize={280}      // min width percentage
             className="bg-[#381d2a]/80 text-white overflow-auto"
           >
             <WorkSpaceSidebar />
