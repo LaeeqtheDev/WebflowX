@@ -18,6 +18,9 @@ import { TrashIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useConfirm } from "../../hooks/use-confirm";
+
+
 
 interface PreferencesModalProps {
     open: boolean;
@@ -30,8 +33,14 @@ export const PreferencesModal = ({open, setOpen, initialValue}: PreferencesModal
      const [value, setValue] = useState(initialValue);
      const [editOpen, setEditOpen] = useState(false)
      const router = useRouter()
+     const [ConfirmDialog, confirm] = useConfirm(
+        "Are you sure?",
+        "This action cannot be undone."
+     );
 
-     const handleRemove=()=>{
+     const handleRemove= async ()=>{
+        const ok = await confirm();
+        if(!ok) return;
         removeWorkspace({
             id: workspaceId
         },{
@@ -67,6 +76,8 @@ export const PreferencesModal = ({open, setOpen, initialValue}: PreferencesModal
      const {mutate: updateWorkspace, isPending: isUpdatingWorkspace} = useUpdateWorkspace()
      const {mutate: removeWorkspace, isPending: isRemovingWorkspace} = useRemoveWorkspace()
     return(
+   <>
+   <ConfirmDialog/>
     <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="bg-gray-50 p-0 overflow-hidden">
             <DialogHeader className="p-4 border-b bg-white">
@@ -141,5 +152,6 @@ export const PreferencesModal = ({open, setOpen, initialValue}: PreferencesModal
             </div>
         </DialogContent>
     </Dialog>
+   </>
     )
 }
