@@ -37,6 +37,7 @@
     "react-icons": "^5.5.0",
     "react-resizable-panels": "^4",
     "react-use": "^17.6.0",
+    "react-verification-input": "^4.2.2",
     "recharts": "2.15.4",
     "shadcn": "^3.6.0",
     "sonner": "^2.0.7",

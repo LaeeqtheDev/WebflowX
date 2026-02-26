@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "src/features/workspaces/api/use-get-workspace-info.ts"  ],
   "exclude": ["node_modules"]
 }
