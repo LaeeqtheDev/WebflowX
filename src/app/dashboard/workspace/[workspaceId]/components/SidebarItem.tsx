@@ -37,7 +37,7 @@ export const SidebarItem = ({label, id, icon: Icon, variant}: SidebarItemProps) 
     const workspaceId = useWorkspaceId()
     return(
        <Button asChild variant={"trasnparent"} size={"sm"} className={cn(sidebarItemVariants({variant: variant}))}>
-        <Link href={`/dashboard/workspace/channel/${id}`}>
+        <Link href={`/dashboard/workspace/${workspaceId}/channel/${id}`}>
             <Icon className="text-[#ff5018] size-3.5 mr-1 shrink-0" />
             <span className="text-sm truncate">{label}</span>
         
