@@ -17,7 +17,7 @@ type Options ={
     throwError?: boolean
 }
 
-export const useRemove = () => {
+export const useRemoveChannel = () => {
     const [data, setData]= useState<ResponseType>(null);
     const [status, setStatus] = useState<"success" | "error" | "settled" | "pending" | null>(null);
     const [error, setError] = useState<Error |null>(null);
