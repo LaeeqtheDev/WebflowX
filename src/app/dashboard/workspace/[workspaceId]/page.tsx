@@ -13,7 +13,7 @@ import { useEffect, useMemo } from "react";
 const WorkspaceIdPage = () => {
   const router = useRouter();
   const workspaceId = useWorkspaceId();
-  const [sOpen, setIsOpen] = useCreateChannelModal();
+  const [IsOpen, setIsOpen] = useCreateChannelModal();
   const { data: member, isLoading: memberLoading } = useCurrentMember({ workspaceId });
   const { data: workspace, isLoading: workspaceLoading } = useGetWorkspace({ id: workspaceId });
   const { data: channels, isLoading: channelsLoading } = useGetChannels({ workspaceId });
@@ -26,7 +26,7 @@ const WorkspaceIdPage = () => {
 
     if (channelId) {
       router.replace(`/dashboard/workspace/${workspaceId}/channel/${channelId}`);
-    } else if (!sOpen && isAdmin) {
+    } else if (!IsOpen && isAdmin) {
       setIsOpen(true);
     }
   }, [channelId, workspaceLoading, channelsLoading, workspace, open, setIsOpen, router, workspaceId, member, memberLoading, isAdmin]);
