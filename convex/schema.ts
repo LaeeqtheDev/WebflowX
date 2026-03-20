@@ -47,7 +47,7 @@ const schema = defineSchema({
 
                         //add conversation id
                         conversationId: v.optional(v.id("conversations")),
-                        updatedAt: v.number()
+                        updatedAt: v.optional(v.number())
 
 
                 })
