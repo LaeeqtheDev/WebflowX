@@ -58,7 +58,9 @@ const schema = defineSchema({
                 .index(
                         "by_channel_id_parent_message_id_conversation_id",
                         ["channelId", "parentMessagesId", "conversationId"]
-                      ),
+                      )
+                .index("by_parent_message_id",["parentMessagesId"])
+                      ,
 
                       reactions: defineTable({
                         workspaceId: v.id("workspaces"),
@@ -68,7 +70,7 @@ const schema = defineSchema({
                       })
 
                       .index("byWorkspaceId", ["workspaceId"])
-                      .index("by_message_id", ["memberId"])
+                      .index("by_message_id", ["messageId"])
                       .index("by_member_id", ["memberId"]) 
            
         
