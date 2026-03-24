@@ -227,3 +227,9 @@ body,
 .ql-toolbar button svg {
   transition: stroke 0.15s ease, fill 0.15s ease;
 }
+
+
+.messages-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #ff5018  !important;
+}
