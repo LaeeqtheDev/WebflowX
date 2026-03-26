@@ -98,14 +98,14 @@ export const Header = ({title}: HeaderProps) => {
             className="text-lg font-semibold px-2 overflow-hidden w-auto"
             size={"sm"}
             >
-                <span className="truncate">#{title}</span>
+                <span className="truncate font-bold">#{title}</span>
                 <FaChevronDown className="text-[#ff5018] size-2.5 ml-2"/>
             </Button>
 
                 </DialogTrigger>
 
                 <DialogContent className="p-0 bg-gray-50 overflow-hidden">
-                    <DialogHeader className="p-4 border-b bg-white">
+                    <DialogHeader className="p-4 border-b bg-white ">
                         <DialogTitle>
                             #{title}
                         </DialogTitle>
