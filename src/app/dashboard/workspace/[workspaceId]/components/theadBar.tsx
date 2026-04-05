@@ -6,11 +6,13 @@ interface ThreadBarProps {
     count?: number,
     image?: string,
     timestamp?: number,
+    name?: string,
     onClick?: () => void
 }
 
 
-export const ThreadBar = ({count, image, timestamp, onClick}: ThreadBarProps) => {
+export const ThreadBar = ({count, image, timestamp, onClick,name="Member"}: ThreadBarProps) => {
+    const avatarFallBack = name.charAt(0).toUpperCase()
 
    if (!count || !timestamp) return null;
 
@@ -23,7 +25,7 @@ export const ThreadBar = ({count, image, timestamp, onClick}: ThreadBarProps) =>
         <Avatar className="rounded-md mr-1">
                     <AvatarImage className="rounded-md" src={image} />
                     <AvatarFallback className="rounded-md bg-[#ff5018] text-white text-center text-xs">
-                        M
+                        {avatarFallBack}
                     </AvatarFallback>
                 </Avatar>
                 <span className="text-xs text-[#ff5018] hover:underline font-bold truncate">

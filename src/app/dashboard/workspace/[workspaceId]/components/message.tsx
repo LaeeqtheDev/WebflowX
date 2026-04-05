@@ -41,6 +41,7 @@ interface MessageProps {
     threadCount?: number;
     threadImage?: string;
     threadTimestamp?: number
+    threadName?: string;
 }
 
 const formatFullTime = (date: Date) => {
@@ -64,10 +65,11 @@ export const Message = ({
     hideThreadButton,
     threadCount,
     threadImage,
-    threadTimestamp
+    threadTimestamp,
+    threadName
 }: MessageProps)=>{
 
-    const  {parentMessageId,onOpenMessage, onClose} = usePanel()
+    const  {parentMessageId,onOpenMessage, onOpenProfile, onClose} = usePanel()
 
     const [ConfirmDialog, confirm] = useConfirm(
         "Delete Message",
@@ -105,7 +107,7 @@ export const Message = ({
 
     }
 
-    const isPending= isUpdatingMessage;
+    const isPending= isUpdatingMessage || isTogglingReaction;
 
     const handleUpdate=({body}:{body:string}) => {
         updateMessage({id, body},{
@@ -157,6 +159,7 @@ export const Message = ({
                       count={threadCount}
                       image={threadImage}
                       timestamp={threadTimestamp}
+                      name={threadName}
                       onClick={() => onOpenMessage(id)}
                       />
                 </div>
@@ -188,7 +191,7 @@ export const Message = ({
             isRemovingMessage && "bg-rose-500/50 transform transition-all scale-y-0 origin-bottom duration-200"
         )}>
             <div className="flex items-start gap-2">
-                <button>
+                <button onClick={()=> onOpenProfile(memberId)}>
                 <Avatar className="rounded-md mr-1">
                     <AvatarImage className="rounded-md" src={authorImage} />
                     <AvatarFallback className="rounded-md bg-[#ff5018] text-white text-center text-xs">
@@ -209,7 +212,7 @@ export const Message = ({
                 ): (
                 <div className="flex flex-col w-full overflow-hidden">
                     <div className="text-sm">
-                    <button className="font-bold text-primary hover:underline">
+                    <button onClick={()=> onOpenProfile(memberId)} className="font-bold text-primary hover:underline">
                         {authorName}
                     </button>
                     <span>&nbsp;&nbsp;</span>

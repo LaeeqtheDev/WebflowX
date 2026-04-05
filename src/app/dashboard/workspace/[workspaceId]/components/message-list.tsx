@@ -21,8 +21,8 @@ interface MessageListProps {
     data: GetMessagesReturnType | undefined;
     loadMore: () => void;
     isLoadingMore: boolean;
-    canLoadMore: boolean
-
+    canLoadMore: boolean;
+ 
 }
 
 
@@ -43,6 +43,7 @@ export const MessageList = ({
     loadMore,
     isLoadingMore,
     canLoadMore,
+    
 
 }: MessageListProps) =>{
     const workspaceId = useWorkspaceId()
@@ -95,6 +96,7 @@ export const MessageList = ({
                             createdAt={message._creationTime}
                             threadCount={message.threadCount}
                             threadImage={message.threadImage}
+                            threadName={message.threadName}
                             threadTimestamp={message.threadTimestamp}
                             isEditing={editingId === message._id}
                             setEditingId={setEditingId}

@@ -214,6 +214,7 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
                             isEditing={editingId === message._id}
                             setEditingId={setEditingId}
                             isCompact={isCompact}
+                            threadName={message.threadName}
                             hideThreadButton
                             />
                         )
@@ -262,6 +263,7 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
                 reactions={message.reactions}
                 isEditing={editingId === message._id}
                 setEditingId={setEditingId}
+              
                 isCompact={false}
                 />
             </div>
