@@ -382,3 +382,31 @@ export const getById = query({
 
     }
 })
+
+export const search = query({
+    args: {
+        workspaceId: v.id("workspaces"),
+        query: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const userId = await auth.getUserId(ctx)
+        if (!userId) return []
+
+        const member = await ctx.db
+            .query("members")
+            .withIndex("byWorkspaceId_user_id", (q) =>
+                q.eq("workspaceId", args.workspaceId).eq("userId", userId)
+            ).unique()
+
+        if (!member) return []
+
+        const messages = await ctx.db
+            .query("messages")
+            .withSearchIndex("search_body", (q) =>
+                q.search("body", args.query).eq("workspaceId", args.workspaceId)
+            )
+            .take(10)
+
+        return messages
+    }
+})

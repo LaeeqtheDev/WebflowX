@@ -1,35 +1,72 @@
 import { UserButton } from "@/features/auth/components/user-button"
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher"
 import { SidebarButton } from "./SidebarButton"
-import { Bell, Camera, CheckSquare, FileText, Home, MessageSquare, MoreHorizontal, Video } from "lucide-react"
-import {  FaSpotify } from "react-icons/fa"
-
-import { usePathname } from "next/navigation"
-import { IconInvoice, IconPlayerTrackNextFilled } from "@tabler/icons-react"
+import { Bell, CheckSquare, FileText, Home, MessageSquare, MoreHorizontal, Notebook, Video } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { useWorkspaceId } from "@/hooks/use-workspace-id"
 
 export const Sidebar = () => {
     const pathname = usePathname()
+    const router = useRouter()
+    const workspaceId = useWorkspaceId()
+
     return(
-        <>
         <aside className="w-17.5 h-full bg-[#381d2a] flex flex-col gap-y-4 items-center pt-2.25 pb-4">
            <WorkspaceSwitcher/>
-           <SidebarButton icon={Home} label="Home" isActive={pathname.includes("/dashboard/workspace")}/>
-           <SidebarButton icon={MessageSquare} label="DMs" />
-            <SidebarButton icon={Bell} label="Activity" />
+           <SidebarButton 
+             icon={Home} 
+             label="Home" 
+             isActive={pathname.includes("/dashboard/workspace") && !pathname.includes("/meeting") && !pathname.includes("/dms") && !pathname.includes("/activity") && !pathname.includes("/tasks") && !pathname.includes("/notes")}
+             onClick={() => router.push(`/dashboard/workspace/${workspaceId}`)}
+           />
+           <SidebarButton 
+             icon={MessageSquare} 
+             label="DMs" 
+             isActive={pathname.includes("/dms")}
+             onClick={() => router.push(`/dashboard/workspace/${workspaceId}/dms`)}
+           />
+           <SidebarButton 
+             icon={Bell} 
+             label="Activity" 
+             isActive={pathname.includes("/activity")}
+             onClick={() => router.push(`/dashboard/workspace/${workspaceId}/activity`)}
+           />
+            <SidebarButton 
+             icon={FileText} 
+             label="Docs"
+             isActive={pathname.includes("/docs")}
+             onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}
+           />
 
-            <SidebarButton icon={Video} label="Meetings" />
-            <SidebarButton icon={CheckSquare} label="Tasks" />
-            <SidebarButton icon={FileText} label="Notes" />
+            <SidebarButton 
+             icon={Notebook} 
+             label="Notes"
+             isActive={pathname.includes("/notes")}
+             onClick={() => router.push(`/dashboard/workspace/${workspaceId}/notes`)}
+           />
 
-            <SidebarButton icon={FaSpotify} label="Jam" />
-            
+            <SidebarButton 
+             icon={CheckSquare} 
+             label="Tasks"
+             isActive={pathname.includes("/tasks")}
+             onClick={() => router.push(`/dashboard/workspace/${workspaceId}/tasks`)}
+           />
+           
+           <SidebarButton 
+             icon={Video} 
+             label="Meetings" 
+             isActive={pathname.includes("/meeting")}
+             onClick={() => router.push(`/dashboard/workspace/${workspaceId}/meeting`)}
+           />
+           
 
-<SidebarButton icon={MoreHorizontal} label="More" />
+
+
+           
+           <SidebarButton icon={MoreHorizontal} label="More" />
            <div className="flex flex-col items-center justify-center gap-y-1 mt-auto">
-            
-           <UserButton/>
+             <UserButton/>
            </div>
         </aside>
-        </>
     )
 }

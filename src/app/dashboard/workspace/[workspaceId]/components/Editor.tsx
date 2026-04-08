@@ -5,7 +5,7 @@ import { MutableRefObject, useEffect, useLayoutEffect, useRef, useState } from "
 import Quill,  {  type QuillOptions }  from "quill";
 import { Button } from "@/components/ui/button";
 import {PiTextAa} from 'react-icons/pi'
-import { ImageIcon, Smile, XIcon } from "lucide-react";
+import { File, FileIcon, FileText, ImageIcon, Smile, XIcon } from "lucide-react";
 import {MdSend} from 'react-icons/md'
 import { Hint } from "./hints";
 import {Delta, Op} from "quill/core"
@@ -222,6 +222,19 @@ const Editor = ({
                 <ImageIcon className="size-4"/>
               </Button>
              </Hint>
+
+    
+        )}
+
+            {variant === "create" && (      
+          <Hint label="File Upload">
+          <Button
+          size={"iconSm"}
+          variant={"ghost"}
+          >
+            <FileText className="size-4"/>
+          </Button>
+        </Hint>
         )}
 
         {variant === "update" &&(

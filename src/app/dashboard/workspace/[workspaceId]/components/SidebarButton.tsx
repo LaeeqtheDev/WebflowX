@@ -7,15 +7,17 @@ interface SidebarButtonProps {
   icon: LucideIcon | IconType
   label: string
   isActive?: boolean
+  onClick?: () => void
 }
 
 export const SidebarButton = ({
   icon: Icon,
   label,
   isActive,
+  onClick,
 }: SidebarButtonProps) => {
   return (
-    <div className="cursor-pointer group">
+    <div className="cursor-pointer group" onClick={onClick}>
       <Button
         variant={"trasnparent"}
         className={cn(
@@ -23,7 +25,7 @@ export const SidebarButton = ({
           isActive && "bg-accent/20"
         )}
       >
-        <Icon className="size-5  transition-transform group-hover:scale-110 text-[#ff5018]" />
+        <Icon className="size-5 transition-transform group-hover:scale-110 text-[#ff5018]" />
         <span className="text-[11px] text-white group-hover:text-accent">
           {label}
         </span>
