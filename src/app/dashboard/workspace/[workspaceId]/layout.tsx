@@ -34,8 +34,8 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
       <main className="flex-1 flex overflow-hidden">
         <ResizablePanelGroup autoSave="ca-workspace-layout" dir="horizontal">
           <ResizablePanel
-            defaultSize={280}  // percentage of total width
-            minSize={280}      // min width percentage
+            defaultSize={220}  // percentage of total width
+            minSize={220}      // min width percentage
             className="bg-[#381d2a]/80 text-white overflow-auto"
           >
             <WorkSpaceSidebar />
@@ -44,7 +44,7 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
           <ResizableHandle />
 
           <ResizablePanel
-            minSize={200} // percentage of total width
+            minSize={100} // percentage of total width
             className="overflow-auto"
           >
             
@@ -53,7 +53,7 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
           {showPanel && (
             <>
             <ResizableHandle withHandle />
-            <ResizablePanel minSize={280} defaultSize={280}>
+            <ResizablePanel minSize={260} defaultSize={260}>
              {parentMessageId ? (
              <Thread
              messageId= {parentMessageId as Id<"messages">}

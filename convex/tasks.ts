@@ -78,6 +78,7 @@ export const create = mutation({
         dueDate: v.optional(v.number()),
         labels: v.optional(v.array(v.string())),
         storyPoints: v.optional(v.number()),
+        sprintId: v.optional(v.id("sprints")),
     },
     handler: async (ctx, args) => {
         const userId = await auth.getUserId(ctx)
@@ -110,6 +111,7 @@ export const update = mutation({
         dueDate: v.optional(v.number()),
         labels: v.optional(v.array(v.string())),
         storyPoints: v.optional(v.number()),
+        sprintId: v.optional(v.id("sprints")),
     },
     handler: async (ctx, args) => {
         const userId = await auth.getUserId(ctx)

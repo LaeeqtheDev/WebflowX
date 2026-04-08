@@ -13,6 +13,7 @@ type RequestType = {
     dueDate?: number
     labels?: string[]
     storyPoints?: number
+    sprintId?: Id<"sprints">
 }
 
 export const useCreateTask = () => {
