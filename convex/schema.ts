@@ -141,7 +141,20 @@ const schema = defineSchema({
                         workspaceId: v.id("workspaces"),
                         body: v.string(),
                     })
-                    .index("by_task_id", ["taskId"])
+                    .index("by_task_id", ["taskId"]),
+
+                    meetings: defineTable({
+                        workspaceId: v.id("workspaces"),
+                        roomName: v.string(),
+                        title: v.string(),
+                        createdBy: v.id("members"),
+                        startedAt: v.number(),
+                        endedAt: v.optional(v.number()),
+                        transcript: v.optional(v.string()),
+                        summary: v.optional(v.string()),
+                        participants: v.optional(v.array(v.string())),
+                    })
+                    .index("by_workspace_id", ["workspaceId"])
 
 
                       

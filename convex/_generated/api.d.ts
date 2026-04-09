@@ -12,6 +12,7 @@ import type * as auth from "../auth.js";
 import type * as channels from "../channels.js";
 import type * as conversations from "../conversations.js";
 import type * as http from "../http.js";
+import type * as meetings from "../meetings.js";
 import type * as members from "../members.js";
 import type * as messages from "../messages.js";
 import type * as notes from "../notes.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   channels: typeof channels;
   conversations: typeof conversations;
   http: typeof http;
+  meetings: typeof meetings;
   members: typeof members;
   messages: typeof messages;
   notes: typeof notes;

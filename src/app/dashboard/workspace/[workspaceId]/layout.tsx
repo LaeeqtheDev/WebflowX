@@ -53,7 +53,7 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
           {showPanel && (
             <>
             <ResizableHandle withHandle />
-            <ResizablePanel minSize={260} defaultSize={260}>
+            <ResizablePanel minSize={390} defaultSize={390}>
              {parentMessageId ? (
              <Thread
              messageId= {parentMessageId as Id<"messages">}
