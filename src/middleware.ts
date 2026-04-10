@@ -6,7 +6,7 @@ import {
 } from "@convex-dev/auth/nextjs/server";
 
 const isPublicPage = createRouteMatcher(["/", "/auth", "/join"])
-const isPublicApi = createRouteMatcher(["/api/livekit", "/api/ai-summary"])  // 👈 add this
+const isPublicApi = createRouteMatcher(["/api/livekit", "/api/ai-summary", "/api/liveblocks-auth" ])  // 👈 add this
 
 export default convexAuthNextjsMiddleware(async (request) => {
   const authenticated = await isAuthenticatedNextjs(request as any);

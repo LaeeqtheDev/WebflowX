@@ -154,7 +154,42 @@ const schema = defineSchema({
                         summary: v.optional(v.string()),
                         participants: v.optional(v.array(v.string())),
                     })
+                    .index("by_workspace_id", ["workspaceId"]),
+
+                    docs: defineTable({
+                        title: v.string(),
+                        workspaceId: v.id("workspaces"),
+                        createdBy: v.id("members"),
+                        type: v.union(v.literal("document"), v.literal("spreadsheet")),
+                        liveblocksRoomId: v.string(),
+                        updatedAt: v.optional(v.number()),
+                    })
                     .index("by_workspace_id", ["workspaceId"])
+                    .index("by_room_id", ["liveblocksRoomId"]),
+
+                    notifications: defineTable({
+    workspaceId: v.id("workspaces"),
+    recipientId: v.id("members"),  // who gets notified
+    senderId: v.id("members"),     // who triggered it
+    type: v.union(
+        v.literal("thread_reply"),
+        v.literal("reaction"),
+        v.literal("task_assigned"),
+        v.literal("task_comment"),
+        v.literal("note_added")
+    ),
+    read: v.boolean(),
+    // optional references
+    messageId: v.optional(v.id("messages")),
+    taskId: v.optional(v.id("tasks")),
+    noteId: v.optional(v.id("notes")),
+    channelId: v.optional(v.id("channels")),
+    conversationId: v.optional(v.id("conversations")),
+    body: v.optional(v.string()),  // preview text
+})
+.index("by_recipient", ["recipientId"])
+.index("by_workspace_recipient", ["workspaceId", "recipientId"])
+.index("by_recipient_read", ["recipientId", "read"])
 
 
                       
