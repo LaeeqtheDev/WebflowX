@@ -8,7 +8,13 @@ const schema = defineSchema({
         workspaces: defineTable({
                 name: v.string(),
                 userId: v.id("users"),
-                joinCode: v.string()
+                joinCode: v.string(),
+                plan: v.optional(v.union(
+                        v.literal("free"),
+                        v.literal("startup"),
+                        v.literal("growth"),
+                        v.literal("enterprise")
+                ))
 
         }),
 
@@ -176,7 +182,8 @@ const schema = defineSchema({
         v.literal("reaction"),
         v.literal("task_assigned"),
         v.literal("task_comment"),
-        v.literal("note_added")
+        v.literal("note_added"),
+        v.literal("dm_received")
     ),
     read: v.boolean(),
     // optional references
@@ -189,7 +196,12 @@ const schema = defineSchema({
 })
 .index("by_recipient", ["recipientId"])
 .index("by_workspace_recipient", ["workspaceId", "recipientId"])
-.index("by_recipient_read", ["recipientId", "read"])
+.index("by_recipient_read", ["recipientId", "read"]),
+
+
+
+
+
 
 
                       

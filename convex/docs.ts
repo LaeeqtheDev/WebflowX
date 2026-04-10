@@ -1,6 +1,7 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { auth } from "./auth"
+import { checkLimit } from "./limits"
 
 export const get = query({
     args: { workspaceId: v.id("workspaces") },
@@ -18,9 +19,7 @@ export const get = query({
 
         const docs = await ctx.db
             .query("docs")
-            .withIndex("by_workspace_id", (q) =>
-                q.eq("workspaceId", args.workspaceId)
-            )
+            .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
             .order("desc")
             .collect()
 
@@ -49,6 +48,19 @@ export const create = mutation({
             ).unique()
 
         if (!member) throw new Error("Unauthorized")
+
+        const existingDocs = await ctx.db
+            .query("docs")
+            .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
+            .collect()
+
+        const { allowed, limit, plan } = await checkLimit(
+            ctx, args.workspaceId, "docs", existingDocs.length
+        )
+
+        if (!allowed) {
+            throw new Error(`LIMIT_REACHED:docs:${limit}:${plan}`)
+        }
 
         const liveblocksRoomId = `${args.workspaceId}-doc-${Date.now()}`
 

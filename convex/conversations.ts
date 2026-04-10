@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { auth } from "./auth";
 
 export const CreateOrGet = mutation({
@@ -57,6 +57,75 @@ export const CreateOrGet = mutation({
     //     throw new Error("Conversation not found after creation");
     // }
     return conversationId;
+    
 
+    }
+})
+
+
+
+export const getAll = query({
+    args: { workspaceId: v.id("workspaces") },
+    handler: async (ctx, args) => {
+        const userId = await auth.getUserId(ctx)
+        if (!userId) return []
+
+        const member = await ctx.db
+            .query("members")
+            .withIndex("byWorkspaceId_user_id", (q) =>
+                q.eq("workspaceId", args.workspaceId).eq("userId", userId)
+            ).unique()
+
+        if (!member) return []
+
+        const conversations = await ctx.db
+            .query("conversations")
+            .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId))
+            .collect()
+
+        // Only return conversations this member is part of
+        const myConversations = conversations.filter(c =>
+            c.memberOneId === member._id || c.memberTwoId === member._id
+        )
+
+        return await Promise.all(myConversations.map(async (conv) => {
+            // Get the other member
+            const otherMemberId = conv.memberOneId === member._id
+                ? conv.memberTwoId
+                : conv.memberOneId
+
+            const otherMember = await ctx.db.get(otherMemberId)
+            const otherUser = otherMember ? await ctx.db.get(otherMember.userId) : null
+
+            // Get last message
+            const messages = await ctx.db
+                .query("messages")
+                .withIndex("by_conversation_id", (q) => q.eq("conversationId", conv._id))
+                .order("desc")
+                .take(1)
+
+            const lastMessage = messages[0] ?? null
+
+            // Get unread count from notifications
+            const unreadNotifs = await ctx.db
+                .query("notifications")
+                .withIndex("by_recipient_read", (q) =>
+                    q.eq("recipientId", member._id).eq("read", false)
+                )
+                .filter((q) =>
+                    q.and(
+                        q.eq(q.field("type"), "dm_received"),
+                        q.eq(q.field("conversationId"), conv._id)
+                    )
+                )
+                .collect()
+
+            return {
+                ...conv,
+                otherMember: otherMember ? { ...otherMember, user: otherUser } : null,
+                lastMessage,
+                unreadCount: unreadNotifs.length,
+            }
+        }))
     }
 })

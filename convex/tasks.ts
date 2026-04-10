@@ -42,16 +42,10 @@ export const get = query({
             )
             .collect()
 
-        if (args.status) {
-            tasks = tasks.filter(t => t.status === args.status)
-        }
+        if (args.status) tasks = tasks.filter(t => t.status === args.status)
+        if (args.assigneeId) tasks = tasks.filter(t => t.assigneeId === args.assigneeId)
 
-        if (args.assigneeId) {
-            tasks = tasks.filter(t => t.assigneeId === args.assigneeId)
-        }
-
-        // Populate assignee info
-        const populated = await Promise.all(tasks.map(async (task) => {
+        return await Promise.all(tasks.map(async (task) => {
             const assignee = task.assigneeId ? await ctx.db.get(task.assigneeId) : null
             const assigneeUser = assignee ? await ctx.db.get(assignee.userId) : null
             const creator = await ctx.db.get(task.createdBy)
@@ -62,8 +56,6 @@ export const get = query({
                 creator: creator ? { ...creator, user: creatorUser } : null,
             }
         }))
-
-        return populated
     }
 })
 
@@ -92,11 +84,26 @@ export const create = mutation({
 
         if (!member || member.role !== "admin") throw new Error("Only admins can create tasks")
 
-        return await ctx.db.insert("tasks", {
+        const taskId = await ctx.db.insert("tasks", {
             ...args,
             createdBy: member._id,
             updatedAt: Date.now(),
         })
+
+        // 👇 Notify assignee
+        if (args.assigneeId && args.assigneeId !== member._id) {
+            await ctx.db.insert("notifications", {
+                workspaceId: args.workspaceId,
+                recipientId: args.assigneeId,
+                senderId: member._id,
+                type: "task_assigned",
+                taskId,
+                body: args.title,
+                read: false,
+            })
+        }
+
+        return taskId
     }
 })
 
@@ -131,7 +138,6 @@ export const update = mutation({
         const isAdmin = member.role === "admin"
         const { id, ...updates } = args
 
-        // members can only update status
         if (!isAdmin) {
             const allowedKeys = ["status"]
             const hasDisallowedKeys = Object.keys(updates).some(
@@ -140,11 +146,20 @@ export const update = mutation({
             if (hasDisallowedKeys) throw new Error("Members can only update task status")
         }
 
-        await ctx.db.patch(args.id, {
-            ...updates,
-            updatedAt: Date.now(),
-        })
+        // 👇 Notify new assignee if changed
+        if (args.assigneeId && args.assigneeId !== task.assigneeId && args.assigneeId !== member._id) {
+            await ctx.db.insert("notifications", {
+                workspaceId: task.workspaceId,
+                recipientId: args.assigneeId,
+                senderId: member._id,
+                type: "task_assigned",
+                taskId: args.id,
+                body: task.title,
+                read: false,
+            })
+        }
 
+        await ctx.db.patch(args.id, { ...updates, updatedAt: Date.now() })
         return args.id
     }
 })
@@ -188,11 +203,7 @@ export const assignToMe = mutation({
 
         if (!member) throw new Error("Unauthorized")
 
-        await ctx.db.patch(args.id, {
-            assigneeId: member._id,
-            updatedAt: Date.now(),
-        })
-
+        await ctx.db.patch(args.id, { assigneeId: member._id, updatedAt: Date.now() })
         return args.id
     }
 })

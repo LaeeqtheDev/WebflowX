@@ -39,12 +39,28 @@ export const create = mutation({
 
         if (!member) throw new Error("Unauthorized")
 
-        return await ctx.db.insert("taskComments", {
+        const commentId = await ctx.db.insert("taskComments", {
             taskId: args.taskId,
             workspaceId: args.workspaceId,
             memberId: member._id,
             body: args.body,
         })
+
+        // 👇 Notify task assignee
+        const task = await ctx.db.get(args.taskId)
+        if (task && task.assigneeId && task.assigneeId !== member._id) {
+            await ctx.db.insert("notifications", {
+                workspaceId: args.workspaceId,
+                recipientId: task.assigneeId,
+                senderId: member._id,
+                type: "task_comment",
+                taskId: args.taskId,
+                body: args.body,
+                read: false,
+            })
+        }
+
+        return commentId
     }
 })
 

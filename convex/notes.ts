@@ -1,6 +1,7 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { auth } from "./auth"
+import { checkLimit } from "./limits"
 
 export const get = query({
     args: {
@@ -57,7 +58,28 @@ export const create = mutation({
 
         if (!member) throw new Error("Member not found")
 
-        return await ctx.db.insert("notes", {
+        // Check limit
+        const feature = args.type === "personal" ? "personalNotes" : "workspaceNotes"
+        const existingNotes = await ctx.db
+            .query("notes")
+            .withIndex("by_workspace_id_type", (q) =>
+                q.eq("workspaceId", args.workspaceId).eq("type", args.type)
+            )
+            .collect()
+
+        const notesCount = args.type === "personal"
+            ? existingNotes.filter(n => n.authorId === member._id).length
+            : existingNotes.length
+
+        const { allowed, limit, plan } = await checkLimit(
+            ctx, args.workspaceId, feature, notesCount
+        )
+
+        if (!allowed) {
+            throw new Error(`LIMIT_REACHED:${feature}:${limit}:${plan}`)
+        }
+
+        const noteId = await ctx.db.insert("notes", {
             title: args.title,
             body: args.body,
             workspaceId: args.workspaceId,
@@ -66,6 +88,30 @@ export const create = mutation({
             isPinned: false,
             updatedAt: Date.now()
         })
+
+        // Notify workspace members
+        if (args.type === "workspace") {
+            const allMembers = await ctx.db
+                .query("members")
+                .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId))
+                .collect()
+
+            await Promise.all(
+                allMembers
+                    .filter(m => m._id !== member._id)
+                    .map(m => ctx.db.insert("notifications", {
+                        workspaceId: args.workspaceId,
+                        recipientId: m._id,
+                        senderId: member._id,
+                        type: "note_added",
+                        noteId,
+                        body: args.title,
+                        read: false,
+                    }))
+            )
+        }
+
+        return noteId
     }
 })
 
@@ -125,8 +171,6 @@ export const remove = mutation({
         const isAuthor = note.authorId === member._id
         const isAdmin = member.role === "admin"
 
-        // workspace notes: only admin can delete
-        // personal notes: only author can delete
         if (note.type === "workspace" && !isAdmin) throw new Error("Only admins can delete workspace notes")
         if (note.type === "personal" && !isAuthor) throw new Error("Unauthorized")
 

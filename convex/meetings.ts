@@ -2,6 +2,7 @@ import { v } from "convex/values"
 import { mutation, query, action } from "./_generated/server"
 import { auth } from "./auth"
 import { api } from "./_generated/api"
+import { checkLimit } from "./limits"
 
 export const get = query({
     args: { workspaceId: v.id("workspaces") },
@@ -50,6 +51,24 @@ export const create = mutation({
             ).unique()
 
         if (!member) throw new Error("Unauthorized")
+
+        // Only count meetings from this month for limit check
+        const now = new Date()
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime()
+
+        const existingMeetings = await ctx.db
+            .query("meetings")
+            .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
+            .filter((q) => q.gte(q.field("startedAt"), startOfMonth))
+            .collect()
+
+        const { allowed, limit, plan } = await checkLimit(
+            ctx, args.workspaceId, "meetings", existingMeetings.length
+        )
+
+        if (!allowed) {
+            throw new Error(`LIMIT_REACHED:meetings:${limit}:${plan}`)
+        }
 
         return await ctx.db.insert("meetings", {
             workspaceId: args.workspaceId,
