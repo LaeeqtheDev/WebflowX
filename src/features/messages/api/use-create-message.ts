@@ -2,63 +2,74 @@ import { useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useCallback, useMemo, useState } from "react";
 import { Id } from "../../../../convex/_generated/dataModel";
-import { mutation } from "../../../../convex/_generated/server";
 
+type RequestType = {
+    body: string;
+    image?: Id<"_storage">;
+    file?: Id<"_storage">;
+    fileName?: string;
+    fileType?: string;
+    fileSize?: number;
+    workspaceId: Id<"workspaces">;
+    channelId?: Id<"channels">;
+    parentMessagesId?: Id<"messages">;
+    conversationId?: Id<"conversations">;
+};
 
+type ResponseType = Id<"messages"> | null;
 
-type RequestType = {body: string, image?: Id<"_storage">, workspaceId:Id<"workspaces">, channelId?: Id<"channels">, parentMessagesId?: Id<"messages">, conversationId?:Id<"conversations">}; 
-
-type ResponseType = Id<"messages"> | null
-
-type Options ={
+type Options = {
     onSuccess?: (data: ResponseType) => void;
-    onError?: (error:Error) => void;
-    onSettled?: () => void; 
-    throwError?: boolean
-}
+    onError?: (error: Error) => void;
+    onSettled?: () => void;
+    throwError?: boolean;
+};
 
 export const useCreateMessage = () => {
-    const [data, setData]= useState<ResponseType>(null);
-    const [status, setStatus] = useState<"success" | "error" | "settled" | "pending" | null>(null);
-    const [error, setError] = useState<Error |null>(null);
-    // const [ispending, setIsPending] = useState(false);
-    // const [isSuccess, setIsSuccess] = useState(false);
-    // const [isError, setIsError] = useState(false);
-    // const [isSettled, setIsSettled] = useState(false);
+    const [data, setData] = useState<ResponseType>(null);
+    const [status, setStatus] = useState<
+        "success" | "error" | "settled" | "pending" | null
+    >(null);
+    const [error, setError] = useState<Error | null>(null);
 
     const isPending = useMemo(() => status === "pending", [status]);
     const isSuccess = useMemo(() => status === "success", [status]);
     const isError = useMemo(() => status === "error", [status]);
     const isSettled = useMemo(() => status === "settled", [status]);
 
-
-
     const mutation = useMutation(api.messages.create);
 
-    const mutate = useCallback(async(values: RequestType, options?: Options) => {
-        try {
+    const mutate = useCallback(
+        async (values: RequestType, options?: Options) => {
+            try {
+                setData(null);
+                setError(null);
+                setStatus("pending");
 
-            setData(null);
-            setError(null);
-            setStatus("pending");
-
-            
-            const repsonse = await mutation(values);
-            options?.onSuccess?.(repsonse);
-            return repsonse;
-
-        } catch (error) {
-            setStatus("error");
-            options?.onError?.(error as Error);
-            if (options?.throwError) {
-                throw error;
+                const response = await mutation(values);
+                options?.onSuccess?.(response);
+                return response;
+            } catch (error) {
+                setStatus("error");
+                options?.onError?.(error as Error);
+                if (options?.throwError) {
+                    throw error;
+                }
+            } finally {
+                setStatus("settled");
+                options?.onSettled?.();
             }
-        } finally {
-            setStatus("settled");
-            options?.onSettled?.()
-        }
-    }, [mutation])
-    return { mutate,
-     data,
-     error, isPending, isSuccess, isError, isSettled};
+        },
+        [mutation]
+    );
+
+    return {
+        mutate,
+        data,
+        error,
+        isPending,
+        isSuccess,
+        isError,
+        isSettled,
+    };
 };

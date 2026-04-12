@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
-import { Loader, Video, Plus, Sparkles, Clock, Users } from "lucide-react"
+import { Loader, Video, Plus, Sparkles, Clock, Users, AlertTriangle } from "lucide-react"
 import { useMutation } from "convex/react"
 import { api } from "../../../../../../convex/_generated/api"
 import { Id } from "../../../../../../convex/_generated/dataModel"
@@ -44,6 +44,7 @@ export default function MeetingPage() {
     const [selectedChannelId, setSelectedChannelId] = useState("")
     const [isGenerating, setIsGenerating] = useState(false)
     const [selectedMeeting, setSelectedMeeting] = useState<any>(null)
+    const [generationError, setGenerationError] = useState<string | null>(null)
 
     const currentUserName = members?.find(m => m._id === currentMember?._id)?.user.name ?? "Someone"
 
@@ -101,48 +102,85 @@ export default function MeetingPage() {
 
     const handleDisconnect = useCallback(async (transcript: string) => {
         const meetingId = activeMeetingId
+        console.log("=== MEETING DISCONNECT ===")
+        console.log("Meeting ID:", meetingId)
+        console.log("Transcript length:", transcript?.length)
+        console.log("Transcript preview:", transcript?.substring(0, 200))
 
         if (meetingId) {
-            await endMeeting({ id: meetingId })
+            try {
+                await endMeeting({ id: meetingId })
+                console.log("Meeting ended successfully")
+            } catch (e) {
+                console.error("Failed to end meeting:", e)
+            }
         }
 
         setToken(null)
         setServerUrl(null)
+        setGenerationError(null)
 
-        if (transcript && transcript.length > 20) {
+        // Check if we have a meaningful transcript
+        const hasValidTranscript = transcript && transcript.trim().length > 20
+
+        if (hasValidTranscript) {
             setIsGenerating(true)
             toast.info("Generating AI summary...")
+            
             try {
+                console.log("Calling AI summary API...")
                 const res = await fetch("/api/ai-summary", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ transcript })
+                    body: JSON.stringify({ transcript: transcript.trim() })
                 })
+                
                 const data = await res.json()
-                if (data.error) throw new Error(data.error)
+                console.log("AI summary response:", data)
+                
+                if (data.error) {
+                    throw new Error(data.error)
+                }
 
-                if (meetingId) {
+                if (meetingId && data.summary) {
                     await saveSummary({
                         id: meetingId,
                         summary: data.summary,
-                        transcript,
+                        transcript: transcript.trim(),
                     })
+                    console.log("Summary saved successfully")
                 }
+                
                 toast.success("AI summary generated!")
-            } catch (e) {
-                toast.error("Failed to generate summary")
+            } catch (e: any) {
+                console.error("Summary generation failed:", e)
+                setGenerationError(e.message || "Failed to generate summary")
+                toast.error("Failed to generate summary. You can add it manually later.")
+                
+                // Still save the transcript even if summary failed
+                if (meetingId) {
+                    await saveSummary({
+                        id: meetingId,
+                        summary: "Summary generation failed. You can add a transcript and regenerate.",
+                        transcript: transcript.trim(),
+                    }).catch(console.error)
+                }
             } finally {
                 setIsGenerating(false)
                 setActiveMeetingId(null)
             }
         } else {
+            console.log("No valid transcript captured")
+            
             if (meetingId) {
                 await saveSummary({
                     id: meetingId,
-                    summary: "No transcript was captured for this meeting.",
+                    summary: "No transcript was captured for this meeting. You can add one manually to generate a summary.",
                     transcript: "",
                 }).catch(console.error)
             }
+            
+            toast.info("No transcript captured. You can add one manually from the meeting details.")
             setActiveMeetingId(null)
         }
     }, [activeMeetingId, endMeeting, saveSummary])
@@ -186,6 +224,24 @@ export default function MeetingPage() {
                     <Plus className="size-4 mr-1" /> New Meeting
                 </Button>
             </div>
+
+            {/* Error banner */}
+            {generationError && (
+                <div className="mx-6 mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                    <AlertTriangle className="size-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                        <p className="text-sm font-medium text-amber-800">Summary generation had an issue</p>
+                        <p className="text-xs text-amber-600 mt-0.5">{generationError}</p>
+                        <p className="text-xs text-amber-600 mt-1">You can add a transcript manually from the meeting details.</p>
+                    </div>
+                    <button 
+                        onClick={() => setGenerationError(null)}
+                        className="text-amber-600 hover:text-amber-800"
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
 
             {/* Body */}
             <div className="flex-1 flex overflow-hidden">
@@ -325,6 +381,10 @@ export default function MeetingPage() {
                                     ))}
                                 </SelectContent>
                             </Select>
+                        </div>
+                        <div className="bg-amber-50 border border-amber-200 rounded-md p-2 text-xs text-amber-700">
+                            <p className="font-medium">💡 Tip for transcripts</p>
+                            <p className="mt-1">Keep this tab in focus during the meeting for best transcript capture. You can also add transcripts manually after the meeting.</p>
                         </div>
                         <Button
                             onClick={handleCreate}
