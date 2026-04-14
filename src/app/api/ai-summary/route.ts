@@ -51,18 +51,18 @@ ${transcript}
 
 Provide the summary in this exact format:
 
-## 📋 Meeting Summary
+📋 Meeting Summary
 
-### 🎯 Key Points
+🎯 Key Points
 - List the main topics discussed (3-5 bullet points)
 
-### ✅ Decisions Made
+✅ Decisions Made
 - List any decisions that were made (if none, write "No explicit decisions recorded")
 
-### 📌 Action Items
+📌 Action Items
 - List any tasks or next steps mentioned with owners if known (if none, write "No action items identified")
 
-### 💡 Overall Summary
+💡 Overall Summary
 Write a 2-3 sentence overview of the meeting's purpose and outcome.`
                     }
                 ]

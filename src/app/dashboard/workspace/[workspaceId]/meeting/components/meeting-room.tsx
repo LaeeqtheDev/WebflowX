@@ -8,62 +8,8 @@ import {
     useLocalParticipant,
     useRoomContext,
 } from "@livekit/components-react"
-import { useEffect, useRef, useState, useCallback } from "react"
-import { Mic, MicOff, AlertCircle } from "lucide-react"
-
-// TypeScript declarations for Speech Recognition API
-interface ISpeechRecognition extends EventTarget {
-    continuous: boolean
-    interimResults: boolean
-    lang: string
-    maxAlternatives: number
-    start(): void
-    stop(): void
-    abort(): void
-    onstart: ((this: ISpeechRecognition, ev: Event) => void) | null
-    onend: ((this: ISpeechRecognition, ev: Event) => void) | null
-    onerror: ((this: ISpeechRecognition, ev: ISpeechRecognitionErrorEvent) => void) | null
-    onresult: ((this: ISpeechRecognition, ev: ISpeechRecognitionEvent) => void) | null
-}
-
-interface ISpeechRecognitionErrorEvent extends Event {
-    error: string
-    message?: string
-}
-
-interface ISpeechRecognitionEvent extends Event {
-    resultIndex: number
-    results: ISpeechRecognitionResultList
-}
-
-interface ISpeechRecognitionResultList {
-    length: number
-    item(index: number): ISpeechRecognitionResult
-    [index: number]: ISpeechRecognitionResult
-}
-
-interface ISpeechRecognitionResult {
-    isFinal: boolean
-    length: number
-    item(index: number): ISpeechRecognitionAlternative
-    [index: number]: ISpeechRecognitionAlternative
-}
-
-interface ISpeechRecognitionAlternative {
-    transcript: string
-    confidence: number
-}
-
-interface ISpeechRecognitionConstructor {
-    new(): ISpeechRecognition
-}
-
-declare global {
-    interface Window {
-        SpeechRecognition?: ISpeechRecognitionConstructor
-        webkitSpeechRecognition?: ISpeechRecognitionConstructor
-    }
-}
+import { useEffect, useRef, useState } from "react"
+import { Mic, AlertCircle } from "lucide-react"
 
 interface MeetingRoomProps {
     token: string
@@ -71,261 +17,206 @@ interface MeetingRoomProps {
     onDisconnect: (transcript: string) => void
 }
 
-// Inner component that has access to room context
+// Global singleton state
+let globalWebSocket: WebSocket | null = null
+let globalMediaRecorder: MediaRecorder | null = null
+let globalTranscript = ""
+let isInitializing = false  // Lock to prevent double init
+
+const cleanupGlobals = () => {
+    console.log("🧹 Cleaning up globals...")
+    
+    if (globalMediaRecorder) {
+        try {
+            if (globalMediaRecorder.state === 'recording') {
+                globalMediaRecorder.stop()
+            }
+            const stream = globalMediaRecorder.stream
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop())
+            }
+        } catch (e) {
+            console.log("MediaRecorder cleanup error:", e)
+        }
+        globalMediaRecorder = null
+    }
+    
+    if (globalWebSocket) {
+        try {
+            if (globalWebSocket.readyState === WebSocket.OPEN) {
+                globalWebSocket.send(JSON.stringify({ type: 'CloseStream' }))
+                globalWebSocket.close(1000, 'Cleanup')
+            }
+        } catch (e) {
+            console.log("WebSocket cleanup error:", e)
+        }
+        globalWebSocket = null
+    }
+    
+    isInitializing = false
+}
+
 const MeetingRoomInner = ({ onDisconnect }: { onDisconnect: (transcript: string) => void }) => {
     const room = useRoomContext()
     const { localParticipant } = useLocalParticipant()
     
-    const transcriptRef = useRef<string>("")
-    const recognitionRef = useRef<ISpeechRecognition | null>(null)
-    const [status, setStatus] = useState<"starting" | "recording" | "paused" | "error" | "unsupported">("starting")
+    const [status, setStatus] = useState<"starting" | "recording" | "error">("starting")
     const [errorMessage, setErrorMessage] = useState<string>("")
-    const stoppedRef = useRef(false)
-    const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const [audioChunksSent, setAudioChunksSent] = useState(0)
+    const [transcriptLength, setTranscriptLength] = useState(0)
+    const hasInitializedRef = useRef(false)
 
-    // Check for speech recognition support
-    const getSpeechRecognition = useCallback((): ISpeechRecognitionConstructor | null => {
-        if (typeof window === "undefined") return null
-        return window.SpeechRecognition || window.webkitSpeechRecognition || null
-    }, [])
-
-    // Initialize and start recognition
-    const initRecognition = useCallback(() => {
-        const SpeechRecognition = getSpeechRecognition()
+    useEffect(() => {
+        // Only initialize ONCE per component lifecycle
+        if (hasInitializedRef.current) {
+            console.log("⏭️ Already initialized, skipping")
+            return
+        }
         
-        if (!SpeechRecognition) {
-            console.error("Speech Recognition not supported in this browser")
-            setStatus("unsupported")
-            setErrorMessage("Speech recognition not supported. Try Chrome or Edge.")
-            return null
-        }
-
-        // Clean up existing
-        if (recognitionRef.current) {
-            try { 
-                recognitionRef.current.stop() 
-            } catch (e) {
-                console.log("Error stopping previous recognition:", e)
-            }
-        }
-
-        const recognition = new SpeechRecognition()
-        
-        // Configuration
-        recognition.continuous = true
-        recognition.interimResults = false
-        recognition.lang = "en-US"
-        recognition.maxAlternatives = 1
-
-        recognition.onstart = () => {
-            console.log("✅ Speech recognition STARTED")
-            setStatus("recording")
-            setErrorMessage("")
-        }
-
-        recognition.onresult = (event: ISpeechRecognitionEvent) => {
-            console.log("📝 Speech result received, results:", event.results.length)
-            
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                const result = event.results[i]
-                if (result.isFinal) {
-                    const text = result[0].transcript.trim()
-                    if (text) {
-                        const timestamp = new Date().toLocaleTimeString("en-US", { 
-                            hour: "2-digit", 
-                            minute: "2-digit" 
-                        })
-                        const speaker = localParticipant?.identity || "Speaker"
-                        const entry = `[${timestamp}] ${speaker}: ${text}\n`
-                        
-                        console.log("📝 Adding to transcript:", entry)
-                        transcriptRef.current += entry
-                    }
+        // Check if another instance is initializing
+        if (isInitializing) {
+            console.log("⏭️ Another instance is initializing, waiting...")
+            const checkInterval = setInterval(() => {
+                if (!isInitializing && globalWebSocket && globalWebSocket.readyState === WebSocket.OPEN) {
+                    console.log("✅ Using existing connection")
+                    setStatus("recording")
+                    clearInterval(checkInterval)
+                    hasInitializedRef.current = true
                 }
-            }
-        }
-
-        recognition.onerror = (event: ISpeechRecognitionErrorEvent) => {
-            console.log("❌ Speech recognition error:", event.error, event.message)
-            
-            if (event.error === "not-allowed") {
-                setStatus("error")
-                setErrorMessage("Microphone permission denied. Please allow access and refresh.")
-                return
-            }
-            
-            if (event.error === "no-speech") {
-                console.log("No speech detected, continuing...")
-                return
-            }
-            
-            if (event.error === "audio-capture") {
-                setStatus("error")
-                setErrorMessage("No microphone found. Please connect one and refresh.")
-                return
-            }
-            
-            if (event.error === "aborted") {
-                console.log("Recognition aborted")
-                return
-            }
-            
-            if (event.error === "network") {
-                setErrorMessage("Network error. Retrying...")
-            } else {
-                setErrorMessage(`Error: ${event.error}. Retrying...`)
-            }
-            
-            if (!stoppedRef.current) {
-                scheduleRestart()
-            }
-        }
-
-        recognition.onend = () => {
-            console.log("🔄 Speech recognition ENDED, stopped:", stoppedRef.current)
-            
-            if (!stoppedRef.current) {
-                setStatus("paused")
-                scheduleRestart()
-            }
-        }
-
-        recognitionRef.current = recognition
-        return recognition
-    }, [getSpeechRecognition, localParticipant])
-
-    // Schedule a restart with debouncing
-    const scheduleRestart = useCallback(() => {
-        if (restartTimeoutRef.current) {
-            clearTimeout(restartTimeoutRef.current)
+            }, 100)
+            return () => clearInterval(checkInterval)
         }
         
-        restartTimeoutRef.current = setTimeout(() => {
-            if (!stoppedRef.current && recognitionRef.current) {
-                console.log("🔄 Attempting to restart recognition...")
-                try {
-                    recognitionRef.current.start()
-                } catch (e: unknown) {
-                    const error = e as Error
-                    console.log("Restart failed:", error.message)
-                    if (!error.message?.includes("already started")) {
-                        const newRecognition = initRecognition()
-                        if (newRecognition) {
-                            try {
-                                newRecognition.start()
-                            } catch (e2) {
-                                console.error("Failed to start new recognition:", e2)
+        // If already running AND active, use it
+        if (globalWebSocket && globalWebSocket.readyState === WebSocket.OPEN && globalMediaRecorder) {
+            console.log("✅ Using existing Deepgram connection")
+            setStatus("recording")
+            hasInitializedRef.current = true
+            return
+        }
+        
+        // If globals exist but are closed/dead, clean them up first
+        if (globalWebSocket || globalMediaRecorder) {
+            console.log("🧹 Cleaning up stale globals before starting new connection")
+            cleanupGlobals()
+        }
+        
+        console.log("🎬 Starting NEW Deepgram instance...")
+        isInitializing = true
+        hasInitializedRef.current = true
+        
+        const initDeepgram = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+                console.log("✅ Microphone OK")
+                
+                const response = await fetch('/api/deepgram-token')
+                const data = await response.json()
+                if (data.error) throw new Error(data.error)
+                console.log("✅ API key OK")
+                
+                const params = new URLSearchParams({
+                    'model': 'nova-2',
+                    'language': 'en-US',
+                    'smart_format': 'true',
+                })
+                
+                const wsUrl = `wss://api.deepgram.com/v1/listen?${params.toString()}`
+                const ws = new WebSocket(wsUrl, ['token', data.key])
+                
+                let chunkCount = 0
+                
+                ws.onopen = () => {
+                    console.log("✅✅✅ WebSocket CONNECTED")
+                    setStatus("recording")
+                    isInitializing = false
+                    
+                    let mimeType = 'audio/webm;codecs=opus'
+                    const mediaRecorder = new MediaRecorder(stream, { mimeType })
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
+                            chunkCount++
+                            ws.send(event.data)
+                            setAudioChunksSent(chunkCount)
+                        }
+                    }
+                    
+                    mediaRecorder.start(1000)
+                    globalMediaRecorder = mediaRecorder
+                    console.log("✅ MediaRecorder started")
+                }
+                
+                ws.onmessage = (message) => {
+                    const data = JSON.parse(message.data)
+                    
+                    if (data.type === 'Results') {
+                        const alternatives = data.channel?.alternatives || []
+                        
+                        if (alternatives.length > 0) {
+                            const transcript = alternatives[0]?.transcript
+                            
+                            if (transcript && transcript.trim()) {
+                                const time = new Date().toLocaleTimeString("en-US", { 
+                                    hour: "2-digit", 
+                                    minute: "2-digit" 
+                                })
+                                const speaker = localParticipant?.identity || "Speaker"
+                                const entry = `[${time}] ${speaker}: ${transcript}\n`
+                                
+                                console.log("✅ TRANSCRIPT:", transcript)
+                                globalTranscript += entry
+                                setTranscriptLength(globalTranscript.length)
                             }
                         }
                     }
                 }
-            }
-        }, 300)
-    }, [initRecognition])
-
-    // Manual start button handler
-    const handleManualStart = useCallback(() => {
-        console.log("👆 Manual start requested")
-        stoppedRef.current = false
-        
-        const recognition = initRecognition()
-        if (recognition) {
-            try {
-                recognition.start()
-                console.log("Manual start initiated")
-            } catch (e) {
-                console.error("Manual start failed:", e)
-            }
-        }
-    }, [initRecognition])
-
-    // Initialize on mount
-    useEffect(() => {
-        console.log("🎬 MeetingRoom mounted, initializing speech recognition...")
-        stoppedRef.current = false
-        
-        // Request microphone permission first
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then((stream) => {
-                console.log("✅ Microphone permission granted")
-                stream.getTracks().forEach(track => track.stop())
                 
-                setTimeout(() => {
-                    const recognition = initRecognition()
-                    if (recognition) {
-                        try {
-                            recognition.start()
-                            console.log("🎤 Speech recognition start() called")
-                        } catch (e) {
-                            console.error("Failed to start recognition:", e)
-                            setStatus("error")
-                            setErrorMessage("Failed to start speech recognition")
-                        }
-                    }
-                }, 1000)
-            })
-            .catch((err) => {
-                console.error("❌ Microphone permission denied:", err)
+                ws.onerror = (error) => {
+                    console.error("❌ WebSocket error")
+                    setStatus("error")
+                    setErrorMessage("Connection error")
+                    isInitializing = false
+                }
+                
+                ws.onclose = (event) => {
+                    console.log("🔌 WebSocket closed:", event.code)
+                }
+                
+                globalWebSocket = ws
+                
+            } catch (error: any) {
+                console.error("❌ Init error:", error)
                 setStatus("error")
-                setErrorMessage("Microphone access denied. Please allow and refresh.")
-            })
-
-        const handleVisibility = () => {
-            if (document.visibilityState === "visible" && !stoppedRef.current) {
-                console.log("👁️ Tab visible, checking recognition...")
-                if (status !== "recording") {
-                    scheduleRestart()
-                }
+                setErrorMessage(error.message)
+                isInitializing = false
             }
         }
-
-        document.addEventListener("visibilitychange", handleVisibility)
-
+        
+        initDeepgram()
+        
         return () => {
-            console.log("🛑 MeetingRoom unmounting, cleaning up...")
-            stoppedRef.current = true
-            document.removeEventListener("visibilitychange", handleVisibility)
-            
-            if (restartTimeoutRef.current) {
-                clearTimeout(restartTimeoutRef.current)
-            }
-            
-            if (recognitionRef.current) {
-                try { 
-                    recognitionRef.current.stop() 
-                } catch (e) {
-                    console.log("Cleanup stop error:", e)
-                }
-                recognitionRef.current = null
-            }
+            console.log("🧹 Component cleanup (NOT stopping recording)")
+            // Don't cleanup here - let disconnect handler do it
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [localParticipant])
 
-    // Handle room disconnect
+    // Handle room disconnect - the ONLY place we stop recording
     useEffect(() => {
         const handleDisconnected = () => {
-            console.log("📴 Room disconnected")
-            stoppedRef.current = true
+            console.log("📴 ROOM DISCONNECTED - STOPPING ALL RECORDING")
             
-            if (restartTimeoutRef.current) {
-                clearTimeout(restartTimeoutRef.current)
-            }
-            
-            if (recognitionRef.current) {
-                try { 
-                    recognitionRef.current.stop() 
-                } catch (e) {
-                    // ignore
-                }
-                recognitionRef.current = null
-            }
+            cleanupGlobals()
 
             setTimeout(() => {
-                const finalTranscript = transcriptRef.current.trim()
-                console.log("📄 Final transcript length:", finalTranscript.length)
-                console.log("📄 Final transcript:", finalTranscript || "(empty)")
-                onDisconnect(finalTranscript)
+                const finalTranscript = globalTranscript.trim()
+                console.log("📄 Final transcript:", finalTranscript.length, "chars")
+                console.log("📄 Content:", finalTranscript.substring(0, 200))
+                
+                const transcriptToSend = finalTranscript
+                globalTranscript = "" // Reset
+                
+                onDisconnect(transcriptToSend)
             }, 500)
         }
 
@@ -336,70 +227,44 @@ const MeetingRoomInner = ({ onDisconnect }: { onDisconnect: (transcript: string)
         }
     }, [room, onDisconnect])
 
-    // Status indicator component
-    const StatusIndicator = () => {
-        switch (status) {
-            case "recording":
-                return (
-                    <div className="flex items-center gap-2 bg-green-500/90 text-white px-3 py-1.5 rounded-full text-xs shadow-lg">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                        </span>
-                        Recording transcript...
-                    </div>
-                )
-            case "paused":
-                return (
-                    <div className="flex items-center gap-2 bg-yellow-500/90 text-white px-3 py-1.5 rounded-full text-xs shadow-lg">
-                        <MicOff className="size-3" />
-                        <span>Transcript paused</span>
-                        <button 
-                            onClick={handleManualStart}
-                            className="ml-1 bg-white/20 hover:bg-white/30 px-2 py-0.5 rounded text-[10px]"
-                        >
-                            Restart
-                        </button>
-                    </div>
-                )
-            case "error":
-                return (
-                    <div className="flex items-center gap-2 bg-red-500/90 text-white px-3 py-1.5 rounded-full text-xs shadow-lg max-w-md">
-                        <AlertCircle className="size-3 shrink-0" />
-                        <span className="truncate">{errorMessage}</span>
-                    </div>
-                )
-            case "unsupported":
-                return (
-                    <div className="flex items-center gap-2 bg-gray-500/90 text-white px-3 py-1.5 rounded-full text-xs shadow-lg">
-                        <AlertCircle className="size-3" />
-                        Browser doesn&apos;t support speech recognition
-                    </div>
-                )
-            case "starting":
-            default:
-                return (
-                    <div className="flex items-center gap-2 bg-blue-500/90 text-white px-3 py-1.5 rounded-full text-xs shadow-lg">
-                        <Mic className="size-3 animate-pulse" />
-                        Starting transcript...
-                    </div>
-                )
-        }
-    }
-
     return (
         <div className="h-full w-full relative">
             <VideoConference />
             <RoomAudioRenderer />
             
-            {/* Recording status indicator */}
             <div className="absolute top-4 left-4 z-50">
-                <StatusIndicator />
+                {status === "recording" && (
+                    <div className="flex items-center gap-2 bg-green-500/90 text-white px-3 py-1.5 rounded-full text-xs shadow-lg">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                        </span>
+                        Recording • {audioChunksSent} chunks
+                    </div>
+                )}
+                
+                {status === "starting" && (
+                    <div className="flex items-center gap-2 bg-blue-500/90 text-white px-3 py-1.5 rounded-full text-xs shadow-lg">
+                        <Mic className="size-3 animate-pulse" />
+                        Initializing...
+                    </div>
+                )}
+                
+                {status === "error" && (
+                    <div className="flex flex-col gap-2 bg-red-500/90 text-white p-3 rounded-lg text-xs shadow-lg max-w-sm">
+                        <div className="flex items-center gap-2">
+                            <AlertCircle className="size-4" />
+                            <span className="font-semibold">Error</span>
+                        </div>
+                        <p className="text-[11px]">{errorMessage}</p>
+                    </div>
+                )}
             </div>
 
-            {/* Debug info */}
-            <div className="absolute bottom-4 left-4 z-50 bg-black/70 text-white text-[10px] px-2 py-1 rounded font-mono max-w-xs">
-                Transcript: {transcriptRef.current.length} chars
+            <div className="absolute bottom-4 left-4 z-50 bg-black/80 text-white text-[10px] px-3 py-2 rounded font-mono">
+                <div>Status: <strong>{status}</strong></div>
+                <div>Chunks sent: <strong>{audioChunksSent}</strong></div>
+                <div>Transcript: <strong>{transcriptLength} chars</strong></div>
             </div>
         </div>
     )

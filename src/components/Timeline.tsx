@@ -110,7 +110,7 @@ export function WebflowXTimeline() {
   ];
 
   return (
-    <div className="relative w-full overflow-hidden">
+    <div id="timeline" className="relative w-full overflow-hidden">
       <Timeline data={data} />
     </div>
   );

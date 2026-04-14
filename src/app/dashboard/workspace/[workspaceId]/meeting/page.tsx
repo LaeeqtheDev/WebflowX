@@ -167,7 +167,31 @@ export default function MeetingPage() {
                 }
             } finally {
                 setIsGenerating(false)
-                setActiveMeetingId(null)
+                
+                // ✅ Wait for Convex to refetch and update the meeting data
+                // Check periodically until we see the updated meeting with endedAt
+                const checkInterval = setInterval(() => {
+                    const meeting = meetings?.find(m => m._id === meetingId)
+                    if (meeting?.endedAt) {
+                        // Meeting has been updated with endedAt timestamp
+                        clearInterval(checkInterval)
+                        setSelectedMeeting(meeting)
+                        setActiveMeetingId(null)
+                        console.log("✅ Auto-selected updated meeting for viewing")
+                    }
+                }, 500) // Check every 500ms
+                
+                // Safety timeout - stop checking after 5 seconds
+                setTimeout(() => {
+                    clearInterval(checkInterval)
+                    setActiveMeetingId(null)
+                    // Force select the meeting even if not updated yet
+                    const meeting = meetings?.find(m => m._id === meetingId)
+                    if (meeting) {
+                        setSelectedMeeting(meeting)
+                        console.log("⚠️ Force-selected meeting after timeout")
+                    }
+                }, 5000)
             }
         } else {
             console.log("No valid transcript captured")
@@ -181,9 +205,30 @@ export default function MeetingPage() {
             }
             
             toast.info("No transcript captured. You can add one manually from the meeting details.")
-            setActiveMeetingId(null)
+            
+            // ✅ Wait for Convex to refetch and update the meeting data
+            const checkInterval = setInterval(() => {
+                const meeting = meetings?.find(m => m._id === meetingId)
+                if (meeting?.endedAt) {
+                    clearInterval(checkInterval)
+                    setSelectedMeeting(meeting)
+                    setActiveMeetingId(null)
+                    console.log("✅ Auto-selected updated meeting for viewing")
+                }
+            }, 500)
+            
+            setTimeout(() => {
+                clearInterval(checkInterval)
+                setActiveMeetingId(null)
+                // Force select the meeting even if not updated yet
+                const meeting = meetings?.find(m => m._id === meetingId)
+                if (meeting) {
+                    setSelectedMeeting(meeting)
+                    console.log("⚠️ Force-selected meeting after timeout")
+                }
+            }, 5000)
         }
-    }, [activeMeetingId, endMeeting, saveSummary])
+    }, [activeMeetingId, endMeeting, saveSummary, meetings])
 
     // Active call
     if (token && serverUrl) {
