@@ -45,29 +45,34 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
   };
 
   return (
-    <Card className="w-full h-full p-12 border-2 drop-shadow-2xl relative">
+    <Card className="w-full h-full max-w-md mx-auto p-6 sm:p-8 md:p-12 border-2 drop-shadow-2xl relative">
       {/* Back Arrow */}
-      <Link href="/" className="absolute top-6 left-6 flex items-center gap-1 text-gray-500 hover:text-black">
-        <ArrowLeft size={20} />
+      <Link href="/" className="absolute top-4 left-4 sm:top-6 sm:left-6 flex items-center gap-1 text-gray-500 hover:text-black transition-colors">
+        <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
+        <span className="text-sm sm:text-base hidden xs:inline">Back</span>
       </Link>
 
-      <div className="flex gap-3 mx-auto items-center justify-center">
-        <div className="w-24 h-24 rounded-full items-center justify-center mx-auto flex">
-          <img src={"/logo.png"} alt="Logo" className="w-24 h-24 mb-0 mt-0 mx-auto" />
+      <div className="flex gap-3 mx-auto items-center justify-center mt-8 sm:mt-0">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full items-center justify-center mx-auto flex">
+          <img 
+            src={"/logo.png"} 
+            alt="Logo" 
+            className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mb-0 mt-0 mx-auto" 
+          />
         </div>
       </div>
 
-      <CardHeader className="px-0 pt-8">
-        <CardTitle>Sign Up to Continue</CardTitle>
-        <CardDescription>
+      <CardHeader className="px-0 pt-6 sm:pt-8 text-center sm:text-left">
+        <CardTitle className="text-xl sm:text-2xl">Sign Up to Continue</CardTitle>
+        <CardDescription className="text-sm sm:text-base">
           Use your email or another service to continue
         </CardDescription>
       </CardHeader>
 
       {!!error && (
-        <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive mb-3">
-          <TriangleAlert className="size-4" />
-          <p>{error}</p>
+        <div className="bg-destructive/15 p-3 rounded-md flex items-start sm:items-center gap-x-2 text-xs sm:text-sm text-destructive mb-3">
+          <TriangleAlert className="size-4 flex-shrink-0 mt-0.5 sm:mt-0" />
+          <p className="break-words">{error}</p>
         </div>
       )}
 
@@ -79,6 +84,7 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
             onChange={(e) => setName(e.target.value)}
             placeholder="Full Name"
             required
+            className="text-sm sm:text-base"
           />
 
           <Input
@@ -88,6 +94,7 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
             placeholder="Email"
             type="email"
             required
+            className="text-sm sm:text-base"
           />
 
           <Input
@@ -97,6 +104,7 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
             placeholder="Password"
             type="password"
             required
+            className="text-sm sm:text-base"
           />
 
           <Input
@@ -106,11 +114,12 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
             placeholder="Confirm Password"
             type="password"
             required
+            className="text-sm sm:text-base"
           />
 
           <Button
             type="submit"
-            className="w-full bg-black/70 hover:bg-black cursor-pointer"
+            className="w-full bg-black/70 hover:bg-black cursor-pointer text-sm sm:text-base"
             size="lg"
             disabled={pending}
           >
@@ -118,7 +127,14 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
           </Button>
         </form>
 
-        <Separator />
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <Separator className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 text-gray-500">Or continue with</span>
+          </div>
+        </div>
 
         <div className="flex flex-col gap-y-2.5">
           <Button
@@ -126,9 +142,9 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
             onClick={() => handleProviderSignIn("google")}
             variant="outline"
             size="lg"
-            className="w-full relative flex items-center justify-center gap-x-2.5 cursor-pointer"
+            className="w-full relative flex items-center justify-center gap-x-2.5 cursor-pointer text-sm sm:text-base"
           >
-            <FcGoogle size={20} />
+            <FcGoogle className="w-5 h-5" />
             Continue with Google
           </Button>
 
@@ -137,18 +153,18 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
             onClick={() => handleProviderSignIn("github")}
             variant="outline"
             size="lg"
-            className="w-full relative flex items-center justify-center gap-x-2.5 cursor-pointer"
+            className="w-full relative flex items-center justify-center gap-x-2.5 cursor-pointer text-sm sm:text-base"
           >
-            <FaGithub size={20} />
+            <FaGithub className="w-5 h-5" />
             Continue with Github
           </Button>
         </div>
 
-        <p>
+        <p className="text-center text-sm">
           Already have an account?{" "}
           <span
             onClick={() => setState("signIn")}
-            className="text-orange-600 hover:underline cursor-pointer"
+            className="text-orange-600 hover:underline cursor-pointer font-medium"
           >
             Sign In
           </span>

@@ -19,6 +19,7 @@ const PricingSection = () => {
         "Mobile app access",
       ],
       cta: "Get Started",
+      ctaLink: "/signup",
       popular: false,
     },
     {
@@ -36,6 +37,7 @@ const PricingSection = () => {
         "Advanced analytics",
       ],
       cta: "Start Free Trial",
+      ctaLink: "/signup?plan=pro",
       popular: true,
     },
     {
@@ -53,6 +55,7 @@ const PricingSection = () => {
         "On-premise deployment",
       ],
       cta: "Contact Sales",
+      ctaLink: "/contact-sales",
       popular: false,
     },
   ];
@@ -128,15 +131,17 @@ const PricingSection = () => {
                 </div>
 
                 {/* CTA Button */}
-                <Button
-                  className={`w-full mb-6 font-semibold py-3 sm:py-3.5 rounded-lg transition-all duration-300 ${
-                    plan.popular
-                      ? "bg-[#ff5018] hover:bg-[#ff5018]/90 text-white shadow-lg hover:shadow-xl"
-                      : "bg-white border-2 border-[#ff5018] text-[#ff5018] hover:bg-[#ff5018] hover:text-white"
-                  }`}
-                >
-                  {plan.cta}
-                </Button>
+                <a href={plan.ctaLink}>
+                  <Button
+                    className={`w-full mb-6 font-semibold py-3 sm:py-3.5 rounded-lg transition-all duration-300 ${
+                      plan.popular
+                        ? "bg-[#ff5018] hover:bg-[#ff5018]/90 text-white shadow-lg hover:shadow-xl"
+                        : "bg-white border-2 border-[#ff5018] text-[#ff5018] hover:bg-[#ff5018] hover:text-white"
+                    }`}
+                  >
+                    {plan.cta}
+                  </Button>
+                </a>
 
                 {/* Features List */}
                 <div className="space-y-3">
@@ -162,9 +167,11 @@ const PricingSection = () => {
           <p className="text-sm sm:text-base text-gray-600 mb-4">
             Need a custom solution for your organization?
           </p>
-          <Button className="bg-white border-2 border-[#ff5018] text-[#ff5018] hover:bg-[#ff5018] hover:text-white font-semibold px-6 sm:px-8 py-3 rounded-lg transition-all">
-            Talk to Sales
-          </Button>
+          <a href="/contact-sales">
+            <Button className="bg-white border-2 border-[#ff5018] text-[#ff5018] hover:bg-[#ff5018] hover:text-white font-semibold px-6 sm:px-8 py-3 rounded-lg transition-all">
+              Talk to Sales
+            </Button>
+          </a>
         </div>
       </div>
     </section>

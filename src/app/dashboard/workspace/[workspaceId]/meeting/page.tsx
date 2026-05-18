@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
-import { Loader, Video, Plus, Sparkles, Clock, Users, AlertTriangle } from "lucide-react"
+import { Loader, Video, Plus, Sparkles, Clock, Users, AlertTriangle, ArrowLeft } from "lucide-react"
 import { useMutation } from "convex/react"
 import { api } from "../../../../../../convex/_generated/api"
 import { Id } from "../../../../../../convex/_generated/dataModel"
@@ -45,6 +45,7 @@ export default function MeetingPage() {
     const [isGenerating, setIsGenerating] = useState(false)
     const [selectedMeeting, setSelectedMeeting] = useState<any>(null)
     const [generationError, setGenerationError] = useState<string | null>(null)
+    const [showMobileDetail, setShowMobileDetail] = useState(false)
 
     const currentUserName = members?.find(m => m._id === currentMember?._id)?.user.name ?? "Someone"
 
@@ -120,7 +121,6 @@ export default function MeetingPage() {
         setServerUrl(null)
         setGenerationError(null)
 
-        // Check if we have a meaningful transcript
         const hasValidTranscript = transcript && transcript.trim().length > 20
 
         if (hasValidTranscript) {
@@ -157,7 +157,6 @@ export default function MeetingPage() {
                 setGenerationError(e.message || "Failed to generate summary")
                 toast.error("Failed to generate summary. You can add it manually later.")
                 
-                // Still save the transcript even if summary failed
                 if (meetingId) {
                     await saveSummary({
                         id: meetingId,
@@ -168,24 +167,19 @@ export default function MeetingPage() {
             } finally {
                 setIsGenerating(false)
                 
-                // ✅ Wait for Convex to refetch and update the meeting data
-                // Check periodically until we see the updated meeting with endedAt
                 const checkInterval = setInterval(() => {
                     const meeting = meetings?.find(m => m._id === meetingId)
                     if (meeting?.endedAt) {
-                        // Meeting has been updated with endedAt timestamp
                         clearInterval(checkInterval)
                         setSelectedMeeting(meeting)
                         setActiveMeetingId(null)
                         console.log("✅ Auto-selected updated meeting for viewing")
                     }
-                }, 500) // Check every 500ms
+                }, 500)
                 
-                // Safety timeout - stop checking after 5 seconds
                 setTimeout(() => {
                     clearInterval(checkInterval)
                     setActiveMeetingId(null)
-                    // Force select the meeting even if not updated yet
                     const meeting = meetings?.find(m => m._id === meetingId)
                     if (meeting) {
                         setSelectedMeeting(meeting)
@@ -206,7 +200,6 @@ export default function MeetingPage() {
             
             toast.info("No transcript captured. You can add one manually from the meeting details.")
             
-            // ✅ Wait for Convex to refetch and update the meeting data
             const checkInterval = setInterval(() => {
                 const meeting = meetings?.find(m => m._id === meetingId)
                 if (meeting?.endedAt) {
@@ -220,7 +213,6 @@ export default function MeetingPage() {
             setTimeout(() => {
                 clearInterval(checkInterval)
                 setActiveMeetingId(null)
-                // Force select the meeting even if not updated yet
                 const meeting = meetings?.find(m => m._id === meetingId)
                 if (meeting) {
                     setSelectedMeeting(meeting)
@@ -229,6 +221,16 @@ export default function MeetingPage() {
             }, 5000)
         }
     }, [activeMeetingId, endMeeting, saveSummary, meetings])
+
+    const handleSelectMeeting = (meeting: any) => {
+        setSelectedMeeting(meeting)
+        setShowMobileDetail(true)
+    }
+
+    const handleBackToList = () => {
+        setShowMobileDetail(false)
+        setSelectedMeeting(null)
+    }
 
     // Active call
     if (token && serverUrl) {
@@ -246,10 +248,10 @@ export default function MeetingPage() {
     // Generating summary screen
     if (isGenerating) {
         return (
-            <div className="h-full flex items-center justify-center flex-col gap-4">
+            <div className="h-full flex items-center justify-center flex-col gap-4 px-4">
                 <Sparkles className="size-8 text-[#ff5018] animate-pulse" />
-                <p className="text-sm font-medium">Generating AI summary...</p>
-                <p className="text-xs text-muted-foreground">This will just take a moment</p>
+                <p className="text-sm font-medium text-center">Generating AI summary...</p>
+                <p className="text-xs text-muted-foreground text-center">This will just take a moment</p>
             </div>
         )
     }
@@ -257,31 +259,42 @@ export default function MeetingPage() {
     return (
         <div className="h-full flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b shrink-0">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b shrink-0">
                 <div className="flex items-center gap-2">
-                    <Video className="size-5 text-[#ff5018]" />
-                    <h1 className="text-lg font-bold">Meetings</h1>
+                    {showMobileDetail && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="md:hidden -ml-2 h-7 px-2"
+                            onClick={handleBackToList}
+                        >
+                            <ArrowLeft className="size-4" />
+                        </Button>
+                    )}
+                    <Video className="size-4 sm:size-5 text-[#ff5018]" />
+                    <h1 className="text-base sm:text-lg font-bold">Meetings</h1>
                 </div>
                 <Button
                     onClick={() => setShowCreate(true)}
-                    className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white h-8 text-xs"
+                    className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white h-7 sm:h-8 text-[11px] sm:text-xs px-2 sm:px-3"
                 >
-                    <Plus className="size-4 mr-1" /> New Meeting
+                    <Plus className="size-3.5 sm:size-4 sm:mr-1" /> 
+                    <span className="hidden sm:inline">New Meeting</span>
                 </Button>
             </div>
 
             {/* Error banner */}
             {generationError && (
-                <div className="mx-6 mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                <div className="mx-4 sm:mx-6 mt-3 sm:mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
                     <AlertTriangle className="size-4 text-amber-600 shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                        <p className="text-sm font-medium text-amber-800">Summary generation had an issue</p>
-                        <p className="text-xs text-amber-600 mt-0.5">{generationError}</p>
-                        <p className="text-xs text-amber-600 mt-1">You can add a transcript manually from the meeting details.</p>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm font-medium text-amber-800">Summary generation had an issue</p>
+                        <p className="text-[10px] sm:text-xs text-amber-600 mt-0.5">{generationError}</p>
+                        <p className="text-[10px] sm:text-xs text-amber-600 mt-1">You can add a transcript manually from the meeting details.</p>
                     </div>
                     <button 
                         onClick={() => setGenerationError(null)}
-                        className="text-amber-600 hover:text-amber-800"
+                        className="text-amber-600 hover:text-amber-800 text-lg shrink-0"
                     >
                         ×
                     </button>
@@ -295,23 +308,26 @@ export default function MeetingPage() {
                         <Loader className="size-6 animate-spin text-[#ff5018]" />
                     </div>
                 ) : meetings?.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-                        <Video className="size-12" />
-                        <p className="text-sm">No meetings yet</p>
+                    <div className="flex-1 flex flex-col items-center justify-center gap-3 text-muted-foreground px-4">
+                        <Video className="size-10 sm:size-12" />
+                        <p className="text-sm text-center">No meetings yet</p>
                         <Button onClick={() => setShowCreate(true)} variant="outline" size="sm">
                             <Plus className="size-4 mr-1" /> Start a Meeting
                         </Button>
                     </div>
                 ) : (
                     <>
-                        {/* Left panel: meeting list */}
-                        <div className="w-72 border-r flex flex-col overflow-y-auto shrink-0">
+                        {/* Left panel: meeting list - Hidden on mobile when detail is shown */}
+                        <div className={cn(
+                            "w-full md:w-72 border-r flex flex-col overflow-y-auto shrink-0",
+                            showMobileDetail && "hidden md:flex"
+                        )}>
                             {meetings?.map(meeting => (
                                 <div
                                     key={meeting._id}
-                                    onClick={() => setSelectedMeeting(meeting)}
+                                    onClick={() => handleSelectMeeting(meeting)}
                                     className={cn(
-                                        "flex flex-col gap-1 px-4 py-3 border-b cursor-pointer hover:bg-muted/40 transition-colors",
+                                        "flex flex-col gap-1 px-3 sm:px-4 py-3 border-b cursor-pointer hover:bg-muted/40 transition-colors",
                                         selectedMeeting?._id === meeting._id && "bg-muted/60 border-l-2 border-l-[#ff5018]"
                                     )}
                                 >
@@ -323,7 +339,7 @@ export default function MeetingPage() {
                                             </Badge>
                                         )}
                                     </div>
-                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                                         <span className="flex items-center gap-1">
                                             <Clock className="size-3" />
                                             {format(meeting.startedAt, "MMM d · h:mm a")}
@@ -347,15 +363,18 @@ export default function MeetingPage() {
                             ))}
                         </div>
 
-                        {/* Right panel: meeting detail */}
-                        <div className="flex-1 overflow-y-auto p-6">
+                        {/* Right panel: meeting detail - Full screen on mobile when shown */}
+                        <div className={cn(
+                            "flex-1 overflow-y-auto p-4 sm:p-6",
+                            !showMobileDetail && !selectedMeeting && "hidden md:block"
+                        )}>
                             {selectedMeeting ? (
                                 <div className="flex flex-col gap-4">
                                     {/* Meeting header */}
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <h2 className="text-xl font-bold">{selectedMeeting.title}</h2>
-                                            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
+                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <h2 className="text-lg sm:text-xl font-bold break-words">{selectedMeeting.title}</h2>
+                                            <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
                                                 <span className="flex items-center gap-1">
                                                     <Clock className="size-3" />
                                                     {format(selectedMeeting.startedAt, "MMM d, yyyy · h:mm a")}
@@ -376,7 +395,7 @@ export default function MeetingPage() {
                                         {!selectedMeeting.endedAt && (
                                             <Button
                                                 onClick={() => handleJoin(selectedMeeting.roomName, selectedMeeting._id)}
-                                                className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white h-8 text-xs shrink-0"
+                                                className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white h-7 sm:h-8 text-xs shrink-0 w-full sm:w-auto"
                                             >
                                                 <Video className="size-3.5 mr-1" /> Join Meeting
                                             </Button>
@@ -387,9 +406,9 @@ export default function MeetingPage() {
                                     <MeetingSummary meeting={selectedMeeting} />
                                 </div>
                             ) : (
-                                <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
+                                <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3 px-4">
                                     <Video className="size-10" />
-                                    <p className="text-sm">Select a meeting to view details</p>
+                                    <p className="text-sm text-center">Select a meeting to view details</p>
                                 </div>
                             )}
                         </div>
@@ -399,9 +418,9 @@ export default function MeetingPage() {
 
             {/* Create dialog */}
             <Dialog open={showCreate} onOpenChange={setShowCreate}>
-                <DialogContent className="max-w-sm">
+                <DialogContent className="max-w-sm mx-4">
                     <DialogHeader>
-                        <DialogTitle>Start a Meeting</DialogTitle>
+                        <DialogTitle className="text-base sm:text-lg">Start a Meeting</DialogTitle>
                     </DialogHeader>
                     <div className="flex flex-col gap-3 mt-2">
                         <Input
@@ -409,6 +428,7 @@ export default function MeetingPage() {
                             value={title}
                             onChange={e => setTitle(e.target.value)}
                             onKeyDown={e => e.key === "Enter" && handleCreate()}
+                            className="text-sm"
                         />
                         <div>
                             <label className="text-xs text-muted-foreground mb-1 block">
@@ -434,7 +454,7 @@ export default function MeetingPage() {
                         <Button
                             onClick={handleCreate}
                             disabled={isCreating}
-                            className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white"
+                            className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white text-sm"
                         >
                             {isCreating
                                 ? <Loader className="size-4 animate-spin" />

@@ -133,9 +133,9 @@ export default function DocPage() {
 
     if (!doc) {
         return (
-            <div className="h-full flex flex-col items-center justify-center gap-3 text-muted-foreground bg-gray-50">
+            <div className="h-full flex flex-col items-center justify-center gap-3 text-muted-foreground bg-gray-50 px-4">
                 <FileText className="size-10" />
-                <p className="text-sm">Document not found</p>
+                <p className="text-sm text-center">Document not found</p>
                 <Button
                     variant="outline"
                     size="sm"
@@ -150,35 +150,37 @@ export default function DocPage() {
     return (
         <div className="h-full flex flex-col overflow-hidden bg-gray-50">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-3 border-b bg-white shrink-0 shadow-sm">
-                <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 border-b bg-white shrink-0 shadow-sm gap-2">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground"
+                        className="h-6 sm:h-7 text-[11px] sm:text-xs gap-1 text-muted-foreground hover:text-foreground px-2 shrink-0"
                         onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}
                     >
-                        <ArrowLeft className="size-3.5" /> Docs
+                        <ArrowLeft className="size-3 sm:size-3.5" /> 
+                        <span className="hidden xs:inline">Docs</span>
                     </Button>
-                    <span className="text-muted-foreground">/</span>
-                    <div className="flex items-center gap-2">
-                        <div className={`size-6 rounded flex items-center justify-center ${doc.type === "spreadsheet" ? "bg-green-50" : "bg-blue-50"}`}>
+                    <span className="text-muted-foreground hidden xs:inline">/</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                        <div className={`size-5 sm:size-6 rounded flex items-center justify-center shrink-0 ${doc.type === "spreadsheet" ? "bg-green-50" : "bg-blue-50"}`}>
                             {doc.type === "spreadsheet"
-                                ? <FileSpreadsheet className="size-3.5 text-green-600" />
-                                : <FileText className="size-3.5 text-blue-500" />
+                                ? <FileSpreadsheet className="size-3 sm:size-3.5 text-green-600" />
+                                : <FileText className="size-3 sm:size-3.5 text-blue-500" />
                             }
                         </div>
-                        <span className="text-sm font-semibold">{doc.title}</span>
+                        <span className="text-xs sm:text-sm font-semibold truncate">{doc.title}</span>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                     <DropdownMenu open={showShareDialog} onOpenChange={setShowShareDialog}>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
-                                <Share2 className="size-3.5" /> Share
+                            <Button variant="outline" size="sm" className="h-6 sm:h-7 text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2 sm:px-3">
+                                <Share2 className="size-3 sm:size-3.5" /> 
+                                <span className="hidden xs:inline">Share</span>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56 p-3">
+                        <DropdownMenuContent align="end" className="w-52 sm:w-56 p-3">
                             <p className="text-xs font-semibold mb-2">Share to channel</p>
                             <Select value={shareChannelId} onValueChange={setShareChannelId}>
                                 <SelectTrigger className="h-7 text-xs mb-2">
@@ -206,9 +208,10 @@ export default function DocPage() {
                         onClick={handleDownloadPdf}
                         variant="outline"
                         size="sm"
-                        className="h-7 text-xs gap-1.5"
+                        className="h-6 sm:h-7 text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2 sm:px-3"
                     >
-                        <Download className="size-3.5" /> PDF
+                        <Download className="size-3 sm:size-3.5" /> 
+                        <span className="hidden xs:inline">PDF</span>
                     </Button>
                 </div>
             </div>

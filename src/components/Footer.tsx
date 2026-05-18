@@ -11,11 +11,11 @@ export default function Footer() {
         * { font-family: 'Poppins', sans-serif; }
       `}</style>
 
-      <footer className="w-full bg-black text-gray-400 overflow-x-hidden">
+      <footer className="w-full bg-black text-gray-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-16 py-12 sm:py-16 lg:py-20">
           
           {/* Main Footer Content */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
             
             {/* Logo & Description - Spans 2 columns on large screens */}
             <div className="lg:col-span-2">
@@ -33,18 +33,18 @@ export default function Footer() {
                 Making every customer feel valued—no matter the size of your audience.
               </p>
               
-              {/* Socials - Mobile at bottom, Desktop here */}
-              <div className="hidden md:flex items-center gap-4 text-sm">
-                <Link href="#" aria-label="Dribbble" className="hover:text-[#ff5018] transition-colors">
+              {/* Socials - Desktop */}
+              <div className="hidden sm:flex items-center gap-4 text-sm">
+                <Link href="https://dribbble.com" target="_blank" rel="noopener noreferrer" aria-label="Dribbble" className="hover:text-[#ff5018] transition-colors">
                   Dribbble
                 </Link>
-                <Link href="#" aria-label="LinkedIn" className="hover:text-[#ff5018] transition-colors">
+                <Link href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-[#ff5018] transition-colors">
                   LinkedIn
                 </Link>
-                <Link href="#" aria-label="X" className="hover:text-[#ff5018] transition-colors">
+                <Link href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="X" className="hover:text-[#ff5018] transition-colors">
                   X
                 </Link>
-                <Link href="#" aria-label="YouTube" className="hover:text-[#ff5018] transition-colors">
+                <Link href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="hover:text-[#ff5018] transition-colors">
                   YouTube
                 </Link>
               </div>
@@ -60,17 +60,17 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/" className="hover:text-[#ff5018] transition-colors inline-block">
+                  <Link href="/support" className="hover:text-[#ff5018] transition-colors inline-block">
                     Support
                   </Link>
                 </li>
                 <li>
-                  <Link href="/" className="hover:text-[#ff5018] transition-colors inline-block">
+                  <Link href="#pricing" className="hover:text-[#ff5018] transition-colors inline-block">
                     Pricing
                   </Link>
                 </li>
                 <li>
-                  <Link href="/" className="hover:text-[#ff5018] transition-colors inline-block">
+                  <Link href="/affiliate" className="hover:text-[#ff5018] transition-colors inline-block">
                     Affiliate
                   </Link>
                 </li>
@@ -82,22 +82,22 @@ export default function Footer() {
               <p className="text-white font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Resources</p>
               <ul className="space-y-2 sm:space-y-2.5 text-xs sm:text-sm">
                 <li>
-                  <Link href="/" className="hover:text-[#ff5018] transition-colors inline-block">
+                  <Link href="/company" className="hover:text-[#ff5018] transition-colors inline-block">
                     Company
                   </Link>
                 </li>
                 <li>
-                  <Link href="/" className="hover:text-[#ff5018] transition-colors inline-block">
+                  <Link href="/blogs" className="hover:text-[#ff5018] transition-colors inline-block">
                     Blogs
                   </Link>
                 </li>
                 <li>
-                  <Link href="/" className="hover:text-[#ff5018] transition-colors inline-block">
+                  <Link href="/community" className="hover:text-[#ff5018] transition-colors inline-block">
                     Community
                   </Link>
                 </li>
                 <li>
-                  <Link href="/" className="hover:text-[#ff5018] transition-colors inline-flex items-center gap-2 flex-wrap">
+                  <Link href="/careers" className="hover:text-[#ff5018] transition-colors inline-flex items-center gap-2 flex-wrap">
                     Careers
                     <span className="text-[10px] sm:text-xs px-2 py-0.5 sm:py-1 rounded-md bg-orange-500/40 text-white whitespace-nowrap">
                       We're hiring!
@@ -105,7 +105,7 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/" className="hover:text-[#ff5018] transition-colors inline-block">
+                  <Link href="/about" className="hover:text-[#ff5018] transition-colors inline-block">
                     About
                   </Link>
                 </li>
@@ -117,12 +117,12 @@ export default function Footer() {
               <p className="text-white font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Legal</p>
               <ul className="space-y-2 sm:space-y-2.5 text-xs sm:text-sm">
                 <li>
-                  <Link href="/" className="hover:text-[#ff5018] transition-colors inline-block">
+                  <Link href="/privacy" className="hover:text-[#ff5018] transition-colors inline-block">
                     Privacy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/" className="hover:text-[#ff5018] transition-colors inline-block">
+                  <Link href="/terms" className="hover:text-[#ff5018] transition-colors inline-block">
                     Terms
                   </Link>
                 </li>
@@ -131,17 +131,17 @@ export default function Footer() {
           </div>
 
           {/* Socials - Mobile Only */}
-          <div className="md:hidden flex flex-wrap items-center justify-center gap-4 mt-8 text-sm">
-            <Link href="#" aria-label="Dribbble" className="hover:text-[#ff5018] transition-colors">
+          <div className="sm:hidden flex flex-wrap items-center justify-center gap-4 mt-8 text-sm">
+            <Link href="https://dribbble.com" target="_blank" rel="noopener noreferrer" aria-label="Dribbble" className="hover:text-[#ff5018] transition-colors">
               Dribbble
             </Link>
-            <Link href="#" aria-label="LinkedIn" className="hover:text-[#ff5018] transition-colors">
+            <Link href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-[#ff5018] transition-colors">
               LinkedIn
             </Link>
-            <Link href="#" aria-label="X" className="hover:text-[#ff5018] transition-colors">
+            <Link href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="X" className="hover:text-[#ff5018] transition-colors">
               X
             </Link>
-            <Link href="#" aria-label="YouTube" className="hover:text-[#ff5018] transition-colors">
+            <Link href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="hover:text-[#ff5018] transition-colors">
               YouTube
             </Link>
           </div>

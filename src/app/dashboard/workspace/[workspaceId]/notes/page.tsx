@@ -6,7 +6,7 @@ import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { Id } from "../../../../../../convex/_generated/dataModel"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Pin, PinOff, Pencil, Trash2, Plus, Loader, FileText, Users } from "lucide-react"
+import { Pin, PinOff, Pencil, Trash2, Plus, Loader, FileText, Users, ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { quillToText } from "@/features/messages/lib/quill-to-text"
@@ -41,6 +41,7 @@ export default function NotesPage() {
     const [newBody, setNewBody] = useState("")
     const [editTitle, setEditTitle] = useState("")
     const [editBody, setEditBody] = useState("")
+    const [showMobileEditor, setShowMobileEditor] = useState(false)
 
     const { data: notes, isLoading } = useGetNotes({ workspaceId, type: tab })
     const { mutate: createNote, isPending: isCreatingNote } = useCreateNote()
@@ -57,6 +58,7 @@ export default function NotesPage() {
                 setIsCreating(false)
                 setNewTitle("")
                 setNewBody("")
+                setShowMobileEditor(false)
                 toast.success("Note created")
             },
             onError: () => toast.error("Failed to create note")
@@ -68,6 +70,7 @@ export default function NotesPage() {
         setEditTitle(note.title)
         setEditBody(quillToText(note.body))
         setIsCreating(false)
+        setShowMobileEditor(true)
     }
 
     const handleUpdate = () => {
@@ -81,7 +84,10 @@ export default function NotesPage() {
     const handleDelete = (id: Id<"notes">) => {
         removeNote(id, {
             onSuccess: () => {
-                if (selectedNote?._id === id) setSelectedNote(null)
+                if (selectedNote?._id === id) {
+                    setSelectedNote(null)
+                    setShowMobileEditor(false)
+                }
                 toast.success("Note deleted")
             },
             onError: (e) => toast.error(e.message)
@@ -111,14 +117,29 @@ export default function NotesPage() {
         return (b.updatedAt ?? 0) - (a.updatedAt ?? 0)
     })
 
+    const handleBackToList = () => {
+        setShowMobileEditor(false)
+        setIsCreating(false)
+        setSelectedNote(null)
+    }
+
+    const handleNewNote = () => {
+        setIsCreating(true)
+        setSelectedNote(null)
+        setShowMobileEditor(true)
+    }
+
     return (
         <div className="h-full flex">
-            {/* LEFT: Notes list */}
-            <div className="w-72 border-r flex flex-col h-full">
+            {/* LEFT: Notes list - Hidden on mobile when editor is shown */}
+            <div className={cn(
+                "w-full md:w-72 border-r flex flex-col h-full",
+                showMobileEditor && "hidden md:flex"
+            )}>
                 {/* Tabs */}
                 <div className="flex border-b">
                     <button
-                        onClick={() => { setTab("personal"); setSelectedNote(null); setIsCreating(false) }}
+                        onClick={() => { setTab("personal"); setSelectedNote(null); setIsCreating(false); setShowMobileEditor(false) }}
                         className={cn(
                             "flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium transition-colors",
                             tab === "personal"
@@ -126,10 +147,11 @@ export default function NotesPage() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        <FileText className="size-4" /> Personal
+                        <FileText className="size-4" /> 
+                        <span className="hidden sm:inline">Personal</span>
                     </button>
                     <button
-                        onClick={() => { setTab("workspace"); setSelectedNote(null); setIsCreating(false) }}
+                        onClick={() => { setTab("workspace"); setSelectedNote(null); setIsCreating(false); setShowMobileEditor(false) }}
                         className={cn(
                             "flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium transition-colors",
                             tab === "workspace"
@@ -137,14 +159,15 @@ export default function NotesPage() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        <Users className="size-4" /> Workspace
+                        <Users className="size-4" /> 
+                        <span className="hidden sm:inline">Workspace</span>
                     </button>
                 </div>
 
                 {/* New note button */}
                 <div className="p-3 border-b">
                     <Button
-                        onClick={() => { setIsCreating(true); setSelectedNote(null) }}
+                        onClick={handleNewNote}
                         className="w-full bg-[#ff5018]/80 hover:bg-[#ff5018] text-white"
                         size="sm"
                     >
@@ -159,9 +182,9 @@ export default function NotesPage() {
                             <Loader className="size-5 animate-spin text-[#ff5018]" />
                         </div>
                     ) : sortedNotes.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
+                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2 p-4">
                             <FileText className="size-8" />
-                            <p className="text-sm">No notes yet</p>
+                            <p className="text-sm text-center">No notes yet</p>
                         </div>
                     ) : (
                         sortedNotes.map((note) => (
@@ -213,19 +236,43 @@ export default function NotesPage() {
                 </div>
             </div>
 
-            {/* RIGHT: Editor */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden">
+            {/* RIGHT: Editor - Full screen on mobile when shown */}
+            <div className={cn(
+                "flex-1 flex flex-col h-full overflow-hidden",
+                !showMobileEditor && !isCreating && "hidden md:flex"
+            )}>
                 {isCreating ? (
-                    <div className="flex flex-col h-full p-6 gap-4">
+                    <div className="flex flex-col h-full p-4 sm:p-6 gap-4">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold">New {tab === "personal" ? "Personal" : "Workspace"} Note</h2>
-                            <Button variant="ghost" size="sm" onClick={() => setIsCreating(false)}>Cancel</Button>
+                            <div className="flex items-center gap-2">
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="md:hidden -ml-2"
+                                    onClick={handleBackToList}
+                                >
+                                    <ArrowLeft className="size-4" />
+                                </Button>
+                                <h2 className="text-base sm:text-lg font-semibold">
+                                    New {tab === "personal" ? "Personal" : "Workspace"} Note
+                                </h2>
+                            </div>
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => {
+                                    setIsCreating(false)
+                                    setShowMobileEditor(false)
+                                }}
+                            >
+                                Cancel
+                            </Button>
                         </div>
                         <Input
                             placeholder="Note title..."
                             value={newTitle}
                             onChange={(e) => setNewTitle(e.target.value)}
-                            className="text-xl font-semibold border-none shadow-none focus-visible:ring-0 px-0 h-auto"
+                            className="text-lg sm:text-xl font-semibold border-none shadow-none focus-visible:ring-0 px-0 h-auto"
                         />
                         <textarea
                             placeholder="Start writing..."
@@ -244,18 +291,30 @@ export default function NotesPage() {
                         </div>
                     </div>
                 ) : selectedNote ? (
-                    <div className="flex flex-col h-full p-6 gap-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                {selectedNote.isPinned && <Pin className="size-4 text-[#ff5018]" />}
-                                <span className="text-xs text-muted-foreground capitalize">{selectedNote.type} note</span>
+                    <div className="flex flex-col h-full p-4 sm:p-6 gap-4">
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="md:hidden -ml-2 shrink-0"
+                                    onClick={handleBackToList}
+                                >
+                                    <ArrowLeft className="size-4" />
+                                </Button>
+                                <div className="flex items-center gap-2 min-w-0">
+                                    {selectedNote.isPinned && <Pin className="size-4 text-[#ff5018] shrink-0" />}
+                                    <span className="text-xs text-muted-foreground capitalize truncate">
+                                        {selectedNote.type} note
+                                    </span>
+                                </div>
                             </div>
                             {canEdit(selectedNote) && (
                                 <Button
                                     size="sm"
                                     onClick={handleUpdate}
                                     disabled={isUpdatingNote}
-                                    className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white"
+                                    className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white shrink-0"
                                 >
                                     {isUpdatingNote
                                         ? <Loader className="size-4 animate-spin" />
@@ -267,7 +326,7 @@ export default function NotesPage() {
                             value={editTitle}
                             onChange={(e) => setEditTitle(e.target.value)}
                             disabled={!canEdit(selectedNote)}
-                            className="text-xl font-semibold border-none shadow-none focus-visible:ring-0 px-0 h-auto"
+                            className="text-lg sm:text-xl font-semibold border-none shadow-none focus-visible:ring-0 px-0 h-auto"
                         />
                         <textarea
                             value={editBody}
@@ -277,11 +336,11 @@ export default function NotesPage() {
                         />
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
+                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3 p-4">
                         <FileText className="size-12" />
-                        <p className="text-sm">Select a note or create a new one</p>
+                        <p className="text-sm text-center">Select a note or create a new one</p>
                         <Button
-                            onClick={() => setIsCreating(true)}
+                            onClick={handleNewNote}
                             variant="outline"
                             size="sm"
                         >

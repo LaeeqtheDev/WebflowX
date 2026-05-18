@@ -12,8 +12,6 @@ const Hero: React.FC = () => {
     "Launch your Ideas to the World.",
   ];
 
-  const longestPhrase = "Collaborate Seamlessly with your Team.";
-
   const [currentText, setCurrentText] = useState("");
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
@@ -43,7 +41,7 @@ const Hero: React.FC = () => {
     }, speed);
 
     return () => clearTimeout(timeout);
-  }, [charIndex, deleting, phraseIndex]);
+  }, [charIndex, deleting, phraseIndex, phrases]);
 
   return (
     <section className="" id="hero">
@@ -76,16 +74,20 @@ const Hero: React.FC = () => {
 
             {/* Mobile: row buttons, Desktop: same as before */}
             <div className="flex flex-row md:flex-row gap-3 md:gap-4 mt-2 md:mt-4">
-              <Button className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border-3 border-black text-black hover:text-white hover:bg-black px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-semibold cursor-pointer text-sm md:text-base">
-                Get Started Free <HiArrowNarrowRight size={20} className="hidden sm:block" />
-              </Button>
+              <a href="/signup" className="flex-1 md:flex-none">
+                <Button className="w-full flex items-center justify-center gap-2 bg-white border-3 border-black text-black hover:text-white hover:bg-black px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-semibold cursor-pointer text-sm md:text-base">
+                  Get Started Free <HiArrowNarrowRight size={20} className="hidden sm:block" />
+                </Button>
+              </a>
 
-              <Button
-                variant="outline"
-                className="flex-1 md:flex-none flex items-center justify-center gap-2 border-2 border-[#ff5018] text-orange-600 hover:bg-[#ff5018] hover:text-white px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-semibold text-sm md:text-base"
-              >
-                Learn More <HiArrowNarrowRight size={20} className="hidden sm:block" />
-              </Button>
+              <a href="#pricing" className="flex-1 md:flex-none">
+                <Button
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2 border-2 border-[#ff5018] text-orange-600 hover:bg-[#ff5018] hover:text-white px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-semibold text-sm md:text-base"
+                >
+                  Learn More <HiArrowNarrowRight size={20} className="hidden sm:block" />
+                </Button>
+              </a>
             </div>
           </div>
 

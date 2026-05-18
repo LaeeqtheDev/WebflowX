@@ -99,7 +99,6 @@ export const FAQSection = () => {
               />
             </span>
           </h2>
-         
         </div>
 
         {/* Accordion */}
@@ -123,7 +122,7 @@ export const FAQSection = () => {
                       {item.icon}
                     </div>
                     {/* Question */}
-                    <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 group-hover:text-[#ff5018] transition-colors truncate">
+                    <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 group-hover:text-[#ff5018] transition-colors break-words">
                       {item.question}
                     </span>
                   </div>
@@ -160,7 +159,7 @@ export const FAQSection = () => {
             Still have questions? We're here to help!
           </p>
           <a
-            href="#contact"
+            href="/contact"
             className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 bg-[#ff5018] hover:bg-[#ff5018]/90 text-white font-semibold rounded-lg sm:rounded-xl transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
           >
             <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
