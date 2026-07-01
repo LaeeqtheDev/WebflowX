@@ -1,5 +1,6 @@
 declare module '*.css';
 
+//file for the global definition
 
 // global.d.ts
 declare module "@material-tailwind/react" {
