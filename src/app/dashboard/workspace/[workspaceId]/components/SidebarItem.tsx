@@ -1,19 +1,18 @@
 "use client"
 import { Button } from "@/components/ui/button";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
-import { LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { IconType } from "react-icons/lib";
+import type { ComponentType } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const sidebarItemVariants = cva(
-    "flex items-center gap-1.5 justify-start font-normal h-7 px-[18px] text-sm overflow-hidden rounded-md transition-colors",
+    "flex items-center gap-2 justify-start font-normal h-8 px-3 text-sm overflow-hidden rounded-lg transition-colors",
     {
         variants: {
             variant: {
                 default: "text-white/75 hover:text-white hover:bg-white/10",
-                active: "text-[#1b1017] font-medium bg-[#f7f2ee] hover:bg-[#f7f2ee]",
+                active: "text-white font-semibold bg-[#ff5018] hover:bg-[#ff5018] shadow-[0_6px_14px_-8px_rgba(255,80,24,0.9)]",
             },
         },
         defaultVariants: {
@@ -25,7 +24,7 @@ const sidebarItemVariants = cva(
 interface SidebarItemProps {
     label: string;
     id: string;
-    icon: LucideIcon | IconType
+    icon: ComponentType<{ className?: string }>
     variant?: VariantProps<typeof sidebarItemVariants>["variant"]
     onClick?: () => void
 }
@@ -41,7 +40,7 @@ export const SidebarItem = ({ label, id, icon: Icon, variant, onClick }: Sidebar
                 className={cn(sidebarItemVariants({ variant }))}
                 onClick={onClick}
             >
-                <Icon className="text-[#ff5018] size-3.5 mr-1 shrink-0" />
+                <Icon className="size-[18px] shrink-0 opacity-90" />
                 <span className="text-sm truncate">{label}</span>
             </Button>
         )
@@ -50,7 +49,7 @@ export const SidebarItem = ({ label, id, icon: Icon, variant, onClick }: Sidebar
     return (
         <Button asChild variant={"trasnparent"} size={"sm"} className={cn(sidebarItemVariants({ variant }))}>
             <Link href={`/dashboard/workspace/${workspaceId}/channel/${id}`}>
-                <Icon className="text-[#ff5018] size-3.5 mr-1 shrink-0" />
+                <Icon className="size-[18px] shrink-0 opacity-90" />
                 <span className="text-sm truncate">{label}</span>
             </Link>
         </Button>

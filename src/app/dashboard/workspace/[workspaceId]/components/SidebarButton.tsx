@@ -1,10 +1,11 @@
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { LucideIcon } from "lucide-react"
-import { IconType } from "react-icons/lib"
+import type { ComponentType } from "react"
+
+type IconLike = ComponentType<{ className?: string }>
 
 interface SidebarButtonProps {
-    icon: LucideIcon | IconType
+    icon: IconLike
+    activeIcon?: IconLike
     label: string
     isActive?: boolean
     onClick?: () => void
@@ -13,32 +14,44 @@ interface SidebarButtonProps {
 
 export const SidebarButton = ({
     icon: Icon,
+    activeIcon: ActiveIcon,
     label,
     isActive,
     onClick,
     badge,
 }: SidebarButtonProps) => {
+    const Shown = isActive && ActiveIcon ? ActiveIcon : Icon
     return (
-        <div className="cursor-pointer group relative" onClick={onClick}>
-            <Button
-                variant={"trasnparent"}
+        <button
+            type="button"
+            onClick={onClick}
+            aria-label={label}
+            aria-current={isActive ? "page" : undefined}
+            className="group relative flex w-14 flex-col items-center gap-1 outline-none"
+        >
+            <span
                 className={cn(
-                    "size-8 p-1 flex h-auto w-auto min-w-12 flex-col items-center justify-center gap-0.5 rounded-lg transition-colors group-hover:bg-white/10",
-                    isActive && "bg-white/15 ring-1 ring-inset ring-[#ff5018]/60"
+                    "relative flex h-8 w-12 items-center justify-center rounded-xl transition-all duration-200",
+                    isActive
+                        ? "bg-[#ff5018] text-white shadow-[0_6px_16px_-6px_rgba(255,80,24,0.8)]"
+                        : "text-white/70 group-hover:bg-white/10 group-hover:text-white group-focus-visible:ring-2 group-focus-visible:ring-[#ff5018]"
                 )}
             >
-                <Icon className="size-5 transition-transform group-hover:scale-110 text-[#ff5018]" />
-                <span className="text-[11px] font-medium text-white/85 group-hover:text-white">
-                    {label}
-                </span>
-            </Button>
-            {badge && badge > 0 ? (
-                <div className="absolute -top-0.5 -right-0.5 size-4 bg-[#ff5018] rounded-full flex items-center justify-center pointer-events-none">
-                    <span className="text-[9px] text-white font-bold">
+                <Shown className="size-[22px]" />
+                {badge && badge > 0 ? (
+                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ff5018] px-1 text-[9px] font-bold text-white ring-2 ring-[#381d2a]">
                         {badge > 9 ? "9+" : badge}
                     </span>
-                </div>
-            ) : null}
-        </div>
+                ) : null}
+            </span>
+            <span
+                className={cn(
+                    "text-[11px] font-medium transition-colors",
+                    isActive ? "text-white" : "text-white/60 group-hover:text-white"
+                )}
+            >
+                {label}
+            </span>
+        </button>
     )
 }

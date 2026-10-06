@@ -14,6 +14,7 @@
     "@deepgram/sdk": "^5.0.0",
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
+    "@fluentui/react-icons": "^2.0.343",
     "@liveblocks/client": "^3.18.0",
     "@liveblocks/node": "^3.18.0",
     "@liveblocks/react": "^3.18.0",

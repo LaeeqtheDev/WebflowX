@@ -2,7 +2,16 @@
 import { UserButton } from "@/features/auth/components/user-button"
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher"
 import { SidebarButton } from "./SidebarButton"
-import { Bell, CheckSquare, FileText, Home, MessageSquare, MoreHorizontal, Video, BookOpen } from "lucide-react"
+import {
+    Home24Regular, Home24Filled,
+    Chat24Regular, Chat24Filled,
+    Alert24Regular, Alert24Filled,
+    TaskListSquareLtr24Regular, TaskListSquareLtr24Filled,
+    Notebook24Regular, Notebook24Filled,
+    DocumentText24Regular, DocumentText24Filled,
+    Video24Regular, Video24Filled,
+    MoreHorizontal24Regular,
+} from "@fluentui/react-icons"
 import { usePathname, useRouter } from "next/navigation"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { useGetUnreadCount } from "@/features/notifications/use-get-unread-count"
@@ -20,10 +29,11 @@ export const Sidebar = () => {
     const [showMore, setShowMore] = useState(false)
 
     return (
-        <aside className="w-17.5 h-full bg-[#381d2a] border-r border-black/20 flex flex-col gap-y-3 items-center pt-2.25 pb-4">
+        <aside className="w-17.5 h-full bg-[#381d2a] border-r border-black/20 flex flex-col gap-y-2.5 items-center pt-2.25 pb-4">
             <WorkspaceSwitcher />
             <SidebarButton
-                icon={Home}
+                icon={Home24Regular}
+                activeIcon={Home24Filled}
                 label="Home"
                 isActive={
                     pathname.includes("/dashboard/workspace") &&
@@ -38,14 +48,16 @@ export const Sidebar = () => {
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}`)}
             />
             <SidebarButton
-                icon={MessageSquare}
+                icon={Chat24Regular}
+                activeIcon={Chat24Filled}
                 label="DMs"
                 isActive={pathname.includes("/dms")}
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/dms`)}
                 badge={totalDmUnread}
             />
             <SidebarButton
-                icon={Bell}
+                icon={Alert24Regular}
+                activeIcon={Alert24Filled}
                 label="Activity"
                 isActive={pathname.includes("/activity")}
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/activity`)}
@@ -53,32 +65,36 @@ export const Sidebar = () => {
             />
 
             <SidebarButton
-                icon={CheckSquare}
+                icon={TaskListSquareLtr24Regular}
+                activeIcon={TaskListSquareLtr24Filled}
                 label="Tasks"
                 isActive={pathname.includes("/tasks")}
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/tasks`)}
             />
                         <SidebarButton
-                icon={BookOpen}
+                icon={Notebook24Regular}
+                activeIcon={Notebook24Filled}
                 label="Notes"
                 isActive={pathname.includes("/notes")}
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/notes`)}
             />
             <SidebarButton
-                icon={FileText}
+                icon={DocumentText24Regular}
+                activeIcon={DocumentText24Filled}
                 label="Docs"
                 isActive={pathname.includes("/docs")}
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}
             />
 
                         <SidebarButton
-                icon={Video}
+                icon={Video24Regular}
+                activeIcon={Video24Filled}
                 label="Meetings"
                 isActive={pathname.includes("/meeting")}
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/meeting`)}
             />
             <SidebarButton
-                icon={MoreHorizontal}
+                icon={MoreHorizontal24Regular}
                 label="More"
                 onClick={() => setShowMore(true)}
             />

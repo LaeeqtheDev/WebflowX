@@ -1,7 +1,9 @@
 import { useCurrentMember } from "@/features/members/api/use-current-member"
 import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
-import { AlertTriangle, HashIcon, Loader, MessageSquareText, SendHorizonal } from "lucide-react"
+import { AlertTriangle, Loader } from "lucide-react"
+import { CommentMultiple20Regular, Send20Regular } from "@fluentui/react-icons"
+import { channelIcon, cleanChannelName } from "./channel-icon"
 import { WorkspaceHeader } from "./WorkspaceHeader"
 import { SidebarItem } from "./SidebarItem"
 import { useGetChannels } from "@/features/channels/api/use-get-channels"
@@ -49,13 +51,13 @@ export const WorkSpaceSidebar = () => {
             <div className="flex flex-col px-2 mt-3 gap-0.5">
                 <SidebarItem
                     label="Threads"
-                    icon={MessageSquareText}
+                    icon={CommentMultiple20Regular}
                     id="threads"
                     onClick={() => router.push(`/dashboard/workspace/${workspaceId}/threads`)}
                 />
                 <SidebarItem
                     label="Drafts & Sent"
-                    icon={SendHorizonal}
+                    icon={Send20Regular}
                     id="drafts"
                     onClick={() => router.push(`/dashboard/workspace/${workspaceId}/drafts`)}
                 />
@@ -69,8 +71,8 @@ export const WorkSpaceSidebar = () => {
                 {channels?.map((item) => (
                     <SidebarItem
                         key={item._id}
-                        label={item.name}
-                        icon={HashIcon}
+                        label={cleanChannelName(item.name)}
+                        icon={channelIcon(item.name)}
                         id={item._id}
                         variant={channelId === item._id ? "active" : "default"}
                     />
