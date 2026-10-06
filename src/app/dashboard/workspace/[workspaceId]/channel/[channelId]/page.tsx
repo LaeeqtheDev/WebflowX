@@ -16,8 +16,10 @@ const ChannelIdPage = () => {
 
     if(channelLoading || status === "LoadingFirstPage") 
     return(
-        <div className="h-full flex-1 flex items-center justify-center">
-            <Loader className="animate-spin size-5 text-[#ff5018]"/>
+        <div className="h-full flex-1 flex items-center justify-center bg-[#fbf9f7]">
+            <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
+                <Loader className="animate-spin size-6 text-[#ff5018]"/>
+            </div>
 
         </div>
 
@@ -26,9 +28,11 @@ const ChannelIdPage = () => {
 
         if( !channel) 
         return(
-            <div className="h-full flex-1 flex flex-col gap-y-2 items-center justify-center">
-                <TriangleAlert className="size-5 text-[#ff5018]"/>
-                <span className="text-sm text-muted-foreground">
+            <div className="h-full flex-1 flex flex-col gap-y-3 items-center justify-center bg-[#fbf9f7]">
+                <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
+                    <TriangleAlert className="size-6 text-[#ff5018]"/>
+                </div>
+                <span className="font-semibold tracking-tight text-[#1b1017]">
                     Channel not found
                 </span>
             </div>

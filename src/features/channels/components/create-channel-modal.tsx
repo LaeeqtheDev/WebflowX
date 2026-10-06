@@ -52,11 +52,11 @@ export const CreateChannelModal = () => {
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent>
+            <DialogContent className="rounded-2xl p-6">
                 <DialogHeader>
-                    <DialogTitle>Add a channel</DialogTitle>
+                    <DialogTitle className="text-xl font-semibold tracking-tight">Add a channel</DialogTitle>
                 </DialogHeader>
-                <form className="space-y-4" onSubmit={handleSubmit}>
+                <form className="space-y-5" onSubmit={handleSubmit}>
                     <Input
                         value={name}
                         disabled={isPending}

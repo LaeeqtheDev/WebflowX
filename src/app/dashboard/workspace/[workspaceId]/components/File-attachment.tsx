@@ -1,4 +1,4 @@
-import { Download, FileText, File } from "lucide-react";
+import { Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface FileAttachmentProps {
@@ -7,29 +7,6 @@ interface FileAttachmentProps {
     fileType?: string;
     fileSize?: number;
 }
-
-// File type icons mapping
-const getFileIcon = (fileType?: string) => {
-    if (!fileType) return "📎";
-    if (fileType.startsWith("image/")) return "🖼️";
-    if (fileType.includes("pdf")) return "📄";
-    if (fileType.includes("word") || fileType.includes("document")) return "📝";
-    if (fileType.includes("sheet") || fileType.includes("excel")) return "📊";
-    if (fileType.includes("presentation") || fileType.includes("powerpoint"))
-        return "📽️";
-    if (fileType.includes("zip") || fileType.includes("rar") || fileType.includes("7z"))
-        return "📦";
-    if (fileType.includes("video")) return "🎬";
-    if (fileType.includes("audio")) return "🎵";
-    if (fileType.includes("text") || fileType.includes("plain")) return "📃";
-    if (fileType.includes("json")) return "{ }";
-    if (fileType.includes("javascript") || fileType.includes("typescript"))
-        return "⚡";
-    if (fileType.includes("python")) return "🐍";
-    if (fileType.includes("html")) return "🌐";
-    if (fileType.includes("css")) return "🎨";
-    return "📎";
-};
 
 // Get file extension from filename
 const getFileExtension = (fileName?: string) => {
@@ -49,26 +26,12 @@ const formatFileSize = (bytes?: number) => {
 
 // Get background color based on file type
 const getFileColor = (fileType?: string) => {
-    if (!fileType) return "bg-gray-100";
-    if (fileType.includes("pdf")) return "bg-red-50 text-red-600";
-    if (fileType.includes("word") || fileType.includes("document"))
-        return "bg-[#ff5018]/10 text-blue-600";
-    if (fileType.includes("sheet") || fileType.includes("excel"))
-        return "bg-green-50 text-green-600";
-    if (fileType.includes("presentation") || fileType.includes("powerpoint"))
-        return "bg-orange-50 text-orange-600";
-    if (fileType.includes("zip") || fileType.includes("rar"))
-        return "bg-yellow-50 text-yellow-600";
-    if (fileType.includes("video")) return "bg-purple-50 text-purple-600";
-    if (fileType.includes("audio")) return "bg-pink-50 text-pink-600";
-    if (
-        fileType.includes("javascript") ||
-        fileType.includes("typescript") ||
-        fileType.includes("json")
-    )
-        return "bg-amber-50 text-amber-600";
-    if (fileType.includes("python")) return "bg-emerald-50 text-emerald-600";
-    return "bg-[#f7f2ee] text-gray-600";
+    if (!fileType) return "bg-[#f7f2ee] text-[#381d2a]";
+    if (fileType.startsWith("image/") || fileType.includes("video") || fileType.includes("audio"))
+        return "bg-[#381d2a] text-white";
+    if (fileType.includes("pdf") || fileType.includes("presentation") || fileType.includes("powerpoint"))
+        return "bg-[#ff5018]/10 text-[#ff5018]";
+    return "bg-[#f7f2ee] text-[#381d2a]";
 };
 
 export const FileAttachment = ({
@@ -90,22 +53,22 @@ export const FileAttachment = ({
     const extension = getFileExtension(fileName);
 
     return (
-        <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-[#f7f2ee] transition-colors max-w-sm group">
+        <div className="flex items-center gap-3 p-3 bg-white border border-[#381d2a]/12 rounded-xl hover:bg-[#f7f2ee]/70 transition-colors max-w-sm group">
             {/* File Icon */}
             <div
-                className={`size-12 rounded-lg flex items-center justify-center text-xl shrink-0 ${getFileColor(
+                className={`size-11 rounded-lg flex items-center justify-center shrink-0 ${getFileColor(
                     fileType
                 )}`}
             >
-                {getFileIcon(fileType)}
+                <FileText className="size-5" />
             </div>
 
             {/* File Info */}
             <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-medium text-[#1b1017] truncate">
                     {fileName || "Untitled File"}
                 </p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-[#1b1017]/50">
                     {extension && (
                         <span className="uppercase font-medium">{extension}</span>
                     )}
@@ -119,7 +82,7 @@ export const FileAttachment = ({
                 variant="ghost"
                 size="sm"
                 onClick={handleDownload}
-                className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 rounded-lg"
             >
                 <Download className="size-4" />
             </Button>

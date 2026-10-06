@@ -17,11 +17,11 @@ const ThreadItem = ({ thread, onSelect }: { thread: ThreadData; onSelect: (chann
     return (
         <div
             onClick={() => thread.channel?._id && onSelect(thread.channel._id)}
-            className="flex items-start gap-3 px-4 py-3 hover:bg-[#f7f2ee] cursor-pointer border-b transition-colors"
+            className="flex items-start gap-3 px-4 py-3 hover:bg-[#f7f2ee] cursor-pointer border-b border-[#381d2a]/10 transition-colors"
         >
-            <Avatar className="size-9 shrink-0 mt-0.5">
+            <Avatar className="size-9 shrink-0 mt-0.5 rounded-md">
                 <AvatarImage src={thread.author?.user?.image} />
-                <AvatarFallback className="text-xs">
+                <AvatarFallback className="text-xs rounded-md bg-[#381d2a] text-white">
                     {thread.author?.user?.name?.[0] ?? "?"}
                 </AvatarFallback>
             </Avatar>
@@ -32,13 +32,13 @@ const ThreadItem = ({ thread, onSelect }: { thread: ThreadData; onSelect: (chann
                             {thread.author?.user?.name ?? "Unknown"}
                         </span>
                         {thread.channel && (
-                            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                            <span className="flex items-center gap-0.5 text-[11px] font-medium text-[#1b1017]/70 bg-[#efe8e3] px-2 py-0.5 rounded-md">
                                 <Hash className="size-2.5" />
                                 {thread.channel.name}
                             </span>
                         )}
                     </div>
-                    <span className="text-[10px] text-muted-foreground shrink-0">
+                    <span className="text-[11px] text-[#1b1017]/60 shrink-0">
                         {format(thread._creationTime, "MMM d, h:mm a")}
                     </span>
                 </div>
@@ -60,9 +60,11 @@ const ThreadItem = ({ thread, onSelect }: { thread: ThreadData; onSelect: (chann
 }
 
 const EmptySection = ({ label }: { label: string }) => (
-    <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-2">
-        <MessagesSquare className="size-8 opacity-30" />
-        <p className="text-xs">{label}</p>
+    <div className="flex flex-col items-center justify-center py-12 text-[#1b1017]/60 gap-3">
+        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
+            <MessagesSquare className="size-6 text-[#ff5018]" />
+        </div>
+        <p className="text-sm">{label}</p>
     </div>
 )
 
@@ -77,15 +79,15 @@ export default function ThreadsPage() {
 
 
     return (
-        <div className="h-full flex flex-col overflow-hidden bg-[#f7f2ee]">
+        <div className="h-full flex flex-col overflow-hidden bg-[#fbf9f7]">
             {/* Header */}
-            <div className="flex items-center gap-3 px-6 py-4 border-b bg-white shrink-0 shadow-none">
+            <div className="flex items-center gap-3 px-6 h-14 border-b bg-white shrink-0 shadow-none">
                 <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
                     <MessagesSquare className="size-4 text-[#ff5018]" />
                 </div>
                 <div>
-                    <h1 className="tracking-tight text-base font-bold leading-none">Threads</h1>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                    <h1 className="tracking-tight text-[17px] font-semibold leading-none text-[#1b1017]">Threads</h1>
+                    <p className="text-[11px] text-[#1b1017]/60 mt-1">
                         Conversations you started or joined
                     </p>
                 </div>
@@ -102,7 +104,7 @@ export default function ThreadsPage() {
                         {/* My Threads */}
                         <div>
                             <div className="px-4 py-2 bg-[#f7f2ee] border-b">
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                <p className="text-[11px] font-semibold text-[#1b1017]/60 uppercase tracking-wider">
                                     My Threads
                                     {(data?.myThreads?.length ?? 0) > 0 && (
                                         <span className="ml-1.5 text-[#ff5018]">
@@ -120,7 +122,7 @@ export default function ThreadsPage() {
                         {/* Participated */}
                         <div>
                             <div className="px-4 py-2 bg-[#f7f2ee] border-b border-t">
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                <p className="text-[11px] font-semibold text-[#1b1017]/60 uppercase tracking-wider">
                                     Participated In
                                     {(data?.participatedThreads?.length ?? 0) > 0 && (
                                         <span className="ml-1.5 text-[#ff5018]">

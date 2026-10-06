@@ -21,11 +21,11 @@ export const Thumbnail = ({url}: ThumbnailProps) => {
     return(
         <Dialog>
             <DialogTrigger>
-            <div className="relative overflow-hidden max-w-90 border rounded-lg my-2 cursor-zoom-in">
+            <div className="relative overflow-hidden max-w-90 border border-[#381d2a]/12 rounded-xl my-2 cursor-zoom-in">
             <img
             src={url}
             alt="Message Image"
-            className="rounded-md object-cover size-full"
+            className="rounded-xl object-cover size-full"
             />
         </div>
             </DialogTrigger>

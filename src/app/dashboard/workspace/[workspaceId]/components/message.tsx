@@ -155,15 +155,15 @@ export const Message = ({
                 <ConfirmDialog />
                 <div
                     className={cn(
-                        "flex flex-col gap-2 p-1.5 px-5 hover:bg-gray-100/60 group relative",
-                        isEditing && "bg-[#f2c74433] hover:bg-[#f2c74433]",
+                        "flex flex-col gap-2 p-1.5 px-5 hover:bg-[#f7f2ee]/70 group relative",
+                        isEditing && "bg-[#ff5018]/10 hover:bg-[#ff5018]/10",
                         isRemovingMessage &&
                             "bg-rose-500/50 transform transition-all scale-y-0 origin-bottom duration-200"
                     )}
                 >
                     <div className="flex items-start gap-2">
                         <Hint label={formatFullTime(new Date(createdAt))}>
-                            <button className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 w-10 leading-5.5 text-center hover:underline">
+                            <button className="text-xs text-[#1b1017]/50 opacity-0 group-hover:opacity-100 w-10 leading-5.5 text-center hover:underline">
                                 {format(new Date(createdAt), "hh:mm")}
                             </button>
                         </Hint>
@@ -193,7 +193,7 @@ export const Message = ({
                                     </div>
                                 )}
                                 {updatedAt ? (
-                                    <span className="text-xs text-muted-foreground">
+                                    <span className="text-xs text-[#1b1017]/50">
                                         (edited)
                                     </span>
                                 ) : null}
@@ -230,17 +230,17 @@ export const Message = ({
             <ConfirmDialog />
             <div
                 className={cn(
-                    "flex flex-col gap-2 p-1.5 px-5 hover:bg-gray-100/60 group relative",
-                    isEditing && "bg-[#f2c74433] hover:bg-[#f2c74433]",
+                    "flex flex-col gap-2 p-1.5 px-5 hover:bg-[#f7f2ee]/70 group relative",
+                    isEditing && "bg-[#ff5018]/10 hover:bg-[#ff5018]/10",
                     isRemovingMessage &&
                         "bg-rose-500/50 transform transition-all scale-y-0 origin-bottom duration-200"
                 )}
             >
                 <div className="flex items-start gap-2">
                     <button onClick={() => onOpenProfile(memberId)}>
-                        <Avatar className="rounded-md mr-1">
+                        <Avatar className="rounded-md mr-1 size-9">
                             <AvatarImage className="rounded-md" src={authorImage} />
-                            <AvatarFallback className="rounded-md bg-[#ff5018] text-white text-center text-xs">
+                            <AvatarFallback className="rounded-md bg-[#381d2a] text-white text-center text-sm font-semibold">
                                 {fallbackInitial}
                             </AvatarFallback>
                         </Avatar>
@@ -260,13 +260,13 @@ export const Message = ({
                             <div className="text-sm">
                                 <button
                                     onClick={() => onOpenProfile(memberId)}
-                                    className="font-bold text-primary hover:underline"
+                                    className="font-semibold tracking-tight text-[#1b1017] hover:underline"
                                 >
                                     {authorName}
                                 </button>
                                 <span>&nbsp;&nbsp;</span>
                                 <Hint label={formatFullTime(new Date(createdAt))}>
-                                    <button className="text-xs text-muted-foreground hover:underline">
+                                    <button className="text-xs text-[#1b1017]/50 hover:underline">
                                         {format(new Date(createdAt), "h:mm a")}
                                     </button>
                                 </Hint>
@@ -285,7 +285,7 @@ export const Message = ({
                                 </div>
                             )}
                             {updatedAt ? (
-                                <span className="text-xs text-muted-foreground">
+                                <span className="text-xs text-[#1b1017]/50">
                                     (edited)
                                 </span>
                             ) : null}

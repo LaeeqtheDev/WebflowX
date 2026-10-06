@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader } from "lucide-react"
 import { toast } from "sonner"
-import { STATUSES, STATUS_LABELS, PRIORITIES, PRIORITY_LABELS } from "@/features/tasks/constants"
+import { STATUSES, STATUS_LABELS, PRIORITIES } from "@/features/tasks/constants"
+import { PRIORITY_TEXT } from "./task-styles"
 import { Member, Sprint, Status, Priority } from "@/features/tasks/types"
 import { useCreateTask } from "@/features/tasks/use-create-task"
 import { Id } from "../../../../../../../convex/_generated/dataModel"
@@ -69,21 +70,21 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg rounded-2xl border-[#381d2a]/12">
                 <DialogHeader>
-                    <DialogTitle>Create New Task</DialogTitle>
+                    <DialogTitle className="text-[17px] font-semibold tracking-tight">Create New Task</DialogTitle>
                 </DialogHeader>
                 <div className="flex flex-col gap-3 mt-2">
-                    <Input placeholder="Task title *" value={title} onChange={e => setTitle(e.target.value)} />
+                    <Input placeholder="Task title *" value={title} onChange={e => setTitle(e.target.value)} className="rounded-lg h-10 font-medium" />
                     <textarea
                         placeholder="Description..."
                         value={description}
                         onChange={e => setDescription(e.target.value)}
-                        className="border rounded-md p-2 text-sm resize-none h-20 outline-none focus:border-[#ff5018]"
+                        className="border border-input rounded-lg px-3 py-2 text-sm resize-none h-20 outline-none focus:border-[#ff5018] focus:ring-2 focus:ring-[#ff5018]/20 transition-colors"
                     />
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-xs text-muted-foreground mb-1 block">Status</label>
+                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Status</label>
                             <Select value={status} onValueChange={v => setStatus(v as Status)}>
                                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                                 <SelectContent>
@@ -92,16 +93,16 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
                             </Select>
                         </div>
                         <div>
-                            <label className="text-xs text-muted-foreground mb-1 block">Priority</label>
+                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Priority</label>
                             <Select value={priority} onValueChange={v => setPriority(v as Priority)}>
                                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                    {PRIORITIES.map(p => <SelectItem key={p} value={p}>{PRIORITY_LABELS[p]}</SelectItem>)}
+                                    {PRIORITIES.map(p => <SelectItem key={p} value={p}>{PRIORITY_TEXT[p]}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
                         <div>
-                            <label className="text-xs text-muted-foreground mb-1 block">Assignee</label>
+                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Assignee</label>
                             <Select value={assigneeId} onValueChange={setAssigneeId}>
                                 <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Unassigned" /></SelectTrigger>
                                 <SelectContent>
@@ -110,7 +111,7 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
                             </Select>
                         </div>
                         <div>
-                            <label className="text-xs text-muted-foreground mb-1 block">Sprint</label>
+                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Sprint</label>
                             <Select value={sprintId} onValueChange={setSprintId}>
                                 <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="No sprint" /></SelectTrigger>
                                 <SelectContent>
@@ -120,29 +121,29 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
                             </Select>
                         </div>
                         <div>
-                            <label className="text-xs text-muted-foreground mb-1 block">Due Date</label>
+                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Due Date</label>
                             <Input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div>
-                            <label className="text-xs text-muted-foreground mb-1 block">Story Points</label>
+                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Story Points</label>
                             <Input type="number" placeholder="0" value={storyPoints} onChange={e => setStoryPoints(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div className="col-span-2">
-                            <label className="text-xs text-muted-foreground mb-1 block">Labels (press Enter)</label>
+                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Labels (press Enter)</label>
                             <Input placeholder="Add label..." value={labelInput} onChange={e => setLabelInput(e.target.value)} onKeyDown={handleAddLabel} className="h-8 text-xs" />
                         </div>
                     </div>
                     {labels.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                             {labels.map((l, index) => (
-                                <Badge key={index} variant="secondary" className="cursor-pointer text-xs"
+                                <Badge key={index} variant="secondary" className="cursor-pointer text-[11px] rounded-md bg-[#f7f2ee] text-[#381d2a] hover:bg-[#efe8e3]"
                                     onClick={() => setLabels(prev => prev.filter((_, i) => i !== index))}>
                                     {l} ×
                                 </Badge>
                             ))}
                         </div>
                     )}
-                    <Button onClick={handleSubmit} disabled={isPending} className="bg-[#ff5018] hover:bg-[#e6430f] text-white">
+                    <Button onClick={handleSubmit} disabled={isPending} className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold h-10">
                         {isPending ? <Loader className="size-4 animate-spin" /> : "Create Task"}
                     </Button>
                 </div>

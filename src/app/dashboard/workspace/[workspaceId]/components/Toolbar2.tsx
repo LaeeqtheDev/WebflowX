@@ -25,19 +25,19 @@ export const Toolbar2 =({
 }: ToolbarProps) =>{
     return(
         <div className="absolute top-0 right-5">
-          <div className="group-hover:opacity-100 opacity-0 transition-opacity border bg-white rounded-md shadow-none">
+          <div className="group-hover:opacity-100 opacity-0 transition-opacity border border-[#381d2a]/12 bg-white rounded-lg shadow-sm p-0.5 flex items-center">
         <EmojiPopover
         hint="Add Reaction"
         onEmojiSelect={(emoji)=> handleReaction(emoji.native)} 
         >
-        <Button variant={"ghost"} size={"iconSm"} disabled={isPending}>
+        <Button variant={"ghost"} size={"iconSm"} className="rounded-md hover:bg-[#f7f2ee]" disabled={isPending}>
                 <Smile className="size-4 text-[#ff5018]"/>
             </Button>
         </EmojiPopover>
 
         {!hideThreadButton && (
                         <Hint label="Reply in thead">
-                        <Button variant={"ghost"} size={"iconSm"} disabled={isPending} onClick={handleThread}>
+                        <Button variant={"ghost"} size={"iconSm"} className="rounded-md hover:bg-[#f7f2ee]" disabled={isPending} onClick={handleThread}>
                             <MessageSquareTextIcon className="size-4 text-[#ff5018]"/>
                         </Button>
                         </Hint>
@@ -45,7 +45,7 @@ export const Toolbar2 =({
 
             {isAuthor && (
                 <Hint label="Edit Message">
-                <Button variant={"ghost"} size={"iconSm"} disabled={isPending} onClick={handleEdit}>
+                <Button variant={"ghost"} size={"iconSm"} className="rounded-md hover:bg-[#f7f2ee]" disabled={isPending} onClick={handleEdit}>
                     <Pencil className="size-4 text-[#ff5018]" />
                 </Button>
                 </Hint>
@@ -53,7 +53,7 @@ export const Toolbar2 =({
             )}
            {isAuthor && (
              <Hint label="Delete Message">
-             <Button variant={"ghost"} size={"iconSm"} disabled={isPending} onClick={handleDelete}>
+             <Button variant={"ghost"} size={"iconSm"} className="rounded-md hover:bg-[#f7f2ee]" disabled={isPending} onClick={handleDelete}>
                  <TrashIcon className="size-4 text-[#ff5018]"/>
              </Button>
              </Hint>

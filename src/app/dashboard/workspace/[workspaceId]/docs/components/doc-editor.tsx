@@ -77,12 +77,12 @@ const EditorInner = ({
     return (
         <div className="flex flex-col h-full">
             {editor && (
-                <div className="bg-white border-b sticky top-0 z-10">
+                <div className="bg-white border-b border-[#381d2a]/12 sticky top-0 z-10">
                     <DocToolbar editor={editor} />
                 </div>
             )}
-            <div className="flex-1 overflow-y-auto bg-[#f7f2ee] py-8 px-4">
-                <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-none border min-h-[calc(100vh-200px)]">
+            <div className="flex-1 overflow-y-auto bg-[#fbf9f7] py-8 px-4">
+                <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-sm border border-[#381d2a]/12 min-h-[calc(100vh-200px)]">
                     <EditorContent editor={editor} />
                 </div>
             </div>
@@ -171,10 +171,10 @@ export const DocEditor = ({
 
     if (!ydoc || !provider) {
         return (
-            <div className="flex items-center justify-center h-full bg-[#f7f2ee]">
+            <div className="flex items-center justify-center h-full bg-[#fbf9f7]">
                 <div className="flex flex-col items-center gap-2">
                     <Loader className="size-5 animate-spin text-[#ff5018]" />
-                    <p className="text-xs text-muted-foreground">Connecting to document...</p>
+                    <p className="text-xs text-[#1b1017]/60">Connecting to document...</p>
                 </div>
             </div>
         )
@@ -184,15 +184,15 @@ export const DocEditor = ({
         <div className="flex flex-col h-full">
             {/* Also editing bar */}
             {others.length > 0 && (
-                <div className="flex items-center gap-2 px-4 py-1.5 bg-white border-b text-xs shrink-0">
+                <div className="flex items-center gap-2 px-4 py-1.5 bg-white border-b border-[#381d2a]/12 text-xs shrink-0">
                     <div className="flex items-center gap-1.5">
                         <div className="size-1.5 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-muted-foreground">Also editing:</span>
+                        <span className="text-[#1b1017]/60 font-medium">Also editing:</span>
                     </div>
                     {others.map((o, i) => (
                         <div
                             key={i}
-                            className="flex items-center gap-1 px-2 py-0.5 rounded-full text-white text-[10px] font-medium"
+                            className="flex items-center gap-1 px-2 py-0.5 rounded-md text-white text-[11px] font-medium"
                             style={{ backgroundColor: o.color }}
                         >
                             {o.name}

@@ -27,7 +27,7 @@ export const Hint = ({label, children, side , align}:HintsProps) => {
                 <TooltipTrigger asChild>
                     {children}
                 </TooltipTrigger>
-                <TooltipContent side={side} align={align} className="bg-black text-white border border-white/5 ">
+                <TooltipContent side={side} align={align} className="bg-[#1b1017] text-white border border-white/5 rounded-lg px-2.5 py-1.5 shadow-sm">
                     <p className="font-medium text-xs"> 
                     {label}
                     </p>

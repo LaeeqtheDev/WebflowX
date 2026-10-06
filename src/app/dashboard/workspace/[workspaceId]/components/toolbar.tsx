@@ -81,16 +81,18 @@ export const Toolbar = () => {
         </Button>
 
         <CommandDialog   open={open} onOpenChange={setOpen}>
-          <CommandInput 
+          <CommandInput
+            className="text-sm"
             placeholder="Search messages, channels, members..."
             onValueChange={setQuery}
           />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
 
-            <CommandGroup heading="Channels">
+            <CommandGroup heading="Channels" className="[&_[cmdk-group-heading]]:text-[#1b1017]/50 [&_[cmdk-group-heading]]:font-semibold">
               {channels?.map((channel) => (
                 <CommandItem
+                  className="rounded-lg data-[selected=true]:bg-[#f7f2ee] data-[selected=true]:text-[#1b1017]"
                   key={channel._id}
                   onSelect={() => onChannelClick(channel._id)}
                 >
@@ -101,9 +103,10 @@ export const Toolbar = () => {
 
             <CommandSeparator />
 
-            <CommandGroup heading="Members">
+            <CommandGroup heading="Members" className="[&_[cmdk-group-heading]]:text-[#1b1017]/50 [&_[cmdk-group-heading]]:font-semibold">
               {members?.map((member) => (
                 <CommandItem
+                  className="rounded-lg data-[selected=true]:bg-[#f7f2ee] data-[selected=true]:text-[#1b1017]"
                   key={member._id}
                   onSelect={() => onMemberClick(member._id)}
                 >
@@ -115,9 +118,10 @@ export const Toolbar = () => {
             {messageResults && messageResults.length > 0 && (
               <>
                 <CommandSeparator />
-                <CommandGroup heading="Messages">
+                <CommandGroup heading="Messages" className="[&_[cmdk-group-heading]]:text-[#1b1017]/50 [&_[cmdk-group-heading]]:font-semibold">
                   {messageResults.map((message) => (
                     <CommandItem
+                      className="rounded-lg data-[selected=true]:bg-[#f7f2ee] data-[selected=true]:text-[#1b1017]"
                       key={message._id}
                       onSelect={() => onMessageClick(message.channelId, message.conversationId)}
                     >

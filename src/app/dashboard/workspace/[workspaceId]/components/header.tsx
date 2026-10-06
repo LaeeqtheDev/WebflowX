@@ -88,34 +88,34 @@ export const Header = ({title}: HeaderProps) => {
 
 
     return(
-        <div className="bg-white border-b h-12.25 flex items-center px-4 overflow-hidden">
+        <div className="bg-white border-b border-[#381d2a]/12 h-14 flex items-center px-4 overflow-hidden">
             <ConfirmDialog/>
         
             <Dialog>
                 <DialogTrigger asChild>
                 <Button 
             variant={"ghost"}
-            className="text-lg font-semibold px-2 overflow-hidden w-auto"
+            className="text-lg font-semibold tracking-tight px-2 overflow-hidden w-auto rounded-lg hover:bg-[#f7f2ee]"
             size={"sm"}
             >
-                <span className="truncate font-bold">#{title}</span>
+                <span className="truncate font-semibold tracking-tight">#{title}</span>
                 <FaChevronDown className="text-[#ff5018] size-2.5 ml-2"/>
             </Button>
 
                 </DialogTrigger>
 
-                <DialogContent className="p-0 bg-[#f7f2ee] overflow-hidden">
-                    <DialogHeader className="p-4 border-b bg-white ">
-                        <DialogTitle>
+                <DialogContent className="p-0 bg-[#f7f2ee] overflow-hidden rounded-2xl">
+                    <DialogHeader className="px-6 py-5 border-b bg-white ">
+                        <DialogTitle className="font-semibold tracking-tight">
                             #{title}
                         </DialogTitle>
 
                     </DialogHeader>
 
-                    <div className="px-4 pb-4 flex flex-col gap-y-2">
+                    <div className="px-6 py-5 flex flex-col gap-y-2">
                         <Dialog open={editOpen} onOpenChange={handleEditOpen}>
                             <DialogTrigger asChild>
-                            <div className="px-5 py-4 bg-white rounded-lg border cursor-pointer hover:bg-[#f7f2ee]">
+                            <div className="px-5 py-4 bg-white rounded-xl border border-[#381d2a]/12 cursor-pointer hover:bg-[#f7f2ee]/60">
                             <div className="flex items-center justify-between">
                                 <p className="text-sm font-semibold">Channel Name</p>
                               {   member?.role === "admin" && (
@@ -127,7 +127,7 @@ export const Header = ({title}: HeaderProps) => {
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Rename this channel</DialogTitle>
+                                    <DialogTitle className="font-semibold tracking-tight">Rename this channel</DialogTitle>
                                 </DialogHeader>
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <Input
@@ -158,7 +158,7 @@ export const Header = ({title}: HeaderProps) => {
                             </DialogContent>
                         </Dialog>
                         {member?.role === "admin" && (
-                                                    <button className="flex items-center gap-x-2 px-5 py-4 bg-white rounded-lg cursor-pointer border hover:bg-[#f7f2ee] text-rose-600"
+                                                    <button className="flex items-center gap-x-2 px-5 py-4 bg-white rounded-xl cursor-pointer border border-[#381d2a]/12 hover:bg-rose-50 text-rose-600"
                                                     onClick={handleDelete}
                                                     >
                                                         <TrashIcon className="size-4"/>

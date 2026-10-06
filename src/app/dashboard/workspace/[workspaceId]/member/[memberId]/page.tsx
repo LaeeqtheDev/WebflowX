@@ -33,17 +33,21 @@ const MemberIdPage = () => {
 
     if(isPending){
       return(
-         <div className="h-full flex items-center justify-center">
-                <Loader className="size-6 animate-spin  text-[#ff5018] "/>
+         <div className="h-full flex items-center justify-center bg-[#fbf9f7]">
+                <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
+                  <Loader className="size-6 animate-spin text-[#ff5018]"/>
+                </div>
             </div>
       )
     }
 
     if(!conversationId){
       return(
-         <div className="h-full flex items-center justify-center">
-                <AlertTriangle className="size-6  text-[#ff5018]"/>
-                <span className="text-sm text-muted-foreground">
+         <div className="h-full flex flex-col gap-3 items-center justify-center bg-[#fbf9f7]">
+                <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
+                  <AlertTriangle className="size-6 text-[#ff5018]"/>
+                </div>
+                <span className="font-semibold tracking-tight text-[#1b1017]">
                   Conversation not found
                 </span>
             </div>

@@ -28,7 +28,7 @@ export const WorkspaceSwitcher = () => {
     return(
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button className="size-9 relative overflow-hidden bg-black/60 text-white hover:bg-black/80 font-semibold text-xl ">
+                <Button className="size-9 relative overflow-hidden rounded-lg bg-[#ff5018] text-white hover:bg-[#e6430f] font-semibold text-lg">
                     {workspaceLoading ? (
                         <Loader className="size-5 animate-spin shrink-0"/>
                     ):(
@@ -36,19 +36,19 @@ export const WorkspaceSwitcher = () => {
                     )}
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="bottom" align="start" className="w-64">
+            <DropdownMenuContent side="bottom" align="start" className="w-64 rounded-xl p-1.5">
                 <DropdownMenuItem
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}`)}
-                 className="cursor-pointer flex-col justify-start items-start capitalize">
+                 className="cursor-pointer flex-col justify-start items-start capitalize rounded-lg font-semibold">
                     {workspace?.name}
                     <span className="text-xs text-muted-foreground">Active Workspace</span>
                 </DropdownMenuItem>
                 {filteredWorkspaces?.map((workspace)=>(
                     <DropdownMenuItem key={workspace._id}
-                    className="cursor-pointer capitalize overflow-hidden "
+                    className="cursor-pointer capitalize overflow-hidden rounded-lg"
                     onClick={()=> router.push(`/dashboard/workspace/${workspace._id}`)}
                     >
-                        <div className=" shrink-0 size-9 bg-[#ff5018] text-white rounded-md flex items-center justify-center">
+                        <div className=" shrink-0 size-9 bg-[#381d2a] text-white font-semibold rounded-lg flex items-center justify-center">
                             {workspace.name.charAt(0).toUpperCase()}
                         </div>
                         <p className="truncate">{workspace.name}</p>
@@ -57,9 +57,9 @@ export const WorkspaceSwitcher = () => {
                 ))}
 
             <DropdownMenuItem
-            className="cursor-pointer flex items-center gap-2"
+            className="cursor-pointer flex items-center gap-2 rounded-lg"
             onClick={() => setOpen(true)}>
-            <div className="size-9 bg-[#F2F2F2] text-slate-900 rounded-md flex items-center justify-center">
+            <div className="size-9 bg-[#f7f2ee] text-[#1b1017] rounded-lg flex items-center justify-center">
                 <Plus />
             </div>
 

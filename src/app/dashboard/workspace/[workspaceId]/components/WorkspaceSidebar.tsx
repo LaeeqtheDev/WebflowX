@@ -46,7 +46,7 @@ export const WorkSpaceSidebar = () => {
         <div className="flex flex-col h-full bg-[#402633]">
             <WorkspaceHeader workspace={workspace} isAdmin={member.role === "admin"} />
 
-            <div className="flex flex-col px-2 mt-3 gap-1">
+            <div className="flex flex-col px-2 mt-3 gap-0.5">
                 <SidebarItem
                     label="Threads"
                     icon={MessageSquareText}

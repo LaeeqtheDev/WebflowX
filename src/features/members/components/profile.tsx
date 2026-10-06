@@ -94,10 +94,10 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
 
     if (isLoadingMember || isLoadingCurrentMember) {
         return (
-            <div className="h-full flex flex-col">
-                <div className="h-12.25 flex justify-between items-center px-4 border-b">
-                    <p className="text-lg font-bold">Profile</p>
-                    <Button onClick={onClose} size={"iconSm"} variant={"ghost"}>
+            <div className="h-full flex flex-col bg-white">
+                <div className="h-14 flex justify-between items-center px-4 border-b border-[#381d2a]/12 bg-white">
+                    <p className="text-lg font-semibold tracking-tight text-[#1b1017]">Profile</p>
+                    <Button onClick={onClose} size={"iconSm"} variant={"ghost"} className="rounded-lg hover:bg-[#f7f2ee]">
                         <XIcon className="size-5 stroke-[1.5]" />
                     </Button>
                 </div>
@@ -110,16 +110,16 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
 
     if (!member) {
         return (
-            <div className="h-full flex flex-col">
-                <div className="h-12.25 flex justify-between items-center px-4 border-b">
-                    <p className="text-lg font-bold">Profile</p>
-                    <Button onClick={onClose} size={"iconSm"} variant={"ghost"}>
+            <div className="h-full flex flex-col bg-white">
+                <div className="h-14 flex justify-between items-center px-4 border-b border-[#381d2a]/12 bg-white">
+                    <p className="text-lg font-semibold tracking-tight text-[#1b1017]">Profile</p>
+                    <Button onClick={onClose} size={"iconSm"} variant={"ghost"} className="rounded-lg hover:bg-[#f7f2ee]">
                         <XIcon className="size-5 stroke-[1.5]" />
                     </Button>
                 </div>
                 <div className="flex flex-col gap-y-2 h-full items-center justify-center">
                     <AlertTriangle className="size-5 text-[#ff5018]" />
-                    <p className="text-sm text-muted-foreground">Member not found</p>
+                    <p className="text-sm text-[#1b1017]/60">Member not found</p>
                 </div>
             </div>
         )
@@ -132,36 +132,36 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
             <RemoveDialog />
             <LeaveDialog />
             <UpdateDialog />
-            <div className="h-full flex flex-col overflow-y-auto">
-                <div className="h-12.25 flex justify-between items-center px-4 border-b">
-                    <p className="text-lg font-bold">Profile</p>
-                    <Button onClick={onClose} size={"iconSm"} variant={"ghost"}>
+            <div className="h-full flex flex-col overflow-y-auto bg-white">
+                <div className="h-14 flex justify-between items-center px-4 border-b border-[#381d2a]/12 bg-white">
+                    <p className="text-lg font-semibold tracking-tight text-[#1b1017]">Profile</p>
+                    <Button onClick={onClose} size={"iconSm"} variant={"ghost"} className="rounded-lg hover:bg-[#f7f2ee]">
                         <XIcon className="size-5 stroke-[1.5]" />
                     </Button>
                 </div>
 
-                <div className="flex flex-col items-center justify-center p-4">
-                    <Avatar className="w-40 h-40">
-                        <AvatarImage src={member.user.image} />
-                        <AvatarFallback className="aspect-square text-6xl">
+                <div className="flex flex-col items-center justify-center p-6">
+                    <Avatar className="w-40 h-40 rounded-2xl">
+                        <AvatarImage className="rounded-2xl" src={member.user.image} />
+                        <AvatarFallback className="aspect-square text-6xl rounded-2xl bg-[#381d2a] text-white font-semibold">
                             {avatarFallback}
                         </AvatarFallback>
                     </Avatar>
                 </div>
 
-                <div className="flex flex-col p-4">
-                    <p className="text-xl font-bold">{member.user.name}</p>
+                <div className="flex flex-col px-6 pb-6">
+                    <p className="text-2xl font-semibold tracking-tight text-[#1b1017]">{member.user.name}</p>
 
                     {/* Admin viewing someone else → show role change + remove */}
                     {currentMember?.role === "admin" && currentMember?._id !== memberId && (
                         <div className="flex flex-col gap-2 mt-2">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant={"outline"} className="w-full capitalize">
+                                    <Button variant={"outline"} className="w-full capitalize rounded-lg border-[#381d2a]/15">
                                         {member.role} <ChevronDown className="size-4 ml-2 text-[#ff5018]" />
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-full">
+                                <DropdownMenuContent className="w-full rounded-xl p-1.5">
                                     <DropdownMenuRadioGroup
                                         value={member.role}
                                         onValueChange={(role) => onUpdate(role as "admin" | "member")}
@@ -175,7 +175,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                                     </DropdownMenuRadioGroup>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                            <Button onClick={onRemove} variant={"outline"} className="w-full capitalize">
+                            <Button onClick={onRemove} variant={"outline"} className="w-full capitalize rounded-lg border-[#381d2a]/15">
                                 Remove
                             </Button>
                         </div>
@@ -184,7 +184,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                     {/* Non-admin viewing their own profile → show leave */}
                     {currentMember?._id === memberId && currentMember?.role !== "admin" && (
                         <div className="mt-2">
-                            <Button onClick={onLeave} variant={"outline"} className="w-full">
+                            <Button onClick={onLeave} variant={"outline"} className="w-full rounded-lg border-[#381d2a]/15">
                                 Leave
                             </Button>
                         </div>
@@ -193,14 +193,14 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
 
                 <Separator />
 
-                <div className="flex flex-col p-4">
-                    <p className="text-sm font-bold mb-4">Contact Information</p>
+                <div className="flex flex-col p-6">
+                    <p className="text-sm font-semibold tracking-tight text-[#1b1017] mb-4">Contact Information</p>
                     <div className="flex items-center gap-2">
-                        <div className="size-9 rounded-md bg-muted flex items-center justify-center">
+                        <div className="size-9 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
                             <MailIcon className="size-4 text-[#ff5018]" />
                         </div>
                         <div className="flex flex-col">
-                            <p className="text-[13px] font-semibold text-muted-foreground">
+                            <p className="text-[13px] font-semibold text-[#1b1017]/60">
                                 Email Address
                             </p>
                             <Link

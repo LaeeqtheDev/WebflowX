@@ -24,10 +24,10 @@ function Sketch() {
         </g>
       ))}
       <rect className="draw" x="170" y="262" width="320" height="38" rx="8" />
-      <text className="fade" x="372" y="52" fill={INK} stroke="none" fontSize="15" fontFamily="ui-monospace, monospace" transform="rotate(-3 372 52)">
+      <text className="fade" x="318" y="56" fill={INK} stroke="none" fontSize="18" fontFamily="ui-monospace, monospace" transform="rotate(-3 318 56)">
         chat + tasks?
       </text>
-      <path className="draw" stroke="#ff5018" d="M300 44C330 28 360 30 382 36" />
+      <path className="draw" stroke="#ff5018" d="M260 44C280 30 300 30 316 38" />
     </svg>
   );
 }
@@ -36,7 +36,7 @@ function Architecture() {
   const node = (x: number, y: number, label: string) => (
     <g>
       <rect className="draw" x={x} y={y} width="120" height="56" rx="10" />
-      <text className="fade" x={x + 60} y={y + 33} textAnchor="middle" fill={INK} stroke="none" fontSize="14" fontFamily="var(--font-geist-sans), sans-serif">
+      <text className="fade" x={x + 60} y={y + 33} textAnchor="middle" fill={INK} stroke="none" fontSize="18" fontWeight="600" fontFamily="var(--font-geist-sans), sans-serif">
         {label}
       </text>
     </g>
@@ -52,7 +52,7 @@ function Architecture() {
       <path className="draw" d="M320 272L376 190" />
       <path className="draw" d="M144 190L200 262" />
       <path className="draw" stroke="#ff5018" strokeDasharray="5 6" d="M60 142C60 90 120 30 200 30" />
-      <text className="fade" x="30" y="100" fill="#ff5018" stroke="none" fontSize="12" fontFamily="ui-monospace, monospace">
+      <text className="fade" x="24" y="228" fill="#ff5018" stroke="none" fontSize="15" fontFamily="ui-monospace, monospace">
         WebRTC (failed)
       </text>
       <path className="draw" stroke="#ff5018" d="M118 112l14 14M132 112l-14 14" />
@@ -75,40 +75,46 @@ function Stable() {
 function Scale() {
   const box = (x: number, y: number, w: number, label: string) => (
     <g>
-      <rect className="draw" x={x} y={y} width={w} height="46" rx="10" />
-      <text className="fade" x={x + w / 2} y={y + 28} textAnchor="middle" fill={INK} stroke="none" fontSize="13" fontFamily="var(--font-geist-sans), sans-serif">
+      <rect className="draw" x={x} y={y} width={w} height="50" rx="10" />
+      <text className="fade" x={x + w / 2} y={y + 31} textAnchor="middle" fill={INK} stroke="none" fontSize="17" fontWeight="600" fontFamily="var(--font-geist-sans), sans-serif">
         {label}
       </text>
     </g>
   );
   return (
     <svg viewBox="0 0 520 340" className="w-full" fill="none" stroke={INK} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      {box(20, 147, 110, "Teams")}
+      {box(20, 145, 110, "Teams")}
       {box(200, 40, 120, "Server A")}
-      {box(200, 147, 120, "Server B")}
+      {box(200, 145, 120, "Server B")}
       {box(200, 254, 120, "Server C")}
-      {box(390, 147, 110, "Database")}
-      <path className="draw" d="M130 170L200 63M130 170H200M130 170L200 277" />
-      <path className="draw" d="M320 63L390 170M320 170H390M320 277L390 170" />
-      <path className="draw" stroke="#ff5018" d="M455 80l22 8v18c0 14-9 24-22 30-13-6-22-16-22-30V88z" />
-      <path className="draw" stroke="#ff5018" d="M446 112l7 7 13-14" />
-      <text className="fade" x="455" y="66" textAnchor="middle" fill="#ff5018" stroke="none" fontSize="12" fontFamily="ui-monospace, monospace">secured</text>
+      {box(390, 145, 110, "Database")}
+      <path className="draw" d="M130 170L200 65M130 170H200M130 170L200 279" />
+      <path className="draw" d="M320 65L390 170M320 170H390M320 279L390 170" />
+      <path className="draw" stroke="#ff5018" d="M445 232l22 8v16c0 13-9 22-22 28-13-6-22-15-22-28v-16z" />
+      <path className="draw" stroke="#ff5018" d="M436 258l7 7 13-14" />
+      <text className="fade" x="445" y="314" textAnchor="middle" fill="#ff5018" stroke="none" fontSize="16" fontFamily="ui-monospace, monospace">secured</text>
     </svg>
   );
 }
 
 function Together() {
   return (
-    <svg viewBox="0 0 520 340" className="w-full" fill="none" stroke={INK} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <rect className="draw" x="40" y="100" width="130" height="130" rx="26" />
-      <image href="/logo.png" x="75" y="135" width="60" height="60" />
-      <rect className="draw" x="350" y="100" width="130" height="130" rx="26" />
-      <image href="/northfoundry-logo.png" x="360" y="110" width="110" height="110" />
-      <path className="draw" stroke="#ff5018" d="M170 165H350" />
-      <circle className="draw" cx="260" cy="165" r="22" stroke="#ff5018" />
-      <path className="draw" stroke="#ff5018" d="M250 155l20 20M270 155l-20 20" />
-      <text className="fade" x="105" y="262" textAnchor="middle" fill={INK} stroke="none" fontSize="14" fontFamily="var(--font-geist-sans), sans-serif">WebflowX</text>
-      <text className="fade" x="415" y="262" textAnchor="middle" fill={INK} stroke="none" fontSize="14" fontFamily="var(--font-geist-sans), sans-serif">North Foundry</text>
+    <svg viewBox="0 0 520 340" className="w-full" fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <defs>
+        <clipPath id="tg-a"><rect x="30" y="80" width="150" height="150" rx="30" /></clipPath>
+        <clipPath id="tg-b"><rect x="340" y="80" width="150" height="150" rx="30" /></clipPath>
+      </defs>
+      <rect x="30" y="80" width="150" height="150" rx="30" fill="#fff" stroke="none" />
+      <image href="/logo.png" x="55" y="105" width="100" height="100" preserveAspectRatio="xMidYMid meet" clipPath="url(#tg-a)" />
+      <rect className="draw" x="30" y="80" width="150" height="150" rx="30" />
+      <rect x="340" y="80" width="150" height="150" rx="30" fill="#fff" stroke="none" />
+      <image href="/northfoundry-logo.png" x="340" y="80" width="150" height="150" preserveAspectRatio="xMidYMid slice" clipPath="url(#tg-b)" />
+      <rect className="draw" x="340" y="80" width="150" height="150" rx="30" />
+      <path className="draw" stroke="#ff5018" d="M180 155H340" />
+      <circle cx="260" cy="155" r="26" fill="#fbf9f7" stroke="#ff5018" />
+      <path className="draw" stroke="#ff5018" d="M249 144l22 22M271 144l-22 22" />
+      <text className="fade" x="105" y="272" textAnchor="middle" fill={INK} stroke="none" fontSize="20" fontWeight="600" fontFamily="var(--font-geist-sans), sans-serif">WebflowX</text>
+      <text className="fade" x="415" y="272" textAnchor="middle" fill={INK} stroke="none" fontSize="20" fontWeight="600" fontFamily="var(--font-geist-sans), sans-serif">North Foundry</text>
     </svg>
   );
 }

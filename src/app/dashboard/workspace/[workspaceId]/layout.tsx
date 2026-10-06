@@ -36,7 +36,7 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
           <ResizablePanel
             defaultSize={220}  // percentage of total width
             minSize={220}      // min width percentage
-            className="bg-[#402633] text-white overflow-auto"
+            className="bg-[#402633] text-white overflow-auto border-r border-white/5"
           >
             <WorkSpaceSidebar />
           </ResizablePanel>
@@ -65,7 +65,7 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
                 onClose={onClose}
                 />
              ):(
-               <div className="flex h-ful items-center justify-center">
+               <div className="flex h-full items-center justify-center bg-white">
                 <Loader className="size-5 animate-spin text-muted-foreground"/>
               </div>
              )}

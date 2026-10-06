@@ -35,13 +35,13 @@ export const Reactions =({data, onChange}:ReactionsProps)=>{
                label={`${reaction.count} ${reaction.count === 1 ? "person": "people"} reacted with ${reaction.value}`}>
                  <button 
                 onClick={()=> onChange(reaction.value)}
-                className={cn("h-6 px-2 rounded-full bg-slate-200/70 border border-transparent text-slate-800 flex items-center gap-x-1",
-                reaction.memberIds.includes(currentMemberId) && "bg-orange-100/70 border-orange-500 text-black"
+                className={cn("h-6 px-2 rounded-full bg-[#f7f2ee] border border-[#381d2a]/10 text-[#1b1017] flex items-center gap-x-1 transition-colors hover:border-[#381d2a]/25",
+                reaction.memberIds.includes(currentMemberId) && "bg-[#ff5018]/10 border-[#ff5018]/40 text-[#1b1017]"
                 )}>
                     {reaction.value}
 
-                    <span className={cn("text-xs font-semibold text-muted-foreground",
-                    reaction.memberIds.includes(currentMemberId) && "text-orange-500"
+                    <span className={cn("text-xs font-semibold text-[#1b1017]/60",
+                    reaction.memberIds.includes(currentMemberId) && "text-[#ff5018]"
                     )}>
                         {reaction.count}
                     </span>
@@ -52,7 +52,7 @@ export const Reactions =({data, onChange}:ReactionsProps)=>{
             hint="Add reaction"
             onEmojiSelect={(emoji)=> onChange(emoji.native)}
             >
-                <button className="h-7 px-3 rounded-full bg-slate-200/70 border border-transparent hover:border-slate-500 text-slate-800 flex items-center gap-x-1">
+                <button className="h-6 px-2.5 rounded-full bg-[#f7f2ee] border border-[#381d2a]/10 hover:border-[#381d2a]/25 text-[#1b1017]/70 flex items-center gap-x-1">
                 <MdOutlineAddReaction className="size-4"/>
                 </button>
 

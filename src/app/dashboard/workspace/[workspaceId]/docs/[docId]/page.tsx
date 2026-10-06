@@ -125,7 +125,7 @@ export default function DocPage() {
 
     if (isLoading || !currentMember) {
         return (
-            <div className="h-full flex items-center justify-center bg-[#f7f2ee]">
+            <div className="h-full flex items-center justify-center bg-[#fbf9f7]">
                 <Loader className="size-5 animate-spin text-[#ff5018]" />
             </div>
         )
@@ -133,12 +133,14 @@ export default function DocPage() {
 
     if (!doc) {
         return (
-            <div className="h-full flex flex-col items-center justify-center gap-3 text-muted-foreground bg-[#f7f2ee] px-4">
-                <FileText className="size-10" />
-                <p className="text-sm text-center">Document not found</p>
+            <div className="h-full flex flex-col items-center justify-center gap-3 bg-[#fbf9f7] px-4">
+                <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
+                    <FileText className="size-6" />
+                </div>
+                <p className="text-sm font-semibold tracking-tight text-[#1b1017] text-center">Document not found</p>
                 <Button
-                    variant="outline"
                     size="sm"
+                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold"
                     onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}
                 >
                     <ArrowLeft className="size-4 mr-1" /> Back to Docs
@@ -148,42 +150,42 @@ export default function DocPage() {
     }
 
     return (
-        <div className="h-full flex flex-col overflow-hidden bg-[#f7f2ee]">
+        <div className="h-full flex flex-col overflow-hidden bg-[#fbf9f7]">
             {/* Header */}
-            <div className="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 border-b bg-white shrink-0 shadow-none gap-2">
+            <div className="flex items-center justify-between px-3 sm:px-6 h-14 border-b border-[#381d2a]/12 bg-white shrink-0 gap-2">
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 sm:h-7 text-[11px] sm:text-xs gap-1 text-muted-foreground hover:text-foreground px-2 shrink-0"
+                        className="h-8 text-xs gap-1 rounded-lg text-[#1b1017]/60 hover:text-[#1b1017] hover:bg-[#f3eeea] px-2 shrink-0"
                         onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}
                     >
                         <ArrowLeft className="size-3 sm:size-3.5" /> 
                         <span className="hidden xs:inline">Docs</span>
                     </Button>
-                    <span className="text-muted-foreground hidden xs:inline">/</span>
+                    <span className="text-[#1b1017]/30 hidden xs:inline">/</span>
                     <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                        <div className={`size-5 sm:size-6 rounded flex items-center justify-center shrink-0 ${doc.type === "spreadsheet" ? "bg-green-50" : "bg-[#ff5018]/10"}`}>
+                        <div className={`size-5 sm:size-6 rounded-md flex items-center justify-center shrink-0 ${doc.type === "spreadsheet" ? "bg-green-50" : "bg-[#ff5018]/10"}`}>
                             {doc.type === "spreadsheet"
-                                ? <FileSpreadsheet className="size-3 sm:size-3.5 text-green-600" />
+                                ? <FileSpreadsheet className="size-3 sm:size-3.5 text-green-700" />
                                 : <FileText className="size-3 sm:size-3.5 text-[#ff5018]" />
                             }
                         </div>
-                        <span className="text-xs sm:text-sm font-semibold truncate">{doc.title}</span>
+                        <span className="text-sm font-semibold tracking-tight text-[#1b1017] truncate">{doc.title}</span>
                     </div>
                 </div>
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                     <DropdownMenu open={showShareDialog} onOpenChange={setShowShareDialog}>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-6 sm:h-7 text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2 sm:px-3">
+                            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 px-3 rounded-lg border-[#381d2a]/15 hover:bg-[#f3eeea]">
                                 <Share2 className="size-3 sm:size-3.5" /> 
                                 <span className="hidden xs:inline">Share</span>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-52 sm:w-56 p-3">
-                            <p className="text-xs font-semibold mb-2">Share to channel</p>
+                        <DropdownMenuContent align="end" className="w-52 sm:w-56 p-3 rounded-xl border-[#381d2a]/12">
+                            <p className="text-xs font-semibold tracking-tight text-[#1b1017] mb-2">Share to channel</p>
                             <Select value={shareChannelId} onValueChange={setShareChannelId}>
-                                <SelectTrigger className="h-7 text-xs mb-2">
+                                <SelectTrigger className="h-8 text-xs mb-2 rounded-lg">
                                     <SelectValue placeholder="Select channel..." />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -197,7 +199,7 @@ export default function DocPage() {
                             <Button
                                 onClick={handleShare}
                                 disabled={!shareChannelId}
-                                className="w-full h-7 text-xs bg-[#ff5018] hover:bg-[#e6430f] text-white"
+                                className="w-full h-8 text-xs rounded-lg font-semibold bg-[#ff5018] hover:bg-[#e6430f] text-white"
                             >
                                 Share
                             </Button>
@@ -208,7 +210,7 @@ export default function DocPage() {
                         onClick={handleDownloadPdf}
                         variant="outline"
                         size="sm"
-                        className="h-6 sm:h-7 text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2 sm:px-3"
+                        className="h-8 text-xs gap-1.5 px-3 rounded-lg border-[#381d2a]/15 hover:bg-[#f3eeea]"
                     >
                         <Download className="size-3 sm:size-3.5" /> 
                         <span className="hidden xs:inline">PDF</span>

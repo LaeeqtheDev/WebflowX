@@ -136,10 +136,10 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
 
     if(loadingMessage || status === "LoadingFirstPage"){
         return(
-            <div className="h-full flex flex-col">
-            <div className="h-12.25 flex justify-between items-center px-4 border-b">
-                <p className="text-lg font-bold">Thread</p>
-                <Button onClick={onClose} size={"iconSm"} variant={"ghost"}>
+            <div className="h-full flex flex-col bg-white">
+            <div className="h-14 flex justify-between items-center px-4 border-b border-[#381d2a]/12 bg-white">
+                <p className="text-lg font-semibold tracking-tight text-[#1b1017]">Thread</p>
+                <Button onClick={onClose} size={"iconSm"} variant={"ghost"} className="rounded-lg hover:bg-[#f7f2ee]">
                     <XIcon className="size-5 stroke-[1.5]"/>
                 </Button>
             </div>
@@ -154,26 +154,26 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
 
     if(!message){
         return(
-            <div className="h-full flex flex-col">
-            <div className="h-12.25 flex justify-between items-center px-4 border-b">
-                <p className="text-lg font-bold">Thread</p>
-                <Button onClick={onClose} size={"iconSm"} variant={"ghost"}>
+            <div className="h-full flex flex-col bg-white">
+            <div className="h-14 flex justify-between items-center px-4 border-b border-[#381d2a]/12 bg-white">
+                <p className="text-lg font-semibold tracking-tight text-[#1b1017]">Thread</p>
+                <Button onClick={onClose} size={"iconSm"} variant={"ghost"} className="rounded-lg hover:bg-[#f7f2ee]">
                     <XIcon className="size-5 stroke-[1.5]"/>
                 </Button>
             </div>
             <div className="flex flex-col gap-y-2 h-full items-center justify-center">
                 <AlertTriangle className="size-5 text-[#ff5018] "/>
-                <p className="text-sm text-muted-foreground">Message not found</p>
+                <p className="text-sm text-[#1b1017]/60">Message not found</p>
             </div>
         </div>
         )
     }
 
     return(
-        <div className="h-full flex flex-col">
-            <div className="h-12.25 flex justify-between items-center px-4 border-b">
-                <p className="text-lg font-bold">Thread</p>
-                <Button onClick={onClose} size={"iconSm"} variant={"ghost"}>
+        <div className="h-full flex flex-col bg-white">
+            <div className="h-14 flex justify-between items-center px-4 border-b border-[#381d2a]/12 bg-white">
+                <p className="text-lg font-semibold tracking-tight text-[#1b1017]">Thread</p>
+                <Button onClick={onClose} size={"iconSm"} variant={"ghost"} className="rounded-lg hover:bg-[#f7f2ee]">
                     <XIcon className="size-5 stroke-[1.5]"/>
                 </Button>
             </div>
@@ -181,8 +181,8 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
             {Object.entries(groupedMessages || {}).map(([dateKey, messages])=> (
                 <div key={dateKey}>
                     <div className="text-center my-2 relative">
-                        <hr className="absolute top-1/2 left-0 right-0 border-t border-gray-300"/>
-                        <span className="relative inline-block bg-white px-4 py-1 rounded-full text-xs border border-gray-300 shadow-none">
+                        <hr className="absolute top-1/2 left-0 right-0 border-t border-[#381d2a]/12"/>
+                        <span className="relative inline-block bg-white px-4 py-1 rounded-full text-xs font-medium text-[#1b1017]/60 border border-[#381d2a]/12 shadow-none">
                             {formatDateLabel(dateKey)}
                         </span>
                     </div>
@@ -242,8 +242,8 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
 
                 {isLoadingMore && (
                 <div className="text-center my-2 relative">
-                <hr className="absolute top-1/2 left-0 right-0 border-t border-gray-300"/>
-                <span className="relative inline-block bg-white px-4 py-1 rounded-full text-xs border border-gray-300 shadow-none">
+                <hr className="absolute top-1/2 left-0 right-0 border-t border-[#381d2a]/12"/>
+                <span className="relative inline-block bg-white px-4 py-1 rounded-full text-xs font-medium text-[#1b1017]/60 border border-[#381d2a]/12 shadow-none">
                     <Loader className="size-4 animate-spin"/>
                 </span>
             </div>
@@ -267,7 +267,7 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
                 isCompact={false}
                 />
             </div>
-            <div className="px-4">
+            <div className="px-4 pb-4">
                 <Editor
                 onSubmit={handleSubmit}
                 key={editorKey}

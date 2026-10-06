@@ -35,13 +35,13 @@ export const CreateWorkspaceModal = () => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent>
+      <DialogContent className="rounded-2xl p-6">
         <DialogHeader>
-          <DialogTitle>Create your workspace</DialogTitle>
+          <DialogTitle className="text-xl font-semibold tracking-tight">Create your workspace</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}
-          className="space-y-4"
+          className="space-y-5"
   
         >
           <Input

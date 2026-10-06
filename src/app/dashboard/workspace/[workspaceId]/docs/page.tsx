@@ -68,23 +68,23 @@ export default function DocsPage() {
     }
 
     return (
-        <div className="h-full flex flex-col overflow-hidden bg-[#f7f2ee]">
+        <div className="h-full flex flex-col overflow-hidden bg-[#fbf9f7]">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b bg-white shrink-0 shadow-none">
-                <div className="flex items-center gap-2">
-                    <div className="size-7 sm:size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
-                        <FileText className="size-3.5 sm:size-4 text-[#ff5018]" />
+            <div className="flex items-center justify-between px-4 sm:px-6 h-14 border-b border-[#381d2a]/12 bg-white shrink-0">
+                <div className="flex items-center gap-3">
+                    <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
+                        <FileText className="size-4 text-[#ff5018]" />
                     </div>
                     <div>
-                        <h1 className="tracking-tight text-sm sm:text-base font-bold leading-none">Documents</h1>
-                        <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">
+                        <h1 className="tracking-tight text-[17px] font-semibold leading-none text-[#1b1017]">Documents</h1>
+                        <p className="text-[11px] text-[#1b1017]/60 mt-1 leading-none">
                             {docs?.length ?? 0} document{docs?.length !== 1 ? "s" : ""}
                         </p>
                     </div>
                 </div>
                 <Button
                     onClick={() => setShowCreate(true)}
-                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-7 sm:h-8 text-[11px] sm:text-xs px-2 sm:px-3"
+                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 text-xs px-3 rounded-lg font-semibold"
                 >
                     <Plus className="size-3.5 sm:size-4 sm:mr-1" /> 
                     <span className="hidden sm:inline">New Document</span>
@@ -92,21 +92,21 @@ export default function DocsPage() {
             </div>
 
             {/* Doc grid */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full">
                         <Loader className="size-5 animate-spin text-[#ff5018]" />
                     </div>
                 ) : !docs || docs.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground px-4">
-                        <div className="size-14 sm:size-16 rounded-2xl bg-[#ff5018]/10 flex items-center justify-center">
-                            <FileText className="size-7 sm:size-8 text-[#ff5018]" />
+                    <div className="flex flex-col items-center justify-center h-full gap-4 px-4">
+                        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
+                            <FileText className="size-6 text-[#ff5018]" />
                         </div>
                         <div className="text-center">
-                            <p className="text-sm font-medium">No documents yet</p>
-                            <p className="text-xs mt-1">Create your first document to get started</p>
+                            <p className="text-sm font-semibold tracking-tight text-[#1b1017]">No documents yet</p>
+                            <p className="text-xs mt-1 text-[#1b1017]/60">Create your first document to get started</p>
                         </div>
-                        <Button onClick={() => setShowCreate(true)} variant="outline" size="sm">
+                        <Button onClick={() => setShowCreate(true)} size="sm" className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold">
                             <Plus className="size-4 mr-1" /> New Document
                         </Button>
                     </div>
@@ -115,7 +115,7 @@ export default function DocsPage() {
                         {docs.map(doc => (
                             <div
                                 key={doc._id}
-                                className="group relative flex flex-col gap-2 sm:gap-3 p-3 sm:p-4 border rounded-xl cursor-pointer hover:shadow-md transition-all hover:border-[#ff5018]/30 bg-white"
+                                className="group relative flex flex-col gap-3 p-3 sm:p-4 border border-[#381d2a]/12 rounded-xl cursor-pointer hover:shadow-sm transition-all hover:border-[#ff5018]/40 bg-white"
                                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs/${doc._id}`)}
                             >
                                 {/* Doc preview area */}
@@ -124,8 +124,8 @@ export default function DocsPage() {
                                     doc.type === "spreadsheet" ? "bg-green-50" : "bg-[#ff5018]/10"
                                 )}>
                                     {doc.type === "spreadsheet"
-                                        ? <FileSpreadsheet className="size-8 sm:size-10 text-green-400" />
-                                        : <FileText className="size-8 sm:size-10 text-[#ff5018]" />
+                                        ? <FileSpreadsheet className="size-8 sm:size-9 text-green-600" />
+                                        : <FileText className="size-8 sm:size-9 text-[#ff5018]" />
                                     }
                                 </div>
 
@@ -140,14 +140,14 @@ export default function DocsPage() {
                                         }}
                                         onBlur={() => handleRename(doc._id)}
                                         autoFocus
-                                        className="h-5 sm:h-6 text-[11px] sm:text-xs px-1"
+                                        className="h-7 text-xs px-2 rounded-lg"
                                         onClick={e => e.stopPropagation()}
                                     />
                                 ) : (
-                                    <p className="text-[11px] sm:text-xs font-semibold truncate leading-none">{doc.title}</p>
+                                    <p className="text-[13px] font-semibold tracking-tight text-[#1b1017] truncate leading-none">{doc.title}</p>
                                 )}
 
-                                <p className="text-[9px] sm:text-[10px] text-muted-foreground leading-none">
+                                <p className="text-[11px] text-[#1b1017]/60 leading-none">
                                     {doc.updatedAt ? format(doc.updatedAt, "MMM d, yyyy") : ""}
                                 </p>
 
@@ -155,7 +155,7 @@ export default function DocsPage() {
                                 <div className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                                            <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-[#ff5018] rounded hover:bg-muted">
+                                            <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-[#1b1017]/60 hover:text-[#ff5018] rounded-md bg-white/80 hover:bg-white">
                                                 <MoreHorizontal className="size-3 sm:size-3.5" />
                                             </button>
                                         </DropdownMenuTrigger>
@@ -187,9 +187,9 @@ export default function DocsPage() {
 
             {/* Create dialog */}
             <Dialog open={showCreate} onOpenChange={setShowCreate}>
-                <DialogContent className="max-w-sm mx-4">
+                <DialogContent className="max-w-sm mx-4 rounded-2xl border-[#381d2a]/12">
                     <DialogHeader>
-                        <DialogTitle className="text-base sm:text-lg">Create Document</DialogTitle>
+                        <DialogTitle className="text-[17px] font-semibold tracking-tight">Create Document</DialogTitle>
                     </DialogHeader>
                     <div className="flex flex-col gap-3 mt-2">
                         <Input
@@ -198,21 +198,21 @@ export default function DocsPage() {
                             onChange={e => setNewTitle(e.target.value)}
                             onKeyDown={e => e.key === "Enter" && handleCreate()}
                             autoFocus
-                            className="text-sm"
+                            className="text-sm rounded-lg h-10"
                         />
-                        <div className="flex items-center gap-3 p-3 rounded-lg border-2 border-[#ff5018] bg-orange-50">
-                            <div className="size-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                        <div className="flex items-center gap-3 p-3 rounded-xl border border-[#ff5018] bg-[#ff5018]/5">
+                            <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center shrink-0">
                                 <FileText className="size-4 text-[#ff5018]" />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-sm font-medium">Document</p>
-                                <p className="text-[10px] text-muted-foreground">Rich text with images & tables</p>
+                                <p className="text-sm font-semibold tracking-tight text-[#1b1017]">Document</p>
+                                <p className="text-[11px] text-[#1b1017]/60">Rich text with images & tables</p>
                             </div>
                         </div>
                         <Button
                             onClick={handleCreate}
                             disabled={isCreating}
-                            className="bg-[#ff5018] hover:bg-[#e6430f] text-white text-sm"
+                            className="bg-[#ff5018] hover:bg-[#e6430f] text-white text-sm rounded-lg font-semibold h-10"
                         >
                             {isCreating ? <Loader className="size-4 animate-spin" /> : "Create Document"}
                         </Button>

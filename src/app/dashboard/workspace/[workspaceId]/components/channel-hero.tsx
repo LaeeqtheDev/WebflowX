@@ -7,12 +7,15 @@ interface ChannelHeroProps {
 
 export const ChannelHero = ({name, creationTime}: ChannelHeroProps) => {
     return (
-        <div className="mt-22 mx-5 mb-4">
-            <p className="text-2xl font-bold flex items-center mb-2">
+        <div className="mt-22 mx-5 mb-6">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-[#ff5018]/10 text-2xl font-semibold text-[#ff5018] mb-4">
+                #
+            </div>
+            <p className="text-3xl font-semibold tracking-tight text-[#1b1017] flex items-center mb-2">
                 # {name}
             </p>
-            <p className="font-normal text-slate-800 mb-4">
-                This channel was created on {format(creationTime ,"MMMM do, yyyy")}. This is the very beginning of the <strong>{name}</strong> channel.
+            <p className="font-normal text-[#1b1017]/60 max-w-xl leading-relaxed mb-4">
+                This channel was created on {format(creationTime ,"MMMM do, yyyy")}. This is the very beginning of the <strong className="font-semibold text-[#1b1017]">{name}</strong> channel.
 
             </p>
         </div>

@@ -54,11 +54,11 @@ export const InviteModal = ({ open, setOpen, name, joinCode }: InviteModalProps)
         <>
             <ConfirmDialog />
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent>
+                <DialogContent className="rounded-2xl p-6">
                     <DialogHeader>
-                        <DialogTitle>
+                        <DialogTitle className="font-semibold tracking-tight">
                             Invite People{" "}
-                            <span className="font-semibold text-[#ff5018] underline underline-offset-4">
+                            <span className="font-semibold text-[#ff5018]">
                                 {name}
                             </span>
                         </DialogTitle>
@@ -66,8 +66,8 @@ export const InviteModal = ({ open, setOpen, name, joinCode }: InviteModalProps)
                             Use the code below to invite people to your Workspace
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="flex flex-col gap-y-4 items-center justify-center py-10">
-                        <p className="text-4xl font-bold tracking-widest uppercase">
+                    <div className="flex flex-col gap-y-4 items-center justify-center py-8 my-2 rounded-xl bg-[#f7f2ee] border border-[#381d2a]/10">
+                        <p className="text-4xl font-semibold tracking-widest uppercase text-[#1b1017]">
                             {joinCode}
                         </p>
                         <Button variant={"ghost"} size={"sm"} onClick={handleCopy}>

@@ -28,31 +28,31 @@ export const WorkspaceHeader = ({ workspace, isAdmin }: WorkspaceHeaderProps) =>
    name={workspace.name} joinCode={workspace.joinCode}
    />
    <PreferencesModal open={preferencesOpen} setOpen={setPreferencesOpen}  initialValue={workspace.name}/>
-    <div className="flex items-center justify-between px-4 h-12.25 gap-2 w-full">
+    <div className="flex items-center justify-between px-3 h-14 gap-2 w-full border-b border-white/10">
       
       {/* Workspace Name Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            className="font-semibold text-lg w-auto p-1.5 overflow-hidden cursor-pointer"
+            className="font-semibold tracking-tight text-base text-white hover:bg-white/10 rounded-lg w-auto px-2 py-1.5 overflow-hidden cursor-pointer"
             size="sm"
             variant="trasnparent"
           >
-<span className="flex items-start truncate max-w-fit">
+<span className="flex items-center truncate max-w-fit">
   {workspace.name}
-  <ChevronDown className="text-[#ff5018] size-4 ml-1 mt-1 shrink-0 cursor-pointer" />
+  <ChevronDown className="text-white/55 size-4 ml-1 shrink-0 cursor-pointer" />
 </span>
 
           </Button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent side="bottom" align="start" className="w-64">
-          <DropdownMenuItem className="cursor-pointer capitalize">
-            <div className="size-9 relative overflow-hidden bg-[#402633] text-white font-semibold text-xl rounded-md flex items-center justify-center mr-2">
+        <DropdownMenuContent side="bottom" align="start" className="w-64 rounded-xl p-1.5">
+          <DropdownMenuItem className="cursor-pointer capitalize rounded-lg">
+            <div className="size-9 relative overflow-hidden bg-[#381d2a] text-white font-semibold text-lg rounded-lg flex items-center justify-center mr-2">
               {workspace.name.charAt(0).toUpperCase()}
             </div>
             <div className="flex flex-col items-start">
-              <p className="font-bold">{workspace.name}</p>
+              <p className="font-semibold tracking-tight">{workspace.name}</p>
               <p className="text-xs text-muted-foreground">Active Workspace</p>
             </div>
           </DropdownMenuItem>
@@ -60,11 +60,11 @@ export const WorkspaceHeader = ({ workspace, isAdmin }: WorkspaceHeaderProps) =>
           {isAdmin && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer py-2"
+              <DropdownMenuItem className="cursor-pointer py-2 rounded-lg"
               onClick={() => setInviteOpen(true)}>
                 Invite People to {workspace.name}
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer py-2" onClick={() => setPreferencesOpen(true)}>
+              <DropdownMenuItem className="cursor-pointer py-2 rounded-lg" onClick={() => setPreferencesOpen(true)}>
                 Preferences
               </DropdownMenuItem>
             </>
@@ -75,13 +75,13 @@ export const WorkspaceHeader = ({ workspace, isAdmin }: WorkspaceHeaderProps) =>
       {/* Action Buttons */}
       <div className="flex items-center gap-1 shrink-0">
       <Hint label="Filter Conversations" side="bottom">
-        <Button variant="trasnparent" size="iconSm">
-          <ListFilter className="size-4 text-[#ff5018]" />
+        <Button variant="trasnparent" size="iconSm" className="rounded-lg hover:bg-white/10">
+          <ListFilter className="size-4 text-white/70" />
         </Button>
         </Hint>
         <Hint label="New Message" side="bottom">
-          <Button variant="trasnparent" size="iconSm">
-            <SquarePen className="size-4 text-[#ff5018]" />
+          <Button variant="trasnparent" size="iconSm" className="rounded-lg hover:bg-white/10">
+            <SquarePen className="size-4 text-white/70" />
           </Button>
         </Hint>
       </div>

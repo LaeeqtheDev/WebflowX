@@ -228,13 +228,13 @@ const MeetingRoomInner = ({ onDisconnect }: { onDisconnect: (transcript: string)
     }, [room, onDisconnect])
 
     return (
-        <div className="h-full w-full relative">
+        <div className="h-full w-full relative bg-[#2a1420]">
             <VideoConference />
             <RoomAudioRenderer />
             
             <div className="absolute top-4 left-4 z-50">
                 {status === "recording" && (
-                    <div className="flex items-center gap-2 bg-green-500/90 text-white px-3 py-1.5 rounded-full text-xs shadow-lg">
+                    <div className="flex items-center gap-2 bg-green-600/95 text-white px-3 py-1.5 rounded-lg text-xs font-medium shadow-sm">
                         <span className="relative flex h-2 w-2">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
@@ -244,14 +244,14 @@ const MeetingRoomInner = ({ onDisconnect }: { onDisconnect: (transcript: string)
                 )}
                 
                 {status === "starting" && (
-                    <div className="flex items-center gap-2 bg-[#ff5018]/100/90 text-white px-3 py-1.5 rounded-full text-xs shadow-lg">
+                    <div className="flex items-center gap-2 bg-[#ff5018] text-white px-3 py-1.5 rounded-lg text-xs font-medium shadow-sm">
                         <Mic className="size-3 animate-pulse" />
                         Initializing...
                     </div>
                 )}
                 
                 {status === "error" && (
-                    <div className="flex flex-col gap-2 bg-red-500/90 text-white p-3 rounded-lg text-xs shadow-lg max-w-sm">
+                    <div className="flex flex-col gap-2 bg-red-600/95 text-white p-3 rounded-xl text-xs shadow-sm max-w-sm">
                         <div className="flex items-center gap-2">
                             <AlertCircle className="size-4" />
                             <span className="font-semibold">Error</span>
@@ -261,7 +261,7 @@ const MeetingRoomInner = ({ onDisconnect }: { onDisconnect: (transcript: string)
                 )}
             </div>
 
-            <div className="absolute bottom-4 left-4 z-50 bg-black/80 text-white text-[10px] px-3 py-2 rounded font-mono">
+            <div className="absolute bottom-4 left-4 z-50 bg-[#2a1420]/90 border border-white/10 text-white/80 text-[10px] px-3 py-2 rounded-lg font-mono">
                 <div>Status: <strong>{status}</strong></div>
                 <div>Chunks sent: <strong>{audioChunksSent}</strong></div>
                 <div>Transcript: <strong>{transcriptLength} chars</strong></div>
@@ -278,8 +278,21 @@ export const MeetingRoom = ({ token, serverUrl, onDisconnect }: MeetingRoomProps
             connect={true}
             video={true}
             audio={true}
-            className="h-full w-full"
+            className="h-full w-full bg-[#2a1420]"
             data-lk-theme="default"
+            style={{
+                "--lk-bg": "#2a1420",
+                "--lk-bg2": "#381d2a",
+                "--lk-bg3": "#402633",
+                "--lk-control-bg": "#381d2a",
+                "--lk-control-hover-bg": "#4a2a3a",
+                "--lk-accent-bg": "#ff5018",
+                "--lk-accent2": "#e6430f",
+                "--lk-accent3": "#e6430f",
+                "--lk-danger": "#dc2626",
+                "--lk-border-radius": "1rem",
+                "--lk-control-border-radius": "9999px",
+            } as React.CSSProperties}
         >
             <MeetingRoomInner onDisconnect={onDisconnect} />
         </LiveKitRoom>

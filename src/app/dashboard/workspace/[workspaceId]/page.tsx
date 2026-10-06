@@ -12,7 +12,7 @@ import { useEffect, useMemo } from "react";
 
 // centralized container for all states
 const CenteredContainer = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex flex-col items-center justify-center h-full w-full gap-2">
+  <div className="flex flex-col items-center justify-center h-full w-full gap-3 bg-[#fbf9f7]">
     {children}
   </div>
 );
@@ -41,7 +41,9 @@ const WorkspaceIdPage = () => {
   if (workspaceLoading || channelsLoading || memberLoading) {
     return (
       <CenteredContainer>
-        <Loader className="size-6 animate-spin text-[#ff5018]" />
+        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
+          <Loader className="size-6 animate-spin text-[#ff5018]" />
+        </div>
       </CenteredContainer>
     );
   }
@@ -49,8 +51,10 @@ const WorkspaceIdPage = () => {
   if (!workspace || !member) {
     return (
       <CenteredContainer>
-        <TriangleAlert className="size-6 text-[#ff5018]" />
-        <span className="text-sm text-muted-foreground">Workspace Not Found</span>
+        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
+          <TriangleAlert className="size-6 text-[#ff5018]" />
+        </div>
+        <span className="font-semibold tracking-tight text-[#1b1017]">Workspace Not Found</span>
       </CenteredContainer>
     );
   }
@@ -58,8 +62,10 @@ const WorkspaceIdPage = () => {
   if (!channels ) {
     return (
       <CenteredContainer>
-        <TriangleAlert className="size-6 text-[#ff5018]" />
-        <span className="text-sm text-muted-foreground">No channels found</span>
+        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
+          <TriangleAlert className="size-6 text-[#ff5018]" />
+        </div>
+        <span className="font-semibold tracking-tight text-[#1b1017]">No channels found</span>
       </CenteredContainer>
     );
   }

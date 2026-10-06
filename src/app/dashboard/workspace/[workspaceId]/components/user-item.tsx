@@ -13,12 +13,12 @@ import Link from "next/link";
 
 
 const userItemVariants = cva(
-    "flex items-center gap-1.5 justify-start font-normal h-7 px-4 text-sm overflow-hidden",
+    "flex items-center gap-1.5 justify-start font-normal h-7 px-[18px] text-sm overflow-hidden rounded-md transition-colors",
     {
         variants: {
             variant: {
-                default: "text-[#f9edffcc]",
-                active: "text-black bg-white/90 hover:bg-white/90",
+                default: "text-white/75 hover:text-white hover:bg-white/10",
+                active: "text-[#1b1017] font-medium bg-[#f7f2ee] hover:bg-[#f7f2ee]",
             },
         },
         defaultVariants: {

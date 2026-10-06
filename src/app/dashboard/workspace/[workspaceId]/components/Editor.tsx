@@ -153,21 +153,6 @@ const AI_COMMANDS = [
     },
 ];
 
-// File type icons mapping
-const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith("image/")) return "🖼️";
-    if (fileType.includes("pdf")) return "📄";
-    if (fileType.includes("word") || fileType.includes("document")) return "📝";
-    if (fileType.includes("sheet") || fileType.includes("excel")) return "📊";
-    if (fileType.includes("presentation") || fileType.includes("powerpoint"))
-        return "📽️";
-    if (fileType.includes("zip") || fileType.includes("rar")) return "📦";
-    if (fileType.includes("video")) return "🎬";
-    if (fileType.includes("audio")) return "🎵";
-    if (fileType.includes("text")) return "📃";
-    return "📎";
-};
-
 // Format file size
 const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
@@ -468,7 +453,7 @@ const Editor = ({
             <div ref={wrapperRef} className="relative">
                 {/* Slash command menu — outside the overflow-hidden div */}
                 {showSlashMenu && (
-                    <div className="absolute bottom-full left-0 z-9999 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden w-72 mb-2">
+                    <div className="absolute bottom-full left-0 z-9999 bg-white border border-[#381d2a]/12 rounded-xl shadow-lg overflow-hidden w-72 mb-2">
                         {/* Tabs */}
                         <div className="flex border-b">
                             <button
@@ -480,8 +465,8 @@ const Editor = ({
                                 className={cn(
                                     "flex-1 py-2 text-xs font-semibold transition-colors",
                                     activeTab === "format"
-                                        ? "text-[#ff5018] border-b-2 border-[#ff5018] bg-orange-50/50"
-                                        : "text-muted-foreground hover:text-foreground"
+                                        ? "text-[#ff5018] border-b-2 border-[#ff5018] bg-[#ff5018]/5"
+                                        : "text-[#1b1017]/60 hover:text-[#1b1017]"
                                 )}
                             >
                                 Formatting
@@ -495,8 +480,8 @@ const Editor = ({
                                 className={cn(
                                     "flex-1 py-2 text-xs font-semibold transition-colors flex items-center justify-center gap-1",
                                     activeTab === "ai"
-                                        ? "text-[#ff5018] border-b-2 border-[#ff5018] bg-orange-50/50"
-                                        : "text-muted-foreground hover:text-foreground"
+                                        ? "text-[#ff5018] border-b-2 border-[#ff5018] bg-[#ff5018]/5"
+                                        : "text-[#1b1017]/60 hover:text-[#1b1017]"
                                 )}
                             >
                                 <Sparkles className="size-3" /> AI
@@ -514,8 +499,8 @@ const Editor = ({
                                               handleFormattingCommand(cmd);
                                           }}
                                           className={cn(
-                                              "w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-orange-50 transition-colors",
-                                              selectedSlashItem === i && "bg-orange-50"
+                                              "w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-[#f7f2ee] transition-colors",
+                                              selectedSlashItem === i && "bg-[#f7f2ee]"
                                           )}
                                       >
                                           <div
@@ -523,7 +508,7 @@ const Editor = ({
                                                   "size-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0",
                                                   selectedSlashItem === i
                                                       ? "bg-[#ff5018] text-white"
-                                                      : "bg-gray-100 text-gray-600"
+                                                      : "bg-[#f7f2ee] text-[#381d2a]"
                                               )}
                                           >
                                               {cmd.icon}
@@ -544,8 +529,8 @@ const Editor = ({
                                               handleAiCommand(cmd.command);
                                           }}
                                           className={cn(
-                                              "w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-orange-50 transition-colors",
-                                              selectedSlashItem === i && "bg-orange-50"
+                                              "w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-[#f7f2ee] transition-colors",
+                                              selectedSlashItem === i && "bg-[#f7f2ee]"
                                           )}
                                       >
                                           <div
@@ -553,7 +538,7 @@ const Editor = ({
                                                   "size-8 rounded-lg flex items-center justify-center text-sm shrink-0",
                                                   selectedSlashItem === i
                                                       ? "bg-[#ff5018] text-white"
-                                                      : "bg-gray-100"
+                                                      : "bg-[#f7f2ee]"
                                               )}
                                           >
                                               {cmd.icon}
@@ -578,7 +563,7 @@ const Editor = ({
 
                 <div
                     className={cn(
-                        "flex flex-col border border-slate-200 rounded focus-within:border-slate-300 focus-within:shadow-none transition bg-white",
+                        "flex flex-col border border-[#381d2a]/15 rounded-xl focus-within:border-[#ff5018]/50 focus-within:ring-4 focus-within:ring-[#ff5018]/25 transition bg-white",
                         disabled && "opacity-50"
                     )}
                 >
@@ -606,7 +591,7 @@ const Editor = ({
                                             setImage(null);
                                             imageElementRef.current!.value = "";
                                         }}
-                                        className="hidden group-hover/image:flex rounded-full bg-black/70 hover:bg-black absolute -top-2.5 -right-2.5 text-white size-6 z-4 border-2 border-white items-center justify-center"
+                                        className="hidden group-hover/image:flex rounded-full bg-[#1b1017]/80 hover:bg-[#1b1017] absolute -top-2.5 -right-2.5 text-white size-6 z-4 border-2 border-white items-center justify-center"
                                     >
                                         <XIcon className="size-3.5" />
                                     </button>
@@ -615,7 +600,7 @@ const Editor = ({
                                     src={URL.createObjectURL(image)}
                                     alt="uploaded"
                                     fill
-                                    className="rounded-xl overflow-hidden border object-cover"
+                                    className="rounded-xl overflow-hidden border border-[#381d2a]/12 object-cover"
                                 />
                             </div>
                         </div>
@@ -624,20 +609,20 @@ const Editor = ({
                     {/* File preview */}
                     {!!file && (
                         <div className="p-2">
-                            <div className="relative flex items-center gap-3 p-3 bg-[#f7f2ee] rounded-lg border border-gray-200 group/file max-w-xs">
+                            <div className="relative flex items-center gap-3 p-3 bg-[#f7f2ee] rounded-xl border border-[#381d2a]/12 group/file max-w-xs">
                                 <Hint label="Remove File">
                                     <button
                                         onClick={() => {
                                             setFile(null);
                                             fileElementRef.current!.value = "";
                                         }}
-                                        className="hidden group-hover/file:flex rounded-full bg-black/70 hover:bg-black absolute -top-2 -right-2 text-white size-5 z-4 border-2 border-white items-center justify-center"
+                                        className="hidden group-hover/file:flex rounded-full bg-[#1b1017]/80 hover:bg-[#1b1017] absolute -top-2 -right-2 text-white size-5 z-4 border-2 border-white items-center justify-center"
                                     >
                                         <XIcon className="size-3" />
                                     </button>
                                 </Hint>
-                                <div className="size-10 rounded-lg bg-[#ff5018]/10 flex items-center justify-center text-lg shrink-0">
-                                    {getFileIcon(file.type)}
+                                <div className="size-10 rounded-lg bg-[#ff5018]/10 flex items-center justify-center shrink-0">
+                                    <FileText className="size-5 text-[#ff5018]" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium truncate">
@@ -737,7 +722,7 @@ const Editor = ({
                                     Cancel
                                 </Button>
                                 <Button
-                                    className="bg-[#ff5018]/50 hover:bg-[#ff5018] text-white"
+                                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white"
                                     disabled={disabled || isEmpty}
                                     onClick={() =>
                                         onSubmit({
@@ -765,10 +750,10 @@ const Editor = ({
                                 disabled={disabled || isEmpty}
                                 size={"iconSm"}
                                 className={cn(
-                                    "ml-auto",
+                                    "ml-auto rounded-lg",
                                     isEmpty
-                                        ? "bg-white hover:bg-white text-muted-foreground"
-                                        : "bg-[#ff5018]/50 hover:bg-[#ff5018] text-white cursor-pointer"
+                                        ? "bg-[#f7f2ee] hover:bg-[#f7f2ee] text-[#1b1017]/40"
+                                        : "bg-[#ff5018] hover:bg-[#e6430f] text-white cursor-pointer"
                                 )}
                             >
                                 <MdSend className="size-4" />

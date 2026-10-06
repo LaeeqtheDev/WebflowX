@@ -31,32 +31,32 @@ const TYPE_CONFIG = {
     },
     reaction: {
         icon: Smile,
-        color: "text-yellow-500",
-        bg: "bg-yellow-50",
+        color: "text-[#381d2a]",
+        bg: "bg-[#efe8e3]",
         label: "reacted to your message"
     },
     task_assigned: {
         icon: CheckSquare,
         color: "text-[#ff5018]",
-        bg: "bg-orange-50",
+        bg: "bg-[#ff5018]/10",
         label: "assigned a task to you"
     },
     task_comment: {
         icon: MessageSquare,
-        color: "text-purple-500",
-        bg: "bg-purple-50",
+        color: "text-[#381d2a]",
+        bg: "bg-[#efe8e3]",
         label: "commented on your task"
     },
     note_added: {
         icon: FileText,
-        color: "text-green-500",
-        bg: "bg-green-50",
+        color: "text-[#381d2a]",
+        bg: "bg-[#efe8e3]",
         label: "added a workspace note"
     },
     dm_received: {
         icon: MessageSquare,
-        color: "text-pink-500",
-        bg: "bg-pink-50",
+        color: "text-[#ff5018]",
+        bg: "bg-[#ff5018]/10",
         label: "sent you a direct message"
     },
 }
@@ -117,21 +117,21 @@ export default function ActivityPage() {
     }
 
     return (
-        <div className="h-full flex flex-col overflow-hidden bg-[#f7f2ee]">
+        <div className="h-full flex flex-col overflow-hidden bg-[#fbf9f7]">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b bg-white shrink-0 shadow-none">
+            <div className="flex items-center justify-between px-6 h-14 border-b bg-white shrink-0 shadow-none">
                 <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-lg bg-orange-50 flex items-center justify-center">
+                    <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
                         <Bell className="size-4 text-[#ff5018]" />
                     </div>
                     <div>
-                        <h1 className="tracking-tight text-base font-bold leading-none">Activity</h1>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                        <h1 className="tracking-tight text-[17px] font-semibold leading-none text-[#1b1017]">Activity</h1>
+                        <p className="text-[11px] text-[#1b1017]/60 mt-1">
                             {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}` : "All caught up!"}
                         </p>
                     </div>
                     {unreadCount > 0 && (
-                        <Badge className="bg-[#ff5018] text-white text-[10px] h-5 px-1.5">
+                        <Badge className="bg-[#ff5018] text-white text-[11px] h-5 px-2 rounded-md">
                             {unreadCount}
                         </Badge>
                     )}
@@ -141,7 +141,7 @@ export default function ActivityPage() {
                     <Button
                         variant="outline"
                         size="sm"
-                        className="h-7 text-xs gap-1.5"
+                        className="h-8 text-xs gap-1.5 rounded-lg border-[#381d2a]/15 hover:bg-[#f3eeea]"
                         onClick={() => window.location.reload()}
                     >
                         <RefreshCw className="size-3" /> Refresh
@@ -150,7 +150,7 @@ export default function ActivityPage() {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 text-xs gap-1.5"
+                            className="h-8 text-xs gap-1.5 rounded-lg border-[#381d2a]/15 hover:bg-[#f3eeea]"
                             onClick={handleMarkAllRead}
                             disabled={isMarkingAll}
                         >
@@ -161,7 +161,7 @@ export default function ActivityPage() {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 text-xs gap-1.5 text-destructive hover:text-destructive"
+                            className="h-8 text-xs gap-1.5 rounded-lg border-[#381d2a]/15 hover:bg-red-50 text-red-600 hover:text-red-700"
                             onClick={handleClearAll}
                             disabled={isClearing}
                         >
@@ -178,20 +178,20 @@ export default function ActivityPage() {
                         <Loader className="size-5 animate-spin text-[#ff5018]" />
                     </div>
                 ) : !notifications || notifications.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
-                        <div className="size-16 rounded-2xl bg-orange-50 flex items-center justify-center">
-                            <Bell className="size-8 text-[#ff5018]/40" />
+                    <div className="flex flex-col items-center justify-center h-full gap-4 text-[#1b1017]/60">
+                        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
+                            <Bell className="size-6 text-[#ff5018]" />
                         </div>
                         <div className="text-center">
-                            <p className="text-sm font-medium">No activity yet</p>
-                            <p className="text-xs mt-1 max-w-xs">
+                            <p className="font-semibold tracking-tight text-[#1b1017]">No activity yet</p>
+                            <p className="text-sm mt-1 max-w-xs">
                                 You&apos;ll be notified when someone replies to your messages,
                                 reacts, assigns tasks, or adds workspace notes
                             </p>
                         </div>
                     </div>
                 ) : (
-                    <div className="divide-y bg-white">
+                    <div className="divide-y divide-[#381d2a]/10 bg-white">
                         {notifications.map(notification => {
                             const config = TYPE_CONFIG[notification.type as keyof typeof TYPE_CONFIG]
                             if (!config) return null
@@ -203,19 +203,19 @@ export default function ActivityPage() {
                                     onClick={() => handleClick(notification)}
                                     className={cn(
                                         "flex items-start gap-4 px-6 py-4 cursor-pointer hover:bg-[#f7f2ee] transition-colors",
-                                        !notification.read && "border-l-2 border-l-[#ff5018] bg-orange-50/30"
+                                        !notification.read && "border-l-2 border-l-[#ff5018] bg-[#ff5018]/5"
                                     )}
                                 >
                                     {/* Avatar with type icon */}
                                     <div className="relative shrink-0">
-                                        <Avatar className="size-9">
+                                        <Avatar className="size-9 rounded-md">
                                             <AvatarImage src={notification.sender?.user?.image} />
-                                            <AvatarFallback className="text-xs">
+                                            <AvatarFallback className="text-xs rounded-md bg-[#381d2a] text-white">
                                                 {notification.sender?.user?.name?.[0] ?? "?"}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className={cn(
-                                            "absolute -bottom-0.5 -right-0.5 size-4 rounded-full flex items-center justify-center border border-white",
+                                            "absolute -bottom-0.5 -right-0.5 size-4 rounded-md flex items-center justify-center border border-white",
                                             config.bg
                                         )}>
                                             <Icon className={cn("size-2.5", config.color)} />
@@ -230,7 +230,7 @@ export default function ActivityPage() {
                                                     {notification.sender?.user?.name ?? "Someone"}
                                                 </span>
                                                 {" "}
-                                                <span className="text-muted-foreground">
+                                                <span className="text-[#1b1017]/60">
                                                     {config.label}
                                                 </span>
                                             </p>
@@ -238,7 +238,7 @@ export default function ActivityPage() {
                                                 {!notification.read && (
                                                     <div className="size-2 rounded-full bg-[#ff5018]" />
                                                 )}
-                                                <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                                                <span className="text-[11px] text-[#1b1017]/60 whitespace-nowrap">
                                                     {format(notification._creationTime, "MMM d, h:mm a")}
                                                 </span>
                                             </div>
@@ -258,7 +258,7 @@ export default function ActivityPage() {
 
                                         {/* Type badge */}
                                         <span className={cn(
-                                            "inline-block mt-1.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium",
+                                            "inline-block mt-1.5 text-[11px] px-2 py-0.5 rounded-md font-medium",
                                             config.bg,
                                             config.color
                                         )}>

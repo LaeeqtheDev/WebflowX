@@ -25,34 +25,34 @@ export default function DraftsPage() {
     }
 
     return (
-        <div className="h-full flex flex-col overflow-hidden bg-[#f7f2ee]">
+        <div className="h-full flex flex-col overflow-hidden bg-[#fbf9f7]">
             {/* Header */}
-            <div className="flex items-center gap-3 px-6 py-4 border-b bg-white shrink-0 shadow-none">
-                <div className="size-8 rounded-lg bg-purple-50 flex items-center justify-center">
-                    <SendHorizonal className="size-4 text-purple-500" />
+            <div className="flex items-center gap-3 px-6 h-14 border-b bg-white shrink-0 shadow-none">
+                <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
+                    <SendHorizonal className="size-4 text-[#ff5018]" />
                 </div>
                 <div>
-                    <h1 className="tracking-tight text-base font-bold leading-none">Sent</h1>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                    <h1 className="tracking-tight text-[17px] font-semibold leading-none text-[#1b1017]">Sent</h1>
+                    <p className="text-[11px] text-[#1b1017]/60 mt-1">
                         {messages?.length ?? 0} message{messages?.length !== 1 ? "s" : ""} sent across channels
                     </p>
                 </div>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto bg-white divide-y">
+            <div className="flex-1 overflow-y-auto bg-white divide-y divide-[#381d2a]/10">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full">
                         <Loader className="size-5 animate-spin text-[#ff5018]" />
                     </div>
                 ) : !messages || messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
-                        <div className="size-16 rounded-2xl bg-purple-50 flex items-center justify-center">
-                            <SendHorizonal className="size-8 text-purple-300" />
+                    <div className="flex flex-col items-center justify-center h-full gap-4 text-[#1b1017]/60">
+                        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
+                            <SendHorizonal className="size-6 text-[#ff5018]" />
                         </div>
                         <div className="text-center">
-                            <p className="text-sm font-medium">No messages sent yet</p>
-                            <p className="text-xs mt-1">Messages you send in channels will appear here</p>
+                            <p className="font-semibold tracking-tight text-[#1b1017]">No messages sent yet</p>
+                            <p className="text-sm mt-1">Messages you send in channels will appear here</p>
                         </div>
                     </div>
                 ) : (
@@ -64,9 +64,9 @@ export default function DraftsPage() {
                                 onClick={() => msg.channel?._id && handleClick(msg.channel._id)}
                                 className="flex items-start gap-3 px-4 py-3 hover:bg-[#f7f2ee] cursor-pointer transition-colors"
                             >
-                                <Avatar className="size-9 shrink-0 mt-0.5">
+                                <Avatar className="size-9 shrink-0 mt-0.5 rounded-md">
                                     <AvatarImage src={currentUser?.user?.image} />
-                                    <AvatarFallback className="text-xs">
+                                    <AvatarFallback className="text-xs rounded-md bg-[#381d2a] text-white">
                                         {currentUser?.user?.name?.[0] ?? "?"}
                                     </AvatarFallback>
                                 </Avatar>
@@ -77,13 +77,13 @@ export default function DraftsPage() {
                                                 {currentUser?.user?.name ?? "You"}
                                             </span>
                                             {msg.channel && (
-                                                <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                                                <span className="flex items-center gap-0.5 text-[11px] font-medium text-[#1b1017]/70 bg-[#efe8e3] px-2 py-0.5 rounded-md">
                                                     <Hash className="size-2.5" />
                                                     {msg.channel.name}
                                                 </span>
                                             )}
                                         </div>
-                                        <span className="text-[10px] text-muted-foreground shrink-0">
+                                        <span className="text-[11px] text-[#1b1017]/60 shrink-0">
                                             {format(msg._creationTime, "MMM d, h:mm a")}
                                         </span>
                                     </div>
