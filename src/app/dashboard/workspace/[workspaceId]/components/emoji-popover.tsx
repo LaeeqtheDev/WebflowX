@@ -21,7 +21,7 @@ import { useState } from "react";
 interface EmojiPopoverProps {
     children: React.ReactNode;
     hint?: string;
-    onEmojiSelect: (emoji: any) => void
+    onEmojiSelect: (emoji: { native: string }) => void
 }
 
 
@@ -32,7 +32,7 @@ export const EmojiPopover = ({
     const [popoverOpen, setPopOverOpen]= useState(false);
     const [tooltipOpen, setTooltipOpen]= useState(false);
 
-    const onSelect = (emoji: any) => {
+    const onSelect = (emoji: { native: string }) => {
         onEmojiSelect(emoji)
         setPopOverOpen(false)
 

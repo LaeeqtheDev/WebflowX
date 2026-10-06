@@ -36,7 +36,7 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
           <ResizablePanel
             defaultSize={220}  // percentage of total width
             minSize={220}      // min width percentage
-            className="bg-[#381d2a]/80 text-white overflow-auto"
+            className="bg-[#402633] text-white overflow-auto"
           >
             <WorkSpaceSidebar />
           </ResizablePanel>

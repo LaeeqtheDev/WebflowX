@@ -104,7 +104,7 @@ export const Header = ({title}: HeaderProps) => {
 
                 </DialogTrigger>
 
-                <DialogContent className="p-0 bg-gray-50 overflow-hidden">
+                <DialogContent className="p-0 bg-[#f7f2ee] overflow-hidden">
                     <DialogHeader className="p-4 border-b bg-white ">
                         <DialogTitle>
                             #{title}
@@ -115,7 +115,7 @@ export const Header = ({title}: HeaderProps) => {
                     <div className="px-4 pb-4 flex flex-col gap-y-2">
                         <Dialog open={editOpen} onOpenChange={handleEditOpen}>
                             <DialogTrigger asChild>
-                            <div className="px-5 py-4 bg-white rounded-lg border cursor-pointer hover:bg-gray-50">
+                            <div className="px-5 py-4 bg-white rounded-lg border cursor-pointer hover:bg-[#f7f2ee]">
                             <div className="flex items-center justify-between">
                                 <p className="text-sm font-semibold">Channel Name</p>
                               {   member?.role === "admin" && (
@@ -158,7 +158,7 @@ export const Header = ({title}: HeaderProps) => {
                             </DialogContent>
                         </Dialog>
                         {member?.role === "admin" && (
-                                                    <button className="flex items-center gap-x-2 px-5 py-4 bg-white rounded-lg cursor-pointer border hover:bg-gray-50 text-rose-600"
+                                                    <button className="flex items-center gap-x-2 px-5 py-4 bg-white rounded-lg cursor-pointer border hover:bg-[#f7f2ee] text-rose-600"
                                                     onClick={handleDelete}
                                                     >
                                                         <TrashIcon className="size-4"/>

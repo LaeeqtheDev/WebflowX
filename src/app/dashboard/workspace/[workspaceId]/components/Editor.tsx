@@ -442,7 +442,7 @@ const Editor = ({
     const isEmpty =
         !image && !file && text.replace(/<(.|\n)*?>/g, "").trim().length === 0;
 
-    const onEmojiSelect = (emoji: any) => {
+    const onEmojiSelect = (emoji: { native: string }) => {
         const quill = quilRef.current;
         quill?.insertText(quill?.getSelection()?.index || 0, emoji.native);
     };
@@ -568,7 +568,7 @@ const Editor = ({
                                   ))}
                         </div>
 
-                        <div className="px-3 py-1.5 bg-gray-50 border-t">
+                        <div className="px-3 py-1.5 bg-[#f7f2ee] border-t">
                             <p className="text-[9px] text-muted-foreground">
                                 ↑↓ navigate · Enter select · Esc close
                             </p>
@@ -578,7 +578,7 @@ const Editor = ({
 
                 <div
                     className={cn(
-                        "flex flex-col border border-slate-200 rounded focus-within:border-slate-300 focus-within:shadow-sm transition bg-white",
+                        "flex flex-col border border-slate-200 rounded focus-within:border-slate-300 focus-within:shadow-none transition bg-white",
                         disabled && "opacity-50"
                     )}
                 >
@@ -624,7 +624,7 @@ const Editor = ({
                     {/* File preview */}
                     {!!file && (
                         <div className="p-2">
-                            <div className="relative flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 group/file max-w-xs">
+                            <div className="relative flex items-center gap-3 p-3 bg-[#f7f2ee] rounded-lg border border-gray-200 group/file max-w-xs">
                                 <Hint label="Remove File">
                                     <button
                                         onClick={() => {

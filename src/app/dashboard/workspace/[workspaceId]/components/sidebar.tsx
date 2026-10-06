@@ -20,7 +20,7 @@ export const Sidebar = () => {
     const [showMore, setShowMore] = useState(false)
 
     return (
-        <aside className="w-17.5 h-full bg-[#381d2a] flex flex-col gap-y-4 items-center pt-2.25 pb-4">
+        <aside className="w-17.5 h-full bg-[#381d2a] border-r border-black/20 flex flex-col gap-y-3 items-center pt-2.25 pb-4">
             <WorkspaceSwitcher />
             <SidebarButton
                 icon={Home}

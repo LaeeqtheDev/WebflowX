@@ -14,17 +14,17 @@ const isPublicApi = createRouteMatcher([
 ]) // 👈 add this
 
 export default convexAuthNextjsMiddleware(async (request) => {
-  const authenticated = await isAuthenticatedNextjs(request as any);
+  const authenticated = await isAuthenticatedNextjs();
 
   // 👈 allow these API routes through without auth check
   if (isPublicApi(request)) return undefined;
 
   if (!isPublicPage(request) && !authenticated) {
-    return nextjsMiddlewareRedirect(request as any, "/auth");
+    return nextjsMiddlewareRedirect(request, "/auth");
   }
 
   if (isPublicPage(request) && authenticated) {
-    return nextjsMiddlewareRedirect(request as any, "/dashboard");
+    return nextjsMiddlewareRedirect(request, "/dashboard");
   }
 
   return undefined;

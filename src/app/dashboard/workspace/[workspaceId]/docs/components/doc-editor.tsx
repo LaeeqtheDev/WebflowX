@@ -15,6 +15,14 @@ import { TextStyle } from "@tiptap/extension-text-style"
 import { Color } from "@tiptap/extension-color"
 import { Loader } from "lucide-react"
 import { DocToolbar } from "./doc-toolbar"
+import type { LiveblocksYjsProvider } from "@liveblocks/yjs"
+import type * as Y from "yjs"
+
+interface DocOther {
+    name: string
+    color: string
+    avatar: string
+}
 
 interface DocEditorProps {
     roomId: string
@@ -22,7 +30,7 @@ interface DocEditorProps {
     userName: string
     userColor: string
     userAvatar?: string
-    onOthersChange?: (others: any[]) => void
+    onOthersChange?: (others: DocOther[]) => void
 }
 
 const EditorInner = ({
@@ -30,7 +38,7 @@ const EditorInner = ({
     userName,
     userColor,
 }: {
-    ydoc: any
+    ydoc: Y.Doc
     userName: string
     userColor: string
 }) => {
@@ -73,8 +81,8 @@ const EditorInner = ({
                     <DocToolbar editor={editor} />
                 </div>
             )}
-            <div className="flex-1 overflow-y-auto bg-gray-50 py-8 px-4">
-                <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-sm border min-h-[calc(100vh-200px)]">
+            <div className="flex-1 overflow-y-auto bg-[#f7f2ee] py-8 px-4">
+                <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-none border min-h-[calc(100vh-200px)]">
                     <EditorContent editor={editor} />
                 </div>
             </div>
@@ -85,13 +93,13 @@ const EditorInner = ({
 export const DocEditor = ({
     roomId, userId, userName, userColor, userAvatar, onOthersChange
 }: DocEditorProps) => {
-    const [provider, setProvider] = useState<any>(null)
-    const [ydoc, setYdoc] = useState<any>(null)
-    const [others, setOthers] = useState<any[]>([])
+    const [provider, setProvider] = useState<LiveblocksYjsProvider | null>(null)
+    const [ydoc, setYdoc] = useState<Y.Doc | null>(null)
+    const [others, setOthers] = useState<DocOther[]>([])
 
     useEffect(() => {
         let leaveRoom: (() => void) | null = null
-        let yProvider: any = null
+        let yProvider: LiveblocksYjsProvider | null = null
         let mounted = true
 
         const init = async () => {
@@ -122,27 +130,28 @@ export const DocEditor = ({
                 const { room, leave } = client.enterRoom(roomId)
                 leaveRoom = leave
 
-                room.subscribe("others", (roomOthers: any) => {
-                    const activeOthers = roomOthers.map((o: any) => ({
-                        name: o.presence?.name ?? o.info?.name ?? "Anonymous",
-                        color: o.presence?.color ?? o.info?.color ?? "#ff5018",
-                        avatar: o.info?.avatar ?? "",
+                room.subscribe("others", (roomOthers) => {
+                    const activeOthers: DocOther[] = roomOthers.map((o) => ({
+                        name: ((o.presence as Record<string, unknown> | undefined)?.name ?? (o.info as Record<string, unknown> | undefined)?.name ?? "Anonymous") as string,
+                        color: ((o.presence as Record<string, unknown> | undefined)?.color ?? (o.info as Record<string, unknown> | undefined)?.color ?? "#ff5018") as string,
+                        avatar: ((o.info as Record<string, unknown> | undefined)?.avatar ?? "") as string,
                     }))
                     setOthers(activeOthers)
                     onOthersChange?.(activeOthers)
                 })
 
                 const doc = new Y.Doc()
-                yProvider = new LiveblocksYjsProvider(room, doc)
+                const createdProvider = new LiveblocksYjsProvider(room, doc)
+                yProvider = createdProvider
 
                 await new Promise<void>((resolve) => {
-                    yProvider.on("sync", () => resolve())
+                    createdProvider.on("sync", () => resolve())
                     setTimeout(() => resolve(), 5000)
                 })
 
                 if (mounted) {
                     setYdoc(doc)
-                    setProvider(yProvider)
+                    setProvider(createdProvider)
                 }
             } catch (e) {
                 console.error("DocEditor init error:", e)
@@ -162,7 +171,7 @@ export const DocEditor = ({
 
     if (!ydoc || !provider) {
         return (
-            <div className="flex items-center justify-center h-full bg-gray-50">
+            <div className="flex items-center justify-center h-full bg-[#f7f2ee]">
                 <div className="flex flex-col items-center gap-2">
                     <Loader className="size-5 animate-spin text-[#ff5018]" />
                     <p className="text-xs text-muted-foreground">Connecting to document...</p>

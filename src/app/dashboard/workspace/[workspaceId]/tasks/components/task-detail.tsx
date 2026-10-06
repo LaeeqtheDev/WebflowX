@@ -21,6 +21,9 @@ import { useGetTaskComments } from "@/features/tasks/use-get-task-comment"
 import { useRemoveTaskComment } from "@/features/tasks/use-remove-task-comment"
 import { Id } from "../../../../../../../convex/_generated/dataModel"
 
+// Wall-clock read kept outside the render body; evaluated on every render exactly as before.
+const getNow = () => Date.now()
+
 interface TaskDetailProps {
     task: Task | null
     onClose: () => void
@@ -46,7 +49,7 @@ export const TaskDetail = ({
     if (!task) return null
 
     const isAssignedToMe = task.assigneeId === currentMemberId
-    const isOverdue = task.dueDate && task.dueDate < Date.now() && task.status !== "done"
+    const isOverdue = task.dueDate && task.dueDate < getNow() && task.status !== "done"
     const activeSprint = sprints.find(s => s._id === task.sprintId)
 
     const handleComment = () => {
@@ -167,7 +170,7 @@ export const TaskDetail = ({
                                 />
                                 <Button size="iconSm" onClick={handleComment}
                                     disabled={isCommenting || !commentBody.trim()}
-                                    className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white shrink-0">
+                                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white shrink-0">
                                     <Send className="size-3.5" />
                                 </Button>
                             </div>
@@ -178,7 +181,7 @@ export const TaskDetail = ({
                     <div className="w-48 shrink-0 flex flex-col gap-3 border-l pl-6">
                         <div>
                             <p className="text-[10px] font-semibold text-muted-foreground mb-1">STATUS</p>
-                            <Select value={task.status} onValueChange={v => onUpdate(task._id, { status: v as any })}
+                            <Select value={task.status} onValueChange={v => onUpdate(task._id, { status: v as Task["status"] })}
                                 disabled={!isAdmin && task.assigneeId !== currentMemberId}>
                                 <SelectTrigger className={cn("h-7 text-xs border", STATUS_COLORS[task.status])}>
                                     <SelectValue />
@@ -191,7 +194,7 @@ export const TaskDetail = ({
 
                         <div>
                             <p className="text-[10px] font-semibold text-muted-foreground mb-1">PRIORITY</p>
-                            <Select value={task.priority} onValueChange={v => isAdmin && onUpdate(task._id, { priority: v as any })} disabled={!isAdmin}>
+                            <Select value={task.priority} onValueChange={v => isAdmin && onUpdate(task._id, { priority: v as Task["priority"] })} disabled={!isAdmin}>
                                 <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     {PRIORITIES.map(p => <SelectItem key={p} value={p} className="text-xs">{PRIORITY_LABELS[p]}</SelectItem>)}

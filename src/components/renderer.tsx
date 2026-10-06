@@ -25,6 +25,7 @@ const Renderer = ({value}: RendererProps) => {
         quill.setContents(contents)
 
         const isEmpty = quill.getText().replace(/<(.|\n)*?>/g,"").trim().length === 0;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- derived from Quill DOM parsing that can only run in an effect
         setIsEmpty(isEmpty)
 
         container.innerHTML = quill.root.innerHTML;

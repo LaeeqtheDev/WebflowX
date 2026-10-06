@@ -25,8 +25,8 @@ import { useGetUnreadCount } from "@/features/notifications/use-get-unread-count
 const TYPE_CONFIG = {
     thread_reply: {
         icon: MessagesSquare,
-        color: "text-blue-500",
-        bg: "bg-blue-50",
+        color: "text-[#ff5018]",
+        bg: "bg-[#ff5018]/10",
         label: "replied to your message"
     },
     reaction: {
@@ -87,7 +87,7 @@ export default function ActivityPage() {
         })
     }
 
-    const handleClick = async (notification: any) => {
+    const handleClick = async (notification: NonNullable<typeof notifications>[number]) => {
         if (!notification.read) {
             markRead(notification._id)
         }
@@ -117,15 +117,15 @@ export default function ActivityPage() {
     }
 
     return (
-        <div className="h-full flex flex-col overflow-hidden bg-gray-50">
+        <div className="h-full flex flex-col overflow-hidden bg-[#f7f2ee]">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b bg-white shrink-0 shadow-sm">
+            <div className="flex items-center justify-between px-6 py-4 border-b bg-white shrink-0 shadow-none">
                 <div className="flex items-center gap-3">
                     <div className="size-8 rounded-lg bg-orange-50 flex items-center justify-center">
                         <Bell className="size-4 text-[#ff5018]" />
                     </div>
                     <div>
-                        <h1 className="text-base font-bold leading-none">Activity</h1>
+                        <h1 className="tracking-tight text-base font-bold leading-none">Activity</h1>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
                             {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}` : "All caught up!"}
                         </p>
@@ -185,7 +185,7 @@ export default function ActivityPage() {
                         <div className="text-center">
                             <p className="text-sm font-medium">No activity yet</p>
                             <p className="text-xs mt-1 max-w-xs">
-                                You'll be notified when someone replies to your messages,
+                                You&apos;ll be notified when someone replies to your messages,
                                 reacts, assigns tasks, or adds workspace notes
                             </p>
                         </div>
@@ -202,7 +202,7 @@ export default function ActivityPage() {
                                     key={notification._id}
                                     onClick={() => handleClick(notification)}
                                     className={cn(
-                                        "flex items-start gap-4 px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors",
+                                        "flex items-start gap-4 px-6 py-4 cursor-pointer hover:bg-[#f7f2ee] transition-colors",
                                         !notification.read && "border-l-2 border-l-[#ff5018] bg-orange-50/30"
                                     )}
                                 >

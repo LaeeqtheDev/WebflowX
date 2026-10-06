@@ -55,7 +55,7 @@ export const Toolbar = () => {
   }
 
   return (
-    <nav className="bg-[#381d2a] flex items-center h-10 px-2">
+    <nav className="bg-[#2a1420] flex items-center h-11 px-2 border-b border-white/5">
       {/* LEFT: Logo */}
       <div className="flex-1 flex items-center">
         <Image
@@ -71,7 +71,7 @@ export const Toolbar = () => {
       <div className="min-w-70 max-w-160.5 grow-2 shrink">
         <Button
           onClick={() => setOpen(true)}
-          className="bg-accent/25 hover:bg-accent/25 w-full justify-start h-7 px-2"
+          className="bg-white/10 hover:bg-white/15 w-full justify-start h-7 px-3 rounded-md border border-white/10"
           size="sm"
         >
           <Search className="mr-2 size-4 text-white" />

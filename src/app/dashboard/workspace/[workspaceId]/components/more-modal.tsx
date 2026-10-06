@@ -22,7 +22,7 @@ interface MoreModalProps {
 
 const PLAN_CONFIG = {
     free: { label: "Free", color: "text-slate-600", bg: "bg-slate-100", icon: Zap },
-    startup: { label: "Startup", color: "text-blue-600", bg: "bg-blue-50", icon: Rocket },
+    startup: { label: "Startup", color: "text-blue-600", bg: "bg-[#ff5018]/10", icon: Rocket },
     growth: { label: "Growth", color: "text-purple-600", bg: "bg-purple-50", icon: Crown },
     enterprise: { label: "Enterprise", color: "text-amber-600", bg: "bg-amber-50", icon: Building2 },
 }
@@ -40,7 +40,7 @@ const PRICES: Record<string, number> = { free: 0, startup: 19, growth: 49, enter
 
 const UsageBar = ({ label, icon: Icon, current, limit, iconColor }: {
     label: string
-    icon: any
+    icon: React.ComponentType<{ className?: string }>
     current: number
     limit: number
     iconColor: string
@@ -152,7 +152,7 @@ export const MoreModal = ({ open, onClose }: MoreModalProps) => {
                 </DialogHeader>
 
                 {/* Tabs */}
-                <div className="flex border-b px-6 shrink-0 bg-gray-50/50">
+                <div className="flex border-b px-6 shrink-0 bg-[#f7f2ee]/50">
                     {(["usage", "plans"] as const).map(tab => (
                         <button
                             key={tab}
@@ -184,7 +184,7 @@ export const MoreModal = ({ open, onClose }: MoreModalProps) => {
                                     icon={Users}
                                     current={usage?.usage.members.current ?? 0}
                                     limit={usage?.usage.members.limit ?? 0}
-                                    iconColor="text-blue-500"
+                                    iconColor="text-[#ff5018]"
                                 />
                                 <UsageBar
                                     label="Channels"
@@ -198,7 +198,7 @@ export const MoreModal = ({ open, onClose }: MoreModalProps) => {
                                     icon={FileText}
                                     current={usage?.usage.docs.current ?? 0}
                                     limit={usage?.usage.docs.limit ?? 0}
-                                    iconColor="text-blue-500"
+                                    iconColor="text-[#ff5018]"
                                 />
                                 <UsageBar
                                     label="Meetings (this month)"
@@ -298,10 +298,10 @@ export const MoreModal = ({ open, onClose }: MoreModalProps) => {
 
                                             {!isCurrent && planKey !== "free" && (
                                                 <Button
-                                                    onClick={() => handleUpgrade(planKey as any)}
+                                                    onClick={() => handleUpgrade(planKey as "startup" | "growth" | "enterprise")}
                                                     disabled={isPending}
                                                     size="sm"
-                                                    className="h-8 text-xs bg-[#ff5018]/80 hover:bg-[#ff5018] text-white shrink-0 self-center"
+                                                    className="h-8 text-xs bg-[#ff5018] hover:bg-[#e6430f] text-white shrink-0 self-center"
                                                 >
                                                     {upgradingPlan === planKey
                                                         ? <Loader className="size-3.5 animate-spin" />
@@ -315,7 +315,7 @@ export const MoreModal = ({ open, onClose }: MoreModalProps) => {
                             </div>
 
                             <p className="text-[10px] text-center text-muted-foreground pb-1">
-                                💳 Payment integration coming soon. Plan upgrades are simulated for demo purposes.
+                                Payment integration coming soon. Plan upgrades are simulated for demo purposes.
                             </p>
                         </div>
                     )}

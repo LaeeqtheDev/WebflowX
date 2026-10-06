@@ -142,7 +142,7 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
                             ))}
                         </div>
                     )}
-                    <Button onClick={handleSubmit} disabled={isPending} className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white">
+                    <Button onClick={handleSubmit} disabled={isPending} className="bg-[#ff5018] hover:bg-[#e6430f] text-white">
                         {isPending ? <Loader className="size-4 animate-spin" /> : "Create Task"}
                     </Button>
                 </div>

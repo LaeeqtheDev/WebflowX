@@ -43,7 +43,7 @@ export default function MeetingPage() {
     const [title, setTitle] = useState("")
     const [selectedChannelId, setSelectedChannelId] = useState("")
     const [isGenerating, setIsGenerating] = useState(false)
-    const [selectedMeeting, setSelectedMeeting] = useState<any>(null)
+    const [selectedMeeting, setSelectedMeeting] = useState<NonNullable<typeof meetings>[number] | null>(null)
     const [generationError, setGenerationError] = useState<string | null>(null)
     const [showMobileDetail, setShowMobileDetail] = useState(false)
 
@@ -152,9 +152,9 @@ export default function MeetingPage() {
                 }
                 
                 toast.success("AI summary generated!")
-            } catch (e: any) {
+            } catch (e: unknown) {
                 console.error("Summary generation failed:", e)
-                setGenerationError(e.message || "Failed to generate summary")
+                setGenerationError((e instanceof Error && e.message) || "Failed to generate summary")
                 toast.error("Failed to generate summary. You can add it manually later.")
                 
                 if (meetingId) {
@@ -222,7 +222,7 @@ export default function MeetingPage() {
         }
     }, [activeMeetingId, endMeeting, saveSummary, meetings])
 
-    const handleSelectMeeting = (meeting: any) => {
+    const handleSelectMeeting = (meeting: NonNullable<typeof meetings>[number]) => {
         setSelectedMeeting(meeting)
         setShowMobileDetail(true)
     }
@@ -272,11 +272,11 @@ export default function MeetingPage() {
                         </Button>
                     )}
                     <Video className="size-4 sm:size-5 text-[#ff5018]" />
-                    <h1 className="text-base sm:text-lg font-bold">Meetings</h1>
+                    <h1 className="tracking-tight text-base sm:text-lg font-bold">Meetings</h1>
                 </div>
                 <Button
                     onClick={() => setShowCreate(true)}
-                    className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white h-7 sm:h-8 text-[11px] sm:text-xs px-2 sm:px-3"
+                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-7 sm:h-8 text-[11px] sm:text-xs px-2 sm:px-3"
                 >
                     <Plus className="size-3.5 sm:size-4 sm:mr-1" /> 
                     <span className="hidden sm:inline">New Meeting</span>
@@ -350,13 +350,13 @@ export default function MeetingPage() {
                                     </div>
                                     <div className="flex items-center gap-1.5 mt-0.5">
                                         <Avatar className="size-4">
-                                            <AvatarImage src={(meeting as any).creator?.user?.image} />
+                                            <AvatarImage src={meeting.creator?.user?.image} />
                                             <AvatarFallback className="text-[8px]">
-                                                {(meeting as any).creator?.user?.name?.[0] ?? "?"}
+                                                {meeting.creator?.user?.name?.[0] ?? "?"}
                                             </AvatarFallback>
                                         </Avatar>
                                         <span className="text-[11px] text-muted-foreground truncate">
-                                            {(meeting as any).creator?.user?.name}
+                                            {meeting.creator?.user?.name}
                                         </span>
                                     </div>
                                 </div>
@@ -384,10 +384,10 @@ export default function MeetingPage() {
                                                         ⏱ {Math.round((selectedMeeting.endedAt - selectedMeeting.startedAt) / 60000)} min
                                                     </span>
                                                 )}
-                                                {selectedMeeting.participants?.length > 0 && (
+                                                {(selectedMeeting.participants?.length ?? 0) > 0 && (
                                                     <span className="flex items-center gap-1">
                                                         <Users className="size-3" />
-                                                        {selectedMeeting.participants.length} participants
+                                                        {selectedMeeting.participants?.length} participants
                                                     </span>
                                                 )}
                                             </div>
@@ -395,7 +395,7 @@ export default function MeetingPage() {
                                         {!selectedMeeting.endedAt && (
                                             <Button
                                                 onClick={() => handleJoin(selectedMeeting.roomName, selectedMeeting._id)}
-                                                className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white h-7 sm:h-8 text-xs shrink-0 w-full sm:w-auto"
+                                                className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-7 sm:h-8 text-xs shrink-0 w-full sm:w-auto"
                                             >
                                                 <Video className="size-3.5 mr-1" /> Join Meeting
                                             </Button>
@@ -454,7 +454,7 @@ export default function MeetingPage() {
                         <Button
                             onClick={handleCreate}
                             disabled={isCreating}
-                            className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white text-sm"
+                            className="bg-[#ff5018] hover:bg-[#e6430f] text-white text-sm"
                         >
                             {isCreating
                                 ? <Loader className="size-4 animate-spin" />

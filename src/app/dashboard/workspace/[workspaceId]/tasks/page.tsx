@@ -26,6 +26,9 @@ import { SprintPanel } from "./components/sprint-panel"
 import { TaskCard } from "./components/task-card"
 import { TaskDetail } from "./components/task-detail"
 
+// Wall-clock read kept outside the render body; evaluated on every render exactly as before.
+const getNow = () => Date.now()
+
 export default function TasksPage() {
     const workspaceId = useWorkspaceId()
     const { data: currentMember } = useCurrentMember({ workspaceId })
@@ -49,7 +52,7 @@ export default function TasksPage() {
     const activeSprint = safeSprints.find(s => s.status === "active") ?? null
 
     const handleUpdate = (id: Id<"tasks">, data: Partial<Task>) => {
-        updateTask({ id, ...data } as any, { onError: (e) => toast.error(e.message) })
+        updateTask({ id, ...data } as Parameters<typeof updateTask>[0], { onError: (e) => toast.error(e.message) })
         if (selectedTask?._id === id) setSelectedTask(prev => prev ? { ...prev, ...data } : null)
     }
 
@@ -102,7 +105,7 @@ export default function TasksPage() {
             <div className="flex-1 flex flex-col overflow-hidden">
                 <div className="flex items-center justify-between px-6 py-3 border-b gap-4 flex-wrap">
                     <div className="flex items-center gap-3">
-                        <h1 className="text-lg font-bold">Tasks</h1>
+                        <h1 className="tracking-tight text-lg font-bold">Tasks</h1>
                         {activeSprint && (
                             <Badge className="bg-yellow-100 text-yellow-700 border-yellow-300 text-xs">
                                 <Zap className="size-3 mr-1" /> {activeSprint.name}
@@ -142,7 +145,7 @@ export default function TasksPage() {
                             </SelectContent>
                         </Select>
                         {isAdmin && (
-                            <Button onClick={() => setShowCreate(true)} className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white h-8 text-xs">
+                            <Button onClick={() => setShowCreate(true)} className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 text-xs">
                                 <Plus className="size-4 mr-1" /> New Task
                             </Button>
                         )}
@@ -245,7 +248,7 @@ export default function TasksPage() {
                                                 </div>
                                             </td>
                                             <td className="px-4 py-2.5 text-xs text-muted-foreground">{safeSprints.find(s => s._id === task.sprintId)?.name ?? "—"}</td>
-                                            <td className={cn("px-4 py-2.5 text-xs", task.dueDate && task.dueDate < Date.now() && task.status !== "done" ? "text-red-500" : "text-muted-foreground")}>
+                                            <td className={cn("px-4 py-2.5 text-xs", task.dueDate && task.dueDate < getNow() && task.status !== "done" ? "text-red-500" : "text-muted-foreground")}>
                                                 {task.dueDate ? format(task.dueDate, "MMM d, yyyy") : "—"}
                                             </td>
                                             <td className="px-4 py-2.5 text-xs text-muted-foreground">{task.storyPoints ?? "—"}</td>

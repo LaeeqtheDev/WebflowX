@@ -46,7 +46,7 @@ export const UpgradeModal = ({ limitInfo, onClose, onUpgrade }: UpgradeModalProp
                 <div className="flex flex-col gap-4 mt-2">
                     <div className="bg-orange-50 border border-orange-100 rounded-lg p-4 text-center">
                         <p className="text-sm font-semibold">
-                            You've reached the {featureLabel} limit
+                            You&apos;ve reached the {featureLabel} limit
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
                             Your <span className="capitalize font-medium">{limitInfo.plan}</span> plan
@@ -68,7 +68,7 @@ export const UpgradeModal = ({ limitInfo, onClose, onUpgrade }: UpgradeModalProp
                         </Button>
                         <Button
                             onClick={onUpgrade}
-                            className="flex-1 h-8 text-xs bg-[#ff5018]/80 hover:bg-[#ff5018] text-white"
+                            className="flex-1 h-8 text-xs bg-[#ff5018] hover:bg-[#e6430f] text-white"
                         >
                             <Zap className="size-3.5 mr-1" /> Upgrade Now
                         </Button>

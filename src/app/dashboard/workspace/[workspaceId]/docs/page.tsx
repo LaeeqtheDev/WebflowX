@@ -68,15 +68,15 @@ export default function DocsPage() {
     }
 
     return (
-        <div className="h-full flex flex-col overflow-hidden bg-gray-50">
+        <div className="h-full flex flex-col overflow-hidden bg-[#f7f2ee]">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b bg-white shrink-0 shadow-sm">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b bg-white shrink-0 shadow-none">
                 <div className="flex items-center gap-2">
-                    <div className="size-7 sm:size-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                        <FileText className="size-3.5 sm:size-4 text-blue-500" />
+                    <div className="size-7 sm:size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
+                        <FileText className="size-3.5 sm:size-4 text-[#ff5018]" />
                     </div>
                     <div>
-                        <h1 className="text-sm sm:text-base font-bold leading-none">Documents</h1>
+                        <h1 className="tracking-tight text-sm sm:text-base font-bold leading-none">Documents</h1>
                         <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">
                             {docs?.length ?? 0} document{docs?.length !== 1 ? "s" : ""}
                         </p>
@@ -84,7 +84,7 @@ export default function DocsPage() {
                 </div>
                 <Button
                     onClick={() => setShowCreate(true)}
-                    className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white h-7 sm:h-8 text-[11px] sm:text-xs px-2 sm:px-3"
+                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-7 sm:h-8 text-[11px] sm:text-xs px-2 sm:px-3"
                 >
                     <Plus className="size-3.5 sm:size-4 sm:mr-1" /> 
                     <span className="hidden sm:inline">New Document</span>
@@ -99,8 +99,8 @@ export default function DocsPage() {
                     </div>
                 ) : !docs || docs.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground px-4">
-                        <div className="size-14 sm:size-16 rounded-2xl bg-blue-50 flex items-center justify-center">
-                            <FileText className="size-7 sm:size-8 text-blue-400" />
+                        <div className="size-14 sm:size-16 rounded-2xl bg-[#ff5018]/10 flex items-center justify-center">
+                            <FileText className="size-7 sm:size-8 text-[#ff5018]" />
                         </div>
                         <div className="text-center">
                             <p className="text-sm font-medium">No documents yet</p>
@@ -121,11 +121,11 @@ export default function DocsPage() {
                                 {/* Doc preview area */}
                                 <div className={cn(
                                     "w-full h-20 sm:h-24 rounded-lg flex items-center justify-center",
-                                    doc.type === "spreadsheet" ? "bg-green-50" : "bg-blue-50"
+                                    doc.type === "spreadsheet" ? "bg-green-50" : "bg-[#ff5018]/10"
                                 )}>
                                     {doc.type === "spreadsheet"
                                         ? <FileSpreadsheet className="size-8 sm:size-10 text-green-400" />
-                                        : <FileText className="size-8 sm:size-10 text-blue-400" />
+                                        : <FileText className="size-8 sm:size-10 text-[#ff5018]" />
                                     }
                                 </div>
 
@@ -202,7 +202,7 @@ export default function DocsPage() {
                         />
                         <div className="flex items-center gap-3 p-3 rounded-lg border-2 border-[#ff5018] bg-orange-50">
                             <div className="size-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                                <FileText className="size-4 text-blue-500" />
+                                <FileText className="size-4 text-[#ff5018]" />
                             </div>
                             <div className="min-w-0">
                                 <p className="text-sm font-medium">Document</p>
@@ -212,7 +212,7 @@ export default function DocsPage() {
                         <Button
                             onClick={handleCreate}
                             disabled={isCreating}
-                            className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white text-sm"
+                            className="bg-[#ff5018] hover:bg-[#e6430f] text-white text-sm"
                         >
                             {isCreating ? <Loader className="size-4 animate-spin" /> : "Create Document"}
                         </Button>

@@ -109,9 +109,9 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
             toast.success("AI summary generated!")
             setShowTranscriptDialog(false)
             setManualTranscript("")
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error("Summary generation error:", e)
-            toast.error(e.message || "Failed to generate summary")
+            toast.error((e instanceof Error && e.message) || "Failed to generate summary")
         } finally {
             setIsGenerating(false)
         }
@@ -135,7 +135,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
 
     return (
         <>
-            <div className="border rounded-xl p-5 flex flex-col gap-4 hover:shadow-sm transition-shadow bg-white">
+            <div className="border rounded-xl p-5 flex flex-col gap-4 hover:shadow-none transition-shadow bg-white">
                 {/* Header */}
                 <div className="flex items-start justify-between">
                     <div className="flex flex-col gap-1.5">
@@ -333,7 +333,7 @@ Example:
                                     onClick={handleManualTranscriptSubmit}
                                     disabled={isGenerating || manualTranscript.trim().length < 10}
                                     size="sm"
-                                    className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white"
+                                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white"
                                 >
                                     {isGenerating ? (
                                         <>

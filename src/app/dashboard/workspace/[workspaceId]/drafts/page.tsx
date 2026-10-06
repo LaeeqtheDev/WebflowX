@@ -25,14 +25,14 @@ export default function DraftsPage() {
     }
 
     return (
-        <div className="h-full flex flex-col overflow-hidden bg-gray-50">
+        <div className="h-full flex flex-col overflow-hidden bg-[#f7f2ee]">
             {/* Header */}
-            <div className="flex items-center gap-3 px-6 py-4 border-b bg-white shrink-0 shadow-sm">
+            <div className="flex items-center gap-3 px-6 py-4 border-b bg-white shrink-0 shadow-none">
                 <div className="size-8 rounded-lg bg-purple-50 flex items-center justify-center">
                     <SendHorizonal className="size-4 text-purple-500" />
                 </div>
                 <div>
-                    <h1 className="text-base font-bold leading-none">Sent</h1>
+                    <h1 className="tracking-tight text-base font-bold leading-none">Sent</h1>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
                         {messages?.length ?? 0} message{messages?.length !== 1 ? "s" : ""} sent across channels
                     </p>
@@ -62,7 +62,7 @@ export default function DraftsPage() {
                             <div
                                 key={msg._id}
                                 onClick={() => msg.channel?._id && handleClick(msg.channel._id)}
-                                className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                                className="flex items-start gap-3 px-4 py-3 hover:bg-[#f7f2ee] cursor-pointer transition-colors"
                             >
                                 <Avatar className="size-9 shrink-0 mt-0.5">
                                     <AvatarImage src={currentUser?.user?.image} />

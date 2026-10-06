@@ -22,6 +22,7 @@ import {
     DropdownMenuLabel
 } from "@/components/ui/dropdown-menu"
 import { api } from "../../../../../../../convex/_generated/api"
+import type { Id } from "../../../../../../../convex/_generated/dataModel"
 
 interface DocToolbarProps {
     editor: Editor
@@ -59,12 +60,13 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
 
     const storageUrl = useQuery(
         api.upload.getStorageUrl,
-        pendingStorageId ? { storageId: pendingStorageId as any } : "skip"
+        pendingStorageId ? { storageId: pendingStorageId as Id<"_storage"> } : "skip"
     )
 
     useEffect(() => {
         if (storageUrl && pendingStorageId) {
             editor.chain().focus().setImage({ src: storageUrl }).run()
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- reset pending upload after the async storage URL query resolves
             setPendingStorageId(null)
             toast.dismiss()
             toast.success("Image uploaded!")
@@ -98,7 +100,7 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
     }
 
     return (
-        <div className="flex items-center gap-0.5 px-3 py-1.5 border-b bg-white flex-wrap sticky top-0 z-10 shadow-sm">
+        <div className="flex items-center gap-0.5 px-3 py-1.5 border-b bg-white flex-wrap sticky top-0 z-10 shadow-none">
             {/* Hidden image input */}
             <input
                 ref={imageInputRef}

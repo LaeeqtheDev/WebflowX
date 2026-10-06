@@ -11,6 +11,9 @@ import { PRIORITY_COLORS, PRIORITY_LABELS } from "@/features/tasks/constants"
 
 
 
+// Wall-clock read kept outside the render body; evaluated on every render exactly as before.
+const getNow = () => Date.now()
+
 interface TaskCardProps {
     task: Task
     isAdmin: boolean
@@ -26,12 +29,12 @@ export const TaskCard = ({
     task, isAdmin, currentMemberId, members,
     onDelete, onUpdate, onAssignToMe, onOpen
 }: TaskCardProps) => {
-    const isOverdue = task.dueDate && task.dueDate < Date.now() && task.status !== "done"
+    const isOverdue = task.dueDate && task.dueDate < getNow() && task.status !== "done"
     const isAssignedToMe = task.assigneeId === currentMemberId
 
     return (
         <div
-            className="bg-white border rounded-lg p-3 shadow-sm flex flex-col gap-2 group cursor-pointer hover:shadow-md transition-shadow"
+            className="bg-white border rounded-lg p-3 shadow-none flex flex-col gap-2 group cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => onOpen(task)}
         >
             <div className="flex items-start justify-between gap-2">

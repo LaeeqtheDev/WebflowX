@@ -125,7 +125,7 @@ export default function DocPage() {
 
     if (isLoading || !currentMember) {
         return (
-            <div className="h-full flex items-center justify-center bg-gray-50">
+            <div className="h-full flex items-center justify-center bg-[#f7f2ee]">
                 <Loader className="size-5 animate-spin text-[#ff5018]" />
             </div>
         )
@@ -133,7 +133,7 @@ export default function DocPage() {
 
     if (!doc) {
         return (
-            <div className="h-full flex flex-col items-center justify-center gap-3 text-muted-foreground bg-gray-50 px-4">
+            <div className="h-full flex flex-col items-center justify-center gap-3 text-muted-foreground bg-[#f7f2ee] px-4">
                 <FileText className="size-10" />
                 <p className="text-sm text-center">Document not found</p>
                 <Button
@@ -148,9 +148,9 @@ export default function DocPage() {
     }
 
     return (
-        <div className="h-full flex flex-col overflow-hidden bg-gray-50">
+        <div className="h-full flex flex-col overflow-hidden bg-[#f7f2ee]">
             {/* Header */}
-            <div className="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 border-b bg-white shrink-0 shadow-sm gap-2">
+            <div className="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 border-b bg-white shrink-0 shadow-none gap-2">
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                     <Button
                         variant="ghost"
@@ -163,10 +163,10 @@ export default function DocPage() {
                     </Button>
                     <span className="text-muted-foreground hidden xs:inline">/</span>
                     <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                        <div className={`size-5 sm:size-6 rounded flex items-center justify-center shrink-0 ${doc.type === "spreadsheet" ? "bg-green-50" : "bg-blue-50"}`}>
+                        <div className={`size-5 sm:size-6 rounded flex items-center justify-center shrink-0 ${doc.type === "spreadsheet" ? "bg-green-50" : "bg-[#ff5018]/10"}`}>
                             {doc.type === "spreadsheet"
                                 ? <FileSpreadsheet className="size-3 sm:size-3.5 text-green-600" />
-                                : <FileText className="size-3 sm:size-3.5 text-blue-500" />
+                                : <FileText className="size-3 sm:size-3.5 text-[#ff5018]" />
                             }
                         </div>
                         <span className="text-xs sm:text-sm font-semibold truncate">{doc.title}</span>
@@ -197,7 +197,7 @@ export default function DocPage() {
                             <Button
                                 onClick={handleShare}
                                 disabled={!shareChannelId}
-                                className="w-full h-7 text-xs bg-[#ff5018]/80 hover:bg-[#ff5018] text-white"
+                                className="w-full h-7 text-xs bg-[#ff5018] hover:bg-[#e6430f] text-white"
                             >
                                 Share
                             </Button>

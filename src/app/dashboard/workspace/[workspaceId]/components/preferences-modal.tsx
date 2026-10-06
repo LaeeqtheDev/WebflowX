@@ -79,7 +79,7 @@ export const PreferencesModal = ({open, setOpen, initialValue}: PreferencesModal
    <>
    <ConfirmDialog/>
     <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bg-gray-50 p-0 overflow-hidden">
+        <DialogContent className="bg-[#f7f2ee] p-0 overflow-hidden">
             <DialogHeader className="p-4 border-b bg-white">
                 <DialogTitle>
                     {value}
@@ -88,7 +88,7 @@ export const PreferencesModal = ({open, setOpen, initialValue}: PreferencesModal
             <div className="px-4 pb-4 flex flex-col gap-y-2">
                 <Dialog open={editOpen} onOpenChange={setEditOpen}>
                 <DialogTrigger asChild>
-                <div className="px-5 py-4 bg-white rounded-lg border cursor-pointer hover:bg-gray-50">
+                <div className="px-5 py-4 bg-white rounded-lg border cursor-pointer hover:bg-[#f7f2ee]">
     
                 <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold">
@@ -139,7 +139,7 @@ export const PreferencesModal = ({open, setOpen, initialValue}: PreferencesModal
                 <button 
                 disabled={isRemovingWorkspace}
                 onClick={handleRemove}
-                className="flex items-center gap-x-2 px-5 py-4 bg-white rounded-lg border cursor-pointer hover:bg-gray-50 text-rose-600 "
+                className="flex items-center gap-x-2 px-5 py-4 bg-white rounded-lg border cursor-pointer hover:bg-[#f7f2ee] text-rose-600 "
                 >
                     <TrashIcon className="size-4" />
                     <p className="text-sm font-semibold">

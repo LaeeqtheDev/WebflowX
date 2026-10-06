@@ -13,20 +13,20 @@ declare module "@material-tailwind/react" {
       variant?: string;
       as?: string;
       href?: string;
-      [key: string]: any; // allow extra props
+      [key: string]: unknown; // allow extra props
     }
   
     interface CardProps {
       children?: ReactNode;
       className?: string;
       shadow?: boolean;
-      [key: string]: any;
+      [key: string]: unknown;
     }
   
     interface CardBodyProps {
       children?: ReactNode;
       className?: string;
-      [key: string]: any;
+      [key: string]: unknown;
     }
   
     interface AvatarProps {
@@ -35,7 +35,7 @@ declare module "@material-tailwind/react" {
       alt?: string;
       src?: string;
       className?: string;
-      [key: string]: any;
+      [key: string]: unknown;
     }
   
     export const Typography: FC<TypographyProps>;

@@ -10,7 +10,7 @@ interface ToolbarProps{
     handleThread: () => void;
     handleDelete: () => void;
     handleReaction: (value: string) => void;
-    hideThreadButton?: Boolean
+    hideThreadButton?: boolean
 }
 
 
@@ -25,7 +25,7 @@ export const Toolbar2 =({
 }: ToolbarProps) =>{
     return(
         <div className="absolute top-0 right-5">
-          <div className="group-hover:opacity-100 opacity-0 transition-opacity border bg-white rounded-md shadow-sm">
+          <div className="group-hover:opacity-100 opacity-0 transition-opacity border bg-white rounded-md shadow-none">
         <EmojiPopover
         hint="Add Reaction"
         onEmojiSelect={(emoji)=> handleReaction(emoji.native)} 

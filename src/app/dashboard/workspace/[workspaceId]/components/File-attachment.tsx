@@ -52,7 +52,7 @@ const getFileColor = (fileType?: string) => {
     if (!fileType) return "bg-gray-100";
     if (fileType.includes("pdf")) return "bg-red-50 text-red-600";
     if (fileType.includes("word") || fileType.includes("document"))
-        return "bg-blue-50 text-blue-600";
+        return "bg-[#ff5018]/10 text-blue-600";
     if (fileType.includes("sheet") || fileType.includes("excel"))
         return "bg-green-50 text-green-600";
     if (fileType.includes("presentation") || fileType.includes("powerpoint"))
@@ -68,7 +68,7 @@ const getFileColor = (fileType?: string) => {
     )
         return "bg-amber-50 text-amber-600";
     if (fileType.includes("python")) return "bg-emerald-50 text-emerald-600";
-    return "bg-gray-50 text-gray-600";
+    return "bg-[#f7f2ee] text-gray-600";
 };
 
 export const FileAttachment = ({
@@ -90,7 +90,7 @@ export const FileAttachment = ({
     const extension = getFileExtension(fileName);
 
     return (
-        <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors max-w-sm group">
+        <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-[#f7f2ee] transition-colors max-w-sm group">
             {/* File Icon */}
             <div
                 className={`size-12 rounded-lg flex items-center justify-center text-xl shrink-0 ${getFileColor(

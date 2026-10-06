@@ -1,149 +1,114 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "./ui/button";
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
+const menuItems = [
+  { label: "Product", href: "#features" },
+  { label: "Merger", href: "#merger" },
+  { label: "Journey", href: "#timeline" },
+  { label: "Team", href: "#team" },
+  { label: "Pricing", href: "#pricing" },
+  { label: "FAQ", href: "#faq" },
+];
+
 const Navbar: React.FC = () => {
-  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  const toggleMenu = () => setIsOpen(!isOpen);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-  const menuItems = [
-    { label: "Home", href: "#hero" },
-    { label: "Features", href: "#features" },
-    { label: "Our Journey", href: "#timeline" },
-    { label: "Team", href: "#team" },
-    { label: "Pricing", href: "#pricing" },
-    { label: "FAQ", href: "#faq" },
-  ];
-
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+  const go = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     setIsOpen(false);
-    
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const solid = scrolled || isOpen;
+  const ink = solid ? "text-[#1b1017]" : "text-white";
+  const soft = solid ? "text-[#1b1017]/65 hover:text-[#1b1017]" : "text-white/70 hover:text-white";
+
   return (
-    <>
-      {/* Overlay for mobile */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={toggleMenu}
-        />
-      )}
+    <header
+      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
+        scrolled || isOpen
+          ? "border-b border-[#381d2a]/10 bg-[#f7f2ee]/92 backdrop-blur-md"
+          : "border-b border-transparent"
+      }`}
+    >
+      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8">
+        <button
+          type="button"
+          aria-label="Back to top"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="flex items-center gap-2.5"
+        >
+          <Image src="/logo.png" alt="" width={30} height={30} className="h-[30px] w-[30px]" />
+          <span className={`text-[17px] font-semibold tracking-tight ${ink}`}>WebflowX</span>
+        </button>
 
-      <nav className="container w-full z-50 top-0 left-0 sticky  ">
-        <div className="max-w-7xl flex items-center justify-between mx-auto p-4">
-          {/* Logo */}
-          <div
-            onClick={() => {
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            className="inline-flex items-center cursor-pointer justify-center"
-          >
-            <span className="text-xl font-semibold text-heading leading-none -mr-3">
-              Webflow
-            </span>
-            <img src="/logo.png" alt="Logo" className="w-10 h-10 block ml-1" />
-          </div>
-
-          {/* Desktop Menu - Centered */}
-          <div className="hidden md:flex items-center space-x-6 lg:space-x-8 flex-1 justify-center">
-            {menuItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                onClick={(e) => handleNavClick(e, item.href)}
-                className="text-heading text-sm lg:text-base hover:text-[#ff5018] relative py-2 after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-0 after:bg-[#ff5018] after:transition-all after:duration-300 hover:after:w-full cursor-pointer"
-              >
-                {item.label}
-              </a>
-            ))}
-          </div>
-
-          {/* Desktop Login Button */}
-          <div className="hidden md:block">
-            <Button
-              className="text-white flex gap-2 bg-black hover:bg-[#ff5018] border border-transparent focus:ring-4 focus:ring-[#ff5018]/30 shadow-sm font-medium rounded-md text-sm px-4 py-2"
-              onClick={() => router.push("/auth")}
+        <div className="hidden items-center gap-8 md:flex">
+          {menuItems.map((m) => (
+            <a
+              key={m.href}
+              href={m.href}
+              onClick={(e) => go(e, m.href)}
+              className={`text-sm transition-colors ${soft}`}
             >
-              <img src="/arrow.svg" className="h-4 w-4" alt="arrow" />
-              Login
-            </Button>
-          </div>
+              {m.label}
+            </a>
+          ))}
+        </div>
 
-          {/* Mobile Hamburger */}
+        <div className="flex items-center gap-3">
+          <Link href="/auth" className={`hidden text-sm font-medium sm:block ${ink}`}>
+            Log in
+          </Link>
+          <Link
+            href="/auth"
+            className="hidden rounded-md bg-[#ff5018] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#e6430f] sm:block"
+          >
+            Start free
+          </Link>
           <button
             type="button"
-            className="md:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
-            onClick={toggleMenu}
             aria-label="Toggle menu"
+            onClick={() => setIsOpen((v) => !v)}
+            className={`p-2 md:hidden ${ink}`}
           >
-            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
       </nav>
 
-      {/* Mobile Sidebar */}
-      <div
-        className={`fixed top-0 right-0 h-full w-72 bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out md:hidden ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <div className="inline-flex items-center">
-            <span className="text-lg font-semibold text-heading -mr-2">
-              Webflow
-            </span>
-            <img src="/logo.png" alt="Logo" className="w-8 h-8 ml-1" />
-          </div>
-          <button
-            onClick={toggleMenu}
-            className="p-2 hover:bg-gray-100 rounded-md"
-            aria-label="Close menu"
-          >
-            <X className="w-5 h-5 text-gray-600" />
-          </button>
-        </div>
-
-        {/* Sidebar Menu Items */}
-        <div className="flex flex-col p-4 space-y-1">
-          {menuItems.map((item) => (
+      {isOpen && (
+        <div className="border-t border-[#381d2a]/10 px-5 pb-5 md:hidden">
+          {menuItems.map((m) => (
             <a
-              key={item.label}
-              href={item.href}
-              onClick={(e) => handleNavClick(e, item.href)}
-              className="block py-3 px-4 rounded-md text-gray-700 hover:bg-[#ff5018]/10 hover:text-[#ff5018] transition-colors cursor-pointer"
+              key={m.href}
+              href={m.href}
+              onClick={(e) => go(e, m.href)}
+              className="block border-b border-[#381d2a]/10 py-3.5 text-[#1b1017]"
             >
-              {item.label}
+              {m.label}
             </a>
           ))}
-
-          {/* Mobile Login Button */}
-          <div className="pt-4 border-t mt-4">
-            <Button
-              className="w-full text-white bg-black hover:bg-[#ff5018] border border-transparent shadow-sm font-medium rounded-md text-sm px-4 py-2.5 flex items-center justify-center gap-2"
-              onClick={() => {
-                router.push("/auth");
-                setIsOpen(false);
-              }}
-            >
-              <img src="/arrow.svg" className="h-4 w-4" alt="arrow" />
-              Get Started
-            </Button>
-          </div>
+          <Link
+            href="/auth"
+            className="mt-4 block rounded-md bg-[#ff5018] py-3 text-center text-sm font-semibold text-white"
+          >
+            Start free
+          </Link>
         </div>
-      </div>
-    </>
+      )}
+    </header>
   );
 };
 

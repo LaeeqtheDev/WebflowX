@@ -10,6 +10,13 @@ import { Loader, TriangleAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 
+// centralized container for all states
+const CenteredContainer = ({ children }: { children: React.ReactNode }) => (
+  <div className="flex flex-col items-center justify-center h-full w-full gap-2">
+    {children}
+  </div>
+);
+
 const WorkspaceIdPage = () => {
   const router = useRouter();
   const workspaceId = useWorkspaceId();
@@ -30,13 +37,6 @@ const WorkspaceIdPage = () => {
       setIsOpen(true);
     }
   }, [channelId, workspaceLoading, channelsLoading, workspace, open, setIsOpen, router, workspaceId, member, memberLoading, isAdmin]);
-
-  // centralized container for all states
-  const CenteredContainer = ({ children }: { children: React.ReactNode }) => (
-    <div className="flex flex-col items-center justify-center h-full w-full gap-2">
-      {children}
-    </div>
-  );
 
   if (workspaceLoading || channelsLoading || memberLoading) {
     return (

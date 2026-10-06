@@ -168,7 +168,7 @@ export default function NotesPage() {
                 <div className="p-3 border-b">
                     <Button
                         onClick={handleNewNote}
-                        className="w-full bg-[#ff5018]/80 hover:bg-[#ff5018] text-white"
+                        className="w-full bg-[#ff5018] hover:bg-[#e6430f] text-white"
                         size="sm"
                     >
                         <Plus className="size-4 mr-1" /> New Note
@@ -284,7 +284,7 @@ export default function NotesPage() {
                             <Button
                                 onClick={handleCreate}
                                 disabled={isCreatingNote || !newTitle.trim()}
-                                className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white"
+                                className="bg-[#ff5018] hover:bg-[#e6430f] text-white"
                             >
                                 {isCreatingNote ? <Loader className="size-4 animate-spin" /> : "Save Note"}
                             </Button>
@@ -314,7 +314,7 @@ export default function NotesPage() {
                                     size="sm"
                                     onClick={handleUpdate}
                                     disabled={isUpdatingNote}
-                                    className="bg-[#ff5018]/80 hover:bg-[#ff5018] text-white shrink-0"
+                                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white shrink-0"
                                 >
                                     {isUpdatingNote
                                         ? <Loader className="size-4 animate-spin" />

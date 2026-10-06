@@ -1,9 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@radix-ui/react-separator";
+import { AuthDivider, AuthField } from "./auth-ui";
 import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
@@ -38,112 +36,70 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
   };
 
   return (
-    <Card className="w-full h-full max-w-md mx-auto p-6 sm:p-8 md:p-12 border-2 drop-shadow-2xl relative">
-      {/* Back Arrow */}
-      <Link href="/" className="absolute top-4 left-4 sm:top-6 sm:left-6 flex items-center gap-1 text-gray-500 hover:text-black transition-colors">
-        <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
-        <span className="text-sm sm:text-base hidden xs:inline">Back</span>
+    <div className="w-full">
+      <Link href="/" className="mb-10 inline-flex items-center gap-1.5 text-sm text-[#1b1017]/55 transition-colors hover:text-[#1b1017]">
+        <ArrowLeft size={16} />
+        Back to home
       </Link>
 
-      <div className="flex gap-3 mx-auto items-center justify-center mt-8 sm:mt-0">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full items-center justify-center mx-auto flex">
-          <img
-            src={"/logo.png"}
-            alt="Logo"
-            className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mb-0 mt-0 mx-auto"
-          />
-        </div>
-      </div>
-
-      <CardHeader className="px-0 pt-6 sm:pt-8 text-center sm:text-left">
-        <CardTitle className="text-xl sm:text-2xl">Login to Continue</CardTitle>
-        <CardDescription className="text-sm sm:text-base">
-          Use your email or another service to continue
-        </CardDescription>
-      </CardHeader>
+      <h1 className="text-[2rem] font-semibold leading-tight tracking-[-0.03em] text-[#1b1017]">Welcome back</h1>
+      <p className="mt-2 text-[15px] text-[#1b1017]/65">Log in to your workspace.</p>
 
       {!!error && (
-        <div className="bg-destructive/15 p-3 rounded-md flex items-start sm:items-center gap-x-2 text-xs sm:text-sm text-destructive mb-3">
-          <TriangleAlert className="size-4 flex-shrink-0 mt-0.5 sm:mt-0" />
+        <div className="mt-6 flex items-start gap-x-2 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0" />
           <p className="break-words">{error}</p>
         </div>
       )}
 
-      <CardContent className="space-y-5 px-0 pb-0">
-        <form onSubmit={onPasswordSignIn} className="space-y-2.5">
-          <Input
-            disabled={pending}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            type="email"
-            required
-            className="text-sm sm:text-base"
-          />
+      <form onSubmit={onPasswordSignIn} className="mt-8 space-y-4">
+          <AuthField label="Email" disabled={pending} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" type="email" required />
+          <AuthField label="Password" disabled={pending} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" type="password" required />
+        <Button
+          type="submit"
+          className="mt-2 h-12 w-full cursor-pointer rounded-xl bg-[#ff5018] text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_rgba(255,80,24,0.8)] hover:bg-[#e6430f]"
+          size="lg"
+          disabled={pending}
+        >
+          Continue
+        </Button>
+      </form>
 
-          <Input
-            disabled={pending}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            type="password"
-            required
-            className="text-sm sm:text-base"
-          />
+      <AuthDivider />
 
-          <Button
-            type="submit"
-            className="w-full bg-black/70 hover:bg-black cursor-pointer text-sm sm:text-base"
-            size="lg"
-            disabled={pending}
-          >
-            Continue
-          </Button>
-        </form>
+      <div className="grid grid-cols-2 gap-3">
+        <Button
+          disabled={pending}
+          onClick={() => handleProviderSignIn("google")}
+          variant="outline"
+          size="lg"
+          className="h-12 cursor-pointer gap-2.5 rounded-xl border-[#381d2a]/15 bg-white text-[15px] hover:bg-[#f3eeea]"
+        >
+          <FcGoogle className="size-5" />
+          Google
+        </Button>
+        <Button
+          disabled={pending}
+          onClick={() => handleProviderSignIn("github")}
+          variant="outline"
+          size="lg"
+          className="h-12 cursor-pointer gap-2.5 rounded-xl border-[#381d2a]/15 bg-white text-[15px] hover:bg-[#f3eeea]"
+        >
+          <FaGithub className="size-5" />
+          GitHub
+        </Button>
+      </div>
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <Separator className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-gray-500">Or continue with</span>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-y-2.5">
-          <Button
-            disabled={pending}
-            onClick={() => handleProviderSignIn("google")}
-            variant="outline"
-            size="lg"
-            className="w-full relative flex items-center justify-center gap-x-2.5 cursor-pointer text-sm sm:text-base"
-          >
-            <FcGoogle className="w-5 h-5" />
-            Continue with Google
-          </Button>
-
-          <Button
-            disabled={pending}
-            onClick={() => handleProviderSignIn("github")}
-            variant="outline"
-            size="lg"
-            className="w-full relative flex items-center justify-center gap-x-2.5 cursor-pointer text-sm sm:text-base"
-          >
-            <FaGithub className="w-5 h-5" />
-            Continue with Github
-          </Button>
-        </div>
-
-        <p className="text-center text-sm">
-          Don't have an account?{" "}
-          <span
-            onClick={() => setState("signUp")}
-            className="text-orange-600 hover:underline cursor-pointer font-medium"
-          >
-            Sign Up
-          </span>
-        </p>
-      </CardContent>
-    </Card>
+      <p className="mt-8 text-center text-sm text-[#1b1017]/65">
+        Don&apos;t have an account?{" "}
+        <button
+          type="button"
+          onClick={() => setState("signUp")}
+          className="cursor-pointer font-semibold text-[#ff5018] underline-offset-4 hover:underline"
+        >
+          Sign up
+        </button>
+      </p>
+    </div>
   );
 };

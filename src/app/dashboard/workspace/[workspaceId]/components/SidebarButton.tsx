@@ -23,12 +23,12 @@ export const SidebarButton = ({
             <Button
                 variant={"trasnparent"}
                 className={cn(
-                    "size-8 p-1 flex h-auto w-auto flex-col items-center justify-center gap-0.5 transition-colors group-hover:bg-accent/20",
-                    isActive && "bg-accent/20"
+                    "size-8 p-1 flex h-auto w-auto min-w-12 flex-col items-center justify-center gap-0.5 rounded-lg transition-colors group-hover:bg-white/10",
+                    isActive && "bg-white/15 ring-1 ring-inset ring-[#ff5018]/60"
                 )}
             >
                 <Icon className="size-5 transition-transform group-hover:scale-110 text-[#ff5018]" />
-                <span className="text-[11px] text-white group-hover:text-accent">
+                <span className="text-[11px] font-medium text-white/85 group-hover:text-white">
                     {label}
                 </span>
             </Button>

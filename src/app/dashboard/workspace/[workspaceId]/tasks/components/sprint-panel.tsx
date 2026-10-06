@@ -64,7 +64,7 @@ export const SprintPanel = ({
                     <Input placeholder="Sprint name" value={name} onChange={e => setName(e.target.value)} className="h-7 text-xs" />
                     <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="h-7 text-xs" />
                     <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="h-7 text-xs" />
-                    <Button onClick={handleCreate} disabled={isPending} size="sm" className="h-7 text-xs bg-[#ff5018]/80 hover:bg-[#ff5018] text-white">
+                    <Button onClick={handleCreate} disabled={isPending} size="sm" className="h-7 text-xs bg-[#ff5018] hover:bg-[#e6430f] text-white">
                         Create
                     </Button>
                 </div>

@@ -1,38 +1,35 @@
 import React from "react";
+import { Heading, Label, Reveal } from "./landing/ui";
+import { wrap } from "./landing/tokens";
 
-const WhyChooseUs = () => {
-  return (
-    <div  className="w-full mt-8 md:mt-13">
-      {/* Text Section */}
-      <div className="text-center py-12 md:py-16 px-4 md:px-16 bg-white">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-black mb-3 md:mb-4">
-          Why Choose Us?
-        </h1>
-        <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-          Discover the power of WebflowX — streamlined workflows, smart{" "}
-          <span className="inline-block font-bold text-lg sm:text-xl md:text-2xl bg-black text-white rounded-full px-3 md:px-4 py-0.5 md:py-1 mx-1">
-            Collaboration
-          </span>{" "}
-          and a seamless experience that transforms your productivity.
-        </p>
-      </div>
-
-      {/* Video Section */}
-      <div className="relative w-full h-[50vh] sm:h-[60vh] md:h-[70vh] lg:h-screen overflow-hidden">
-        <video
-          className="absolute top-0 left-0 w-full h-full object-cover"
-          autoPlay
-          loop
-          muted
-          playsInline
-          src="/video.mp4"
-        />
-
-        {/* Overlay */}
-        <div className="absolute top-0 left-0 w-full h-full bg-black/80" />
-      </div>
+const WhyChooseUs = () => (
+  <section className="w-full bg-[#f7f2ee] pb-24 md:pb-32">
+    <div className={wrap}>
+      <Reveal>
+        <div className="grid items-end gap-6 lg:grid-cols-2">
+          <div>
+            <Label>In motion</Label>
+            <Heading className="mt-5">See it working.</Heading>
+          </div>
+          <p className="max-w-md text-[17px] leading-relaxed text-[#1b1017]/70 lg:justify-self-end">
+            A short look at WebflowX in use, from conversations to tasks to meetings.
+          </p>
+        </div>
+      </Reveal>
+      <Reveal delay={80}>
+        <div className="mt-12 overflow-hidden rounded-2xl bg-[#381d2a]">
+          <video
+            className="aspect-video w-full object-cover"
+            autoPlay
+            loop
+            muted
+            playsInline
+            src="/video.mp4"
+          />
+        </div>
+      </Reveal>
     </div>
-  );
-};
+  </section>
+);
 
 export default WhyChooseUs;

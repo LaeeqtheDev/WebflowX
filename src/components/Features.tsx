@@ -1,123 +1,192 @@
-import React from 'react';
-import { 
-  MessageSquare, 
-  CheckSquare, 
-  FileText, 
-  Video,
-  Sparkles,
-  Bot,
-  FolderOpen,
-  Users,
-  StickyNote
-} from 'lucide-react';
+"use client";
 
-const NewFeatures: React.FC = () => {
-  const features = [
-    {
-      icon: Users,
-      title: "Workspaces",
-      description: "Organize your teams and projects in dedicated workspaces. Keep everything structured and accessible.",
-      color: "bg-blue-100 text-blue-600"
-    },
-    {
-      icon: MessageSquare,
-      title: "Direct Messages",
-      description: "Communicate instantly with team members through real-time messaging. Stay connected effortlessly.",
-      color: "bg-purple-100 text-purple-600"
-    },
-    {
-      icon: CheckSquare,
-      title: "Task Management",
-      description: "Create, assign, and track tasks with ease. Keep your projects on schedule and organized.",
-      color: "bg-green-100 text-green-600"
-    },
-    {
-      icon: StickyNote,
-      title: "Notes",
-      description: "Capture ideas and important information quickly. Your thoughts, organized and searchable.",
-      color: "bg-yellow-100 text-yellow-600"
-    },
-    {
-      icon: FileText,
-      title: "Documents",
-      description: "Create and collaborate on documents in real-time. Write, edit, and share seamlessly.",
-      color: "bg-indigo-100 text-indigo-600"
-    },
-    {
-      icon: Video,
-      title: "Meetings",
-      description: "Host video meetings with AI-powered transcription and summaries. Never miss important details.",
-      color: "bg-red-100 text-red-600"
-    },
-    {
-      icon: Sparkles,
-      title: "AI Summaries",
-      description: "Get instant AI-generated summaries of meetings and conversations. Save time and stay informed.",
-      color: "bg-pink-100 text-pink-600"
-    },
-    {
-      icon: Bot,
-      title: "AI Assistant",
-      description: "Your intelligent AI companion for drafting, brainstorming, and problem-solving. Work smarter.",
-      color: "bg-teal-100 text-teal-600"
-    },
-    {
-      icon: FolderOpen,
-      title: "File Sharing",
-      description: "Share files instantly with your team. Secure, fast, and accessible from anywhere.",
-      color: "bg-orange-100 text-orange-600"
-    }
-  ];
+import React, { useEffect, useRef } from "react";
+import { FolderOpen, Layers, MessageSquare, NotebookPen } from "lucide-react";
+import { gsap, MOTION_OK } from "./landing/gsap";
+import { Heading, Label, Reveal } from "./landing/ui";
+import { ChatPane, DocPane, MeetingPane, PaneFrame, ScaledFrame, TasksPane } from "./landing/mock";
+import { wrap } from "./landing/tokens";
+
+type Tone = "white" | "plum" | "orange";
+
+const tones: Record<Tone, { box: string; title: string; body: string }> = {
+  white: { box: "bg-white border border-[#381d2a]/10", title: "text-[#1b1017]", body: "text-[#1b1017]/65" },
+  plum: { box: "bg-[#381d2a]", title: "text-white", body: "text-white/65" },
+  orange: { box: "bg-[#ff5018]", title: "text-white", body: "text-white/85" },
+};
+
+function Cell({
+  tone,
+  title,
+  body,
+  className = "",
+  visualH,
+  children,
+}: {
+  tone: Tone;
+  title: string;
+  body: string;
+  className?: string;
+  visualH?: string;
+  children?: React.ReactNode;
+}) {
+  const t = tones[tone];
+  return (
+    <div className={`bento-cell flex flex-col overflow-hidden rounded-3xl p-7 ${t.box} ${className}`}>
+      <h3 className={`lp-h text-2xl ${t.title}`}>{title}</h3>
+      <p className={`mt-2 max-w-sm text-[15px] leading-relaxed ${t.body}`}>{body}</p>
+      {children && (
+        <div className={`-mx-7 -mb-7 mt-7 overflow-hidden px-7 ${visualH ?? "h-[260px]"}`}>{children}</div>
+      )}
+    </div>
+  );
+}
+
+function AssistantVisual() {
+  return (
+    <div className="m-card space-y-3 pt-1">
+      <div className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-[#381d2a] px-4 py-2.5 text-[13px] text-white">
+        Summarize this week&apos;s customer feedback.
+      </div>
+      <div className="m-card w-fit max-w-[92%] rounded-2xl rounded-bl-sm bg-white px-4 py-3 text-[13px] leading-snug text-[#1b1017]">
+        Three themes this week:
+        <ul className="mt-1.5 space-y-1 text-[#1b1017]/75">
+          <li>1. Simpler onboarding</li>
+          <li>2. Faster file uploads</li>
+          <li>3. Calendar integration</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+const small = [
+  { icon: Layers, t: "Workspaces", b: "Separate spaces for each team or project." },
+  { icon: MessageSquare, t: "Direct messages", b: "Private one-to-one conversations." },
+  { icon: NotebookPen, t: "Notes", b: "Personal and workspace notes." },
+  { icon: FolderOpen, t: "File sharing", b: "Share files with your team." },
+];
+
+const NewFeatures = () => {
+  const root = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    const mm = gsap.matchMedia();
+    mm.add(MOTION_OK, () => {
+      const q = gsap.utils.selector(el);
+      q(".bento-cell").forEach((cell) => {
+        const s = gsap.utils.selector(cell);
+        const items = s(".m-card, .m-line, .m-msg");
+        gsap.set(items, { opacity: 0, y: 12 });
+        gsap.fromTo(
+          cell,
+          { y: 40, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: cell,
+              start: "top 88%",
+              once: true,
+              onEnter: () =>
+                gsap.to(items, { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, delay: 0.3, ease: "power2.out" }),
+            },
+          }
+        );
+      });
+    });
+    return () => mm.revert();
+  }, []);
 
   return (
-    <section id="features"  className="relative overflow-hidden bg-gradient-to-b from-white to-gray-50 w-full">
-      {/* Background Decor Elements */}
-      <div className="pointer-events-none absolute -bottom-52 right-0 w-136 h-136 bg-gradient-to-br from-orange-300 to-lime-200 rounded-full opacity-30 blur-3xl" />
-      <div className="pointer-events-none absolute -top-40 -left-40 w-120 h-120 bg-gradient-to-br from-orange-400 to-yellow-200 rounded-full opacity-40 blur-3xl" />
+    <section ref={root} id="features" className="w-full bg-[#efe8e3] py-24 md:py-32">
+      <div className={wrap}>
+        <Reveal>
+          <Label>Product</Label>
+          <Heading className="mt-5 max-w-3xl">Everything your team works in, in one app.</Heading>
+        </Reveal>
 
-      <div id="new-features" className="relative z-10 py-12 sm:py-16 lg:py-24">
-        <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-          
-          {/* Header */}
-          <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
-              Everything You Need to Collaborate
-            </h2>
-            <p className="text-base sm:text-lg text-gray-600">
-              All the tools your team needs in one powerful platform
-            </p>
-          </div>
+        <div className="mt-14 grid gap-4 lg:grid-cols-6">
+          <Cell
+            tone="white"
+            className="lg:col-span-3"
+            title="Channels and threads"
+            body="Talk to the whole team in channels, keep replies in threads, and share files and documents right in the conversation."
+            visualH="h-[300px]"
+          >
+            <ScaledFrame w={680} h={440}>
+              <PaneFrame>
+                <ChatPane channel="product-launch" />
+              </PaneFrame>
+            </ScaledFrame>
+          </Cell>
+          <Cell
+            tone="white"
+            className="lg:col-span-3"
+            title="Tasks next to the conversation"
+            body="Create, assign and track tasks without leaving the workspace. Everyone sees what is waiting, in progress and done."
+            visualH="h-[300px]"
+          >
+            <ScaledFrame w={680} h={440}>
+              <PaneFrame>
+                <TasksPane />
+              </PaneFrame>
+            </ScaledFrame>
+          </Cell>
 
-          {/* Features Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mt-12 sm:mt-16 lg:mt-20">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div
-                  key={index}
-                  className="group relative bg-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-transparent hover:-translate-y-1"
-                >
-                  {/* Icon */}
-                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl ${feature.color} flex items-center justify-center transition-all duration-300 mb-5 group-hover:shadow-lg`}>
-                    <Icon className="w-7 h-7 sm:w-8 sm:h-8 transition-transform group-hover:scale-110" />
-                  </div>
+          <Cell
+            tone="white"
+            className="lg:col-span-2"
+            title="Documents"
+            body="Write and edit together in a rich text editor."
+            visualH="h-[220px]"
+          >
+            <ScaledFrame w={680} h={440}>
+              <PaneFrame>
+                <DocPane />
+              </PaneFrame>
+            </ScaledFrame>
+          </Cell>
+          <Cell
+            tone="plum"
+            className="lg:col-span-2"
+            title="Meetings with AI summaries"
+            body="Start a video call from any channel and get key points and action items afterwards."
+            visualH="h-[220px]"
+          >
+            <ScaledFrame w={680} h={440}>
+              <PaneFrame>
+                <MeetingPane />
+              </PaneFrame>
+            </ScaledFrame>
+          </Cell>
+          <Cell
+            tone="orange"
+            className="lg:col-span-2"
+            title="AI assistant"
+            body="Draft, brainstorm and summarize without leaving your workspace."
+            visualH="h-[220px]"
+          >
+            <AssistantVisual />
+          </Cell>
+        </div>
 
-                  {/* Title */}
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 group-hover:text-gray-800">
-                    {feature.title}
-                  </h3>
-
-                  {/* Description */}
-                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                    {feature.description}
-                  </p>
-
-                  {/* Hover Accent */}
-                  <div className="absolute top-0 left-0 w-1 h-0 bg-gradient-to-b from-orange-500 to-orange-600 rounded-l-2xl group-hover:h-full transition-all duration-300" />
-                </div>
-              );
-            })}
-          </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {small.map(({ icon: Icon, t, b }) => (
+            <Reveal key={t}>
+              <div className="h-full rounded-3xl border border-[#381d2a]/10 bg-[#f7f2ee] p-7">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#381d2a] text-[#ff5018]">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <p className="mt-6 text-lg font-semibold tracking-tight text-[#1b1017]">{t}</p>
+                <p className="mt-1.5 text-sm text-[#1b1017]/65">{b}</p>
+              </div>
+            </Reveal>
+          ))}
         </div>
       </div>
     </section>

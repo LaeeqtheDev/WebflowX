@@ -131,7 +131,7 @@ const MeetingRoomInner = ({ onDisconnect }: { onDisconnect: (transcript: string)
                     setStatus("recording")
                     isInitializing = false
                     
-                    let mimeType = 'audio/webm;codecs=opus'
+                    const mimeType = 'audio/webm;codecs=opus'
                     const mediaRecorder = new MediaRecorder(stream, { mimeType })
                     
                     mediaRecorder.ondataavailable = (event) => {
@@ -185,10 +185,10 @@ const MeetingRoomInner = ({ onDisconnect }: { onDisconnect: (transcript: string)
                 
                 globalWebSocket = ws
                 
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error("❌ Init error:", error)
                 setStatus("error")
-                setErrorMessage(error.message)
+                setErrorMessage(error instanceof Error ? error.message : String(error))
                 isInitializing = false
             }
         }
@@ -244,7 +244,7 @@ const MeetingRoomInner = ({ onDisconnect }: { onDisconnect: (transcript: string)
                 )}
                 
                 {status === "starting" && (
-                    <div className="flex items-center gap-2 bg-blue-500/90 text-white px-3 py-1.5 rounded-full text-xs shadow-lg">
+                    <div className="flex items-center gap-2 bg-[#ff5018]/100/90 text-white px-3 py-1.5 rounded-full text-xs shadow-lg">
                         <Mic className="size-3 animate-pulse" />
                         Initializing...
                     </div>

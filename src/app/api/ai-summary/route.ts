@@ -111,10 +111,10 @@ Write a 2-3 sentence overview of the meeting's purpose and outcome.`
         console.log("Summary generated successfully, length:", summary.length)
 
         return NextResponse.json({ summary })
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("AI Summary API error:", e)
         return NextResponse.json(
-            { error: e.message || "Failed to generate summary" }, 
+            { error: (e instanceof Error && e.message) || "Failed to generate summary" }, 
             { status: 500 }
         )
     }
