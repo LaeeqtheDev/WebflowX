@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
+import { useSearchParams } from "next/navigation"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { useCurrentMember } from "@/features/members/api/use-current-member"
 import { useGetMembers } from "@/features/members/api/use-get-members"
@@ -45,6 +46,18 @@ export default function TasksPage() {
     const [filterStatus, setFilterStatus] = useState<Status | "all">("all")
     const [filterAssignee, setFilterAssignee] = useState("all")
     const [sprintFilter, setSprintFilter] = useState("all")
+
+    const searchParams = useSearchParams()
+    const targetTaskId = searchParams.get("task")
+    const openedTarget = useRef<string | null>(null)
+    useEffect(() => {
+        if (!targetTaskId || !tasks || openedTarget.current === targetTaskId) return
+        const t = (tasks as Task[]).find(x => x._id === targetTaskId)
+        if (t) {
+            openedTarget.current = targetTaskId
+            setSelectedTask(t)
+        }
+    }, [targetTaskId, tasks])
 
     const isAdmin = currentMember?.role === "admin"
     const safeMembers = (members ?? []) as Member[]

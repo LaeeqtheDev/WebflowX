@@ -155,6 +155,7 @@ const MessageImpl = ({
             <>
                 <ConfirmDialog />
                 <div
+                    id={`msg-${id}`}
                     className={cn(
                         "flex flex-col gap-2 p-1.5 px-5 hover:bg-[#f7f2ee]/70 group relative",
                         isEditing && "bg-[#ff5018]/10 hover:bg-[#ff5018]/10",
@@ -230,6 +231,7 @@ const MessageImpl = ({
         <>
             <ConfirmDialog />
             <div
+                id={`msg-${id}`}
                 className={cn(
                     "flex flex-col gap-2 p-1.5 px-5 hover:bg-[#f7f2ee]/70 group relative",
                     isEditing && "bg-[#ff5018]/10 hover:bg-[#ff5018]/10",

@@ -92,26 +92,28 @@ export default function ActivityPage() {
             markRead(notification._id)
         }
 
+        const base = `/dashboard/workspace/${workspaceId}`
+        const msg = notification.messageId ? `?message=${notification.messageId}` : ""
         switch (notification.type) {
             case "thread_reply":
+            case "reaction":
                 if (notification.channelId) {
-                    router.push(`/dashboard/workspace/${workspaceId}/channel/${notification.channelId}`)
+                    router.push(`${base}/channel/${notification.channelId}${msg}`)
+                } else if (notification.senderId) {
+                    router.push(`${base}/member/${notification.senderId}${msg}`)
+                } else {
+                    toast.info("This conversation is no longer available")
                 }
                 break
             case "dm_received":
-                router.push(`/dashboard/workspace/${workspaceId}/member/${notification.senderId}`)
+                router.push(`${base}/member/${notification.senderId}${msg}`)
                 break
             case "task_assigned":
             case "task_comment":
-                router.push(`/dashboard/workspace/${workspaceId}/tasks`)
+                router.push(`${base}/tasks${notification.taskId ? `?task=${notification.taskId}` : ""}`)
                 break
             case "note_added":
-                router.push(`/dashboard/workspace/${workspaceId}/notes`)
-                break
-            case "reaction":
-                if (notification.channelId) {
-                    router.push(`/dashboard/workspace/${workspaceId}/channel/${notification.channelId}`)
-                }
+                router.push(`${base}/notes`)
                 break
         }
     }

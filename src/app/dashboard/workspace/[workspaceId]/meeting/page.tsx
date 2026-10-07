@@ -49,7 +49,10 @@ export default function MeetingPage() {
     const [title, setTitle] = useState("")
     const [selectedChannelId, setSelectedChannelId] = useState("")
     const [isGenerating, setIsGenerating] = useState(false)
-    const [selectedMeeting, setSelectedMeeting] = useState<NonNullable<typeof meetings>[number] | null>(null)
+    const [selectedMeetingId, setSelectedMeetingId] = useState<Id<"meetings"> | null>(null)
+    // Always derive from live data so summaries/end state appear instantly without a refresh
+    const selectedMeeting = meetings?.find(m => m._id === selectedMeetingId) ?? null
+    const setSelectedMeeting = (m: { _id: Id<"meetings"> } | null) => setSelectedMeetingId(m?._id ?? null)
     const [generationError, setGenerationError] = useState<string | null>(null)
     const [showMobileDetail, setShowMobileDetail] = useState(false)
 
@@ -173,25 +176,8 @@ export default function MeetingPage() {
             } finally {
                 setIsGenerating(false)
                 
-                const checkInterval = setInterval(() => {
-                    const meeting = meetings?.find(m => m._id === meetingId)
-                    if (meeting?.endedAt) {
-                        clearInterval(checkInterval)
-                        setSelectedMeeting(meeting)
-                        setActiveMeetingId(null)
-                        console.log("✅ Auto-selected updated meeting for viewing")
-                    }
-                }, 500)
-                
-                setTimeout(() => {
-                    clearInterval(checkInterval)
-                    setActiveMeetingId(null)
-                    const meeting = meetings?.find(m => m._id === meetingId)
-                    if (meeting) {
-                        setSelectedMeeting(meeting)
-                        console.log("⚠️ Force-selected meeting after timeout")
-                    }
-                }, 5000)
+                setActiveMeetingId(null)
+                if (meetingId) setSelectedMeetingId(meetingId)
             }
         } else {
             console.log("No valid transcript captured")
@@ -206,27 +192,10 @@ export default function MeetingPage() {
             
             toast.info("No transcript captured. You can add one manually from the meeting details.")
             
-            const checkInterval = setInterval(() => {
-                const meeting = meetings?.find(m => m._id === meetingId)
-                if (meeting?.endedAt) {
-                    clearInterval(checkInterval)
-                    setSelectedMeeting(meeting)
-                    setActiveMeetingId(null)
-                    console.log("✅ Auto-selected updated meeting for viewing")
-                }
-            }, 500)
-            
-            setTimeout(() => {
-                clearInterval(checkInterval)
-                setActiveMeetingId(null)
-                const meeting = meetings?.find(m => m._id === meetingId)
-                if (meeting) {
-                    setSelectedMeeting(meeting)
-                    console.log("⚠️ Force-selected meeting after timeout")
-                }
-            }, 5000)
+            setActiveMeetingId(null)
+            if (meetingId) setSelectedMeetingId(meetingId)
         }
-    }, [activeMeetingId, endMeeting, saveSummary, meetings])
+    }, [activeMeetingId, endMeeting, saveSummary])
 
     const handleSelectMeeting = (meeting: NonNullable<typeof meetings>[number]) => {
         setSelectedMeeting(meeting)

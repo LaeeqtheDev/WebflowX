@@ -7,6 +7,7 @@ import { Id } from "../../../../../../convex/_generated/dataModel";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useCurrentMember } from "@/features/members/api/use-current-member";
 import { Loader } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { ConversationHero } from "./conversation-hero";
 
 const TIME_THRESHOLD = 5;
@@ -75,6 +76,20 @@ export const MessageList = ({
     );
 
     // One stable IntersectionObserver instead of a new one on every render.
+    const searchParams = useSearchParams();
+    const targetMessageId = searchParams.get("message");
+    const handledTarget = useRef<string | null>(null);
+    useEffect(() => {
+        if (!targetMessageId || handledTarget.current === targetMessageId) return;
+        const el = document.getElementById(`msg-${targetMessageId}`);
+        if (!el) return;
+        handledTarget.current = targetMessageId;
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("bg-[#ff5018]/15", "transition-colors", "duration-700");
+        const t = setTimeout(() => el.classList.remove("bg-[#ff5018]/15"), 2500);
+        return () => clearTimeout(t);
+    }, [targetMessageId, data]);
+
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const loadMoreFn = useRef(loadMore);
     const canLoadRef = useRef(canLoadMore);
