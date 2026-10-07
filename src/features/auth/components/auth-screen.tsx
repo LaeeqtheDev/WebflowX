@@ -20,8 +20,9 @@ const copy = {
     },
 }
 
-export const AuthScreen = () => {
-    const [state, setState] = useState<SignInFlow>("signIn")
+// Invite links open the sign-up form first (/auth?mode=signup&next=...).
+export const AuthScreen = ({ initialState = "signIn" }: { initialState?: SignInFlow }) => {
+    const [state, setState] = useState<SignInFlow>(initialState)
     const [email, setEmail] = useState("")
     const root = useRef<HTMLDivElement>(null)
 

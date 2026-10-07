@@ -13,13 +13,16 @@ import { errorMessage } from "@/lib/error-message"
 import { parseLimitError } from "@/lib/plans";
 import VerificationInput from 'react-verification-input'
 import { toast } from "sonner";
+import { useConvexAuth } from "convex/react";
 
 const JoinPage = () => {
     const router = useRouter()
     const workspaceId = useWorkspaceId()
     const searchParams = useSearchParams()
     const codeFromUrl = searchParams.get("code")
-    const { data, isLoading } = useGetWorkspaceInfo({ id: workspaceId })
+    const { isAuthenticated, isLoading: authLoading } = useConvexAuth()
+    const { data, isLoading: infoLoading } = useGetWorkspaceInfo({ id: workspaceId })
+    const isLoading = infoLoading || authLoading
     const { mutate, isPending } = useJoin()
     const hasAutoJoined = useRef(false)
 
@@ -57,11 +60,11 @@ const JoinPage = () => {
 
     // Auto join if the invite link carries the code. Runs once; a failure is shown instead of retried.
     useEffect(() => {
-        if (codeFromUrl && !isLoading && !isMember && !hasAutoJoined.current) {
+        if (codeFromUrl && isAuthenticated && !isLoading && !isMember && !hasAutoJoined.current) {
             hasAutoJoined.current = true
             tryJoin(codeFromUrl)
         }
-    }, [codeFromUrl, isLoading, isMember, tryJoin])
+    }, [codeFromUrl, isAuthenticated, isLoading, isMember, tryJoin])
 
     const handleComplete = (value: string) => {
         setJoinError(null)
@@ -72,6 +75,38 @@ const JoinPage = () => {
         return (
             <div className="h-full flex items-center justify-center">
                 <Loader className="size-6 animate-spin text-[#ff5018]" />
+            </div>
+        )
+    }
+
+    // Not signed in yet: show the invite, and send them to sign up / log in, then straight back here to join.
+    if (!isAuthenticated) {
+        const back = encodeURIComponent(`${window.location.pathname}${window.location.search}`)
+        return (
+            <div className="h-full flex flex-col gap-y-8 items-center justify-center p-8">
+                <Image src={"/logo.png"} width={60} height={60} alt="WebflowX" />
+                <div className="flex max-w-md flex-col items-center gap-y-2 text-center">
+                    <h1 className="text-2xl font-bold">
+                        {data ? `You're invited to join ${data.name}` : "This invite link isn't valid"}
+                    </h1>
+                    <p className="text-md text-muted-foreground">
+                        {data
+                            ? data.invitesOpen === false
+                                ? "Invites are closed or the code has expired. Ask an admin for a new invite."
+                                : "Create a free account (or log in) and you'll be added to the workspace automatically."
+                            : "Ask the person who invited you to send a new link."}
+                    </p>
+                </div>
+                {data && data.invitesOpen !== false && (
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <Button size="lg" asChild>
+                            <Link href={`/auth?mode=signup&next=${back}`}>Create account</Link>
+                        </Button>
+                        <Button size="lg" variant="outline" asChild>
+                            <Link href={`/auth?next=${back}`}>I already have an account</Link>
+                        </Button>
+                    </div>
+                )}
             </div>
         )
     }

@@ -7,10 +7,11 @@ export const metadata: Metadata = {
   alternates: { canonical: "/auth" },
 }
 
-const AuthPage =()  => {
+const AuthPage = async ({ searchParams }: { searchParams: Promise<{ mode?: string }> }) => {
+  const { mode } = await searchParams
   return(
     <div >
-      <AuthScreen/>
+      <AuthScreen initialState={mode === "signup" ? "signUp" : "signIn"} />
     </div>
   )
 }

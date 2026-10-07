@@ -8,12 +8,12 @@ import { safeNext } from "@/lib/safe-next";
 
 const isPublicPage = createRouteMatcher(["/", "/auth", "/join"])
 
-const isLegal = createRouteMatcher(["/terms", "/privacy"])
+// legal pages and invite links are public for everyone, signed in or not
+const isLegal = createRouteMatcher(["/terms", "/privacy", "/join/(.*)"])
 
 const isApi = createRouteMatcher(["/api/(.*)"])
 
 export default convexAuthNextjsMiddleware(async (request) => {
-  // legal pages are public for everyone, signed in or not
   if (isLegal(request)) return undefined;
 
   const authenticated = await isAuthenticatedNextjs();

@@ -5,9 +5,9 @@ import { wrap } from "./landing/tokens";
 
 type Member = { name: string; role: string; src?: string; pos?: string };
 
-// Drop a photo at public/shah.jpg and set src: "/shah.jpg" below to replace the initials tile.
+// Shah's photo: swap src for your own (e.g. "/shah.jpg" in /public). Without a src an initials tile is shown.
 const team: Member[] = [
-  { name: "Shah", role: "Founder, North Foundry" },
+  { name: "Shah", role: "Founder, North Foundry", src: "/av3.jpg", pos: "object-[50%_20%]" },
   { name: "Shanzay", role: "Co-Founder & CTO", src: "/shanzay.jpg", pos: "object-[50%_30%]" },
   { name: "Arooj", role: "Co-Founder & CPO", src: "/arooj2.jpg", pos: "object-[50%_30%]" },
 ];
