@@ -1,14 +1,26 @@
 import { NextRequest, NextResponse } from "next/server"
+import { fetchQuery } from "convex/nextjs"
+import { api } from "../../../../convex/_generated/api"
+import { getAuthToken, unauthorized, rateLimit, tooMany } from "@/lib/api-guard"
+
+const MAX_TRANSCRIPT = 60_000
 
 export async function POST(req: NextRequest) {
     try {
-        const { transcript } = await req.json()
+        const authToken = await getAuthToken()
+        if (!authToken) return unauthorized()
+        const me = await fetchQuery(api.users.current, {}, { token: authToken })
+        if (!me) return unauthorized()
+        if (!rateLimit(`ai-summary:${me._id}`, 10, 60_000)) return tooMany()
 
-        console.log("=== AI SUMMARY API CALLED ===")
-        console.log("Transcript length:", transcript?.length)
-        console.log("Transcript preview:", transcript?.substring(0, 100))
+        const body = await req.json().catch(() => null)
+        const raw = body?.transcript
+        if (typeof raw !== "string") {
+            return NextResponse.json({ error: "Transcript is too short or empty" }, { status: 400 })
+        }
+        const transcript = raw.slice(0, MAX_TRANSCRIPT)
 
-        if (!transcript || transcript.trim().length < 10) {
+        if (transcript.trim().length < 10) {
             return NextResponse.json(
                 { error: "Transcript is too short or empty" }, 
                 { status: 400 }
@@ -24,8 +36,6 @@ export async function POST(req: NextRequest) {
                 { status: 500 }
             )
         }
-
-        console.log("Calling Groq API...")
 
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -69,8 +79,6 @@ Write a 2-3 sentence overview of the meeting's purpose and outcome.`
             })
         })
 
-        console.log("Groq API response status:", response.status)
-
         if (!response.ok) {
             const errorText = await response.text()
             console.error("Groq API error:", errorText)
@@ -96,8 +104,6 @@ Write a 2-3 sentence overview of the meeting's purpose and outcome.`
         }
 
         const data = await response.json()
-        console.log("Groq API response received")
-
         const summary = data.choices?.[0]?.message?.content
 
         if (!summary) {
@@ -108,13 +114,11 @@ Write a 2-3 sentence overview of the meeting's purpose and outcome.`
             )
         }
 
-        console.log("Summary generated successfully, length:", summary.length)
-
         return NextResponse.json({ summary })
     } catch (e: unknown) {
         console.error("AI Summary API error:", e)
         return NextResponse.json(
-            { error: (e instanceof Error && e.message) || "Failed to generate summary" }, 
+            { error: "Failed to generate summary" }, 
             { status: 500 }
         )
     }

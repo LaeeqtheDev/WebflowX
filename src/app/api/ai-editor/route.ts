@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
+import { fetchQuery } from "convex/nextjs"
+import { api } from "../../../../convex/_generated/api"
+import { getAuthToken, unauthorized, rateLimit, tooMany } from "@/lib/api-guard"
+
+const MAX_TEXT = 12_000
 
 const SYSTEM_PROMPTS: Record<string, string> = {
     improve: "You are a writing assistant. Improve the writing quality, clarity and flow of the text. Keep the same meaning but make it more polished and professional. Return ONLY the improved text, no explanations.",
@@ -13,7 +18,15 @@ const SYSTEM_PROMPTS: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
     try {
-        const { text, command } = await req.json()
+        const authToken = await getAuthToken()
+        if (!authToken) return unauthorized()
+        const me = await fetchQuery(api.users.current, {}, { token: authToken })
+        if (!me) return unauthorized()
+        if (!rateLimit(`ai-editor:${me._id}`, 20, 60_000)) return tooMany()
+
+        const body = await req.json().catch(() => null)
+        const text = typeof body?.text === "string" ? body.text.slice(0, MAX_TEXT) : ""
+        const command = body?.command
 
         if (!text || !command) {
             return NextResponse.json({ error: "Missing text or command" }, { status: 400 })
@@ -22,6 +35,10 @@ export async function POST(req: NextRequest) {
         const systemPrompt = SYSTEM_PROMPTS[command]
         if (!systemPrompt) {
             return NextResponse.json({ error: "Invalid command" }, { status: 400 })
+        }
+
+        if (!process.env.GROQ_API_KEY) {
+            return NextResponse.json({ error: "AI service is not configured" }, { status: 500 })
         }
 
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -40,6 +57,12 @@ export async function POST(req: NextRequest) {
             })
         })
 
+        if (!response.ok) {
+            return NextResponse.json(
+                { error: response.status === 429 ? "AI is busy, try again shortly" : "AI request failed" },
+                { status: response.status === 429 ? 429 : 502 }
+            )
+        }
         const data = await response.json()
         const result = data.choices?.[0]?.message?.content ?? ""
 

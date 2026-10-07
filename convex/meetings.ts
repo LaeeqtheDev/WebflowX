@@ -329,3 +329,25 @@ A 2-3 sentence overview of the meeting.`
         return summary
     }
 })
+
+// Used by the /api/livekit route: only members of the meeting's workspace get a token,
+// and only for meetings that are still running. Identity is derived server-side.
+export const authorizeRoom = query({
+    args: { roomName: v.string() },
+    handler: async (ctx, args) => {
+        const userId = await auth.getUserId(ctx)
+        if (!userId) return null
+        const meeting = await ctx.db
+            .query("meetings")
+            .withIndex("by_room_name", (q) => q.eq("roomName", args.roomName))
+            .first()
+        if (!meeting || meeting.endedAt) return null
+        const member = await findMember(ctx, meeting.workspaceId, userId)
+        if (!member) return null
+        const user = await ctx.db.get(userId)
+        return {
+            identity: member._id as string,
+            name: user?.name ?? user?.email ?? "Member",
+        }
+    },
+})

@@ -159,7 +159,9 @@ const schema = defineSchema({
         participants: v.optional(v.array(v.string())),
         // members currently in the call; the meeting ends when this becomes empty
         activeMembers: v.optional(v.array(v.id("members"))),
-    }).index("by_workspace_id", ["workspaceId"]),
+    })
+        .index("by_workspace_id", ["workspaceId"])
+        .index("by_room_name", ["roomName"]),
 
     // Each participant's own transcript, merged when the meeting ends
     meetingTranscripts: defineTable({

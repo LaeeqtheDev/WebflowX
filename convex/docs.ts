@@ -129,3 +129,29 @@ export const remove = mutation({
         return args.id
     }
 })
+
+// Used by the /api/liveblocks-auth route: only members of the doc's workspace may enter its room.
+export const authorizeRoom = query({
+    args: { roomId: v.string() },
+    handler: async (ctx, args) => {
+        const userId = await auth.getUserId(ctx)
+        if (!userId) return null
+        const doc = await ctx.db
+            .query("docs")
+            .withIndex("by_room_id", (q) => q.eq("liveblocksRoomId", args.roomId))
+            .first()
+        if (!doc) return null
+        const member = await ctx.db
+            .query("members")
+            .withIndex("byWorkspaceId_user_id", (q) =>
+                q.eq("workspaceId", doc.workspaceId).eq("userId", userId)
+            ).unique()
+        if (!member) return null
+        const user = await ctx.db.get(userId)
+        return {
+            userId: userId as string,
+            name: user?.name ?? user?.email ?? "Member",
+            avatar: user?.image ?? "",
+        }
+    },
+})

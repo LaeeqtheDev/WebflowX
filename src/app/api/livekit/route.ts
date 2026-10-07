@@ -1,39 +1,66 @@
 import { AccessToken } from "livekit-server-sdk"
 import { NextRequest, NextResponse } from "next/server"
+import { fetchQuery } from "convex/nextjs"
+import { api } from "../../../../convex/_generated/api"
+import { getAuthToken, unauthorized, rateLimit, tooMany } from "@/lib/api-guard"
 
 export async function GET(req: NextRequest) {
-    const room = req.nextUrl.searchParams.get("room")
-    const username = req.nextUrl.searchParams.get("username")
-    // identity must be unique per person, otherwise two people with the same name kick each other out
-    const identity = req.nextUrl.searchParams.get("identity") || username
+    try {
+        const token = await getAuthToken()
+        if (!token) return unauthorized()
 
-    if (!room || !username) {
-        return NextResponse.json({ error: "Missing room or username" }, { status: 400 })
+        const room = req.nextUrl.searchParams.get("room")
+        if (!room || room.length > 200) {
+            return NextResponse.json({ error: "Missing room" }, { status: 400 })
+        }
+
+        const apiKey = process.env.LIVEKIT_API_KEY
+        const apiSecret = process.env.LIVEKIT_API_SECRET
+        const wsUrl = process.env.LIVEKIT_URL ?? process.env.NEXT_PUBLIC_LIVEKIT_URL
+
+        const missing = [
+            !apiKey && "LIVEKIT_API_KEY",
+            !apiSecret && "LIVEKIT_API_SECRET",
+            !wsUrl && "LIVEKIT_URL",
+        ].filter(Boolean)
+        if (missing.length) {
+            console.error(`[livekit] missing env: ${missing.join(", ")} (add to .env.local and restart npm run dev)`)
+            return NextResponse.json(
+                { error: `LiveKit is not configured (missing ${missing.join(", ")})` },
+                { status: 500 }
+            )
+        }
+
+        // Identity and display name come from the signed-in user, never from the query string.
+        const who = await fetchQuery(api.meetings.authorizeRoom, { roomName: room }, { token })
+        if (!who) {
+            return NextResponse.json(
+                { error: "You can't join this meeting (not a member, or it has ended)" },
+                { status: 403 }
+            )
+        }
+
+        if (!rateLimit(`livekit:${who.identity}`, 20, 60_000)) return tooMany()
+
+        const at = new AccessToken(apiKey!, apiSecret!, {
+            identity: who.identity,
+            name: who.name,
+            ttl: "2h",
+        })
+        at.addGrant({
+            roomJoin: true,
+            room,
+            canPublish: true,
+            canSubscribe: true,
+            canPublishData: true,
+        })
+
+        return NextResponse.json({ token: await at.toJwt(), url: wsUrl })
+    } catch (e) {
+        console.error("[livekit] token error:", e)
+        return NextResponse.json(
+            { error: "Could not create a meeting token. Check the server log." },
+            { status: 500 }
+        )
     }
-
-    const apiKey = process.env.LIVEKIT_API_KEY
-    const apiSecret = process.env.LIVEKIT_API_SECRET
-    const wsUrl = process.env.LIVEKIT_URL
-
-    if (!apiKey || !apiSecret || !wsUrl) {
-        return NextResponse.json({ error: "LiveKit not configured" }, { status: 500 })
-    }
-
-    const at = new AccessToken(apiKey, apiSecret, {
-        identity: identity as string,
-        name: username as string,
-        ttl: "2h",
-    })
-
-    at.addGrant({
-        roomJoin: true,
-        room,
-        canPublish: true,
-        canSubscribe: true,
-        canPublishData: true,
-    })
-
-    const token = await at.toJwt()
-
-    return NextResponse.json({ token, url: wsUrl })
 }

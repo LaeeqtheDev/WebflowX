@@ -6,18 +6,19 @@ import {
 } from "@convex-dev/auth/nextjs/server";
 
 const isPublicPage = createRouteMatcher(["/", "/auth", "/join"])
-const isPublicApi = createRouteMatcher([
-  "/api/livekit",
-  "/api/ai-summary",
-  "/api/liveblocks-auth",
-  "/api/ai-editor"  // 👈 add this
-]) // 👈 add this
+
+const isApi = createRouteMatcher(["/api/(.*)"])
 
 export default convexAuthNextjsMiddleware(async (request) => {
   const authenticated = await isAuthenticatedNextjs();
 
-  // 👈 allow these API routes through without auth check
-  if (isPublicApi(request)) return undefined;
+  // API routes check auth themselves too, but unauthenticated callers get JSON 401, not a redirect
+  if (isApi(request) && !request.nextUrl.pathname.startsWith("/api/auth")) {
+    if (!authenticated) {
+      return NextResponse.json({ error: "Please sign in again" }, { status: 401 });
+    }
+    return undefined;
+  }
 
   if (!isPublicPage(request) && !authenticated) {
     // remember where the visitor was going (e.g. an invite link) so we can send them back after sign-in

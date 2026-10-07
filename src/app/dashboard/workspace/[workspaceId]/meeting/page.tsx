@@ -68,7 +68,7 @@ export default function MeetingPage() {
             // register in the call first (also rejects meetings that already ended)
             await joinMeeting({ id: meetingId })
             const res = await fetch(
-                `/api/livekit?room=${encodeURIComponent(roomName)}&username=${encodeURIComponent(currentUserName)}&identity=${encodeURIComponent(currentMember?._id ?? currentUserName)}`
+                `/api/livekit?room=${encodeURIComponent(roomName)}`
             )
             const data = await res.json()
             if (data.error) throw new Error(data.error)
@@ -76,7 +76,8 @@ export default function MeetingPage() {
             setServerUrl(data.url)
             setActiveMeetingId(meetingId)
         } catch (e) {
-            toast.error(errorMessage(e).includes("ended") ? "This meeting has already ended" : "Failed to join meeting")
+            const msg = errorMessage(e)
+            toast.error(msg.includes("ended") ? "This meeting has already ended" : msg && msg !== "Failed to fetch" ? msg : "Failed to join meeting")
         }
     }
 
