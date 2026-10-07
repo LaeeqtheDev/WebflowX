@@ -213,34 +213,8 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
             <div className="border rounded-xl p-5 flex flex-col gap-5 hover:border-[#ff5018]/40 hover:shadow-sm transition-colors bg-surface">
                 {/* Header */}
                 <div className="flex items-start justify-between">
-                    <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center gap-2">
-                            <h3 className="font-semibold tracking-tight text-[17px] text-ink">{meeting.title}</h3>
-                            {!meeting.endedAt && (
-                                <Badge className="bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 border-transparent rounded-md px-2 py-0.5 text-[11px] font-medium">
-                                    <span className="size-1.5 rounded-full bg-red-500 animate-pulse mr-1.5" />
-                                    Live
-                                </Badge>
-                            )}
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-ink/60">
-                            <span className="flex items-center gap-1">
-                                <Clock className="size-3" />
-                                {format(meeting.startedAt, "MMM d, yyyy · h:mm a")}
-                            </span>
-                            {duration !== null && (
-                                <span className="flex items-center gap-1">
-                                    <Clock className="size-3" /> {duration} min
-                                </span>
-                            )}
-                            {meeting.participants && meeting.participants.length > 0 && (
-                                <span className="flex items-center gap-1">
-                                    <Users className="size-3" />
-                                    {meeting.participants.length} participants
-                                </span>
-                            )}
-                        </div>
-                    </div>
+                    {/* title, time and length are already shown above this card */}
+                    <p className="text-xs font-medium text-ink/60">{!meeting.endedAt ? "Live now" : "Hosted by"}</p>
                     <div className="flex items-center gap-1.5 shrink-0">
                         <Avatar className="size-7 rounded-md">
                             <AvatarImage src={meeting.creator?.user?.image} />

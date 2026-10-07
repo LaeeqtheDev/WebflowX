@@ -1,7 +1,7 @@
 "use client"
 
 import { usePermissions } from "@/hooks/use-permissions"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { errorMessage } from "@/lib/error-message"
 import { segmentsToBody, takeLastSegments } from "./segments"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
@@ -62,6 +62,22 @@ export default function MeetingPage() {
     // Always derive from live data so summaries/end state appear instantly without a refresh
     const selectedMeeting = meetings?.find(m => m._id === selectedMeetingId) ?? null
     const setSelectedMeeting = (m: { _id: Id<"meetings"> } | null) => setSelectedMeetingId(m?._id ?? null)
+    // Opened from the calendar (?meeting=<id>): jump straight to that meeting once the list is loaded
+    const deepLinked = useRef(false)
+    useEffect(() => {
+        if (deepLinked.current || !meetings) return
+        const wanted = new URLSearchParams(window.location.search).get("meeting")
+        if (!wanted) { deepLinked.current = true; return }
+        deepLinked.current = true
+        const found = meetings.find((m) => m._id === wanted)
+        if (found) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time selection from the link
+            setSelectedMeetingId(found._id)
+            setShowMobileDetail(true)
+        } else {
+            toast.info("That meeting is older than the list shows or was removed")
+        }
+    }, [meetings])
     const [generationError, setGenerationError] = useState<string | null>(null)
     const [showMobileDetail, setShowMobileDetail] = useState(false)
 

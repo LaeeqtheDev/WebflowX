@@ -135,7 +135,7 @@ const CalendarPage = () => {
     const open = (item: Item) => {
         const base = `/dashboard/workspace/${workspaceId}`
         if (item.kind === "task") router.push(`${base}/tasks?task=${item.id}`)
-        else if (item.kind === "meeting") router.push(`${base}/meeting`)
+        else if (item.kind === "meeting") router.push(`${base}/meeting?meeting=${item.id}`)
     }
 
     return (
