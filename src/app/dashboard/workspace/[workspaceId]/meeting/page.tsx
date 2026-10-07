@@ -1,5 +1,6 @@
 "use client"
 
+import { usePermissions } from "@/hooks/use-permissions"
 import { useState, useCallback } from "react"
 import { errorMessage } from "@/lib/error-message"
 import { segmentsToBody, takeLastSegments } from "./segments"
@@ -36,6 +37,7 @@ export default function MeetingPage() {
     const workspaceId = useWorkspaceId()
     const router = useRouter()
     const { data: currentMember } = useCurrentMember({ workspaceId })
+    const perms = usePermissions()
     const { data: members } = useGetMembers({ workspaceId })
     const { data: meetings, isLoading } = useGetMeetings({ workspaceId })
     const { data: channels } = useGetChannels({ workspaceId })
@@ -414,7 +416,7 @@ export default function MeetingPage() {
                                                 >
                                                     <Video className="size-3.5 mr-1" /> Join Meeting
                                                 </Button>
-                                                {(currentMember?.role === "admin" || selectedMeeting.createdBy === currentMember?._id) && (
+                                                {(perms.can("moderateMeetings") || selectedMeeting.createdBy === currentMember?._id) && (
                                                     <Button
                                                         variant="outline"
                                                         onClick={() => handleEndForEveryone(selectedMeeting._id)}

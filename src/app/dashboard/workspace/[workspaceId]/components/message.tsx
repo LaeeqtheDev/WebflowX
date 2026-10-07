@@ -32,6 +32,7 @@ interface MessageProps {
     authorImage?: string;
     authorName?: string;
     isAuthor: boolean;
+    canModerate?: boolean;
     reactions: Array<
         Omit<Doc<"reactions">, "memberId"> & {
             count: number;
@@ -74,6 +75,7 @@ const MessageImpl = ({
     fileType,
     fileSize,
     isAuthor,
+    canModerate,
     memberId,
     authorImage,
     authorName = "Member",
@@ -225,6 +227,7 @@ const MessageImpl = ({
                     {!isEditing && (
                         <Toolbar2
                             isAuthor={isAuthor}
+                            canModerate={canModerate}
                             isPending={false}
                             handleEdit={() => setEditingId(id)}
                             handleThread={() => onOpenMessage(id)}
@@ -327,6 +330,7 @@ const MessageImpl = ({
                 {!isEditing && (
                     <Toolbar2
                         isAuthor={isAuthor}
+                            canModerate={canModerate}
                         isPending={isPending}
                         handleEdit={() => setEditingId(id)}
                         handleThread={() => onOpenMessage(id)}

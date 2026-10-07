@@ -1,4 +1,5 @@
 "use client"
+import { usePermissions } from "@/hooks/use-permissions"
 
 import { useState, useEffect, useRef } from "react"
 import { useSearchParams } from "next/navigation"
@@ -34,6 +35,7 @@ type Note = {
 export default function NotesPage() {
     const workspaceId = useWorkspaceId()
     const { data: currentMember } = useCurrentMember({ workspaceId })
+    const perms = usePermissions()
 
     const [tab, setTab] = useState<NoteTab>("workspace")
     const [selectedNote, setSelectedNote] = useState<Note | null>(null)
@@ -50,7 +52,7 @@ export default function NotesPage() {
     const { mutate: removeNote, isPending: isRemovingNote } = useRemoveNote()
     const { mutate: togglePin } = useTogglePin()
 
-    const isAdmin = currentMember?.role === "admin"
+    const isAdmin = perms.can("manageContent")
 
     // Deep link: /notes?note=<id> opens that note (used by notifications)
     const searchParams = useSearchParams()

@@ -2,6 +2,7 @@ import Quill from "quill";
 import "@/app/dashboard/workspace/[workspaceId]/components/mention-blot";
 
 import { useEffect, useRef, useState } from "react";
+import { usePanel } from "@/hooks/use-panel";
 
 interface RendererProps {
     value: string;
@@ -10,6 +11,7 @@ interface RendererProps {
 const Renderer = ({value}: RendererProps) => {
     const [isEmpty, setIsEmpty] = useState(false);
     const rendererRef = useRef<HTMLDivElement>(null)
+    const { onOpenProfile } = usePanel()
 
     useEffect(() => {
         if(!rendererRef.current) return;
@@ -40,7 +42,17 @@ const Renderer = ({value}: RendererProps) => {
 
     if(isEmpty) return null
 
-    return <div ref={rendererRef}  className="ql-editor ql-renderer"/>
+    const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        const el = (e.target as HTMLElement).closest?.("span.mention") as HTMLElement | null;
+        const id = el?.getAttribute("data-member-id");
+        if (id) {
+            e.preventDefault();
+            e.stopPropagation();
+            onOpenProfile(id);
+        }
+    };
+
+    return <div ref={rendererRef} onClick={handleClick} className="ql-editor ql-renderer"/>
 }
 
 export default Renderer

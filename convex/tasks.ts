@@ -2,6 +2,7 @@ import { v } from "convex/values"
 import { mutation, query, QueryCtx } from "./_generated/server"
 import { Id } from "./_generated/dataModel"
 import { auth } from "./auth"
+import { can } from "./permissions"
 import { ConvexError } from "convex/values"
 
 const statusValidator = v.union(
@@ -104,7 +105,7 @@ export const create = mutation({
         if (!member) throw new ConvexError("Unauthorized")
 
         // Any member can create tasks; non-admins can only leave them unassigned or assign them to themselves
-        if (member.role !== "admin" && args.assigneeId && args.assigneeId !== member._id) {
+        if (args.assigneeId && args.assigneeId !== member._id && !(await can(ctx, member, "manageContent"))) {
             throw new ConvexError("Only admins can assign tasks to other people")
         }
 
@@ -163,7 +164,7 @@ export const update = mutation({
 
         if (!member) throw new Error("Unauthorized")
 
-        const isAdmin = member.role === "admin"
+        const isAdmin = await can(ctx, member, "manageContent")
         const { id, unassign, ...updates } = args
 
         if (!isAdmin && task.assigneeId !== member._id && task.createdBy !== member._id) {
@@ -218,7 +219,7 @@ export const remove = mutation({
             ).unique()
 
         if (!member) throw new ConvexError("Unauthorized")
-        if (member.role !== "admin" && task.createdBy !== member._id) {
+        if (task.createdBy !== member._id && !(await can(ctx, member, "manageContent"))) {
             throw new ConvexError("Only admins or the task creator can delete tasks")
         }
 
@@ -250,7 +251,7 @@ export const assignToMe = mutation({
 
         if (!member) throw new Error("Unauthorized")
 
-        if (task.assigneeId && task.assigneeId !== member._id && member.role !== "admin") {
+        if (task.assigneeId && task.assigneeId !== member._id && !(await can(ctx, member, "manageContent"))) {
             throw new ConvexError("This task is already assigned to someone else")
         }
 

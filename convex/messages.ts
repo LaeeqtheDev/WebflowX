@@ -3,6 +3,8 @@ import { mutation, query, QueryCtx, MutationCtx } from "./_generated/server";
 import { auth } from "./auth";
 import { Id, Doc } from "./_generated/dataModel";
 import { paginationOptsValidator, PaginationResult } from "convex/server";
+import { ConvexError } from "convex/values";
+import { canViewChannel, can, canAccessChannel } from "./permissions";
 
 // @mentions are stored in the message body as text ops with attributes.mention = memberId
 const extractMentionIds = (body: string): string[] => {
@@ -33,11 +35,15 @@ const notifyMentions = async (
 ) => {
     // DMs already notify the other person; mentions are for channels and channel threads
     if (!opts.channelId) return;
+    const channel = await ctx.db.get(opts.channelId);
+    const workspace = await ctx.db.get(opts.workspaceId);
+    if (!channel || !workspace) return;
     for (const raw of extractMentionIds(opts.body)) {
         const id = ctx.db.normalizeId("members", raw);
         if (!id || id === opts.senderId || opts.alreadyNotified.has(id)) continue;
         const target = await ctx.db.get(id);
         if (!target || target.workspaceId !== opts.workspaceId) continue;
+        if (!canAccessChannel(workspace, target, channel)) continue; // can't see the channel, so no ping
         opts.alreadyNotified.add(id);
         await ctx.db.insert("notifications", {
             workspaceId: opts.workspaceId,
@@ -185,6 +191,15 @@ export const get = query({
                     conversationForCheck.memberTwoId === viewer._id);
         }
 
+        // locked channels (and threads inside them) are only readable by people with access
+        if (allowed) {
+            let channelForAccess = args.channelId;
+            if (!channelForAccess && args.parentMessageId) {
+                channelForAccess = (await ctx.db.get(args.parentMessageId))?.channelId;
+            }
+            if (channelForAccess && !(await canViewChannel(ctx, channelForAccess, userId))) allowed = false;
+        }
+
         const results: PaginationResult<Doc<"messages">> = allowed
             ? await ctx.db
                   .query("messages")
@@ -320,6 +335,12 @@ export const create = mutation({
             if (!parent || parent.workspaceId !== args.workspaceId)
                 throw new Error("Parent Message not found");
         }
+        const accessChannel =
+            args.channelId ??
+            (args.parentMessageId ? (await ctx.db.get(args.parentMessageId))?.channelId : undefined);
+        if (accessChannel && !(await canViewChannel(ctx, accessChannel, userId))) {
+            throw new ConvexError("You don't have access to this channel");
+        }
 
         const messageId = await ctx.db.insert("messages", {
             memberId: member._id,
@@ -442,8 +463,12 @@ export const remove = mutation({
         if (!message) throw new Error("Message not found");
 
         const member = await getMember(ctx, message.workspaceId, userId);
-        if (!member || member._id !== message.memberId)
-            throw new Error("Unauthorized");
+        if (!member) throw new Error("Unauthorized");
+        // your own messages, or anyone's channel message if your role may delete others' messages (never DMs)
+        const isAuthor = member._id === message.memberId;
+        const isModerating =
+            !isAuthor && !message.conversationId && (await can(ctx, member, "deleteMessages"));
+        if (!isAuthor && !isModerating) throw new Error("Unauthorized");
 
         await deleteMessageCascade(ctx, message);
         return args.id;
@@ -461,6 +486,11 @@ export const getById = query({
 
         const currentMember = await getMember(ctx, message.workspaceId, userId);
         if (!currentMember) return null;
+        if (message.channelId && !(await canViewChannel(ctx, message.channelId, userId))) return null;
+        if (message.conversationId) {
+            const conv = await ctx.db.get(message.conversationId);
+            if (!conv || (conv.memberOneId !== currentMember._id && conv.memberTwoId !== currentMember._id)) return null;
+        }
 
         const member = await populateMember(ctx, message.memberId);
         if (!member) return null;
@@ -531,11 +561,41 @@ export const search = query({
 
         if (!member) return [];
 
-        return await ctx.db
+        const workspace = await ctx.db.get(args.workspaceId);
+        if (!workspace) return [];
+
+        const found = await ctx.db
             .query("messages")
             .withSearchIndex("search_body", (q) =>
                 q.search("body", args.query).eq("workspaceId", args.workspaceId)
             )
-            .take(10);
+            .take(40);
+
+        // never leak locked channels or other people's DMs through search
+        const channelOk = new Map<string, boolean>();
+        const convOk = new Map<string, boolean>();
+        const visible: typeof found = [];
+        for (const m of found) {
+            if (m.conversationId) {
+                let ok = convOk.get(m.conversationId);
+                if (ok === undefined) {
+                    const conv = await ctx.db.get(m.conversationId);
+                    ok = !!conv && (conv.memberOneId === member._id || conv.memberTwoId === member._id);
+                    convOk.set(m.conversationId, ok);
+                }
+                if (!ok) continue;
+            } else if (m.channelId) {
+                let ok = channelOk.get(m.channelId);
+                if (ok === undefined) {
+                    const ch = await ctx.db.get(m.channelId);
+                    ok = !!ch && canAccessChannel(workspace, member, ch);
+                    channelOk.set(m.channelId, ok);
+                }
+                if (!ok) continue;
+            }
+            visible.push(m);
+            if (visible.length >= 10) break;
+        }
+        return visible;
     },
 });

@@ -9,6 +9,7 @@
  */
 
 import type * as access from "../access.js";
+import type * as audit from "../audit.js";
 import type * as auth from "../auth.js";
 import type * as channels from "../channels.js";
 import type * as conversations from "../conversations.js";
@@ -22,6 +23,7 @@ import type * as members from "../members.js";
 import type * as messages from "../messages.js";
 import type * as notes from "../notes.js";
 import type * as notifications from "../notifications.js";
+import type * as permissions from "../permissions.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as reactions from "../reactions.js";
 import type * as sent from "../sent.js";
@@ -42,6 +44,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   access: typeof access;
+  audit: typeof audit;
   auth: typeof auth;
   channels: typeof channels;
   conversations: typeof conversations;
@@ -55,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   notes: typeof notes;
   notifications: typeof notifications;
+  permissions: typeof permissions;
   rateLimit: typeof rateLimit;
   reactions: typeof reactions;
   sent: typeof sent;

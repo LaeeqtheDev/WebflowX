@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { toast } from "sonner"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
-import { useCurrentMember } from "@/features/members/api/use-current-member"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useGetUsage } from "@/features/workspaces/api/use-get-usage"
 
 const LABELS: Record<string, string> = {
@@ -19,11 +19,11 @@ const LABELS: Record<string, string> = {
 // Warns admins once per session when a plan limit is at 80% (and again at 100%).
 export const UsageWarning = () => {
     const workspaceId = useWorkspaceId()
-    const { data: member } = useCurrentMember({ workspaceId })
+    const perms = usePermissions()
     const { data: usage } = useGetUsage({ workspaceId })
 
     useEffect(() => {
-        if (!usage || member?.role !== "admin") return
+        if (!usage || !perms.isAdmin) return
 
         for (const [key, value] of Object.entries(usage.usage)) {
             const label = LABELS[key]
@@ -46,7 +46,7 @@ export const UsageWarning = () => {
                 : `You've used ${value.current} of ${value.limit} ${label} on your plan.`
             toast.warning(text, { description: "Open More → Plans to upgrade." })
         }
-    }, [usage, member?.role, workspaceId])
+    }, [usage, perms.isAdmin, workspaceId])
 
     return null
 }

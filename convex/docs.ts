@@ -1,6 +1,7 @@
 import { v, ConvexError } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { auth } from "./auth"
+import { can } from "./permissions"
 import { checkLimit } from "./limits"
 import { internal } from "./_generated/api"
 
@@ -151,7 +152,7 @@ export const remove = mutation({
         if (!member) throw new Error("Unauthorized")
 
         const isCreator = doc.createdBy === member._id
-        const isAdmin = member.role === "admin"
+        const isAdmin = await can(ctx, member, "manageContent")
 
         if (!isCreator && !isAdmin) throw new Error("Unauthorized")
 

@@ -15,11 +15,13 @@ import { useState } from "react"
 import { InviteModal } from "./inviteModal"
 
 interface WorkspaceHeaderProps {
-  workspace: Doc<"workspaces">
+  workspace: Doc<"workspaces"> & { imageUrl?: string | null }
   isAdmin: boolean
+  canInvite: boolean
+  canEdit: boolean
 }
 
-export const WorkspaceHeader = ({ workspace, isAdmin }: WorkspaceHeaderProps) => {
+export const WorkspaceHeader = ({ workspace, isAdmin, canInvite, canEdit }: WorkspaceHeaderProps) => {
   const [preferencesOpen, setPreferencesOpen] =useState(false)
   const [inviteOpen, setInviteOpen] = useState(false)
   return (
@@ -28,7 +30,7 @@ export const WorkspaceHeader = ({ workspace, isAdmin }: WorkspaceHeaderProps) =>
    name={workspace.name} joinCode={workspace.joinCode}
    joinCodeExpiresAt={workspace.joinCodeExpiresAt}
    invitesDisabled={workspace.invitesDisabled}
-   isAdmin={isAdmin}
+   isAdmin={canInvite}
    />
    <PreferencesModal open={preferencesOpen} setOpen={setPreferencesOpen}  initialValue={workspace.name}/>
     <div className="flex items-center justify-between px-3 h-14 gap-2 w-full border-b border-white/10">
@@ -52,7 +54,10 @@ export const WorkspaceHeader = ({ workspace, isAdmin }: WorkspaceHeaderProps) =>
         <DropdownMenuContent side="bottom" align="start" className="w-64 rounded-xl p-1.5">
           <DropdownMenuItem className="cursor-pointer capitalize rounded-lg">
             <div className="size-9 relative overflow-hidden bg-[#381d2a] text-white font-semibold text-lg rounded-lg flex items-center justify-center mr-2">
-              {workspace.name.charAt(0).toUpperCase()}
+              {workspace.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={workspace.imageUrl} alt="" className="size-full object-cover" />
+              ) : workspace.name.charAt(0).toUpperCase()}
             </div>
             <div className="flex flex-col items-start">
               <p className="font-semibold tracking-tight">{workspace.name}</p>
@@ -60,18 +65,16 @@ export const WorkspaceHeader = ({ workspace, isAdmin }: WorkspaceHeaderProps) =>
             </div>
           </DropdownMenuItem>
 
-          {isAdmin && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer py-2 rounded-lg"
-              onClick={() => setInviteOpen(true)}>
-                Invite People to {workspace.name}
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer py-2 rounded-lg" onClick={() => setPreferencesOpen(true)}>
-                Preferences
-              </DropdownMenuItem>
-            </>
+          <DropdownMenuSeparator />
+          {canInvite && (
+            <DropdownMenuItem className="cursor-pointer py-2 rounded-lg"
+            onClick={() => setInviteOpen(true)}>
+              Invite People to {workspace.name}
+            </DropdownMenuItem>
           )}
+          <DropdownMenuItem className="cursor-pointer py-2 rounded-lg" onClick={() => setPreferencesOpen(true)}>
+            {isAdmin || canEdit ? "Workspace settings" : "Members & info"}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 

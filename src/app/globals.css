@@ -301,7 +301,9 @@ body,
 .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div { text-decoration: line-through; color: rgba(27, 16, 23, 0.45); }
 .ProseMirror .collab-caret { position: relative; margin-left: -1px; margin-right: -1px; border-left: 2px solid; border-right: 0; word-break: normal; pointer-events: none; }
 .ProseMirror .collab-caret__label { position: absolute; top: -1.35em; left: -2px; font-size: 11px; font-weight: 600; line-height: 1; white-space: nowrap; color: #fff; padding: 2px 6px; border-radius: 4px 4px 4px 0; user-select: none; }
-.ql-editor .mention, .ql-renderer .mention { background: rgba(255, 80, 24, 0.14); color: #c2370d; font-weight: 600; border-radius: 5px; padding: 0 3px; }
+.ql-editor span.mention, .ql-renderer span.mention, .ql-container .ql-editor span.mention { background: rgba(255, 80, 24, 0.14); color: #c2370d !important; font-weight: 600; border-radius: 5px; padding: 0 3px; }
+.ql-renderer span.mention { cursor: pointer; }
+.ql-renderer span.mention:hover { background: rgba(255, 80, 24, 0.26); text-decoration: underline; }
 .ProseMirror p.is-editor-empty:first-child::before { color: rgba(56, 29, 42, 0.4); content: attr(data-placeholder); float: left; height: 0; pointer-events: none; }
 
 /* Landing page */

@@ -1,6 +1,7 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { auth } from "./auth"
+import { can } from "./permissions"
 
 export const get = query({
     args: { taskId: v.id("tasks") },
@@ -93,7 +94,7 @@ export const remove = mutation({
             ).unique()
 
         if (!member) throw new Error("Unauthorized")
-        if (comment.memberId !== member._id && member.role !== "admin")
+        if (comment.memberId !== member._id && !(await can(ctx, member, "manageContent")))
             throw new Error("Unauthorized")
 
         await ctx.db.delete(args.id)

@@ -32,7 +32,10 @@ export const WorkspaceSwitcher = () => {
                     {workspaceLoading ? (
                         <Loader className="size-5 animate-spin shrink-0"/>
                     ):(
-                       workspace?.name.charAt(0).toUpperCase()
+                       workspace?.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={workspace.imageUrl} alt="" className="absolute inset-0 size-full object-cover" />
+                       ) : workspace?.name.charAt(0).toUpperCase()
                     )}
                 </Button>
             </DropdownMenuTrigger>
@@ -48,8 +51,11 @@ export const WorkspaceSwitcher = () => {
                     className="cursor-pointer capitalize overflow-hidden rounded-lg"
                     onClick={()=> router.push(`/dashboard/workspace/${workspace._id}`)}
                     >
-                        <div className=" shrink-0 size-9 bg-[#381d2a] text-white font-semibold rounded-lg flex items-center justify-center">
-                            {workspace.name.charAt(0).toUpperCase()}
+                        <div className=" shrink-0 size-9 overflow-hidden bg-[#381d2a] text-white font-semibold rounded-lg flex items-center justify-center">
+                            {workspace.imageUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={workspace.imageUrl} alt="" className="size-full object-cover" />
+                            ) : workspace.name.charAt(0).toUpperCase()}
                         </div>
                         <p className="truncate">{workspace.name}</p>
 

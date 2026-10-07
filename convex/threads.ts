@@ -1,6 +1,7 @@
 import { v } from "convex/values"
 import { query } from "./_generated/server"
 import { auth } from "./auth"
+import { canAccessChannel } from "./permissions"
 
 export const get = query({
     args: { workspaceId: v.id("workspaces") },
@@ -15,6 +16,8 @@ export const get = query({
             ).unique()
 
         if (!member) return { myThreads: [], participatedThreads: [] }
+        const workspace = await ctx.db.get(args.workspaceId)
+        if (!workspace) return { myThreads: [], participatedThreads: [] }
 
         // All channel messages (no DMs, no thread replies) that have at least one reply
         const allParentMessages = await ctx.db
@@ -44,6 +47,7 @@ export const get = query({
                 const msgUser = msgMember ? await ctx.db.get(msgMember.userId) : null
 
                 const channel = msg.channelId ? await ctx.db.get(msg.channelId) : null
+                if (channel && !canAccessChannel(workspace, member, channel)) return null
 
                 const lastReply = replies[replies.length - 1]
                 const lastReplyMember = await ctx.db.get(lastReply.memberId)

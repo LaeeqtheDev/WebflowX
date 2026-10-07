@@ -1,4 +1,5 @@
 "use client"
+import { usePermissions } from "@/hooks/use-permissions"
 
 import { useState } from "react"
 import { useSearchParams } from "next/navigation"
@@ -34,6 +35,7 @@ const getNow = () => Date.now()
 export default function TasksPage() {
     const workspaceId = useWorkspaceId()
     const { data: currentMember } = useCurrentMember({ workspaceId })
+    const perms = usePermissions()
     const { data: tasks, isLoading } = useGetTasks({ workspaceId })
     const { data: members } = useGetMembers({ workspaceId })
     const { data: sprints } = useGetSprints({ workspaceId })
@@ -48,7 +50,7 @@ export default function TasksPage() {
     const [filterAssignee, setFilterAssignee] = useState("all")
     const [sprintFilter, setSprintFilter] = useState("all")
 
-    const isAdmin = currentMember?.role === "admin"
+    const isAdmin = perms.can("manageContent")
     const safeMembers = (members ?? []) as Member[]
     const safeSprints = (sprints ?? []) as Sprint[]
     const activeSprint = safeSprints.find(s => s.status === "active") ?? null

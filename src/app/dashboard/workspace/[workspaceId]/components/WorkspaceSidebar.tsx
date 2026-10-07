@@ -14,6 +14,8 @@ import { useCreateChannelModal } from "@/features/channels/store/use-create-chan
 import { useChannelId } from '@/hooks/use-channel-id'
 import { useMemberId } from "@/hooks/use-member-id"
 import { useRouter } from "next/navigation"
+import { Lock } from "lucide-react"
+import { usePermissions } from "@/hooks/use-permissions"
 
 export const WorkSpaceSidebar = () => {
     const workspaceId = useWorkspaceId()
@@ -26,6 +28,7 @@ export const WorkSpaceSidebar = () => {
     const { data: channels } = useGetChannels({ workspaceId })
     const { data: members } = useGetMembers({ workspaceId })
     const [_isOpen, setIsOpen] = useCreateChannelModal()
+    const perms = usePermissions()
 
     if (memberLoading || workspaceLoading) {
         return (
@@ -46,7 +49,7 @@ export const WorkSpaceSidebar = () => {
 
     return (
         <div className="flex flex-col h-full bg-[#402633]">
-            <WorkspaceHeader workspace={workspace} isAdmin={member.role === "admin"} />
+            <WorkspaceHeader workspace={workspace} isAdmin={perms.isAdmin} canInvite={perms.can("invite")} canEdit={perms.can("editWorkspace")} />
 
             <div className="flex flex-col px-2 mt-3 gap-0.5">
                 <SidebarItem
@@ -66,13 +69,13 @@ export const WorkSpaceSidebar = () => {
             <WorkspaceSection
                 label="Channels"
                 hint="New Channel"
-                onNew={member.role === "admin" ? () => setIsOpen(true) : undefined}
+                onNew={perms.can("createChannels") ? () => setIsOpen(true) : undefined}
             >
                 {channels?.map((item) => (
                     <SidebarItem
                         key={item._id}
                         label={cleanChannelName(item.name)}
-                        icon={channelIcon(item.name)}
+                        icon={item.isPrivate ? Lock : channelIcon(item.name)}
                         id={item._id}
                         variant={channelId === item._id ? "active" : "default"}
                     />

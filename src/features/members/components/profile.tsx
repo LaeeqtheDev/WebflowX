@@ -12,6 +12,10 @@ import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { toast } from "sonner"
 import { useConfirm } from "@/app/dashboard/workspace/hooks/use-confirm"
 import { useRouter } from "next/navigation"
+import { useMutation } from "convex/react"
+import { api } from "../../../../convex/_generated/api"
+import { usePermissions } from "@/hooks/use-permissions"
+import { errMsg } from "@/lib/errors"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -44,6 +48,12 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
         "Are you sure you want to change this member's role?",
     )
 
+    const [TransferDialog, confirmTransfer] = useConfirm(
+        "Transfer ownership",
+        "This member becomes the workspace owner with full control, and you become an admin. Only they can undo it.",
+    )
+    const transferOwnership = useMutation(api.workspaces.transferOwnership)
+    const perms = usePermissions()
     const { data: currentMember, isLoading: isLoadingCurrentMember } = useCurrentMember({ workspaceId })
     const { data: member, isLoading: isLoadingMember } = useGetMember({ id: memberId })
     const { mutate: updateMember, isPending: isUpdatingMember } = useUpdateMember()
@@ -57,8 +67,8 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                 toast.success("Member removed")
                 onClose()
             },
-            onError: () => {
-                toast.error("Failed to remove member")
+            onError: (e) => {
+                toast.error(errMsg(e, "Failed to remove member"))
             }
         })
     }
@@ -72,13 +82,25 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                 toast.success("You left the workspace")
                 onClose()
             },
-            onError: () => {
-                toast.error("Failed to leave workspace")
+            onError: (e) => {
+                toast.error(errMsg(e, "Failed to leave workspace"))
             }
         })
     }
 
-    const onUpdate = async (role: "admin" | "member") => {
+    const onTransfer = async () => {
+        const ok = await confirmTransfer()
+        if (!ok) return
+        try {
+            await transferOwnership({ workspaceId, memberId })
+            toast.success("Ownership transferred")
+            onClose()
+        } catch (e) {
+            toast.error(errMsg(e, "Couldn't transfer ownership"))
+        }
+    }
+
+    const onUpdate = async (role: "admin" | "moderator" | "member") => {
         const ok = await confirmUpdate()
         if (!ok) return
         updateMember({ id: memberId, role }, {
@@ -86,8 +108,8 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                 toast.success("Role updated")
                 onClose()
             },
-            onError: () => {
-                toast.error("Failed to update role")
+            onError: (e) => {
+                toast.error(errMsg(e, "Failed to update role"))
             }
         })
     }
@@ -126,12 +148,19 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
     }
 
     const avatarFallback = member.user.name?.[0] ?? "M"
+    const isSelf = currentMember?._id === memberId
+    const isTargetOwner = member.isOwner
+    const targetIsAdmin = member.role === "admin"
+    // admins/owner manage roles; only the owner touches admins. Removal needs the manageMembers permission.
+    const canChangeRole = perms.isAdmin && (perms.isOwner || !targetIsAdmin)
+    const canRemove = perms.can("manageMembers") && (perms.isOwner || !targetIsAdmin) && (perms.role !== "moderator" || member.role === "member")
 
     return (
         <>
             <RemoveDialog />
             <LeaveDialog />
             <UpdateDialog />
+            <TransferDialog />
             <div className="h-full flex flex-col overflow-y-auto bg-white">
                 <div className="h-14 flex justify-between items-center px-4 border-b border-[#381d2a]/12 bg-white">
                     <p className="text-lg font-semibold tracking-tight text-[#1b1017]">Profile</p>
@@ -152,38 +181,54 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                 <div className="flex flex-col px-6 pb-6">
                     <p className="text-2xl font-semibold tracking-tight text-[#1b1017]">{member.user.name}</p>
 
-                    {/* Admin viewing someone else → show role change + remove */}
-                    {currentMember?.role === "admin" && currentMember?._id !== memberId && (
-                        <div className="flex flex-col gap-2 mt-2">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant={"outline"} className="w-full capitalize rounded-lg border-[#381d2a]/15">
-                                        {member.role} <ChevronDown className="size-4 ml-2 text-[#ff5018]" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-full rounded-xl p-1.5">
-                                    <DropdownMenuRadioGroup
-                                        value={member.role}
-                                        onValueChange={(role) => onUpdate(role as "admin" | "member")}
-                                    >
-                                        <DropdownMenuRadioItem value="admin">
-                                            Admin
-                                        </DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="member">
-                                            Member
-                                        </DropdownMenuRadioItem>
-                                    </DropdownMenuRadioGroup>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                            <Button onClick={onRemove} variant={"outline"} className="w-full capitalize rounded-lg border-[#381d2a]/15">
-                                Remove
-                            </Button>
+                    {member.user.title && <p className="text-sm text-[#1b1017]/60 mt-0.5">{member.user.title}</p>}
+                    <span className="mt-2 w-fit text-[11px] font-semibold uppercase tracking-wide rounded-full px-2 py-0.5 bg-[#ff5018]/10 text-[#c2370d]">
+                        {isTargetOwner ? "Owner" : member.role}
+                    </span>
+                    {member.user.bio && <p className="text-sm text-[#1b1017]/75 mt-3 whitespace-pre-wrap">{member.user.bio}</p>}
+
+                    {isSelf && (
+                        <p className="text-xs text-[#1b1017]/50 mt-3">Edit your photo, title and bio from your avatar menu.</p>
+                    )}
+
+                    {/* Someone with rights over this member → role + remove */}
+                    {!isSelf && !isTargetOwner && (canChangeRole || canRemove) && (
+                        <div className="flex flex-col gap-2 mt-3">
+                            {canChangeRole && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant={"outline"} className="w-full capitalize rounded-lg border-[#381d2a]/15">
+                                            {member.role} <ChevronDown className="size-4 ml-2 text-[#ff5018]" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-full rounded-xl p-1.5">
+                                        <DropdownMenuRadioGroup
+                                            value={member.role}
+                                            onValueChange={(role) => onUpdate(role as "admin" | "moderator" | "member")}
+                                        >
+                                            {perms.isOwner && <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>}
+                                            <DropdownMenuRadioItem value="moderator">Moderator</DropdownMenuRadioItem>
+                                            <DropdownMenuRadioItem value="member">Member</DropdownMenuRadioItem>
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
+                            {perms.isOwner && (
+                                <Button onClick={onTransfer} variant={"outline"} className="w-full rounded-lg border-[#381d2a]/15">
+                                    Make owner
+                                </Button>
+                            )}
+                            {canRemove && (
+                                <Button onClick={onRemove} variant={"outline"} className="w-full rounded-lg border-rose-200 text-rose-600 hover:bg-rose-50">
+                                    Remove from workspace
+                                </Button>
+                            )}
                         </div>
                     )}
 
-                    {/* Non-admin viewing their own profile → show leave */}
-                    {currentMember?._id === memberId && currentMember?.role !== "admin" && (
-                        <div className="mt-2">
+                    {/* Everyone except the owner can leave */}
+                    {isSelf && !isTargetOwner && (
+                        <div className="mt-3">
                             <Button onClick={onLeave} variant={"outline"} className="w-full rounded-lg border-[#381d2a]/15">
                                 Leave
                             </Button>

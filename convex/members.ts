@@ -2,6 +2,9 @@ import { v } from "convex/values";
 import { auth } from "./auth";
 import { Id } from "./_generated/dataModel";
 import { mutation, query, QueryCtx } from "./_generated/server";
+import { ConvexError } from "convex/values";
+import { requireActor, isAdminLike, isOwner, hasPermission, roleOf } from "./permissions";
+import { logAudit } from "./audit";
 
 const populateUser = (ctx: QueryCtx, id: Id<"users">) => {
     return ctx.db.get(id)
@@ -27,8 +30,9 @@ export const getById = query({
 
         const user = await populateUser(ctx, member.userId)
         if (!user) return null
+        const workspace = await ctx.db.get(member.workspaceId)
 
-        return { ...member, user }
+        return { ...member, user, isOwner: workspace?.userId === member.userId }
     }
 })
 
@@ -51,10 +55,11 @@ export const get = query({
             .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId))
             .collect()
 
+        const workspace = await ctx.db.get(args.workspaceId)
         const members = []
         for (const member of data) {
             const user = await populateUser(ctx, member.userId)
-            if (user) members.push({ ...member, user })
+            if (user) members.push({ ...member, user, isOwner: workspace?.userId === member.userId })
         }
         return members
     }
@@ -77,41 +82,30 @@ export const current = query({
     }
 })
 
+const RANK = { member: 0, moderator: 1, admin: 2, owner: 3 } as const
+
 export const update = mutation({
     args: {
         id: v.id("members"),
-        role: v.union(v.literal("admin"), v.literal("member")),
+        role: v.union(v.literal("admin"), v.literal("moderator"), v.literal("member")),
     },
     handler: async (ctx, args) => {
-        const userId = await auth.getUserId(ctx)
-        if (!userId) throw new Error("Unauthorized")
+        const target = await ctx.db.get(args.id);
+        if (!target) throw new ConvexError("Member not found")
 
-        const member = await ctx.db.get(args.id);
-        if (!member) throw new Error("Member not found")
+        const { member: actor, workspace } = await requireActor(ctx, target.workspaceId)
+        if (!isAdminLike(workspace, actor)) throw new ConvexError("Only the owner or an admin can change roles")
+        if (isOwner(workspace, target)) throw new ConvexError("The workspace owner's role can't be changed")
+        if (target.role === args.role) return args.id
 
-        const currentMember = await ctx.db
-            .query("members")
-            .withIndex("byWorkspaceId_user_id", (q) =>
-                q.eq("workspaceId", member.workspaceId).eq("userId", userId)
-            ).unique()
-
-        if (!currentMember || currentMember.role !== "admin") throw new Error("Unauthorized")
-
-        if (member.role === "admin" && args.role !== "admin") {
-            const workspace = await ctx.db.get(member.workspaceId)
-            if (workspace && workspace.userId === member.userId) {
-                throw new Error("The workspace owner cannot be demoted")
-            }
-            const admins = await ctx.db
-                .query("members")
-                .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", member.workspaceId))
-                .collect()
-            if (admins.filter(m => m.role === "admin").length <= 1) {
-                throw new Error("A workspace needs at least one admin")
-            }
+        // Only the owner can make admins or change an admin's role
+        if ((args.role === "admin" || target.role === "admin") && !isOwner(workspace, actor)) {
+            throw new ConvexError("Only the workspace owner can promote or demote admins")
         }
 
         await ctx.db.patch(args.id, { role: args.role })
+        const targetUser = await ctx.db.get(target.userId)
+        await logAudit(ctx, target.workspaceId, actor._id, "member.role", `${targetUser?.name ?? "A member"}: ${target.role} → ${args.role}`)
         return args.id;
     }
 })
@@ -119,24 +113,26 @@ export const update = mutation({
 export const remove = mutation({
     args: { id: v.id("members") },
     handler: async (ctx, args) => {
-        const userId = await auth.getUserId(ctx)
-        if (!userId) throw new Error("Unauthorized")
-
         const member = await ctx.db.get(args.id);
-        if (!member) throw new Error("Member not found")
+        if (!member) throw new ConvexError("Member not found")
 
-        const currentMember = await ctx.db
-            .query("members")
-            .withIndex("byWorkspaceId_user_id", (q) =>
-                q.eq("workspaceId", member.workspaceId).eq("userId", userId)
-            ).unique()
+        const { member: currentMember, workspace } = await requireActor(ctx, member.workspaceId)
+        const leaving = currentMember._id === args.id
 
-        if (!currentMember) throw new Error("Unauthorized")
-        // Only admins can remove others; anyone can remove themselves (leave)
-        if (currentMember.role !== "admin" && currentMember._id !== args.id) {
-            throw new Error("Only admins can remove members")
+        if (isOwner(workspace, member)) {
+            throw new ConvexError("The workspace owner can't be removed or leave. Transfer ownership or delete the workspace instead.")
         }
-        if (member.role === "admin") throw new Error("You cannot remove an admin")
+        if (!leaving) {
+            if (!hasPermission(workspace, currentMember, "manageMembers")) {
+                throw new ConvexError("You don't have permission to remove members")
+            }
+            // you can only remove people ranked below you
+            if (RANK[roleOf(workspace, currentMember)] <= RANK[roleOf(workspace, member)]) {
+                throw new ConvexError("You can't remove someone with the same or a higher role")
+            }
+        }
+        const removedUser = await ctx.db.get(member.userId)
+        await logAudit(ctx, member.workspaceId, currentMember._id, leaving ? "member.leave" : "member.remove", removedUser?.name ?? undefined)
 
         const [messages, reactions, conversations] = await Promise.all([
             ctx.db.query("messages")
@@ -168,6 +164,17 @@ export const remove = mutation({
         ])
         for (const n of notifications) await ctx.db.delete(n._id)
         for (const t of assignedTasks) await ctx.db.patch(t._id, { assigneeId: undefined, updatedAt: Date.now() })
+
+        // take them out of any locked channels they were added to
+        const lockedChannels = await ctx.db
+            .query("channels")
+            .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", member.workspaceId))
+            .collect()
+        for (const ch of lockedChannels) {
+            if (ch.memberIds?.includes(args.id)) {
+                await ctx.db.patch(ch._id, { memberIds: ch.memberIds.filter((id) => id !== args.id) })
+            }
+        }
 
         await ctx.db.delete(args.id)
         return args.id;

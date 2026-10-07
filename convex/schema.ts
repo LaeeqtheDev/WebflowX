@@ -4,6 +4,27 @@ import { authTables } from "@convex-dev/auth/server";
 
 const schema = defineSchema({
     ...authTables,
+    // authTables.users plus profile fields
+    users: defineTable({
+        name: v.optional(v.string()),
+        image: v.optional(v.string()),
+        email: v.optional(v.string()),
+        emailVerificationTime: v.optional(v.number()),
+        phone: v.optional(v.string()),
+        phoneVerificationTime: v.optional(v.number()),
+        isAnonymous: v.optional(v.boolean()),
+        title: v.optional(v.string()),
+        bio: v.optional(v.string()),
+    })
+        .index("email", ["email"])
+        .index("phone", ["phone"]),
+
+    auditLog: defineTable({
+        workspaceId: v.id("workspaces"),
+        actorId: v.id("members"),
+        action: v.string(),
+        detail: v.optional(v.string()),
+    }).index("by_workspace_id", ["workspaceId"]),
     workspaces: defineTable({
         name: v.string(),
         userId: v.id("users"),
@@ -19,12 +40,22 @@ const schema = defineSchema({
         // invite controls
         joinCodeExpiresAt: v.optional(v.number()),
         invitesDisabled: v.optional(v.boolean()),
+        // workspace profile
+        image: v.optional(v.id("_storage")),
+        description: v.optional(v.string()),
+        // what moderators / members are allowed to do (admins and the owner can always do everything)
+        rolePermissions: v.optional(
+            v.object({
+                moderator: v.array(v.string()),
+                member: v.array(v.string()),
+            })
+        ),
     }).index("by_user_id", ["userId"]),
 
     members: defineTable({
         userId: v.id("users"),
         workspaceId: v.id("workspaces"),
-        role: v.union(v.literal("admin"), v.literal("member")),
+        role: v.union(v.literal("admin"), v.literal("moderator"), v.literal("member")),
     })
         .index("byUserId", ["userId"])
         .index("byWorkspaceId", ["workspaceId"])
@@ -33,6 +64,10 @@ const schema = defineSchema({
     channels: defineTable({
         name: v.string(),
         workspaceId: v.id("workspaces"),
+        description: v.optional(v.string()),
+        // locked channel: only people listed here and roles with "view private channels" can open it
+        isPrivate: v.optional(v.boolean()),
+        memberIds: v.optional(v.array(v.id("members"))),
     }).index("byWorkspaceId", ["workspaceId"]),
 
     conversations: defineTable({

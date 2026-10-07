@@ -5,6 +5,7 @@ import { EmojiPopover } from "./emoji-popover";
 
 interface ToolbarProps{
     isAuthor: boolean;
+    canModerate?: boolean;
     isPending: boolean;
     handleEdit: () => void;
     handleThread: () => void;
@@ -17,6 +18,7 @@ interface ToolbarProps{
 
 export const Toolbar2 =({
     isAuthor,
+    canModerate,
     isPending,
     handleDelete,
     handleEdit,
@@ -61,7 +63,7 @@ export const Toolbar2 =({
                 </Hint>
     
             )}
-           {isAuthor && (
+           {(isAuthor || canModerate) && (
              <Hint label="Delete Message">
              <Button variant={"ghost"} size={"iconSm"} className="rounded-md hover:bg-[#f7f2ee]" disabled={isPending} onClick={handleDelete}>
                  <TrashIcon className="size-4 text-[#ff5018]"/>

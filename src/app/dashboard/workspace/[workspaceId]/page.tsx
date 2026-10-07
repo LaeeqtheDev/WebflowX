@@ -1,4 +1,5 @@
 "use client"
+import { usePermissions } from "@/hooks/use-permissions"
 
 import { useGetChannels } from "@/features/channels/api/use-get-channels";
 import { useCreateChannelModal } from "@/features/channels/store/use-create-channel-modal";
@@ -25,7 +26,8 @@ const WorkspaceIdPage = () => {
   const { data: workspace, isLoading: workspaceLoading } = useGetWorkspace({ id: workspaceId });
   const { data: channels, isLoading: channelsLoading } = useGetChannels({ workspaceId });
 //   const channelId = useChannelId();
-  const isAdmin = useMemo(() => member?.role === "admin", [member]);
+  const perms = usePermissions();
+  const isAdmin = perms.can("createChannels");
   const channelId = useMemo(() => channels?.[0]?._id, [channels]);
 
   useEffect(() => {

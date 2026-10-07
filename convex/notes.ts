@@ -1,6 +1,7 @@
 import { v, ConvexError } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { auth } from "./auth"
+import { can } from "./permissions"
 import { checkLimit } from "./limits"
 
 export const get = query({
@@ -137,7 +138,7 @@ export const update = mutation({
         if (!member) throw new Error("Unauthorized")
 
         const isAuthor = note.authorId === member._id
-        const isAdmin = member.role === "admin"
+        const isAdmin = await can(ctx, member, "manageContent")
 
         if (!isAuthor && !isAdmin) throw new Error("Unauthorized")
 
@@ -169,7 +170,7 @@ export const remove = mutation({
         if (!member) throw new Error("Unauthorized")
 
         const isAuthor = note.authorId === member._id
-        const isAdmin = member.role === "admin"
+        const isAdmin = await can(ctx, member, "manageContent")
 
         if (note.type === "workspace" && !isAdmin) throw new Error("Only admins can delete workspace notes")
         if (note.type === "personal" && !isAuthor) throw new Error("Unauthorized")
@@ -194,7 +195,7 @@ export const togglePin = mutation({
                 q.eq("workspaceId", note.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member || member.role !== "admin") throw new Error("Only admins can pin notes")
+        if (!member || !(await can(ctx, member, "manageContent"))) throw new Error("You don't have permission to pin notes")
 
         await ctx.db.patch(args.id, { isPinned: !note.isPinned })
         return args.id

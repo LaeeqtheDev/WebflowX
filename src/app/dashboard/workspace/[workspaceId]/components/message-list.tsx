@@ -7,6 +7,7 @@ import { Id } from "../../../../../../convex/_generated/dataModel";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useCurrentMember } from "@/features/members/api/use-current-member";
 import { Loader } from "lucide-react";
+import { usePermissions } from "@/hooks/use-permissions";
 import { useSearchParams } from "next/navigation";
 import { ConversationHero } from "./conversation-hero";
 
@@ -44,6 +45,7 @@ export const MessageList = ({
 }: MessageListProps) => {
     const workspaceId = useWorkspaceId();
     const { data: currentMember } = useCurrentMember({ workspaceId });
+    const perms = usePermissions();
     const [editingId, setEditingId] = useState<Id<"messages"> | null>(null);
 
     // Add this ref for auto scroll
@@ -111,8 +113,10 @@ export const MessageList = ({
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const loadMoreFn = useRef(loadMore);
     const canLoadRef = useRef(canLoadMore);
-    loadMoreFn.current = loadMore;
-    canLoadRef.current = canLoadMore;
+    useEffect(() => {
+        loadMoreFn.current = loadMore;
+        canLoadRef.current = canLoadMore;
+    });
     useEffect(() => {
         const el = loadMoreRef.current;
         if (!el) return;
@@ -158,6 +162,7 @@ export const MessageList = ({
                                 authorImage={message.user.image}
                                 authorName={message.user.name}
                                 isAuthor={message.memberId === currentMember?._id}
+                                canModerate={variant !== "conversation" && perms.can("deleteMessages")}
                                 reactions={message.reactions}
                                 body={message.body}
                                 image={message.image}

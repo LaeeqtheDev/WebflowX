@@ -119,7 +119,7 @@ export const upgradePlan = mutation({
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member || member.role !== "admin") throw new Error("Only admins can upgrade plan")
+        if (!member || member.role !== "admin") throw new Error("Only admins can upgrade plan")  // Stripe-gated later
 
         await ctx.db.patch(args.workspaceId, { plan: args.plan })
         return args.workspaceId

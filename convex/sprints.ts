@@ -1,6 +1,7 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { auth } from "./auth"
+import { can } from "./permissions"
 
 export const get = query({
     args: { workspaceId: v.id("workspaces") },
@@ -42,7 +43,7 @@ export const create = mutation({
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member || member.role !== "admin") throw new Error("Only admins can create sprints")
+        if (!member || !(await can(ctx, member, "manageContent"))) throw new Error("You don't have permission to create sprints")
 
         return await ctx.db.insert("sprints", {
             ...args,
@@ -69,7 +70,7 @@ export const updateStatus = mutation({
                 q.eq("workspaceId", sprint.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member || member.role !== "admin") throw new Error("Only admins can update sprints")
+        if (!member || !(await can(ctx, member, "manageContent"))) throw new Error("You don't have permission to update sprints")
 
         await ctx.db.patch(args.id, { status: args.status })
         return args.id
@@ -91,7 +92,7 @@ export const remove = mutation({
                 q.eq("workspaceId", sprint.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member || member.role !== "admin") throw new Error("Only admins can delete sprints")
+        if (!member || !(await can(ctx, member, "manageContent"))) throw new Error("You don't have permission to delete sprints")
 
         await ctx.db.delete(args.id)
         return args.id

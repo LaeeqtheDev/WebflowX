@@ -1,4 +1,5 @@
 "use client"
+import { usePermissions } from "@/hooks/use-permissions"
 
 import { useState } from "react"
 import { usePathname } from "next/navigation"
@@ -33,6 +34,7 @@ export const MessageToTaskModal = ({ open, onClose, messageId, body, authorName 
     const pathname = usePathname()
     const { data: members } = useGetMembers({ workspaceId })
     const { data: currentMember } = useCurrentMember({ workspaceId })
+    const perms = usePermissions()
     const { mutate: createTask, isPending } = useCreateTask()
 
     const text = quillToText(body).trim()
@@ -43,7 +45,7 @@ export const MessageToTaskModal = ({ open, onClose, messageId, body, authorName 
     const [priority, setPriority] = useState<Priority>("medium")
     const [assigneeId, setAssigneeId] = useState("unassigned")
 
-    const isAdmin = currentMember?.role === "admin"
+    const isAdmin = perms.can("manageContent")
 
     const handleSubmit = () => {
         if (!title.trim()) return toast.error("Title is required")

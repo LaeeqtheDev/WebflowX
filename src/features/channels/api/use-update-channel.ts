@@ -6,7 +6,7 @@ import { mutation } from "../../../../convex/_generated/server";
 
 
 
-type RequestType = {name: string; id: Id<"channels">}; 
+type RequestType = {id: Id<"channels">; name?: string; description?: string}; 
 
 type ResponseType = Id<"channels"> | null
 

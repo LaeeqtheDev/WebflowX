@@ -1,3 +1,4 @@
+import { createElement } from "react"
 import type { ComponentType } from "react"
 import {
     Sparkle20Regular,
@@ -73,4 +74,11 @@ const hash = (str: string) => {
 export const channelIcon = (name: string): IconLike => {
     const clean = cleanChannelName(name)
     return MAP.find(([re]) => re.test(clean))?.[1] ?? POOL[hash(clean.toLowerCase()) % POOL.length]
+}
+
+export const ChannelIcon = ({ name, className }: { name: string; className?: string }) => {
+    // icons come from a fixed module-level table, not created per render
+    // eslint-disable-next-line react-hooks/static-components
+    const Icon = channelIcon(name)
+    return createElement(Icon, { className })
 }

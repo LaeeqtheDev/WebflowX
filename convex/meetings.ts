@@ -3,6 +3,7 @@ import { mutation, query, action, internalMutation, MutationCtx } from "./_gener
 import { Id } from "./_generated/dataModel"
 import { findMember } from "./access"
 import { auth } from "./auth"
+import { can } from "./permissions"
 import { api } from "./_generated/api"
 import { checkLimit } from "./limits"
 import { ConvexError } from "convex/values"
@@ -110,8 +111,8 @@ export const endForEveryone = mutation({
     args: { id: v.id("meetings") },
     handler: async (ctx, args) => {
         const { meeting, member } = await requireMeetingMember(ctx, args.id)
-        if (member.role !== "admin" && meeting.createdBy !== member._id) {
-            throw new ConvexError("Only an admin or the meeting host can end it for everyone")
+        if (meeting.createdBy !== member._id && !(await can(ctx, member, "moderateMeetings"))) {
+            throw new ConvexError("Only the meeting host or a moderator can end it for everyone")
         }
         if (meeting.endedAt) return args.id
         await ctx.db.patch(args.id, { endedAt: Date.now(), activeMembers: [] })
@@ -351,7 +352,7 @@ export const authorizeRoom = query({
         const user = await ctx.db.get(userId)
         return {
             meetingId: meeting._id,
-            host: member.role === "admin" || meeting.createdBy === member._id,
+            host: meeting.createdBy === member._id || (await can(ctx, member, "moderateMeetings")),
             identity: member._id as string,
             name: user?.name ?? user?.email ?? "Member",
         }
@@ -363,11 +364,15 @@ export const kickMember = mutation({
     args: { id: v.id("meetings"), memberId: v.id("members") },
     handler: async (ctx, args) => {
         const { meeting, member } = await requireMeetingMember(ctx, args.id)
-        if (member.role !== "admin" && meeting.createdBy !== member._id) {
-            throw new ConvexError("Only an admin or the meeting host can remove people")
+        if (meeting.createdBy !== member._id && !(await can(ctx, member, "moderateMeetings"))) {
+            throw new ConvexError("Only the meeting host or a moderator can remove people")
         }
         if (args.memberId === member._id) throw new ConvexError("You can't remove yourself")
         if (args.memberId === meeting.createdBy) throw new ConvexError("You can't remove the person who started the meeting")
+        const targetMember = await ctx.db.get(args.memberId)
+        if (targetMember?.role === "admin" && member.role !== "admin") {
+            throw new ConvexError("You can't remove an admin from a meeting")
+        }
         const target = await ctx.db.get(args.memberId)
         if (!target || target.workspaceId !== meeting.workspaceId) throw new ConvexError("Member not found")
 

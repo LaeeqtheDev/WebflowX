@@ -1,6 +1,7 @@
 import { v } from "convex/values"
 import { query } from "./_generated/server"
 import { auth } from "./auth"
+import { canAccessChannel } from "./permissions"
 
 export const get = query({
     args: { workspaceId: v.id("workspaces") },
@@ -15,6 +16,8 @@ export const get = query({
             ).unique()
 
         if (!member) return []
+        const workspace = await ctx.db.get(args.workspaceId)
+        if (!workspace) return []
 
         // Only channel messages, no DMs, no thread replies
         const messages = await ctx.db
@@ -29,10 +32,12 @@ export const get = query({
             m.parentMessagesId === undefined
         )
 
-        return await Promise.all(channelMessages.map(async (msg) => {
+        const rows = await Promise.all(channelMessages.map(async (msg) => {
             const channel = msg.channelId ? await ctx.db.get(msg.channelId) : null
+            if (channel && !canAccessChannel(workspace, member, channel)) return null
             const image = msg.image ? await ctx.storage.getUrl(msg.image) : undefined
             return { ...msg, channel, image }
         }))
+        return rows.filter((r): r is NonNullable<typeof r> => r !== null)
     }
 })

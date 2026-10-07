@@ -2,6 +2,9 @@ import { v, ConvexError } from "convex/values";
 import { mutation, query, internalMutation } from './_generated/server';
 import { internal } from './_generated/api';
 import { consume } from './rateLimit';
+import { requireActor, requirePermission, hasPermission, isOwner } from './permissions';
+import { logAudit } from './audit';
+import { Id } from './_generated/dataModel';
 import { auth } from './auth';
 import { checkLimit, getPlan, PLANS } from './limits';
 
@@ -76,7 +79,10 @@ export const get = query({
 
         for (const workspaceId of workSpaceIds) {
             const workspace = await ctx.db.get(workspaceId)
-            if (workspace) workspaces.push(workspace)
+            if (workspace) {
+                const imageUrl = workspace.image ? await ctx.storage.getUrl(workspace.image) : null
+                workspaces.push({ ...workspace, imageUrl })
+            }
         }
         return workspaces;
     }
@@ -96,29 +102,61 @@ export const getById = query({
 
         if (!member) return null
 
-        return await ctx.db.get(args.id)
+        const workspace = await ctx.db.get(args.id)
+        if (!workspace) return null
+        const imageUrl = workspace.image ? await ctx.storage.getUrl(workspace.image) : null
+        return { ...workspace, imageUrl }
     }
 })
 
 export const update = mutation({
     args: {
         id: v.id("workspaces"),
-        name: v.string()
+        name: v.optional(v.string()),
+        description: v.optional(v.string()),
+        // new photo (uploaded to storage first) or removeImage to clear it
+        image: v.optional(v.id("_storage")),
+        removeImage: v.optional(v.boolean()),
     },
     handler: async (ctx, args) => {
-        const userId = await auth.getUserId(ctx);
-        if (!userId) throw new Error("Unauthorized");
+        const { member, workspace } = await requirePermission(ctx, args.id, "editWorkspace", "You don't have permission to edit this workspace")
 
-        const member = await ctx.db
-            .query("members")
-            .withIndex("byWorkspaceId_user_id", (q) =>
-                q.eq("workspaceId", args.id).eq("userId", userId)
-            ).unique()
+        const patch: { name?: string; description?: string; image?: Id<"_storage"> } = {}
+        if (args.name !== undefined) {
+            const name = args.name.trim()
+            if (!name) throw new ConvexError("Workspace name is required")
+            if (name.length > 60) throw new ConvexError("Workspace name can be at most 60 characters")
+            patch.name = name
+        }
+        if (args.description !== undefined) patch.description = args.description.trim().slice(0, 300)
+        if (args.image) patch.image = args.image
 
-        if (!member || member.role !== "admin") throw new Error("Unauthorized");
-
-        await ctx.db.patch(args.id, { name: args.name })
+        if (args.removeImage || args.image) {
+            if (workspace.image && workspace.image !== args.image) {
+                try { await ctx.storage.delete(workspace.image) } catch { /* already gone */ }
+            }
+        }
+        await ctx.db.patch(args.id, { ...patch, ...(args.removeImage && !args.image ? { image: undefined } : {}) })
+        await logAudit(ctx, args.id, member._id, "workspace.update", [patch.name && `name: ${patch.name}`, args.image && "new photo", args.removeImage && "photo removed", args.description !== undefined && "description"].filter(Boolean).join(", "))
         return args.id;
+    }
+})
+
+// Hand the workspace to another member (they become owner and admin).
+export const transferOwnership = mutation({
+    args: { workspaceId: v.id("workspaces"), memberId: v.id("members") },
+    handler: async (ctx, args) => {
+        const { member, workspace } = await requireActor(ctx, args.workspaceId)
+        if (!isOwner(workspace, member)) throw new ConvexError("Only the owner can transfer ownership")
+        const target = await ctx.db.get(args.memberId)
+        if (!target || target.workspaceId !== args.workspaceId) throw new ConvexError("Member not found")
+        if (target._id === member._id) throw new ConvexError("You already own this workspace")
+
+        await ctx.db.patch(args.workspaceId, { userId: target.userId })
+        await ctx.db.patch(target._id, { role: "admin" })
+        const targetUser = await ctx.db.get(target.userId)
+        await logAudit(ctx, args.workspaceId, member._id, "workspace.transfer", `to ${targetUser?.name ?? "a member"}`)
+        return args.workspaceId
     }
 })
 
@@ -136,7 +174,8 @@ export const remove = mutation({
                 q.eq("workspaceId", args.id).eq("userId", userId)
             ).unique()
 
-        if (!member || member.role !== "admin") throw new ConvexError("Only an admin can delete the workspace");
+        const ws = await ctx.db.get(args.id)
+        if (!member || !ws || ws.userId !== member.userId) throw new ConvexError("Only the workspace owner can delete it");
 
         // nobody can join or open it from here on
         await ctx.db.patch(args.id, { invitesDisabled: true })
@@ -198,6 +237,7 @@ export const purge = internalMutation({
             await ctx.db.query("channels").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", wid)).take(BATCH),
             await ctx.db.query("aiSummaryLog").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
             await ctx.db.query("notifications").withIndex("by_workspace_recipient", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("auditLog").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
         ]
         for (const rows of simple) {
             for (const row of rows) await ctx.db.delete(row._id)
@@ -207,6 +247,10 @@ export const purge = internalMutation({
         if (more) {
             await ctx.scheduler.runAfter(0, internal.workspaces.purge, { id: wid })
         } else {
+            const ws = await ctx.db.get(wid)
+            if (ws?.image) {
+                try { await ctx.storage.delete(ws.image) } catch { /* already gone */ }
+            }
             await ctx.db.delete(wid)
         }
     },
@@ -228,7 +272,9 @@ export const newJoinCode = mutation({
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member || member.role !== "admin") throw new Error("Unauthorized");
+        if (!member) throw new ConvexError("Unauthorized");
+        const { workspace: ws0 } = await requireActor(ctx, args.workspaceId)
+        if (!hasPermission(ws0, member, "invite")) throw new ConvexError("You don't have permission to manage invites");
 
         const joinCode = generateCode()
         const days = args.expiresInDays && args.expiresInDays > 0 ? Math.min(args.expiresInDays, 365) : undefined
@@ -236,6 +282,7 @@ export const newJoinCode = mutation({
             joinCode,
             joinCodeExpiresAt: days ? Date.now() + days * 24 * 60 * 60 * 1000 : undefined,
         })
+        await logAudit(ctx, args.workspaceId, member._id, "invite.reset", days ? `expires in ${days} days` : "no expiry")
         return args.workspaceId;
     }
 })
@@ -252,9 +299,12 @@ export const setInvitesDisabled = mutation({
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member || member.role !== "admin") throw new ConvexError("Only admins can change invite settings");
+        if (!member) throw new ConvexError("Unauthorized");
+        const { workspace: ws1 } = await requireActor(ctx, args.workspaceId)
+        if (!hasPermission(ws1, member, "invite")) throw new ConvexError("You don't have permission to change invite settings");
 
         await ctx.db.patch(args.workspaceId, { invitesDisabled: args.disabled })
+        await logAudit(ctx, args.workspaceId, member._id, args.disabled ? "invite.disable" : "invite.enable")
         return args.workspaceId;
     }
 })
@@ -337,6 +387,7 @@ export const getInfoById = query({
 
         return {
             name: workspace.name,
+            imageUrl: workspace.image ? await ctx.storage.getUrl(workspace.image) : null,
             isMember,
             invitesOpen:
                 !workspace.invitesDisabled &&

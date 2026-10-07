@@ -1,6 +1,7 @@
 import { v } from "convex/values"
 import { mutation, query, internalMutation } from "./_generated/server"
 import { auth } from "./auth"
+import { canAccessChannel } from "./permissions"
 
 const typeValidator = v.union(
     v.literal("thread_reply"),
@@ -34,7 +35,17 @@ export const get = query({
             .order("desc")
             .take(50)
 
-        return await Promise.all(notifications.map(async (n) => {
+        const workspace = await ctx.db.get(args.workspaceId)
+        const visible = []
+        for (const n of notifications) {
+            if (n.channelId && workspace) {
+                const ch = await ctx.db.get(n.channelId)
+                if (ch && !canAccessChannel(workspace, member, ch)) continue
+            }
+            visible.push(n)
+        }
+
+        return await Promise.all(visible.map(async (n) => {
             const sender = await ctx.db.get(n.senderId)
             const senderUser = sender ? await ctx.db.get(sender.userId) : null
             return {

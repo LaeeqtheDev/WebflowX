@@ -2,6 +2,7 @@ import { v } from "convex/values"
 import { Id } from "./_generated/dataModel"
 import { mutation, QueryCtx } from "./_generated/server"
 import { auth } from "./auth"
+import { canViewChannel } from "./permissions"
 
 export const getMember = async (
     ctx: QueryCtx,
@@ -29,6 +30,11 @@ export const toggle = mutation({
         if (!member) throw new Error("Unauthorized")
 
         if (args.value.length === 0 || args.value.length > 32) throw new Error("Invalid reaction")
+        if (message.channelId && !(await canViewChannel(ctx, message.channelId, userId))) throw new Error("Unauthorized")
+        if (message.conversationId) {
+            const conv = await ctx.db.get(message.conversationId)
+            if (!conv || (conv.memberOneId !== member._id && conv.memberTwoId !== member._id)) throw new Error("Unauthorized")
+        }
 
         const existingReaction = await ctx.db
             .query("reactions")
