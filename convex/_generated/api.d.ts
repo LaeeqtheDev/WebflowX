@@ -23,6 +23,7 @@ import type * as emails from "../emails.js";
 import type * as exports from "../exports.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
+import type * as integrations from "../integrations.js";
 import type * as limits from "../limits.js";
 import type * as liveblocks from "../liveblocks.js";
 import type * as marks from "../marks.js";
@@ -73,6 +74,7 @@ declare const fullApi: ApiFromModules<{
   exports: typeof exports;
   files: typeof files;
   http: typeof http;
+  integrations: typeof integrations;
   limits: typeof limits;
   liveblocks: typeof liveblocks;
   marks: typeof marks;

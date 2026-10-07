@@ -16,6 +16,10 @@ export const PLANS = {
         docs: 10,
         meetings: 5,
         aiSummaries: 2,
+        apiKeys: 0,
+        incomingHooks: 0,
+        outgoingHooks: 0,
+        githubHooks: 0,
         storageMb: 250,
     },
     startup: {
@@ -30,6 +34,10 @@ export const PLANS = {
         docs: 50,
         meetings: 20,
         aiSummaries: 10,
+        apiKeys: 3,
+        incomingHooks: 5,
+        outgoingHooks: 0,
+        githubHooks: 0,
         storageMb: 5_000,
     },
     growth: {
@@ -44,6 +52,10 @@ export const PLANS = {
         docs: 200,
         meetings: 50,
         aiSummaries: 30,
+        apiKeys: 10,
+        incomingHooks: 20,
+        outgoingHooks: 10,
+        githubHooks: 5,
         storageMb: 50_000,
     },
     enterprise: {
@@ -58,6 +70,10 @@ export const PLANS = {
         docs: -1,
         meetings: 200,   // meetings and AI summaries cost real money per use, so even Enterprise has a (generous) cap
         aiSummaries: 150,
+        apiKeys: -1,
+        incomingHooks: -1,
+        outgoingHooks: -1,
+        githubHooks: -1,
         storageMb: 1_000_000, // 1 TB fair use
     },
 }

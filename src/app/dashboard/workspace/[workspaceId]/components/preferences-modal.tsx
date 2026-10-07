@@ -20,6 +20,7 @@ import { useDataExport } from "@/lib/export-data"
 import { errMsg } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 import { useConfirm } from "../../hooks/use-confirm"
+import { IntegrationsPanel } from "@/features/integrations/integrations-panel"
 
 interface PreferencesModalProps {
   open: boolean
@@ -27,7 +28,7 @@ interface PreferencesModalProps {
   initialValue: string
 }
 
-type Tab = "general" | "members" | "roles" | "audit"
+type Tab = "general" | "members" | "roles" | "integrations" | "audit"
 
 const PERMISSION_INFO: { key: PermissionKey; label: string; hint: string }[] = [
   { key: "createChannels", label: "Create channels", hint: "Start new public or locked channels" },
@@ -73,6 +74,10 @@ const ACTION_LABEL: Record<string, string> = {
   "role.update": "Edited a custom role",
   "role.delete": "Deleted a custom role",
   "member.customRole": "Assigned a custom role",
+  "integration.create": "Added an integration",
+  "integration.on": "Turned an integration on",
+  "integration.off": "Turned an integration off",
+  "integration.delete": "Removed an integration",
 }
 
 const RoleIcon = ({ role, isOwner }: { role: string; isOwner?: boolean }) =>
@@ -160,6 +165,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
     { id: "general", label: "General", show: true },
     { id: "members", label: `Members${members ? ` (${members.length})` : ""}`, show: true },
     { id: "roles", label: "Roles & permissions", show: perms.isAdmin },
+    { id: "integrations", label: "Integrations", show: perms.isAdmin },
     { id: "audit", label: "Audit log", show: perms.isAdmin },
   ]
 
@@ -383,6 +389,8 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                 )}
               </div>
             )}
+
+            {tab === "integrations" && <IntegrationsPanel workspaceId={workspaceId} />}
 
             {tab === "audit" && (
               <div className="flex flex-col gap-1.5">

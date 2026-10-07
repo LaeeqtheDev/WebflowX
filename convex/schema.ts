@@ -40,6 +40,28 @@ const schema = defineSchema({
         .index("by_workspace_id", ["workspaceId"])
         .index("by_attached_creation", ["attached"]),
 
+    // API keys, incoming webhooks, GitHub hooks and outgoing webhooks. Secrets in URLs / keys are stored hashed.
+    integrations: defineTable({
+        workspaceId: v.id("workspaces"),
+        kind: v.union(v.literal("apiKey"), v.literal("incoming"), v.literal("github"), v.literal("outgoing")),
+        name: v.string(),
+        createdBy: v.id("members"),
+        tokenHash: v.optional(v.string()),
+        prefix: v.optional(v.string()),
+        channelId: v.optional(v.id("channels")),
+        url: v.optional(v.string()),
+        // signs outgoing deliveries / verifies GitHub deliveries
+        secret: v.optional(v.string()),
+        events: v.optional(v.array(v.string())),
+        active: v.boolean(),
+        lastUsedAt: v.optional(v.number()),
+        failCount: v.optional(v.number()),
+        lastStatus: v.optional(v.string()),
+    })
+        .index("by_workspace_id", ["workspaceId"])
+        .index("by_workspace_kind", ["workspaceId", "kind"])
+        .index("by_token_hash", ["tokenHash"]),
+
     auditLog: defineTable({
         workspaceId: v.id("workspaces"),
         actorId: v.id("members"),
@@ -139,6 +161,8 @@ const schema = defineSchema({
         parentMessagesId: v.optional(v.id("messages")),
         conversationId: v.optional(v.id("conversations")),
         updatedAt: v.optional(v.number()),
+        // set when an API key, webhook or GitHub hook posted this; shown in place of the author's name
+        integrationName: v.optional(v.string()),
     })
         .index("byWorkspaceId", ["workspaceId"])
         .index("by_member_id", ["memberId"])

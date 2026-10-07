@@ -169,6 +169,10 @@ export const remove = mutation({
         const removedUser = await ctx.db.get(member.userId)
         await logAudit(ctx, member.workspaceId, currentMember._id, leaving ? "member.leave" : "member.remove", removedUser?.name ?? undefined)
 
+        // keys and hooks this person made post as them, so they go with them
+        const theirIntegrations = await ctx.db.query("integrations").withIndex("by_workspace_id", (q) => q.eq("workspaceId", member.workspaceId)).take(500)
+        for (const row of theirIntegrations) if (row.createdBy === member._id) await ctx.db.delete(row._id)
+
         const [messages, reactions, conversations] = await Promise.all([
             ctx.db.query("messages")
                 .withIndex("by_member_id", (q) => q.eq("memberId", member._id))

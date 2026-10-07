@@ -7,6 +7,7 @@ import { can } from "./permissions"
 import { ConvexError } from "convex/values"
 import { MAX, text, cleanLabels } from "./validate"
 import { throttle } from "./rateLimit"
+import { emit } from "./integrations"
 
 const statusValidator = v.union(
     v.literal("backlog"),
@@ -143,6 +144,12 @@ export const create = mutation({
             })
         }
 
+        await emit(ctx, args.workspaceId, "task.created", {
+            id: taskId, title, status: args.status, priority: args.priority,
+            assigneeId: args.assigneeId ?? null,
+            dueDate: args.dueDate === undefined ? null : new Date(args.dueDate).toISOString().slice(0, 10),
+        })
+
         return taskId
     }
 })
@@ -210,6 +217,10 @@ export const update = mutation({
                 body: task.title,
                 read: false,
             })
+        }
+
+        if (updates.status === "done" && task.status !== "done") {
+            await emit(ctx, task.workspaceId, "task.completed", { id: task._id, title: updates.title ?? task.title, priority: task.priority })
         }
 
         if (unassign && isAdmin) {

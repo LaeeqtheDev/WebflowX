@@ -257,6 +257,7 @@ export const purge = internalMutation({
             await ctx.db.query("pins").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
             await ctx.db.query("savedMessages").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
             await ctx.db.query("attachments").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("integrations").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
         ]
         for (const rows of simple) {
             for (const row of rows) await ctx.db.delete(row._id)

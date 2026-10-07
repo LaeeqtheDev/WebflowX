@@ -9,6 +9,7 @@ import { claim, release } from "./files";
 import { assertDeltaBody, snippetOf } from "./validate";
 import { throttle } from "./rateLimit";
 import { notify } from "./notifications";
+import { emit } from "./integrations";
 
 // @mentions are stored in the message body as text ops with attributes.mention = memberId
 const extractMentionIds = (body: string): string[] => {
@@ -323,7 +324,8 @@ export const get = query({
                             fileType: message.fileType,
                             fileSize: message.fileSize,
                             member,
-                            user,
+                            // integrations post under their own name
+                            user: message.integrationName ? { ...user, name: message.integrationName, image: undefined } : user,
                             reactions: dedupedReactions.map(
                                 ({ memberId, ...rest }) => rest
                             ),
@@ -503,6 +505,21 @@ export const create = mutation({
             body: args.body,
             alreadyNotified,
         });
+
+        // outgoing webhooks (public channels only)
+        if (channelId) {
+            const ch = await ctx.db.get(channelId);
+            if (ch && !ch.isPrivate) {
+                await emit(ctx, args.workspaceId, "message.created", async () => ({
+                    id: messageId,
+                    channelId,
+                    channel: ch.name,
+                    author: (await ctx.db.get(userId))?.name ?? null,
+                    text: snippetOf(args.body, 2000),
+                    threadParentId: args.parentMessageId ?? null,
+                }));
+            }
+        }
 
         return messageId;
     },
