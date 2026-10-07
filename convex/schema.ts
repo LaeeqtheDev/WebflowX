@@ -59,6 +59,8 @@ const schema = defineSchema({
         // invite controls
         joinCodeExpiresAt: v.optional(v.number()),
         invitesDisabled: v.optional(v.boolean()),
+        // when on, the invite link works without the 6-character code (still revoked by turning invites off)
+        openInviteLink: v.optional(v.boolean()),
         // workspace profile
         image: v.optional(v.id("_storage")),
         description: v.optional(v.string()),

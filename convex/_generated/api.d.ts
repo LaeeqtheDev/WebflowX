@@ -9,16 +9,17 @@
  */
 
 import type * as ResendOTP from "../ResendOTP.js";
+import type * as access from "../access.js";
 import type * as audit from "../audit.js";
-import type * as emailLayout from "../emailLayout.js";
-import type * as emails from "../emails.js";
-import type * as exports from "../exports.js";
-import type * as files from "../files.js";
 import type * as auth from "../auth.js";
 import type * as channels from "../channels.js";
 import type * as conversations from "../conversations.js";
 import type * as crons from "../crons.js";
 import type * as docs from "../docs.js";
+import type * as emailLayout from "../emailLayout.js";
+import type * as emails from "../emails.js";
+import type * as exports from "../exports.js";
+import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as limits from "../limits.js";
 import type * as liveblocks from "../liveblocks.js";
@@ -27,8 +28,8 @@ import type * as members from "../members.js";
 import type * as messages from "../messages.js";
 import type * as notes from "../notes.js";
 import type * as notifications from "../notifications.js";
-import type * as rateLimit from "../rateLimit.js";
 import type * as permissions from "../permissions.js";
+import type * as rateLimit from "../rateLimit.js";
 import type * as reactions from "../reactions.js";
 import type * as sent from "../sent.js";
 import type * as sprints from "../sprints.js";
@@ -49,16 +50,17 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   ResendOTP: typeof ResendOTP;
+  access: typeof access;
   audit: typeof audit;
-  emailLayout: typeof emailLayout;
-  emails: typeof emails;
-  exports: typeof exports;
-  files: typeof files;
   auth: typeof auth;
   channels: typeof channels;
   conversations: typeof conversations;
   crons: typeof crons;
   docs: typeof docs;
+  emailLayout: typeof emailLayout;
+  emails: typeof emails;
+  exports: typeof exports;
+  files: typeof files;
   http: typeof http;
   limits: typeof limits;
   liveblocks: typeof liveblocks;
@@ -67,8 +69,8 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   notes: typeof notes;
   notifications: typeof notifications;
-  rateLimit: typeof rateLimit;
   permissions: typeof permissions;
+  rateLimit: typeof rateLimit;
   reactions: typeof reactions;
   sent: typeof sent;
   sprints: typeof sprints;

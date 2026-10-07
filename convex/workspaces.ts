@@ -303,6 +303,18 @@ export const newJoinCode = mutation({
     }
 })
 
+// "Anyone with the link can join": the invite link no longer needs the code. Turning invites off still stops everyone.
+export const setOpenInviteLink = mutation({
+    args: { workspaceId: v.id("workspaces"), open: v.boolean() },
+    handler: async (ctx, args) => {
+        const { workspace, member } = await requireActor(ctx, args.workspaceId)
+        if (!hasPermission(workspace, member, "invite")) throw new ConvexError("You don't have permission to change invite settings");
+        await ctx.db.patch(args.workspaceId, { openInviteLink: args.open })
+        await logAudit(ctx, args.workspaceId, member._id, args.open ? "invite.open_link" : "invite.close_link")
+        return args.workspaceId;
+    }
+})
+
 export const setInvitesDisabled = mutation({
     args: { workspaceId: v.id("workspaces"), disabled: v.boolean() },
     handler: async (ctx, args) => {
@@ -327,7 +339,7 @@ export const setInvitesDisabled = mutation({
 
 export const join = mutation({
     args: {
-        joinCode: v.string(),
+        joinCode: v.optional(v.string()),
         workspaceId: v.id("workspaces")
     },
     handler: async (ctx, args) => {
@@ -352,8 +364,13 @@ export const join = mutation({
         if (!(await consume(ctx, `join:${userId}`, 10, 10 * 60_000))) {
             throw new ConvexError("Too many attempts. Please wait a few minutes and try again.");
         }
-        if (workspace.joinCode !== args.joinCode.trim().toLowerCase()) {
-            return { error: "That code isn't right. Check it and try again." };
+        const typed = (args.joinCode ?? "").trim().toLowerCase()
+        if (typed) {
+            if (workspace.joinCode !== typed) {
+                return { error: "That code isn't right. Check it and try again." };
+            }
+        } else if (!workspace.openInviteLink) {
+            return { error: "This invite link needs its code. Ask an admin to send the link again." };
         }
         if (workspace.joinCodeExpiresAt && workspace.joinCodeExpiresAt < Date.now()) {
             return { error: "This invite code has expired. Ask an admin for a new one." };
@@ -405,6 +422,7 @@ export const getInfoById = query({
             name: workspace.name,
             imageUrl: workspace.image ? await ctx.storage.getUrl(workspace.image) : null,
             isMember,
+            openLink: !!workspace.openInviteLink,
             invitesOpen:
                 !workspace.invitesDisabled &&
                 !(workspace.joinCodeExpiresAt && workspace.joinCodeExpiresAt < Date.now()),
