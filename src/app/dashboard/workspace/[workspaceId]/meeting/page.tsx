@@ -175,7 +175,7 @@ export default function MeetingPage() {
                 toast.error("Failed to generate summary. You can regenerate it from the meeting details.")
                 await saveSummary({
                     id: meetingId,
-                    summary: "Summary generation failed. You can regenerate it from the meeting details.",
+                    summary: `Summary generation failed${message ? ` (${message.slice(0, 200)})` : ""}. You can regenerate it from the meeting details.`,
                     transcript,
                 }).catch(console.error)
             }

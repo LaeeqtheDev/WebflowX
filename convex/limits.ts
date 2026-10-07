@@ -78,6 +78,11 @@ export const PLANS = {
     },
 }
 
+// Free workspaces keep (but only show) the last 90 days of messages. Upgrading brings the rest back.
+export const HISTORY_DAYS_FREE = 90
+export const historyCutoff = (plan?: string): number | null =>
+    getPlan(plan) === "free" ? Date.now() - HISTORY_DAYS_FREE * 24 * 60 * 60 * 1000 : null
+
 export const getPlan = (plan?: string): Plan => {
     if (plan === "startup" || plan === "growth" || plan === "enterprise") return plan
     return "free"

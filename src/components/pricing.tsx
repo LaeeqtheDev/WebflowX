@@ -13,13 +13,19 @@ const rows = [
   "Meetings / month",
   "AI summaries / month",
   "File storage",
+  "Message history",
+  "Guests",
+  "API keys",
+  "Incoming webhooks",
+  "Outgoing webhooks",
+  "GitHub connections",
 ];
 
 const plans = [
-  { name: "Free", price: "$0", v: ["1", "10", "5", "10", "20", "10", "5", "2", "250 MB"] },
-  { name: "Startup", price: "$29", v: ["3", "25", "20", "50", "100", "50", "20", "10", "5 GB"] },
-  { name: "Growth", price: "$79", v: ["10", "100", "50", "Unlimited", "Unlimited", "200", "50", "30", "50 GB"] },
-  { name: "Enterprise", price: "$249", v: ["Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "200", "150", "1 TB"] },
+  { name: "Free", price: "$0", v: ["1", "10", "5", "10", "20", "10", "5", "2", "250 MB", "90 days", "None", "None", "None", "None", "None"] },
+  { name: "Startup", price: "$29", v: ["3", "25", "20", "50", "100", "50", "20", "10", "5 GB", "Unlimited", "5", "3", "5", "None", "None"] },
+  { name: "Growth", price: "$79", v: ["10", "100", "50", "Unlimited", "Unlimited", "200", "50", "30", "50 GB", "Unlimited", "25", "10", "20", "10", "5"] },
+  { name: "Enterprise", price: "$249", v: ["Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "200", "150", "1 TB", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited"] },
 ];
 
 const PricingSection = () => (
@@ -29,7 +35,7 @@ const PricingSection = () => (
         <Label>Pricing</Label>
         <Heading className="mt-5 max-w-3xl">Four plans. Clear limits.</Heading>
         <p className="mt-5 max-w-lg text-[17px] leading-relaxed text-[#1b1017]/70">
-          Pick the limits that fit your team. Limits and storage apply per workspace (the number of workspaces is per owner); meetings and AI summaries reset each month. Paid billing is coming soon, so during early access owners can switch plans in workspace settings.
+          Pick the limits that fit your team. Free keeps the last 90 days of messages visible; paid plans keep everything. Limits and storage apply per workspace (the number of workspaces is per owner); meetings and AI summaries reset each month. Paid billing is coming soon, so during early access owners can switch plans in workspace settings.
         </p>
       </Reveal>
       <Reveal delay={80}>

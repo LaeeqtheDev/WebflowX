@@ -2,8 +2,9 @@
 
 import React, { useEffect, useRef } from "react";
 import {
-  AtSign, Bell, Command, FileSpreadsheet, FileText, FolderOpen, Layers, ListChecks, MessageSquare,
-  MessagesSquare, Moon, NotebookPen, Paperclip, Search, Smartphone, SmilePlus,
+  AtSign, Bell, BellRing, Bookmark, CalendarDays, Command, FileSpreadsheet, FileText, Files, FolderOpen, GitBranch, KeyRound,
+  Layers, ListChecks, MessageSquare, MessagesSquare, Moon, NotebookPen, Paperclip, Pin, Search, ShieldCheck, Smartphone,
+  SmilePlus, UserRoundPlus, Users, Webhook,
 } from "lucide-react";
 import { gsap, MOTION_OK } from "./landing/gsap";
 import { Heading, Label, Reveal } from "./landing/ui";
@@ -76,6 +77,18 @@ const small = [
   { icon: Smartphone, t: "Works on phones", b: "A mobile layout with drawer navigation." },
   { icon: FolderOpen, t: "Profiles", b: "Profile photo, title and bio for people. Photo and description for the workspace." },
   { icon: FileText, t: "Documents", b: "Real-time collaborative documents with a rich-text editor." },
+  { icon: Users, t: "Presence and typing", b: "See who is online and who is typing, right in the sidebar and the channel." },
+  { icon: Pin, t: "Pinned messages", b: "Pin the messages everyone needs to find again at the top of a channel or conversation." },
+  { icon: Bookmark, t: "Saved messages", b: "Save any message for yourself and find it all in one Saved list." },
+  { icon: CalendarDays, t: "Calendar", b: "Task due dates on a calendar, plus a private feed for Google, Apple or Outlook Calendar and a reminder before a deadline." },
+  { icon: Files, t: "Files and previews", b: "Every file and image in one searchable Files page. Preview images, PDFs, video and audio without downloading." },
+  { icon: UserRoundPlus, t: "Guests", b: "Invite clients and contractors into only the channels you choose. They see nothing else." },
+  { icon: BellRing, t: "Push notifications", b: "Install WebflowX to your phone or desktop and get push alerts for mentions, messages and task reminders." },
+  { icon: ShieldCheck, t: "Two-step verification", b: "Protect accounts with an authenticator app and backup codes. Admins on higher plans can require it for everyone." },
+  { icon: KeyRound, t: "API keys and REST API", b: "Read channels and tasks, post messages and create tasks from your own scripts." },
+  { icon: Webhook, t: "Webhooks", b: "Post into channels from any tool with incoming webhooks, and send signed events out when messages and tasks change." },
+  { icon: GitBranch, t: "GitHub", b: "Pushes, pull requests, issues, releases and failed builds show up in the channel you pick." },
+  { icon: Layers, t: "Zapier and Make", b: "Connect thousands of apps through the API and webhooks, with no extra software to install." },
 ];
 
 const NewFeatures = () => {
@@ -169,7 +182,7 @@ const NewFeatures = () => {
             tone="plum"
             className="lg:col-span-2"
             title="Meetings with AI summaries"
-            body="Start a video meeting, follow a live transcript, then get an AI summary with action items and decisions."
+            body="Start a video meeting, get a live transcript of what you say, then an AI summary with action items and decisions."
             visualH="h-[220px]"
           >
             <ScaledFrame w={680} h={440}>

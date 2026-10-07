@@ -40,6 +40,7 @@ interface Props {
     startedAt: number
     status: Status
     errorMessage: string
+    onRetry?: () => void
 }
 
 const COLORS = ["#ff5018", "#8b5cf6", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#14b8a6"]
@@ -91,7 +92,7 @@ function Tile({
     const speaking = useIsSpeaking(p)
     const micMuted = useIsMuted({ participant: p, source: Track.Source.Microphone })
     const isScreen = trackRef.source === Track.Source.ScreenShare
-    const hasVideo = isTrackReference(trackRef) && !trackRef.publication.isMuted
+    const hasVideo = isTrackReference(trackRef) && !trackRef.publication.isMuted && !!trackRef.publication.track && trackRef.publication.track.mediaStreamTrack?.readyState !== "ended"
     const host = isHostParticipant(p)
     const showMenu = amHost && !p.isLocal && !isScreen
 
@@ -426,31 +427,69 @@ function SidePanel({
 // ---------------------------------------------------------------------------------------------
 
 function CtrlButton({
-    active = true, danger, onClick, label, children, disabled, badge,
+    active = true, danger, onClick, label, children, disabled, badge, caption, className,
 }: {
     active?: boolean; danger?: boolean; onClick?: () => void; label: string
-    children: React.ReactNode; disabled?: boolean; badge?: number
+    children: React.ReactNode; disabled?: boolean; badge?: number; caption?: string; className?: string
 }) {
     return (
-        <button
-            onClick={onClick}
-            disabled={disabled}
-            title={label}
-            aria-label={label}
-            className={cn(
-                "relative flex size-11 items-center justify-center rounded-full text-white transition-colors disabled:opacity-50 sm:size-12",
-                danger ? "bg-red-600 hover:bg-red-700"
-                    : active ? "bg-white/10 hover:bg-white/20"
-                        : "bg-red-500/90 hover:bg-red-500"
-            )}
-        >
-            {children}
-            {!!badge && (
-                <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-[#ff5018] px-1 text-[10px] font-bold">
-                    {badge > 9 ? "9+" : badge}
-                </span>
-            )}
-        </button>
+        <div className="flex flex-col items-center gap-1">
+            <button
+                onClick={onClick}
+                disabled={disabled}
+                title={label}
+                aria-label={label}
+                className={cn(
+                    "relative flex size-12 items-center justify-center rounded-full text-white outline-none transition-all focus-visible:ring-2 focus-visible:ring-[#ff5018] active:scale-95 disabled:opacity-50",
+                    danger ? "bg-red-600 hover:bg-red-500"
+                        : active ? "bg-white/10 hover:bg-white/20"
+                            : "bg-red-500 hover:bg-red-400",
+                    className
+                )}
+            >
+                {children}
+                {!!badge && (
+                    <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-[#ff5018] px-1 text-[10px] font-bold">
+                        {badge > 9 ? "9+" : badge}
+                    </span>
+                )}
+            </button>
+            {caption && <span className="hidden text-[11px] font-medium text-white/60 sm:block">{caption}</span>}
+        </div>
+    )
+}
+
+// the button and its device picker share one rounded pill
+function SplitCtrl({
+    active, onClick, label, caption, disabled, kind, children,
+}: {
+    active: boolean; onClick: () => void; label: string; caption: string; disabled?: boolean
+    kind: "audioinput" | "videoinput"; children: React.ReactNode
+}) {
+    return (
+        <div className="flex flex-col items-center gap-1">
+            <div className={cn("flex items-center rounded-full transition-colors", active ? "bg-white/10" : "bg-red-500")}>
+                <button
+                    onClick={onClick}
+                    disabled={disabled}
+                    title={label}
+                    aria-label={label}
+                    className="flex size-12 items-center justify-center rounded-full text-white outline-none transition-all hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-[#ff5018] active:scale-95 disabled:opacity-50"
+                >
+                    {children}
+                </button>
+                <div className="relative hidden pr-1 sm:block">
+                    <MediaDeviceMenu
+                        kind={kind}
+                        aria-label={kind === "audioinput" ? "Choose microphone" : "Choose camera"}
+                        className="!flex !h-9 !w-7 !items-center !justify-center !rounded-full !border-0 !bg-transparent !p-0 !text-white hover:!bg-white/20"
+                    >
+                        <ChevronUp className="size-4" />
+                    </MediaDeviceMenu>
+                </div>
+            </div>
+            <span className="hidden text-[11px] font-medium text-white/60 sm:block">{caption}</span>
+        </div>
     )
 }
 
@@ -468,65 +507,65 @@ function ControlBar({
     const cam = useTrackToggle({ source: Track.Source.Camera })
     const screen = useTrackToggle({ source: Track.Source.ScreenShare })
 
-    const menuBtn = "flex size-7 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 [&_.lk-button]:!bg-transparent"
-
     return (
-        <div className="flex items-center justify-center gap-2 px-3 pb-4 pt-2 sm:gap-3">
-            <div className="flex items-center gap-1">
-                <CtrlButton label={mic.enabled ? "Mute" : "Unmute"} active={mic.enabled} onClick={() => mic.toggle()} disabled={mic.pending}>
+        <div className="flex justify-center px-3 pb-4 pt-2">
+            <div className="flex max-w-full items-start justify-center gap-2 overflow-x-auto rounded-3xl border border-white/10 bg-[#1e1019]/95 px-3 py-2.5 shadow-2xl backdrop-blur sm:gap-3 sm:px-4">
+                <SplitCtrl label={mic.enabled ? "Mute" : "Unmute"} caption={mic.enabled ? "Mute" : "Unmute"} active={mic.enabled} onClick={() => mic.toggle()} disabled={mic.pending} kind="audioinput">
                     {mic.enabled ? <Mic className="size-5" /> : <MicOff className="size-5" />}
-                </CtrlButton>
-                <div className={cn("hidden sm:block", menuBtn)}>
-                    <MediaDeviceMenu kind="audioinput" aria-label="Choose microphone"><ChevronUp className="size-4" /></MediaDeviceMenu>
-                </div>
-            </div>
-            <div className="flex items-center gap-1">
-                <CtrlButton label={cam.enabled ? "Turn off camera" : "Turn on camera"} active={cam.enabled} onClick={() => cam.toggle()} disabled={cam.pending}>
+                </SplitCtrl>
+                <SplitCtrl label={cam.enabled ? "Turn off camera" : "Turn on camera"} caption={cam.enabled ? "Stop video" : "Start video"} active={cam.enabled} onClick={() => cam.toggle()} disabled={cam.pending} kind="videoinput">
                     {cam.enabled ? <Video className="size-5" /> : <VideoOff className="size-5" />}
+                </SplitCtrl>
+                <CtrlButton label={screen.enabled ? "Stop sharing" : "Share screen"} caption={screen.enabled ? "Stop share" : "Share"} active={!screen.enabled} onClick={() => screen.toggle()} disabled={screen.pending} className={screen.enabled ? "!bg-[#ff5018] hover:!bg-[#e6430f]" : undefined}>
+                    {screen.enabled ? <MonitorOff className="size-5" /> : <MonitorUp className="size-5" />}
                 </CtrlButton>
-                <div className={cn("hidden sm:block", menuBtn)}>
-                    <MediaDeviceMenu kind="videoinput" aria-label="Choose camera"><ChevronUp className="size-4" /></MediaDeviceMenu>
-                </div>
-            </div>
-            <CtrlButton label={screen.enabled ? "Stop sharing" : "Share screen"} active={true} onClick={() => screen.toggle()} disabled={screen.pending}>
-                {screen.enabled ? <MonitorOff className="size-5 text-[#ff5018]" /> : <MonitorUp className="size-5" />}
-            </CtrlButton>
-            <CtrlButton label="People" active={true} onClick={() => togglePanel("people")}>
-                <Users className={cn("size-5", panel === "people" && "text-[#ff5018]")} />
-            </CtrlButton>
-            <CtrlButton label="Chat" active={true} onClick={() => togglePanel("chat")} badge={panel === "chat" ? 0 : unread}>
-                <MessageSquare className={cn("size-5", panel === "chat" && "text-[#ff5018]")} />
-            </CtrlButton>
+                <div className="mx-1 hidden h-12 w-px self-start bg-white/10 sm:block" />
+                <CtrlButton label="People" caption="People" active={panel !== "people"} onClick={() => togglePanel("people")} className={panel === "people" ? "!bg-[#ff5018] hover:!bg-[#e6430f]" : undefined}>
+                    <Users className="size-5" />
+                </CtrlButton>
+                <CtrlButton label="Chat" caption="Chat" active={panel !== "chat"} onClick={() => togglePanel("chat")} badge={panel === "chat" ? 0 : unread} className={panel === "chat" ? "!bg-[#ff5018] hover:!bg-[#e6430f]" : undefined}>
+                    <MessageSquare className="size-5" />
+                </CtrlButton>
+                <div className="mx-1 hidden h-12 w-px self-start bg-white/10 sm:block" />
 
-            {amHost ? (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <button className="flex h-11 items-center gap-1 rounded-full bg-red-600 px-4 text-white hover:bg-red-700 sm:h-12" aria-label="Leave">
+                {amHost ? (
+                    <div className="flex flex-col items-center gap-1">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="flex h-12 items-center gap-1.5 rounded-full bg-red-600 px-5 text-sm font-semibold text-white outline-none transition-all hover:bg-red-500 focus-visible:ring-2 focus-visible:ring-white active:scale-95" aria-label="Leave">
+                                    <PhoneOff className="size-5" />
+                                    <span className="hidden sm:inline">Leave</span>
+                                    <ChevronDown className="size-4" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" side="top" className="w-52">
+                                <DropdownMenuItem onClick={() => room.disconnect()}>
+                                    <PhoneOff className="mr-2 size-4" /> Leave meeting
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400" onClick={onEndAll}>
+                                    <X className="mr-2 size-4" /> End for everyone
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <span className="hidden text-[11px] font-medium text-transparent select-none sm:block">.</span>
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center gap-1">
+                        <button onClick={() => room.disconnect()} aria-label="Leave" className="flex h-12 items-center gap-1.5 rounded-full bg-red-600 px-5 text-sm font-semibold text-white outline-none transition-all hover:bg-red-500 focus-visible:ring-2 focus-visible:ring-white active:scale-95">
                             <PhoneOff className="size-5" />
-                            <ChevronDown className="size-4" />
+                            <span className="hidden sm:inline">Leave</span>
                         </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" side="top" className="w-52">
-                        <DropdownMenuItem onClick={() => room.disconnect()}>
-                            <PhoneOff className="mr-2 size-4" /> Leave meeting
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400" onClick={onEndAll}>
-                            <X className="mr-2 size-4" /> End for everyone
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            ) : (
-                <CtrlButton label="Leave" danger onClick={() => room.disconnect()}>
-                    <PhoneOff className="size-5" />
-                </CtrlButton>
-            )}
+                        <span className="hidden text-[11px] font-medium text-transparent select-none sm:block">.</span>
+                    </div>
+                )}
+            </div>
         </div>
     )
 }
 
 // ---------------------------------------------------------------------------------------------
 
-export function MeetingStage({ roomName, title, startedAt, status, errorMessage }: Props) {
+export function MeetingStage({ roomName, title, startedAt, status, errorMessage, onRetry }: Props) {
     const room = useRoomContext()
     const { localParticipant } = useLocalParticipant()
     const participants = useParticipants()
@@ -635,9 +674,9 @@ export function MeetingStage({ roomName, title, startedAt, status, errorMessage 
                         </span>
                     )}
                     {status === "error" && (
-                        <span className="flex items-center gap-1.5 rounded-full bg-red-500/15 px-2.5 py-1 text-red-300" title={errorMessage}>
-                            <AlertCircle className="size-3.5" /> Transcript off
-                        </span>
+                        <button type="button" onClick={onRetry} className="flex items-center gap-1.5 rounded-full bg-red-500/15 px-2.5 py-1 text-red-300 hover:bg-red-500/25" title={errorMessage}>
+                            <AlertCircle className="size-3.5" /> Transcript off · Retry
+                        </button>
                     )}
                     <button
                         type="button"
@@ -649,6 +688,14 @@ export function MeetingStage({ roomName, title, startedAt, status, errorMessage 
                     </button>
                 </div>
             </div>
+
+            {status === "error" && (
+                <div role="alert" className="mx-4 mb-2 flex items-start gap-2 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+                    <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                    <p className="flex-1">{errorMessage || "Live captions couldn't start."} The meeting itself isn&apos;t affected, but the AI summary needs a transcript.</p>
+                    {onRetry && <button type="button" onClick={onRetry} className="shrink-0 rounded-md bg-white/10 px-2 py-1 font-semibold text-white hover:bg-white/20">Retry</button>}
+                </div>
+            )}
 
             {/* body */}
             <div className="relative flex min-h-0 flex-1">

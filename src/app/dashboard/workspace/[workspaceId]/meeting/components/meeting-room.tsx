@@ -9,6 +9,7 @@ import {
 } from "@livekit/components-react"
 import { useEffect, useRef, useState } from "react"
 import { ConnectionState, DisconnectReason } from "livekit-client"
+import { toast } from "sonner"
 import { MeetingStage } from "./room-ui"
 import { TranscriptSegment, setLastSegments } from "../segments"
 
@@ -21,191 +22,172 @@ interface MeetingRoomProps {
     onDisconnect: (transcript: string, reason: "left" | "removed" | "ended" | "lost") => void
 }
 
-// Global singleton state
+// Transcription lives outside React so it survives re-renders. Each person's browser transcribes their own microphone.
+type DgStatus = "starting" | "recording" | "error"
 let globalWebSocket: WebSocket | null = null
 let globalMediaRecorder: MediaRecorder | null = null
+let globalStream: MediaStream | null = null
 let globalTranscript = ""
 let globalSegments: TranscriptSegment[] = []
-let isInitializing = false  // Lock to prevent double init
+let keepAliveTimer: ReturnType<typeof setInterval> | null = null
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+let closing = false      // true once we are stopping on purpose, so a closed socket isn't re-opened
+let generation = 0       // bumps on every (re)start so late callbacks from an old attempt are ignored
+let attempts = 0
 
-const cleanupGlobals = () => {
-    console.log("🧹 Cleaning up globals...")
-    
+const stopSocket = () => {
+    if (keepAliveTimer) { clearInterval(keepAliveTimer); keepAliveTimer = null }
+    if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null }
     if (globalMediaRecorder) {
-        try {
-            if (globalMediaRecorder.state === 'recording') {
-                globalMediaRecorder.stop()
-            }
-            const stream = globalMediaRecorder.stream
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop())
-            }
-        } catch (e) {
-            console.log("MediaRecorder cleanup error:", e)
-        }
+        try { if (globalMediaRecorder.state !== "inactive") globalMediaRecorder.stop() } catch { /* already stopped */ }
         globalMediaRecorder = null
     }
-    
     if (globalWebSocket) {
-        try {
-            if (globalWebSocket.readyState === WebSocket.OPEN) {
-                globalWebSocket.send(JSON.stringify({ type: 'CloseStream' }))
-                globalWebSocket.close(1000, 'Cleanup')
-            }
-        } catch (e) {
-            console.log("WebSocket cleanup error:", e)
-        }
+        const ws = globalWebSocket
         globalWebSocket = null
+        ws.onclose = null
+        ws.onerror = null
+        try {
+            if (ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: "CloseStream" })); ws.close(1000, "done") }
+            else if (ws.readyState === WebSocket.CONNECTING) ws.close()
+        } catch { /* already closed */ }
     }
-    
-    isInitializing = false
+}
+
+const cleanupGlobals = () => {
+    closing = true // late replies from the speech service are still kept for a moment so the last sentence isn't lost
+    stopSocket()
+    if (globalStream) {
+        globalStream.getTracks().forEach((t) => t.stop())
+        globalStream = null
+    }
+}
+
+type Hooks = {
+    setStatus: (s: DgStatus, message?: string) => void
+    onText: () => void
+    speaker: () => string
+    roomConnected: () => boolean
+}
+
+const MIME_CHOICES = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"]
+
+async function startTranscription(h: Hooks) {
+    closing = false
+    const gen = ++generation
+    stopSocket()
+    h.setStatus("starting")
+    const fail = (message: string) => {
+        if (gen !== generation) return
+        console.error("[transcript]", message)
+        h.setStatus("error", message)
+    }
+
+    try {
+        if (!globalStream || globalStream.getAudioTracks().every((t) => t.readyState !== "live")) {
+            try {
+                globalStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
+            } catch {
+                return fail("The browser blocked the microphone for transcription. Allow it from the lock icon in the address bar, then press Retry.")
+            }
+        }
+        if (gen !== generation || closing) return
+
+        const res = await fetch("/api/deepgram-token", { cache: "no-store" })
+        const data = await res.json().catch(() => ({}))
+        if (gen !== generation || closing) return
+        if (!res.ok || !data.key) return fail(data.error || `Couldn't start live captions (${res.status}).`)
+
+        const mime = MIME_CHOICES.find((m) => typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(m))
+        if (!mime) return fail("This browser can't record audio for live captions. Try Chrome, Edge or Safari 14.1+.")
+
+        const params = new URLSearchParams({ model: "nova-2", language: "en-US", smart_format: "true", punctuate: "true" })
+        const ws = new WebSocket(`wss://api.deepgram.com/v1/listen?${params.toString()}`, [data.type === "bearer" ? "bearer" : "token", data.key])
+        globalWebSocket = ws
+
+        ws.onopen = () => {
+            if (gen !== generation || closing || !globalStream) return
+            attempts = 0
+            h.setStatus("recording")
+            const rec = new MediaRecorder(globalStream, { mimeType: mime })
+            rec.ondataavailable = (e) => {
+                if (e.data.size > 0 && ws.readyState === WebSocket.OPEN) ws.send(e.data)
+            }
+            rec.start(500)
+            globalMediaRecorder = rec
+            // Deepgram drops idle sockets; this keeps a quiet stretch from ending the transcript
+            keepAliveTimer = setInterval(() => {
+                if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "KeepAlive" }))
+            }, 8000)
+        }
+
+        ws.onmessage = (m) => {
+            if (gen !== generation) return
+            let msg
+            try { msg = JSON.parse(m.data) } catch { return }
+            if (msg.type !== "Results" || msg.is_final === false) return
+            const line = msg.channel?.alternatives?.[0]?.transcript?.trim()
+            if (!line) return
+            const speaker = h.speaker()
+            const time = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+            globalSegments.push({ t: Date.now(), speaker, text: line })
+            globalTranscript += `[${time}] ${speaker}: ${line}\n`
+            h.onText()
+        }
+
+        ws.onerror = () => { /* onclose follows and decides what to do */ }
+
+        ws.onclose = (ev) => {
+            if (gen !== generation || closing) return
+            stopSocket()
+            // 1008 / 4xx close codes mean the credentials were refused: retrying the same way won't help
+            if (ev.code === 1008 || ev.code === 4001 || ev.code === 4401) {
+                return fail("Live captions were refused by the speech service. Check the Deepgram key on the server.")
+            }
+            if (!h.roomConnected() || attempts >= 5) return fail("Live captions disconnected. Press Retry to reconnect.")
+            attempts++
+            h.setStatus("starting")
+            reconnectTimer = setTimeout(() => { void startTranscription(h) }, Math.min(1000 * 2 ** attempts, 15000))
+        }
+    } catch (e) {
+        fail(e instanceof Error ? e.message : "Couldn't start live captions.")
+    }
 }
 
 const MeetingRoomInner = ({ onDisconnect, roomName, title, startedAt }: Pick<MeetingRoomProps, "onDisconnect" | "roomName" | "title" | "startedAt">) => {
     const room = useRoomContext()
     const { localParticipant } = useLocalParticipant()
-    
-    const [status, setStatus] = useState<"starting" | "recording" | "error">("starting")
-    const [errorMessage, setErrorMessage] = useState<string>("")
-    const [audioChunksSent, setAudioChunksSent] = useState(0)
-    const [transcriptLength, setTranscriptLength] = useState(0)
-    const hasInitializedRef = useRef(false)
 
+    const [status, setStatus] = useState<DgStatus>("starting")
+    const [errorMessage, setErrorMessage] = useState<string>("")
+    const [, setTick] = useState(0)
+
+    // read the latest name / connection state at the moment a line arrives
+    const nameRef = useRef("Speaker")
+    useEffect(() => { nameRef.current = localParticipant?.name || localParticipant?.identity || "Speaker" }, [localParticipant])
+    const roomRef = useRef(room)
+    useEffect(() => { roomRef.current = room }, [room])
+
+    const hooks = useRef<Hooks>({
+        setStatus: (st, message) => { setStatus(st); setErrorMessage(message ?? "") },
+        onText: () => setTick((n) => n + 1),
+        speaker: () => nameRef.current,
+        roomConnected: () => roomRef.current.state === ConnectionState.Connected,
+    })
+
+    const retry = () => {
+        attempts = 0
+        void startTranscription(hooks.current)
+    }
+
+    // Start once when the room is joined. The room-disconnect handler below is the only place that stops it.
+    const started = useRef(false)
     useEffect(() => {
-        // Only initialize ONCE per component lifecycle
-        if (hasInitializedRef.current) {
-            console.log("⏭️ Already initialized, skipping")
-            return
-        }
-        
-        // Check if another instance is initializing
-        if (isInitializing) {
-            console.log("⏭️ Another instance is initializing, waiting...")
-            const checkInterval = setInterval(() => {
-                if (!isInitializing && globalWebSocket && globalWebSocket.readyState === WebSocket.OPEN) {
-                    console.log("✅ Using existing connection")
-                    setStatus("recording")
-                    clearInterval(checkInterval)
-                    hasInitializedRef.current = true
-                }
-            }, 100)
-            return () => clearInterval(checkInterval)
-        }
-        
-        // If already running AND active, use it
-        if (globalWebSocket && globalWebSocket.readyState === WebSocket.OPEN && globalMediaRecorder) {
-            console.log("✅ Using existing Deepgram connection")
-            setStatus("recording")
-            hasInitializedRef.current = true
-            return
-        }
-        
-        // If globals exist but are closed/dead, clean them up first
-        if (globalWebSocket || globalMediaRecorder) {
-            console.log("🧹 Cleaning up stale globals before starting new connection")
-            cleanupGlobals()
-        }
-        
-        console.log("🎬 Starting NEW Deepgram instance...")
-        isInitializing = true
-        hasInitializedRef.current = true
-        
-        const initDeepgram = async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-                console.log("✅ Microphone OK")
-                
-                const response = await fetch('/api/deepgram-token')
-                const data = await response.json()
-                if (data.error) throw new Error(data.error)
-                console.log("✅ API key OK")
-                
-                const params = new URLSearchParams({
-                    'model': 'nova-2',
-                    'language': 'en-US',
-                    'smart_format': 'true',
-                })
-                
-                const wsUrl = `wss://api.deepgram.com/v1/listen?${params.toString()}`
-                const ws = new WebSocket(wsUrl, ['token', data.key])
-                
-                let chunkCount = 0
-                
-                ws.onopen = () => {
-                    console.log("✅✅✅ WebSocket CONNECTED")
-                    setStatus("recording")
-                    isInitializing = false
-                    
-                    const mimeType = 'audio/webm;codecs=opus'
-                    const mediaRecorder = new MediaRecorder(stream, { mimeType })
-                    
-                    mediaRecorder.ondataavailable = (event) => {
-                        if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
-                            chunkCount++
-                            ws.send(event.data)
-                            setAudioChunksSent(chunkCount)
-                        }
-                    }
-                    
-                    mediaRecorder.start(1000)
-                    globalMediaRecorder = mediaRecorder
-                    console.log("✅ MediaRecorder started")
-                }
-                
-                ws.onmessage = (message) => {
-                    const data = JSON.parse(message.data)
-                    
-                    if (data.type === 'Results') {
-                        const alternatives = data.channel?.alternatives || []
-                        
-                        if (alternatives.length > 0) {
-                            const transcript = alternatives[0]?.transcript
-                            
-                            if (transcript && transcript.trim()) {
-                                const time = new Date().toLocaleTimeString("en-US", { 
-                                    hour: "2-digit", 
-                                    minute: "2-digit" 
-                                })
-                                const speaker = localParticipant?.name || localParticipant?.identity || "Speaker"
-                                const entry = `[${time}] ${speaker}: ${transcript}\n`
-                                globalSegments.push({ t: Date.now(), speaker, text: transcript.trim() })
-                                
-                                console.log("✅ TRANSCRIPT:", transcript)
-                                globalTranscript += entry
-                                setTranscriptLength(globalTranscript.length)
-                            }
-                        }
-                    }
-                }
-                
-                ws.onerror = (error) => {
-                    console.error("❌ WebSocket error")
-                    setStatus("error")
-                    setErrorMessage("Connection error")
-                    isInitializing = false
-                }
-                
-                ws.onclose = (event) => {
-                    console.log("🔌 WebSocket closed:", event.code)
-                }
-                
-                globalWebSocket = ws
-                
-            } catch (error: unknown) {
-                console.error("❌ Init error:", error)
-                setStatus("error")
-                setErrorMessage(error instanceof Error ? error.message : String(error))
-                isInitializing = false
-            }
-        }
-        
-        initDeepgram()
-        
-        return () => {
-            console.log("🧹 Component cleanup (NOT stopping recording)")
-            // Don't cleanup here - let disconnect handler do it
-        }
-    }, [localParticipant])
+        if (started.current) return
+        started.current = true
+        // a stale connection from an earlier visit in this tab is dropped first
+        void startTranscription(hooks.current)
+    }, [])
 
     // Handle room disconnect - the ONLY place we stop recording
     useEffect(() => {
@@ -248,6 +230,7 @@ const MeetingRoomInner = ({ onDisconnect, roomName, title, startedAt }: Pick<Mee
             startedAt={startedAt}
             status={status}
             errorMessage={errorMessage}
+            onRetry={retry}
         />
     )
 }
@@ -272,6 +255,10 @@ export const MeetingRoom = ({ token, serverUrl, roomName, title, startedAt, onDi
             connect={true}
             video={true}
             audio={true}
+            onMediaDeviceFailure={(failure, kind) => {
+                const what = kind === "videoinput" ? "camera" : kind === "audioinput" ? "microphone" : "device"
+                toast.error(`Couldn't use your ${what}`, { description: failure === "PermissionDenied" ? "Allow access from the lock icon in the address bar, then try again." : failure === "NotFound" ? `No ${what} was found on this computer.` : "Another app may be using it." })
+            }}
             className="relative h-full w-full bg-[#150c11]"
             data-lk-theme="default"
             style={{

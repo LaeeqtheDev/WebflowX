@@ -15,10 +15,24 @@ export async function GET() {
 
         const apiKey = process.env.DEEPGRAM_API_KEY
         if (!apiKey) {
-            return NextResponse.json({ error: "Deepgram API key not configured" }, { status: 500 })
+            return NextResponse.json({ error: "Live captions aren't set up on the server yet (the Deepgram key is missing)." }, { status: 500 })
         }
 
         try {
+            // Preferred: a short-lived access token (needs only a key with Member rights)
+            const gr = await fetch("https://api.deepgram.com/v1/auth/grant", {
+                method: "POST",
+                headers: { Authorization: `Token ${apiKey}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ ttl_seconds: 300 }),
+            })
+            if (gr.ok) {
+                const g = await gr.json()
+                if (g?.access_token) return NextResponse.json({ key: g.access_token, type: "bearer" })
+            } else {
+                console.error("[deepgram] token grant failed:", gr.status, await gr.text().catch(() => ""))
+            }
+
+            // Fallback: a temporary project key
             let projectId = process.env.DEEPGRAM_PROJECT_ID
             if (!projectId) {
                 const pr = await fetch("https://api.deepgram.com/v1/projects", {
@@ -38,13 +52,14 @@ export async function GET() {
                 })
                 if (kr.ok) {
                     const k = await kr.json()
-                    if (k?.key) return NextResponse.json({ key: k.key })
+                    if (k?.key) return NextResponse.json({ key: k.key, type: "token" })
                 }
             }
-            // Never hand the browser the main key: if a temporary key can't be minted, transcription is unavailable.
-            console.error("[deepgram] could not mint a temporary key. The DEEPGRAM_API_KEY needs the Member role (or set DEEPGRAM_PROJECT_ID).")
+            // Never hand the browser the main key: if neither works, transcription is unavailable.
+            console.error("[deepgram] could not mint a browser credential. The DEEPGRAM_API_KEY needs the Member role (or higher).")
+            return NextResponse.json({ error: "Live captions aren't set up on the server: the Deepgram key needs the Member role. Ask the workspace owner to check it." }, { status: 503 })
         } catch (e) {
-            console.error("[deepgram] temp key error:", e)
+            console.error("[deepgram] token error:", e)
         }
 
         return NextResponse.json({ error: "Live captions are unavailable right now" }, { status: 503 })

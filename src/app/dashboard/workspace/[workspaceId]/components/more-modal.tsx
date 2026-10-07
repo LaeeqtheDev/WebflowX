@@ -52,7 +52,7 @@ const PLANS: {
         price: 0,
         tagline: "For trying WebflowX with a small crew.",
         icon: Flash20Regular,
-        features: ["1 workspace", "10 members", "5 channels", "10 documents", "5 meetings / month", "2 AI summaries", "10 personal notes", "20 workspace notes"],
+        features: ["1 workspace", "10 members", "5 channels", "10 documents", "5 meetings / month", "2 AI summaries", "10 personal notes", "20 workspace notes", "90 days of history"],
     },
     {
         key: "startup",
@@ -60,7 +60,7 @@ const PLANS: {
         price: 29,
         tagline: "For small teams that ship every week.",
         icon: Rocket20Regular,
-        features: ["3 workspaces", "25 members", "20 channels", "50 documents", "20 meetings / month", "10 AI summaries", "50 personal notes", "100 workspace notes"],
+        features: ["3 workspaces", "25 members", "20 channels", "50 documents", "20 meetings / month", "10 AI summaries", "50 personal notes", "100 workspace notes", "5 guests", "API + 5 incoming webhooks"],
     },
     {
         key: "growth",
@@ -69,7 +69,7 @@ const PLANS: {
         tagline: "For growing teams that run on process.",
         icon: Crown20Regular,
         popular: true,
-        features: ["10 workspaces", "100 members", "50 channels", "200 documents", "50 meetings / month", "30 AI summaries", "Unlimited personal notes", "Unlimited workspace notes"],
+        features: ["10 workspaces", "100 members", "50 channels", "200 documents", "50 meetings / month", "30 AI summaries", "Unlimited personal notes", "Unlimited workspace notes", "25 guests", "Outgoing webhooks + GitHub"],
     },
     {
         key: "enterprise",
@@ -77,7 +77,7 @@ const PLANS: {
         price: 249,
         tagline: "For organisations with no ceiling.",
         icon: Building20Regular,
-        features: ["Unlimited workspaces", "Unlimited members", "Unlimited channels", "Unlimited documents", "200 meetings / month", "150 AI summaries / month", "Unlimited notes", "Email support"],
+        features: ["Unlimited workspaces", "Unlimited members", "Unlimited channels", "Unlimited documents", "200 meetings / month", "150 AI summaries / month", "Unlimited notes", "Unlimited guests + integrations", "Email support"],
     },
 ]
 

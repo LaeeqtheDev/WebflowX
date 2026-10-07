@@ -10,6 +10,7 @@ import { assertDeltaBody, snippetOf } from "./validate";
 import { throttle } from "./rateLimit";
 import { notify } from "./notifications";
 import { emit } from "./integrations";
+import { historyCutoff } from "./limits";
 
 // @mentions are stored in the message body as text ops with attributes.mention = memberId
 const extractMentionIds = (body: string): string[] => {
@@ -250,17 +251,22 @@ export const get = query({
             return userMemo.get(id)!;
         };
 
+        // Free workspaces only see the last 90 days
+        const cutoff = allowed && ownerWorkspaceId ? historyCutoff((await ctx.db.get(ownerWorkspaceId))?.plan) : null;
+
+        let listing = ctx.db
+            .query("messages")
+            .withIndex("by_channel_id_parent_message_id_conversation_id", (q) =>
+                q
+                    .eq("channelId", args.channelId)
+                    .eq("parentMessagesId", args.parentMessageId)
+                    .eq("conversationId", _conversationId)
+            )
+            .order("desc");
+        if (cutoff !== null) listing = listing.filter((q) => q.gte(q.field("_creationTime"), cutoff));
+
         const results: PaginationResult<Doc<"messages">> = allowed
-            ? await ctx.db
-                  .query("messages")
-                  .withIndex("by_channel_id_parent_message_id_conversation_id", (q) =>
-                      q
-                          .eq("channelId", args.channelId)
-                          .eq("parentMessagesId", args.parentMessageId)
-                          .eq("conversationId", _conversationId)
-                  )
-                  .order("desc")
-                  .paginate(args.paginationOpts)
+            ? await listing.paginate(args.paginationOpts)
             : { page: [], isDone: true, continueCursor: "" };
 
         return {
@@ -675,12 +681,14 @@ export const search = query({
                 q.search("body", args.query).eq("workspaceId", args.workspaceId)
             )
             .take(40);
+        const searchCutoff = historyCutoff(workspace.plan);
 
         // never leak locked channels or other people's DMs through search
         const channelOk = new Map<string, boolean>();
         const convOk = new Map<string, boolean>();
         const visible: typeof found = [];
         for (const m of found) {
+            if (searchCutoff !== null && m._creationTime < searchCutoff) continue;
             if (m.conversationId) {
                 let ok = convOk.get(m.conversationId);
                 if (ok === undefined) {
