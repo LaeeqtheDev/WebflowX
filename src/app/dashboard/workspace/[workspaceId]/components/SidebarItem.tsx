@@ -7,18 +7,23 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const sidebarItemVariants = cva(
-    "flex items-center gap-2 justify-start font-normal h-8 max-md:h-10 px-3 text-sm overflow-hidden rounded-lg transition-colors",
+    "relative flex w-full items-center gap-2.5 justify-start font-normal h-8 max-md:h-10 px-3 text-[14px] overflow-hidden rounded-lg transition-colors",
     {
         variants: {
             variant: {
-                default: "text-white/75 hover:text-white hover:bg-white/10",
-                active: "text-white font-semibold bg-[#ff5018] hover:bg-[#ff5018] shadow-[0_6px_14px_-8px_rgba(255,80,24,0.9)]",
+                default: "text-white/70 hover:text-white hover:bg-white/[0.08]",
+                active: "text-white font-medium bg-white/[0.14] hover:bg-white/[0.16]",
             },
         },
         defaultVariants: {
             variant: "default"
         }
     }
+)
+
+// Orange marker on the left edge of the page you're on
+const ActiveMark = () => (
+    <span aria-hidden className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-[#ff5018]" />
 )
 
 interface SidebarItemProps {
@@ -37,20 +42,23 @@ export const SidebarItem = ({ label, id, icon: Icon, variant, onClick }: Sidebar
             <Button
                 variant={"trasnparent"}
                 size={"sm"}
+                aria-current={variant === "active" ? "page" : undefined}
                 className={cn(sidebarItemVariants({ variant }))}
                 onClick={onClick}
             >
+                {variant === "active" && <ActiveMark />}
                 <Icon className="size-[18px] shrink-0 opacity-90" />
-                <span className="text-sm truncate">{label}</span>
+                <span className="truncate">{label}</span>
             </Button>
         )
     }
 
     return (
         <Button asChild variant={"trasnparent"} size={"sm"} className={cn(sidebarItemVariants({ variant }))}>
-            <Link href={`/dashboard/workspace/${workspaceId}/channel/${id}`}>
+            <Link href={`/dashboard/workspace/${workspaceId}/channel/${id}`} aria-current={variant === "active" ? "page" : undefined}>
+                {variant === "active" && <ActiveMark />}
                 <Icon className="size-[18px] shrink-0 opacity-90" />
-                <span className="text-sm truncate">{label}</span>
+                <span className="truncate">{label}</span>
             </Link>
         </Button>
     )

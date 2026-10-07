@@ -13,12 +13,12 @@ import Link from "next/link";
 
 
 const userItemVariants = cva(
-    "flex items-center gap-1.5 justify-start font-normal h-7 max-md:h-10 px-[18px] text-sm overflow-hidden rounded-md transition-colors",
+    "relative flex w-full items-center gap-2.5 justify-start font-normal h-8 max-md:h-10 px-3 text-[14px] overflow-hidden rounded-lg transition-colors",
     {
         variants: {
             variant: {
-                default: "text-white/75 hover:text-white hover:bg-white/10",
-                active: "text-[#1b1017] font-medium bg-[#f7f2ee] hover:bg-[#f7f2ee]",
+                default: "text-white/70 hover:text-white hover:bg-white/[0.08]",
+                active: "text-white font-medium bg-white/[0.14] hover:bg-white/[0.16]",
             },
         },
         defaultVariants: {
@@ -33,27 +33,37 @@ interface UserItemProps {
     label?: string;
     image?: string;
     variant?: VariantProps<typeof userItemVariants>["variant"];
+    // number of unread direct messages from this person
+    unread?: number;
+    isSelf?: boolean;
 }
 
 
-export const UserItem= ({id, label = "Member", image, variant}: UserItemProps) => {
+export const UserItem= ({id, label = "Member", image, variant, unread = 0, isSelf}: UserItemProps) => {
     const workspaceId = useWorkspaceId()
     const fallbackInitial = label.charAt(0).toUpperCase()
     return (
         <Button
         variant={"trasnparent"}
-        className={cn(userItemVariants({variant: variant}))}
+        className={cn(userItemVariants({variant: variant}), unread > 0 && variant !== "active" && "text-white font-medium")}
         size={"sm"}
         asChild
         >
-            <Link href={`/dashboard/workspace/${workspaceId}/member/${id}`}>
-                <Avatar className="size-5 rounded-md mr-1">
-                    <AvatarImage className="rounded-md" src={image} alt={label}/>
-                    <AvatarFallback className="rounded-md bg-[#ff5018] text-white text-center text-xs">
+            <Link href={`/dashboard/workspace/${workspaceId}/member/${id}`} aria-current={variant === "active" ? "page" : undefined}>
+                {variant === "active" && <span aria-hidden className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-[#ff5018]" />}
+                <Avatar className="size-5 rounded-md">
+                    <AvatarImage className="rounded-md" src={image} alt=""/>
+                    <AvatarFallback className="rounded-md bg-[#ff5018] text-white text-center text-[11px]">
                         {fallbackInitial}
                     </AvatarFallback>
                 </Avatar>
-                <span className="text-sm truncate">{label}</span>
+                <span className="truncate">{label}</span>
+                {isSelf && <span className="shrink-0 text-xs text-white/45">you</span>}
+                {unread > 0 && (
+                    <span className="ml-auto flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-[#ff5018] px-1.5 text-[11px] font-bold leading-none text-white">
+                        {unread > 9 ? "9+" : unread}
+                    </span>
+                )}
             </Link>
 
         </Button>

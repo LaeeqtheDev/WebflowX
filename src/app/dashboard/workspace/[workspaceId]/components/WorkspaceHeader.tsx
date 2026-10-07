@@ -8,7 +8,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Doc } from "../../../../../../convex/_generated/dataModel"
-import { ChevronDown, ListFilter, SquarePen } from "lucide-react"
+import { ChevronDown, Search, SquarePen } from "lucide-react"
+import { useQuickSwitcher } from "@/features/workspaces/store/use-quick-switcher"
 import { Hint } from "./hints"
 import { PreferencesModal } from "./preferences-modal"
 import { useState } from "react"
@@ -24,6 +25,7 @@ interface WorkspaceHeaderProps {
 export const WorkspaceHeader = ({ workspace, isAdmin, canInvite, canEdit }: WorkspaceHeaderProps) => {
   const [preferencesOpen, setPreferencesOpen] =useState(false)
   const [inviteOpen, setInviteOpen] = useState(false)
+  const [, setSwitcher] = useQuickSwitcher()
   return (
    <>
    <InviteModal open={inviteOpen} setOpen={setInviteOpen}
@@ -80,16 +82,16 @@ export const WorkspaceHeader = ({ workspace, isAdmin, canInvite, canEdit }: Work
 
       {/* Action Buttons */}
       <div className="flex items-center gap-1 shrink-0">
-      <Hint label="Filter Conversations" side="bottom">
-        <Button variant="trasnparent" size="iconSm" className="rounded-lg hover:bg-white/10">
-          <ListFilter className="size-4 text-white/70" />
+      <Hint label="Jump to… (Ctrl K)" side="bottom">
+        <Button variant="trasnparent" size="iconSm" aria-label="Jump to a channel, person or page" className="rounded-lg hover:bg-white/10" onClick={() => setSwitcher({ open: true, mode: "all" })}>
+          <Search className="size-4 text-white/70" />
         </Button>
-        </Hint>
-        <Hint label="New Message" side="bottom">
-          <Button variant="trasnparent" size="iconSm" className="rounded-lg hover:bg-white/10">
-            <SquarePen className="size-4 text-white/70" />
-          </Button>
-        </Hint>
+      </Hint>
+      <Hint label="New message" side="bottom">
+        <Button variant="trasnparent" size="iconSm" aria-label="New message" className="rounded-lg hover:bg-white/10" onClick={() => setSwitcher({ open: true, mode: "dm" })}>
+          <SquarePen className="size-4 text-white/70" />
+        </Button>
+      </Hint>
       </div>
 
     </div>

@@ -16,6 +16,9 @@ import { useMemberId } from "@/hooks/use-member-id"
 import { useRouter } from "next/navigation"
 import { Lock, Megaphone } from "lucide-react"
 import { usePermissions } from "@/hooks/use-permissions"
+import { usePathname } from "next/navigation"
+import { useGetConversations } from "@/features/conversations/api/use-get-conversations"
+import { useQuickSwitcher } from "@/features/workspaces/store/use-quick-switcher"
 
 export const WorkSpaceSidebar = () => {
     const workspaceId = useWorkspaceId()
@@ -29,6 +32,9 @@ export const WorkSpaceSidebar = () => {
     const { data: members } = useGetMembers({ workspaceId })
     const [_isOpen, setIsOpen] = useCreateChannelModal()
     const perms = usePermissions()
+    const pathname = usePathname()
+    const { data: conversations } = useGetConversations({ workspaceId })
+    const [, setSwitcher] = useQuickSwitcher()
 
     if (memberLoading || workspaceLoading) {
         return (
@@ -48,7 +54,7 @@ export const WorkSpaceSidebar = () => {
     }
 
     return (
-        <div className="flex flex-col h-full bg-[#402633]">
+        <div className="flex flex-col h-full min-w-0 bg-[#402633] pb-4">
             <WorkspaceHeader workspace={workspace} isAdmin={perms.isAdmin} canInvite={perms.can("invite")} canEdit={perms.can("editWorkspace")} />
 
             <div className="flex flex-col px-2 mt-3 gap-0.5">
@@ -56,12 +62,14 @@ export const WorkSpaceSidebar = () => {
                     label="Threads"
                     icon={CommentMultiple20Regular}
                     id="threads"
+                    variant={pathname.endsWith("/threads") ? "active" : "default"}
                     onClick={() => router.push(`/dashboard/workspace/${workspaceId}/threads`)}
                 />
                 <SidebarItem
                     label="Drafts & Sent"
                     icon={Send20Regular}
                     id="drafts"
+                    variant={pathname.endsWith("/drafts") ? "active" : "default"}
                     onClick={() => router.push(`/dashboard/workspace/${workspaceId}/drafts`)}
                 />
             </div>
@@ -85,17 +93,26 @@ export const WorkSpaceSidebar = () => {
             <WorkspaceSection
                 label="Direct Messages"
                 hint="New Direct Message"
-                onNew={() => {}}
+                onNew={() => setSwitcher({ open: true, mode: "dm" })}
             >
-                {members?.map((item) => (
-                    <UserItem
-                        key={item._id}
-                        id={item._id}
-                        label={item.user.name}
-                        image={item.user.image}
-                        variant={item._id === memberId ? "active" : "default"}
-                    />
-                ))}
+                {[...(members ?? [])]
+                    // you first, then everyone else A to Z
+                    .sort((a, b) => (a._id === member._id ? -1 : b._id === member._id ? 1 : (a.user.name ?? "").localeCompare(b.user.name ?? "")))
+                    .map((item) => {
+                        // unread DMs from this person (conversation lookup is by the other member)
+                        const unread = conversations?.find((c) => c.otherMember?._id === item._id)?.unreadCount ?? 0
+                        return (
+                            <UserItem
+                                key={item._id}
+                                id={item._id}
+                                label={item.user.name}
+                                image={item.user.image}
+                                unread={unread}
+                                isSelf={item._id === member._id}
+                                variant={item._id === memberId ? "active" : "default"}
+                            />
+                        )
+                    })}
             </WorkspaceSection>
         </div>
     )

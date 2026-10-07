@@ -18,6 +18,7 @@ import { Loader } from "lucide-react"
 import { Id } from "../../../../../convex/_generated/dataModel"
 import dynamic from "next/dynamic"
 import { UsageWarning } from "./components/usage-warning"
+import { QuickSwitcher } from "./components/quick-switcher"
 
 const Thread = dynamic(() => import("./components/threads").then((m) => m.Thread), { ssr: false })
 const Profile = dynamic(() => import("@/features/members/components/profile").then((m) => m.Profile), { ssr: false })
@@ -55,6 +56,7 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
   if (isMobile) {
     return (
       <div className="h-dvh flex flex-col">
+        <QuickSwitcher />
         {/* Topbar */}
         <Toolbar onOpenMenu={() => setDrawerPath(pathname)} />
         <UsageWarning />
@@ -93,6 +95,7 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
 
   return(
   <div className="h-dvh flex flex-col">
+    <QuickSwitcher />
     {/* Topbar */}
     <Toolbar />
     <UsageWarning />
@@ -105,7 +108,7 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
           <ResizablePanel
             defaultSize={220}  // percentage of total width
             minSize={220}      // min width percentage
-            className="bg-[#402633] text-white overflow-auto border-r border-white/5"
+            className="bg-[#402633] text-white overflow-y-auto overflow-x-hidden border-r border-white/5"
           >
             <WorkSpaceSidebar />
           </ResizablePanel>
