@@ -2,7 +2,8 @@
 
 import { useGetChannel } from "@/features/channels/api/use-get-channel";
 import { useChannelId } from "@/hooks/use-channel-id";
-import { Loader, TriangleAlert, TriangleAlertIcon } from "lucide-react";
+import { Loader, Megaphone, TriangleAlert } from "lucide-react";
+import { usePermissions } from "@/hooks/use-permissions";
 import { cleanChannelName } from "../../components/channel-icon";
 import { Header } from "../../components/header";
 import { ChatInput } from "../../components/Chat-Input";
@@ -14,6 +15,7 @@ const ChannelIdPage = () => {
 
     const {results, status, loadMore} = useGetMessages({channelId})
     const {data: channel, isLoading: channelLoading} = useGetChannel({id: channelId})
+    const perms = usePermissions()
 
     if(channelLoading || status === "LoadingFirstPage") 
     return(
@@ -54,7 +56,14 @@ const ChannelIdPage = () => {
             isLoadingMore={status === "LoadingMore"}
             canLoadMore={status === "CanLoadMore"}
             />
-            <ChatInput placeholder={`Message ${cleanChannelName(channel.name)}`} />
+            {channel.readOnly && !perms.can("postInReadOnly") ? (
+                <div className="mx-5 mb-5 flex items-center gap-2.5 rounded-xl border border-[#381d2a]/12 bg-white px-4 py-3 text-sm text-[#1b1017]/65">
+                    <Megaphone className="size-4 shrink-0 text-[#ff5018]" />
+                    This is an announcement channel. Only admins and allowed roles can post. You can still reply in threads and react.
+                </div>
+            ) : (
+                <ChatInput placeholder={`Message ${cleanChannelName(channel.name)}`} />
+            )}
 
            
          

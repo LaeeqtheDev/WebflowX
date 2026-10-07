@@ -1,15 +1,17 @@
 "use client"
 
 import { useCallback } from "react"
-import { useConvex, useMutation } from "convex/react"
+import { useConvex } from "convex/react"
 import { toast } from "sonner"
+import { useUploader } from "@/lib/upload-photo"
+import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { api } from "../../../../../../../convex/_generated/api"
-import type { Id } from "../../../../../../../convex/_generated/dataModel"
 
 // Uploads an image to Convex storage and returns its URL (or null after showing an error).
 // Used by the toolbar button and by paste / drag-and-drop in the editor.
 export const useDocImageUpload = () => {
-    const generateUploadUrl = useMutation(api.upload.generateUploadUrl)
+    const { upload } = useUploader()
+    const workspaceId = useWorkspaceId()
     const convex = useConvex()
 
     return useCallback(async (file: File): Promise<string | null> => {
@@ -23,17 +25,14 @@ export const useDocImageUpload = () => {
         }
         const toastId = toast.loading("Uploading image...")
         try {
-            const uploadUrl = await generateUploadUrl()
-            const res = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": file.type }, body: file })
-            if (!res.ok) throw new Error("upload failed")
-            const { storageId } = await res.json()
-            const src = await convex.query(api.upload.getStorageUrl, { storageId: storageId as Id<"_storage"> })
+            const storageId = await upload(file, "doc", workspaceId)
+            const src = await convex.query(api.upload.getStorageUrl, { storageId })
             if (!src) throw new Error("no url")
             toast.success("Image added", { id: toastId })
             return src
-        } catch {
-            toast.error("Failed to upload image", { id: toastId })
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : "Failed to upload image", { id: toastId })
             return null
         }
-    }, [generateUploadUrl, convex])
+    }, [upload, workspaceId, convex])
 }

@@ -15,6 +15,7 @@ export const PLANS = {
         docs: 10,
         meetings: 5,
         aiSummaries: 2,
+        storageMb: 250,
     },
     startup: {
         name: "Startup",
@@ -27,6 +28,7 @@ export const PLANS = {
         docs: 50,
         meetings: 20,
         aiSummaries: 10,
+        storageMb: 5_000,
     },
     growth: {
         name: "Growth",
@@ -39,6 +41,7 @@ export const PLANS = {
         docs: 200,
         meetings: 50,
         aiSummaries: 30,
+        storageMb: 50_000,
     },
     enterprise: {
         name: "Enterprise",
@@ -51,6 +54,7 @@ export const PLANS = {
         docs: -1,
         meetings: -1,
         aiSummaries: -1,
+        storageMb: 1_000_000, // 1 TB fair use
     },
 }
 

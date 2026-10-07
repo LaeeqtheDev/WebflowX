@@ -38,6 +38,7 @@ export const Header = ({ title }: HeaderProps) => {
     const channelMembers = useQuery(api.channels.getMembers, channel?.isPrivate ? { id: channelId } : "skip")
     const workspaceMembers = useQuery(api.members.get, canManage && channel?.isPrivate ? { workspaceId } : "skip")
     const setAccess = useMutation(api.channels.setAccess)
+    const setReadOnly = useMutation(api.channels.setReadOnly)
 
     const [value, setValue] = useState(title)
     const [description, setDescription] = useState("")
@@ -195,6 +196,17 @@ export const Header = ({ title }: HeaderProps) => {
                                     </div>
                                 )}
                             </div>
+                        )}
+
+                        {canManage && channel && (
+                            <label className="px-5 py-4 bg-white rounded-xl border border-[#381d2a]/12 flex items-center justify-between gap-3 cursor-pointer">
+                                <span>
+                                    <span className="block text-sm font-semibold">Announcement channel (read-only)</span>
+                                    <span className="block text-xs text-[#1b1017]/55">Everyone can read and reply in threads; only roles allowed to post can start messages.</span>
+                                </span>
+                                <input type="checkbox" className="size-4 accent-[#ff5018]" checked={!!channel.readOnly}
+                                    onChange={(e) => run(() => setReadOnly({ id: channelId, readOnly: e.target.checked }), "Couldn't change channel mode")} />
+                            </label>
                         )}
 
                         {canManage && (

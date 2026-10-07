@@ -19,6 +19,21 @@ const schema = defineSchema({
         .index("email", ["email"])
         .index("phone", ["phone"]),
 
+    // every uploaded file we accept, so storage can be counted per workspace and checked
+    files: defineTable({
+        workspaceId: v.optional(v.id("workspaces")),
+        storageId: v.id("_storage"),
+        uploadedBy: v.id("users"),
+        kind: v.union(v.literal("image"), v.literal("file"), v.literal("doc"), v.literal("avatar")),
+        size: v.number(),
+        contentType: v.string(),
+        // set once a message uses it; unattached uploads are cleaned up by a cron
+        attached: v.optional(v.boolean()),
+    })
+        .index("by_storage_id", ["storageId"])
+        .index("by_workspace_id", ["workspaceId"])
+        .index("by_attached_creation", ["attached"]),
+
     auditLog: defineTable({
         workspaceId: v.id("workspaces"),
         actorId: v.id("members"),
@@ -43,6 +58,21 @@ const schema = defineSchema({
         // workspace profile
         image: v.optional(v.id("_storage")),
         description: v.optional(v.string()),
+        // bytes of uploaded files currently stored for this workspace (plan-capped)
+        storageBytes: v.optional(v.number()),
+        // custom roles the owner/admins define on top of moderator and member
+        customRoles: v.optional(
+            v.array(
+                v.object({
+                    id: v.string(),
+                    name: v.string(),
+                    baseRole: v.union(v.literal("moderator"), v.literal("member")),
+                    permissions: v.array(v.string()),
+                })
+            )
+        ),
+        // 2 once the owner has saved role permissions with the newer permission list
+        permsVersion: v.optional(v.number()),
         // what moderators / members are allowed to do (admins and the owner can always do everything)
         rolePermissions: v.optional(
             v.object({
@@ -56,6 +86,8 @@ const schema = defineSchema({
         userId: v.id("users"),
         workspaceId: v.id("workspaces"),
         role: v.union(v.literal("admin"), v.literal("moderator"), v.literal("member")),
+        // optional custom role (its permissions replace the base role's)
+        customRoleId: v.optional(v.string()),
     })
         .index("byUserId", ["userId"])
         .index("byWorkspaceId", ["workspaceId"])
@@ -68,6 +100,8 @@ const schema = defineSchema({
         // locked channel: only people listed here and roles with "view private channels" can open it
         isPrivate: v.optional(v.boolean()),
         memberIds: v.optional(v.array(v.id("members"))),
+        // announcement channel: everyone can read, only roles with "post in read-only channels" can write
+        readOnly: v.optional(v.boolean()),
     }).index("byWorkspaceId", ["workspaceId"]),
 
     conversations: defineTable({

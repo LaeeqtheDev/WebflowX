@@ -4,7 +4,9 @@ import { useCurrentUser } from "@/app/auth/api/user-current-user"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 import { useAuthActions } from "@convex-dev/auth/react"
-import { Loader, LogOut, UserPen } from "lucide-react"
+import { Download, Loader, LogOut, UserPen } from "lucide-react"
+import { toast } from "sonner"
+import { useDataExport } from "@/lib/export-data"
 import { useState } from "react"
 import { EditProfileModal } from "./edit-profile-modal"
 
@@ -12,6 +14,7 @@ export const UserButton = () => {
     const {data, isLoading} = useCurrentUser();
     const {signOut} = useAuthActions();
     const [editOpen, setEditOpen] = useState(false)
+    const { exportMine, busy, progress } = useDataExport()
 
     if(isLoading){
         return <Loader className="size-4 animate-spin text-white/60"/>
@@ -45,6 +48,17 @@ export const UserButton = () => {
                 <DropdownMenuItem onClick={() => setEditOpen(true)} className="h-10 rounded-lg cursor-pointer">
                     <UserPen className="size-4 mr-2" />
                     Edit profile
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                    disabled={busy}
+                    onSelect={(e) => {
+                        e.preventDefault()
+                        exportMine().then(() => toast.success("Your data was downloaded")).catch(() => toast.error("Couldn't export your data. Please try again."))
+                    }}
+                    className="h-10 rounded-lg cursor-pointer"
+                >
+                    {busy ? <Loader className="size-4 mr-2 animate-spin" /> : <Download className="size-4 mr-2" />}
+                    {busy ? progress || "Exporting…" : "Download my data"}
                 </DropdownMenuItem>
                 <DropdownMenuItem  onClick={()=> signOut()} className="h-10 rounded-lg cursor-pointer">
                     <LogOut className="size-4 mr-2" />

@@ -317,6 +317,14 @@ export const DocEditor = ({
 
     return (
         <div className="flex flex-col h-full min-h-0">
+            {(status === "reconnecting" || status === "disconnected") && (
+                <div role="status" className="flex shrink-0 items-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs font-medium text-amber-800">
+                    <Loader className="size-3.5 animate-spin" />
+                    {status === "reconnecting"
+                        ? "Connection lost. Reconnecting… keep typing, your changes are kept on this device and will sync automatically."
+                        : "You're offline. Changes stay on this device and will sync when the connection returns."}
+                </div>
+            )}
             {/* Also editing bar */}
             {others.length > 0 && (
                 <div className="flex items-center gap-2 px-4 py-1.5 bg-white border-b border-[#381d2a]/12 text-xs shrink-0">

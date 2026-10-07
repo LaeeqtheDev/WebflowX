@@ -96,18 +96,40 @@ export const update = mutation({
         const { member: actor, workspace } = await requireActor(ctx, target.workspaceId)
         if (!isAdminLike(workspace, actor)) throw new ConvexError("Only the owner or an admin can change roles")
         if (isOwner(workspace, target)) throw new ConvexError("The workspace owner's role can't be changed")
-        if (target.role === args.role) return args.id
+        if (target.role === args.role && !target.customRoleId) return args.id
 
         // Only the owner can make admins or change an admin's role
         if ((args.role === "admin" || target.role === "admin") && !isOwner(workspace, actor)) {
             throw new ConvexError("Only the workspace owner can promote or demote admins")
         }
 
-        await ctx.db.patch(args.id, { role: args.role })
+        await ctx.db.patch(args.id, { role: args.role, customRoleId: undefined })
         const targetUser = await ctx.db.get(target.userId)
         await logAudit(ctx, target.workspaceId, actor._id, "member.role", `${targetUser?.name ?? "A member"}: ${target.role} → ${args.role}`)
         return args.id;
     }
+})
+
+// Give a member a custom role (or clear it with null). Admins and the owner can't hold one.
+export const setCustomRole = mutation({
+    args: { id: v.id("members"), customRoleId: v.union(v.string(), v.null()) },
+    handler: async (ctx, args) => {
+        const target = await ctx.db.get(args.id)
+        if (!target) throw new ConvexError("Member not found")
+        const { member: actor, workspace } = await requireActor(ctx, target.workspaceId)
+        if (!isAdminLike(workspace, actor)) throw new ConvexError("Only the owner or an admin can assign roles")
+        if (isOwner(workspace, target) || target.role === "admin") throw new ConvexError("Admins and the owner already have every permission")
+        if (args.customRoleId === null) {
+            await ctx.db.patch(args.id, { customRoleId: undefined })
+        } else {
+            const role = workspace.customRoles?.find((r) => r.id === args.customRoleId)
+            if (!role) throw new ConvexError("Role not found")
+            await ctx.db.patch(args.id, { customRoleId: role.id, role: role.baseRole })
+        }
+        const targetUser = await ctx.db.get(target.userId)
+        await logAudit(ctx, target.workspaceId, actor._id, "member.customRole", `${targetUser?.name ?? "A member"}: ${args.customRoleId ? workspace.customRoles?.find((r) => r.id === args.customRoleId)?.name : "none"}`)
+        return args.id
+    },
 })
 
 export const remove = mutation({

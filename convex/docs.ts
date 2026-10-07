@@ -57,6 +57,7 @@ export const create = mutation({
             ).unique()
 
         if (!member) throw new Error("Unauthorized")
+        if (!(await can(ctx, member, "createDocs"))) throw new ConvexError("You don't have permission to create documents")
 
         const existingDocs = await ctx.db
             .query("docs")

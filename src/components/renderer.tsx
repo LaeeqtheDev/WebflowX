@@ -45,7 +45,7 @@ const Renderer = ({value}: RendererProps) => {
     const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
         const el = (e.target as HTMLElement).closest?.("span.mention") as HTMLElement | null;
         const id = el?.getAttribute("data-member-id");
-        if (id) {
+        if (id && id !== "everyone") {
             e.preventDefault();
             e.stopPropagation();
             onOpenProfile(id);

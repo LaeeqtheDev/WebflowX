@@ -3,11 +3,12 @@
 import "@livekit/components-styles"
 import {
     LiveKitRoom,
+    useConnectionState,
     useLocalParticipant,
     useRoomContext,
 } from "@livekit/components-react"
 import { useEffect, useRef, useState } from "react"
-import { DisconnectReason } from "livekit-client"
+import { ConnectionState, DisconnectReason } from "livekit-client"
 import { MeetingStage } from "./room-ui"
 import { TranscriptSegment, setLastSegments } from "../segments"
 
@@ -17,7 +18,7 @@ interface MeetingRoomProps {
     roomName: string
     title: string
     startedAt: number
-    onDisconnect: (transcript: string, reason: "left" | "removed" | "ended") => void
+    onDisconnect: (transcript: string, reason: "left" | "removed" | "ended" | "lost") => void
 }
 
 // Global singleton state
@@ -227,7 +228,8 @@ const MeetingRoomInner = ({ onDisconnect, roomName, title, startedAt }: Pick<Mee
                 const reason =
                     disconnectReason === DisconnectReason.PARTICIPANT_REMOVED ? "removed"
                         : disconnectReason === DisconnectReason.ROOM_DELETED ? "ended"
-                            : "left"
+                            : disconnectReason === DisconnectReason.CLIENT_INITIATED || disconnectReason === undefined ? "left"
+                                : "lost"
                 onDisconnect(transcriptToSend, reason)
             }, 500)
         }
@@ -250,6 +252,18 @@ const MeetingRoomInner = ({ onDisconnect, roomName, title, startedAt }: Pick<Mee
     )
 }
 
+// Shown over the call whenever LiveKit is reconnecting (it retries by itself), so the screen never just freezes.
+const ConnectionBanner = () => {
+    const state = useConnectionState()
+    if (state === ConnectionState.Connected || state === ConnectionState.Connecting) return null
+    const reconnecting = state === ConnectionState.Reconnecting || state === ConnectionState.SignalReconnecting
+    return (
+        <div role="status" className="pointer-events-none absolute left-1/2 top-4 z-50 -translate-x-1/2 rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-lg">
+            {reconnecting ? "Connection lost. Reconnecting…" : "Disconnected from the meeting"}
+        </div>
+    )
+}
+
 export const MeetingRoom = ({ token, serverUrl, roomName, title, startedAt, onDisconnect }: MeetingRoomProps) => {
     return (
         <LiveKitRoom
@@ -258,7 +272,7 @@ export const MeetingRoom = ({ token, serverUrl, roomName, title, startedAt, onDi
             connect={true}
             video={true}
             audio={true}
-            className="h-full w-full bg-[#150c11]"
+            className="relative h-full w-full bg-[#150c11]"
             data-lk-theme="default"
             style={{
                 "--lk-bg": "#2a1420",
@@ -274,6 +288,7 @@ export const MeetingRoom = ({ token, serverUrl, roomName, title, startedAt, onDi
                 "--lk-control-border-radius": "9999px",
             } as React.CSSProperties}
         >
+            <ConnectionBanner />
             <MeetingRoomInner onDisconnect={onDisconnect} roomName={roomName} title={title} startedAt={startedAt} />
         </LiveKitRoom>
     )

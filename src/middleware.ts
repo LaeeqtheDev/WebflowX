@@ -7,9 +7,14 @@ import {
 
 const isPublicPage = createRouteMatcher(["/", "/auth", "/join"])
 
+const isLegal = createRouteMatcher(["/terms", "/privacy"])
+
 const isApi = createRouteMatcher(["/api/(.*)"])
 
 export default convexAuthNextjsMiddleware(async (request) => {
+  // legal pages are public for everyone, signed in or not
+  if (isLegal(request)) return undefined;
+
   const authenticated = await isAuthenticatedNextjs();
 
   // API routes check auth themselves too, but unauthenticated callers get JSON 401, not a redirect

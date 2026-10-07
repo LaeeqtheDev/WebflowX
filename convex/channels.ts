@@ -47,6 +47,8 @@ export const create = mutation({
         isPrivate: v.optional(v.boolean()),
         // for locked channels: who else is let in (you are always added)
         memberIds: v.optional(v.array(v.id("members"))),
+        // announcement channel: everyone reads, only allowed roles post
+        readOnly: v.optional(v.boolean()),
     },
     handler: async (ctx, args) => {
         const { member } = await requirePermission(ctx, args.workspaceId, "createChannels", "You don't have permission to create channels")
@@ -85,6 +87,7 @@ export const create = mutation({
             workspaceId: args.workspaceId,
             isPrivate: args.isPrivate ? true : undefined,
             memberIds,
+            readOnly: args.readOnly ? true : undefined,
         })
         await logAudit(ctx, args.workspaceId, member._id, args.isPrivate ? "channel.create_private" : "channel.create", `#${parseName}`)
         return channelId;
@@ -168,6 +171,19 @@ export const setAccess = mutation({
         }
         await ctx.db.patch(args.id, { isPrivate: args.isPrivate ? true : undefined, memberIds })
         await logAudit(ctx, channel.workspaceId, member._id, args.isPrivate ? "channel.lock" : "channel.unlock", `#${channel.name}`)
+        return args.id
+    }
+})
+
+// Turn announcement mode on or off: everyone can read, only roles with "post in read-only channels" can write.
+export const setReadOnly = mutation({
+    args: { id: v.id("channels"), readOnly: v.boolean() },
+    handler: async (ctx, args) => {
+        const channel = await ctx.db.get(args.id);
+        if (!channel) throw new ConvexError("Channel not found");
+        const { member } = await requirePermission(ctx, channel.workspaceId, "manageChannels", "You don't have permission to change channels")
+        await ctx.db.patch(args.id, { readOnly: args.readOnly ? true : undefined })
+        await logAudit(ctx, channel.workspaceId, member._id, args.readOnly ? "channel.readonly_on" : "channel.readonly_off", `#${channel.name}`)
         return args.id
     }
 })

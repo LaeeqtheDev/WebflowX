@@ -180,7 +180,7 @@ export default function MeetingPage() {
         }
     }, [convex, saveSummary])
 
-    const handleDisconnect = useCallback(async (_transcript: string, reason: "left" | "removed" | "ended" = "left") => {
+    const handleDisconnect = useCallback(async (_transcript: string, reason: "left" | "removed" | "ended" | "lost" = "left") => {
         const meetingId = activeMeetingId
         const segments = takeLastSegments()
 
@@ -192,6 +192,7 @@ export default function MeetingPage() {
         if (meetingId) setSelectedMeetingId(meetingId)
         if (reason === "removed") toast.error("You were removed from the meeting by the host")
         if (reason === "ended") toast.info("The host ended the meeting")
+        if (reason === "lost") toast.error("You lost connection to the meeting. You can rejoin from the list.")
 
         // Save my part; the server tells us whether I was the last one in the call
         let ended = false

@@ -1,5 +1,6 @@
 import { useCreateMessage } from "@/features/messages/api/use-create-message";
-import { useGenerateUploadUrl } from "@/features/upload/api/use-generate-upload-url";
+import { useUploader } from "@/lib/upload-photo";
+import { errMsg } from "@/lib/errors";
 import { useChannelId } from "@/hooks/use-channel-id";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import dynamic from "next/dynamic"
@@ -35,7 +36,7 @@ export const ChatInput = ({placeholder, conversationId}: ChatInputProps) => {
 
   const {mutate: createMessage} = useCreateMessage()
   const [isPending, setIsPending] = useState(false)
-  const {mutate: GenerateUploadUrl} = useGenerateUploadUrl()
+  const { upload } = useUploader()
 
 
   const handleSubmit = async({
@@ -54,27 +55,7 @@ export const ChatInput = ({placeholder, conversationId}: ChatInputProps) => {
       }
 
       if(image){
-        const url = await GenerateUploadUrl({}, { throwError: true })
-
-        if(!url){
-          throw new Error("URL not found")
-        }
-
-        const result = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": image.type
-          },
-          body: image,
-        })
-
-
-        if(!result.ok){
-          throw new Error("Failed to upload the image")
-        }
-        const {storageId} = await result.json()
-
-        values.image = storageId
+        values.image = await upload(image, "image", workspaceId)
       }
 
     await createMessage(
@@ -83,7 +64,7 @@ export const ChatInput = ({placeholder, conversationId}: ChatInputProps) => {
 
     setEditorKey((prevKey) => prevKey +1)
   } catch (error){
-    toast.error("Failed to send the Message")
+    toast.error(errMsg(error, error instanceof Error && !error.message.includes("CONVEX") ? error.message : "Failed to send the Message"))
   }finally{
       setIsPending(false)
       editorRef?.current?.enable(true)

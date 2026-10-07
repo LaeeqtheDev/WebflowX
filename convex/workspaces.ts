@@ -6,6 +6,7 @@ import { requireActor, requirePermission, hasPermission, isOwner } from './permi
 import { logAudit } from './audit';
 import { Id } from './_generated/dataModel';
 import { auth } from './auth';
+import { assertPhoto, release } from './files';
 import { checkLimit, getPlan, PLANS } from './limits';
 
 const generateCode = () => {
@@ -129,12 +130,13 @@ export const update = mutation({
             patch.name = name
         }
         if (args.description !== undefined) patch.description = args.description.trim().slice(0, 300)
-        if (args.image) patch.image = args.image
+        if (args.image) {
+            await assertPhoto(ctx, args.image)
+            patch.image = args.image
+        }
 
         if (args.removeImage || args.image) {
-            if (workspace.image && workspace.image !== args.image) {
-                try { await ctx.storage.delete(workspace.image) } catch { /* already gone */ }
-            }
+            if (workspace.image && workspace.image !== args.image) await release(ctx, workspace.image)
         }
         await ctx.db.patch(args.id, { ...patch, ...(args.removeImage && !args.image ? { image: undefined } : {}) })
         await logAudit(ctx, args.id, member._id, "workspace.update", [patch.name && `name: ${patch.name}`, args.image && "new photo", args.removeImage && "photo removed", args.description !== undefined && "description"].filter(Boolean).join(", "))
@@ -228,6 +230,14 @@ export const purge = internalMutation({
             await ctx.db.delete(message._id)
         }
         if (messages.length === BATCH) more = true
+
+        // every remaining stored file (doc images, anything unattached): delete the data and the record
+        const fileRows = await ctx.db.query("files").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH)
+        for (const row of fileRows) {
+            try { await ctx.storage.delete(row.storageId) } catch { /* already gone */ }
+            await ctx.db.delete(row._id)
+        }
+        if (fileRows.length === BATCH) more = true
 
         const simple = [
             await ctx.db.query("sprints").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),

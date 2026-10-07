@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { useRouter } from "next/navigation"
-import { Camera, Loader, TrashIcon, Trash2, Crown, Shield, ShieldCheck } from "lucide-react"
+import { Camera, Loader, TrashIcon, Trash2, Crown, Shield, ShieldCheck, Download, Plus, Pencil } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "../../../../../../convex/_generated/api"
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,7 @@ import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { usePermissions, PermissionKey } from "@/hooks/use-permissions"
 import { usePanel } from "@/hooks/use-panel"
 import { usePhotoUpload } from "@/lib/upload-photo"
+import { useDataExport } from "@/lib/export-data"
 import { errMsg } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 import { useConfirm } from "../../hooks/use-confirm"
@@ -38,6 +39,11 @@ const PERMISSION_INFO: { key: PermissionKey; label: string; hint: string }[] = [
   { key: "editWorkspace", label: "Edit workspace", hint: "Name, photo and description" },
   { key: "moderateMeetings", label: "Moderate meetings", hint: "Mute, remove people and end calls for everyone" },
   { key: "manageContent", label: "Manage shared content", hint: "Edit or delete others' tasks, notes, sprints and docs" },
+  { key: "postInReadOnly", label: "Post in read-only channels", hint: "Write in announcement channels" },
+  { key: "mentionEveryone", label: "Use @everyone", hint: "Notify everyone who can see a channel" },
+  { key: "uploadFiles", label: "Upload files and images", hint: "Attach files and pictures to messages and docs" },
+  { key: "startMeetings", label: "Start meetings", hint: "Create new meetings" },
+  { key: "createDocs", label: "Create documents", hint: "Start new docs" },
 ]
 
 const ACTION_LABEL: Record<string, string> = {
@@ -55,6 +61,13 @@ const ACTION_LABEL: Record<string, string> = {
   "channel.lock": "Locked a channel",
   "channel.unlock": "Unlocked a channel",
   "channel.delete": "Deleted a channel",
+  "channel.create_private": "Created a locked channel",
+  "channel.readonly_on": "Made a channel read-only",
+  "channel.readonly_off": "Made a channel writable",
+  "role.create": "Created a custom role",
+  "role.update": "Edited a custom role",
+  "role.delete": "Deleted a custom role",
+  "member.customRole": "Assigned a custom role",
 }
 
 const RoleIcon = ({ role, isOwner }: { role: string; isOwner?: boolean }) =>
@@ -77,6 +90,10 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
 
   const updateWorkspace = useMutation(api.workspaces.update)
   const setRolePermissions = useMutation(api.permissions.setRolePermissions)
+  const saveCustomRole = useMutation(api.permissions.saveCustomRole)
+  const deleteCustomRole = useMutation(api.permissions.deleteCustomRole)
+  const { exportWorkspace, busy: exporting, progress } = useDataExport()
+  const [roleDraft, setRoleDraft] = useState<{ id?: string; name: string; baseRole: "moderator" | "member"; permissions: string[] } | null>(null)
   const { mutate: removeWorkspace, isPending: isRemoving } = useRemoveWorkspace()
 
   const [tab, setTab] = useState<Tab>("general")
@@ -205,6 +222,15 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                   )}
                 </form>
 
+                {perms.isAdmin && (
+                  <button disabled={exporting}
+                    onClick={() => exportWorkspace(workspaceId, workspace?.name ?? name).then(() => toast.success("Export downloaded")).catch((e) => toast.error(errMsg(e, "Export failed. Please try again.")))}
+                    className="flex items-center gap-x-2 px-5 py-4 bg-white rounded-xl border border-[#381d2a]/12 hover:bg-[#fbf9f7] text-[#1b1017] disabled:opacity-60">
+                    {exporting ? <Loader className="size-4 animate-spin" /> : <Download className="size-4" />}
+                    <span className="text-sm font-semibold">{exporting ? progress || "Exporting…" : "Export workspace data (JSON)"}</span>
+                  </button>
+                )}
+
                 {perms.isOwner && (
                   <button disabled={isRemoving} onClick={handleRemove}
                     className="flex items-center gap-x-2 px-5 py-4 bg-white rounded-xl border border-[#381d2a]/12 hover:bg-rose-50 text-rose-600">
@@ -233,7 +259,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                       </div>
                       <span className="flex items-center gap-1 text-xs font-semibold capitalize text-[#1b1017]/70">
                         <RoleIcon role={m.role} isOwner={m.isOwner} />
-                        {m.isOwner ? "Owner" : m.role}
+                        {m.isOwner ? "Owner" : rolePerms?.customRoles.find((r) => r.id === m.customRoleId)?.name ?? m.role}
                       </span>
                     </button>
                   ))}
@@ -265,6 +291,71 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                     </div>
                   ))}
                 </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <div>
+                    <p className="text-sm font-semibold text-[#1b1017]">Custom roles</p>
+                    <p className="text-xs text-[#1b1017]/55">Name a role, pick a rank and exactly what it can do. Assign it from a member&apos;s profile.</p>
+                  </div>
+                  <Button size="sm" variant="outline" className="rounded-lg" disabled={(rolePerms?.customRoles.length ?? 0) >= 10}
+                    onClick={() => setRoleDraft({ name: "", baseRole: "member", permissions: [] })}>
+                    <Plus className="size-4 mr-1" /> New role
+                  </Button>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {rolePerms?.customRoles.length === 0 && <p className="text-sm text-[#1b1017]/50">No custom roles yet.</p>}
+                  {rolePerms?.customRoles.map((r) => (
+                    <div key={r.id} className="flex items-center gap-3 bg-white rounded-xl border border-[#381d2a]/10 px-4 py-2.5">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold truncate">{r.name}</p>
+                        <p className="text-xs text-[#1b1017]/55">Ranks as {r.baseRole} · {r.permissions.length} permissions · {(members ?? []).filter((m) => m.customRoleId === r.id).length} people</p>
+                      </div>
+                      <Button size="icon" variant="ghost" aria-label="Edit role" onClick={() => setRoleDraft({ id: r.id, name: r.name, baseRole: r.baseRole, permissions: r.permissions })}><Pencil className="size-4" /></Button>
+                      <Button size="icon" variant="ghost" aria-label="Delete role" className="text-rose-600"
+                        onClick={() => deleteCustomRole({ workspaceId, id: r.id }).then(() => toast.success("Role deleted")).catch((e) => toast.error(errMsg(e, "Couldn't delete role")))}>
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
+                {roleDraft && (
+                  <form className="bg-white rounded-xl border border-[#ff5018]/40 p-4 flex flex-col gap-3"
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      saveCustomRole({ workspaceId, ...roleDraft })
+                        .then(() => { toast.success("Role saved"); setRoleDraft(null) })
+                        .catch((err) => toast.error(errMsg(err, "Couldn't save role")))
+                    }}>
+                    <div className="grid gap-3 sm:grid-cols-[1fr_160px]">
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="role-name">Role name</Label>
+                        <Input id="role-name" value={roleDraft.name} onChange={(e) => setRoleDraft({ ...roleDraft, name: e.target.value })} maxLength={30} placeholder="e.g. Support lead" required />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="role-rank">Ranks as</Label>
+                        <select id="role-rank" value={roleDraft.baseRole} onChange={(e) => setRoleDraft({ ...roleDraft, baseRole: e.target.value as "moderator" | "member" })}
+                          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm">
+                          <option value="member">Member</option>
+                          <option value="moderator">Moderator</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid gap-x-4 gap-y-2 sm:grid-cols-2">
+                      {PERMISSION_INFO.map((p) => (
+                        <label key={p.key} className="flex items-start gap-2 text-sm cursor-pointer">
+                          <input type="checkbox" className="mt-0.5 size-4 accent-[#ff5018]" checked={roleDraft.permissions.includes(p.key)}
+                            onChange={(e) => setRoleDraft({ ...roleDraft, permissions: e.target.checked ? [...roleDraft.permissions, p.key] : roleDraft.permissions.filter((k) => k !== p.key) })} />
+                          <span>{p.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" variant="outline" onClick={() => setRoleDraft(null)}>Cancel</Button>
+                      <Button type="submit" className="bg-[#ff5018] hover:bg-[#e6430f] text-white">Save role</Button>
+                    </div>
+                  </form>
+                )}
               </div>
             )}
 

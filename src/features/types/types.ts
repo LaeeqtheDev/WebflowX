@@ -1,1 +1,1 @@
-export type SignInFlow = "signIn" | "signUp" | "resetPassword";
+export type SignInFlow = "signIn" | "signUp" | "resetPassword" | "verify";

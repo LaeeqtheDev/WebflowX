@@ -7,6 +7,7 @@ import { useWorkspaceId } from "@/hooks/use-workspace-id"
 export type PermissionKey =
   | "createChannels" | "manageChannels" | "viewPrivateChannels" | "deleteMessages"
   | "manageMembers" | "invite" | "editWorkspace" | "moderateMeetings" | "manageContent"
+  | "postInReadOnly" | "mentionEveryone" | "uploadFiles" | "startMeetings" | "createDocs"
 
 // Single source of truth for UI gates. The server re-checks everything; this only decides what to show.
 export const usePermissions = (workspaceIdArg?: Id<"workspaces">) => {

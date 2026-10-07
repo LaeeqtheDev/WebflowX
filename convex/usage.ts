@@ -90,6 +90,8 @@ export const get = query({
                 docs: { current: docs.length, limit: limits.docs },
                 meetings: { current: meetings.length, limit: limits.meetings },
                 aiSummaries: { current: aiSummaries.length, limit: limits.aiSummaries },
+                // megabytes of uploaded files
+                storage: { current: Math.round(((workspace.storageBytes ?? 0) / (1024 * 1024)) * 10) / 10, limit: limits.storageMb },
                 workspaces: {
                     current: ownedWorkspaces.length,
                     limit: ownedWorkspaces.length === 0 ? limits.workspaces : bestWorkspaceLimit,

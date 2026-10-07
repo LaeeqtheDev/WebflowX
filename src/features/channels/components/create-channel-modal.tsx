@@ -27,6 +27,7 @@ export const CreateChannelModal = () => {
     const workspaceId = useWorkspaceId()
     const { mutate, isPending } = useCreateChannel()
     const [isPrivate, setIsPrivate] = useState(false)
+    const [readOnly, setReadOnly] = useState(false)
     const [picked, setPicked] = useState<Id<"members">[]>([])
     const members = useQuery(api.members.get, isOpen && isPrivate ? { workspaceId } : "skip")
     const me = useQuery(api.permissions.mine, isOpen && isPrivate ? { workspaceId } : "skip")
@@ -34,7 +35,7 @@ export const CreateChannelModal = () => {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         mutate(
-            { name, workspaceId, isPrivate, memberIds: isPrivate ? picked : undefined },
+            { name, workspaceId, isPrivate, readOnly, memberIds: isPrivate ? picked : undefined },
             {
                 onSuccess: (id) => {
                     toast.success("Channel created successfully!")
@@ -57,6 +58,7 @@ export const CreateChannelModal = () => {
     const handleClose = () => {
         setName("")
         setIsPrivate(false)
+        setReadOnly(false)
         setPicked([])
         setIsOpen(false)
     }
@@ -83,6 +85,13 @@ export const CreateChannelModal = () => {
                         <span>
                             <span className="flex items-center gap-1.5 text-sm font-semibold"><Lock className="size-3.5 text-[#ff5018]" /> Make this channel locked</span>
                             <span className="block text-xs text-[#1b1017]/55">Only people you choose (and roles allowed to see locked channels) can open it.</span>
+                        </span>
+                    </label>
+                    <label className="flex items-start gap-3 rounded-xl border border-[#381d2a]/12 bg-[#fbf9f7] px-4 py-3 cursor-pointer">
+                        <input type="checkbox" className="mt-1 size-4 accent-[#ff5018]" checked={readOnly} onChange={(e) => setReadOnly(e.target.checked)} disabled={isPending} />
+                        <span>
+                            <span className="block text-sm font-semibold">Announcement channel (read-only)</span>
+                            <span className="block text-xs text-[#1b1017]/55">Everyone can read; only admins and allowed roles can post.</span>
                         </span>
                     </label>
                     {isPrivate && (

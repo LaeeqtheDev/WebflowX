@@ -4,7 +4,8 @@ import { auth } from "./auth";
 import { Id, Doc } from "./_generated/dataModel";
 import { paginationOptsValidator, PaginationResult } from "convex/server";
 import { ConvexError } from "convex/values";
-import { canViewChannel, can, canAccessChannel } from "./permissions";
+import { canViewChannel, can, canAccessChannel, requireActor, hasPermission } from "./permissions";
+import { claim, release } from "./files";
 
 // @mentions are stored in the message body as text ops with attributes.mention = memberId
 const extractMentionIds = (body: string): string[] => {
@@ -38,7 +39,36 @@ const notifyMentions = async (
     const channel = await ctx.db.get(opts.channelId);
     const workspace = await ctx.db.get(opts.workspaceId);
     if (!channel || !workspace) return;
-    for (const raw of extractMentionIds(opts.body)) {
+    const ids = extractMentionIds(opts.body);
+
+    // @everyone / @channel: ping everyone who can open this channel (only for roles allowed to)
+    if (ids.includes("everyone")) {
+        const sender = await ctx.db.get(opts.senderId);
+        if (sender && hasPermission(workspace, sender, "mentionEveryone")) {
+            const everyone = await ctx.db
+                .query("members")
+                .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", opts.workspaceId))
+                .take(500);
+            for (const target of everyone) {
+                if (target._id === opts.senderId || opts.alreadyNotified.has(target._id)) continue;
+                if (!canAccessChannel(workspace, target, channel)) continue;
+                opts.alreadyNotified.add(target._id);
+                await ctx.db.insert("notifications", {
+                    workspaceId: opts.workspaceId,
+                    recipientId: target._id,
+                    senderId: opts.senderId,
+                    type: "mention",
+                    messageId: opts.messageId,
+                    channelId: opts.channelId,
+                    body: opts.body,
+                    read: false,
+                });
+            }
+        }
+    }
+
+    for (const raw of ids) {
+        if (raw === "everyone") continue;
         const id = ctx.db.normalizeId("members", raw);
         if (!id || id === opts.senderId || opts.alreadyNotified.has(id)) continue;
         const target = await ctx.db.get(id);
@@ -137,13 +167,7 @@ export const deleteMessageCascade = async (
     for (const reaction of reactions) await ctx.db.delete(reaction._id);
 
     for (const fileId of [message.image, message.file]) {
-        if (fileId) {
-            try {
-                await ctx.storage.delete(fileId);
-            } catch {
-                // file already gone
-            }
-        }
+        if (fileId) await release(ctx, fileId);
     }
 
     await ctx.db.delete(message._id);
@@ -342,14 +366,35 @@ export const create = mutation({
             throw new ConvexError("You don't have access to this channel");
         }
 
+        // announcement channels: only roles allowed to post can start a message (replies in threads are open)
+        if (args.channelId && !args.parentMessageId) {
+            const ch = await ctx.db.get(args.channelId);
+            const ws = await ctx.db.get(args.workspaceId);
+            if (ch?.readOnly && ws && !hasPermission(ws, member, "postInReadOnly")) {
+                throw new ConvexError("This is a read-only channel. Only admins and allowed roles can post here.");
+            }
+        }
+
+        // attachments must be files this member uploaded to this workspace (type, size and storage cap were checked on upload)
+        let fileName = args.fileName, fileType = args.fileType, fileSize = args.fileSize;
+        if (args.image) await claim(ctx, args.image, args.workspaceId, userId);
+        if (args.file) {
+            const row = await claim(ctx, args.file, args.workspaceId, userId);
+            fileType = row.contentType;
+            fileSize = row.size;
+            fileName = (fileName ?? "file").slice(0, 200);
+        } else {
+            fileName = undefined; fileType = undefined; fileSize = undefined;
+        }
+
         const messageId = await ctx.db.insert("messages", {
             memberId: member._id,
             body: args.body,
             image: args.image,
             file: args.file,
-            fileName: args.fileName,
-            fileType: args.fileType,
-            fileSize: args.fileSize,
+            fileName,
+            fileType,
+            fileSize,
             channelId: args.channelId,
             workspaceId: args.workspaceId,
             conversationId: _conversationId,

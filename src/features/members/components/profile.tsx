@@ -12,7 +12,7 @@ import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { toast } from "sonner"
 import { useConfirm } from "@/app/dashboard/workspace/hooks/use-confirm"
 import { useRouter } from "next/navigation"
-import { useMutation } from "convex/react"
+import { useMutation, useQuery } from "convex/react"
 import { api } from "../../../../convex/_generated/api"
 import { usePermissions } from "@/hooks/use-permissions"
 import { errMsg } from "@/lib/errors"
@@ -54,6 +54,8 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
     )
     const transferOwnership = useMutation(api.workspaces.transferOwnership)
     const perms = usePermissions()
+    const rolePerms = useQuery(api.permissions.rolePermissions, perms.isAdmin ? { workspaceId } : "skip")
+    const setCustomRole = useMutation(api.members.setCustomRole)
     const { data: currentMember, isLoading: isLoadingCurrentMember } = useCurrentMember({ workspaceId })
     const { data: member, isLoading: isLoadingMember } = useGetMember({ id: memberId })
     const { mutate: updateMember, isPending: isUpdatingMember } = useUpdateMember()
@@ -151,6 +153,8 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
     const isSelf = currentMember?._id === memberId
     const isTargetOwner = member.isOwner
     const targetIsAdmin = member.role === "admin"
+    const customRoles = rolePerms?.customRoles ?? []
+    const customRoleName = customRoles.find((r) => r.id === member.customRoleId)?.name
     // admins/owner manage roles; only the owner touches admins. Removal needs the manageMembers permission.
     const canChangeRole = perms.isAdmin && (perms.isOwner || !targetIsAdmin)
     const canRemove = perms.can("manageMembers") && (perms.isOwner || !targetIsAdmin) && (perms.role !== "moderator" || member.role === "member")
@@ -183,7 +187,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
 
                     {member.user.title && <p className="text-sm text-[#1b1017]/60 mt-0.5">{member.user.title}</p>}
                     <span className="mt-2 w-fit text-[11px] font-semibold uppercase tracking-wide rounded-full px-2 py-0.5 bg-[#ff5018]/10 text-[#c2370d]">
-                        {isTargetOwner ? "Owner" : member.role}
+                        {isTargetOwner ? "Owner" : customRoleName ?? member.role}
                     </span>
                     {member.user.bio && <p className="text-sm text-[#1b1017]/75 mt-3 whitespace-pre-wrap">{member.user.bio}</p>}
 
@@ -209,6 +213,30 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                                             {perms.isOwner && <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>}
                                             <DropdownMenuRadioItem value="moderator">Moderator</DropdownMenuRadioItem>
                                             <DropdownMenuRadioItem value="member">Member</DropdownMenuRadioItem>
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
+                            {canChangeRole && !targetIsAdmin && customRoles.length > 0 && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant={"outline"} className="w-full rounded-lg border-[#381d2a]/15">
+                                            {customRoleName ?? "Custom role: none"} <ChevronDown className="size-4 ml-2 text-[#ff5018]" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-full rounded-xl p-1.5">
+                                        <DropdownMenuRadioGroup
+                                            value={member.customRoleId ?? "none"}
+                                            onValueChange={(id) =>
+                                                setCustomRole({ id: memberId, customRoleId: id === "none" ? null : id })
+                                                    .then(() => toast.success("Role updated"))
+                                                    .catch((e) => toast.error(errMsg(e, "Failed to update role")))
+                                            }
+                                        >
+                                            <DropdownMenuRadioItem value="none">No custom role</DropdownMenuRadioItem>
+                                            {customRoles.map((r) => (
+                                                <DropdownMenuRadioItem key={r.id} value={r.id}>{r.name}</DropdownMenuRadioItem>
+                                            ))}
                                         </DropdownMenuRadioGroup>
                                     </DropdownMenuContent>
                                 </DropdownMenu>

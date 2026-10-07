@@ -6,7 +6,7 @@ import { mutation } from "../../../../convex/_generated/server";
 
 
 
-type RequestType = {name: string; workspaceId: Id<"workspaces">; isPrivate?: boolean; memberIds?: Id<"members">[]}; 
+type RequestType = {name: string; workspaceId: Id<"workspaces">; isPrivate?: boolean; readOnly?: boolean; memberIds?: Id<"members">[]}; 
 
 type ResponseType = Id<"channels"> | null
 

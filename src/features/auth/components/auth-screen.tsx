@@ -7,6 +7,7 @@ import { gsap } from "@/components/landing/gsap"
 import { SignInFlow } from "../../types/types"
 import { SignInCard } from "./SignInCard"
 import { SignUpCard } from "./SignUpCard"
+import { ResetPasswordCard, VerifyEmailCard } from "./code-cards"
 
 const copy = {
     signIn: {
@@ -21,6 +22,7 @@ const copy = {
 
 export const AuthScreen = () => {
     const [state, setState] = useState<SignInFlow>("signIn")
+    const [email, setEmail] = useState("")
     const root = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -101,7 +103,10 @@ export const AuthScreen = () => {
                     <span className="text-lg font-semibold tracking-tight text-[#1b1017]">WebflowX</span>
                 </div>
                 <div className="a-in mx-auto w-full max-w-[420px]">
-                    {state === "signIn" ? <SignInCard setState={setState} /> : <SignUpCard setState={setState} />}
+                    {state === "signIn" && <SignInCard setState={setState} onEmail={setEmail} />}
+                    {state === "signUp" && <SignUpCard setState={setState} onEmail={setEmail} />}
+                    {state === "verify" && <VerifyEmailCard email={email} setState={setState} />}
+                    {state === "resetPassword" && <ResetPasswordCard initialEmail={email} setState={setState} />}
                 </div>
             </main>
         </div>

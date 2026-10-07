@@ -14,7 +14,7 @@ import { useCreateChannelModal } from "@/features/channels/store/use-create-chan
 import { useChannelId } from '@/hooks/use-channel-id'
 import { useMemberId } from "@/hooks/use-member-id"
 import { useRouter } from "next/navigation"
-import { Lock } from "lucide-react"
+import { Lock, Megaphone } from "lucide-react"
 import { usePermissions } from "@/hooks/use-permissions"
 
 export const WorkSpaceSidebar = () => {
@@ -75,7 +75,7 @@ export const WorkSpaceSidebar = () => {
                     <SidebarItem
                         key={item._id}
                         label={cleanChannelName(item.name)}
-                        icon={item.isPrivate ? Lock : channelIcon(item.name)}
+                        icon={item.isPrivate ? Lock : item.readOnly ? Megaphone : channelIcon(item.name)}
                         id={item._id}
                         variant={channelId === item._id ? "active" : "default"}
                     />

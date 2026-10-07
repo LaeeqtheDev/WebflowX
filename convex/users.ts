@@ -1,6 +1,7 @@
 import { v, ConvexError } from "convex/values"
 import { auth } from "./auth";
 import { mutation, query } from "./_generated/server";
+import { assertPhoto } from "./files";
 
 export const current = query({
     args:{},
@@ -38,6 +39,7 @@ export const updateProfile = mutation({
         if (args.title !== undefined) patch.title = args.title.trim().slice(0, 80)
         if (args.bio !== undefined) patch.bio = args.bio.trim().slice(0, 300)
         if (args.imageStorageId) {
+            await assertPhoto(ctx, args.imageStorageId)
             const url = await ctx.storage.getUrl(args.imageStorageId)
             if (!url) throw new ConvexError("Couldn't read the uploaded photo")
             patch.image = url

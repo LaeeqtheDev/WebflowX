@@ -12,9 +12,10 @@ import { useAuthActions } from "@convex-dev/auth/react";
 
 interface SignUpCardProps {
   setState: (state: SignInFlow) => void;
+  onEmail: (email: string) => void;
 }
 
-export const SignUpCard = ({ setState }: SignUpCardProps) => {
+export const SignUpCard = ({ setState, onEmail }: SignUpCardProps) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,8 +33,16 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
     }
 
     setPending(true);
+    setError("");
     signIn("password", { name, email, password, flow: "signUp" })
-      .catch(() => setError("Failed to sign up. Please try again."))
+      .then((res) => {
+        // email verification is on: a code was emailed, ask for it
+        if (res && res.signingIn === false) {
+          onEmail(email);
+          setState("verify");
+        }
+      })
+      .catch(() => setError("Failed to sign up. This email may already be registered, or the password is under 8 characters."))
       .finally(() => setPending(false));
   };
 
@@ -103,7 +112,13 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
         </Button>
       </div>
 
-      <p className="mt-8 text-center text-sm text-[#1b1017]/65">
+      <p className="mt-6 text-center text-xs text-[#1b1017]/55">
+        By continuing you agree to our{" "}
+        <Link href="/terms" className="underline underline-offset-2 hover:text-[#ff5018]">Terms</Link> and{" "}
+        <Link href="/privacy" className="underline underline-offset-2 hover:text-[#ff5018]">Privacy Policy</Link>.
+      </p>
+
+      <p className="mt-5 text-center text-sm text-[#1b1017]/65">
         Already have an account?{" "}
         <button
           type="button"

@@ -5,6 +5,7 @@ import { wrap } from "./landing/tokens";
 const cols = [
   { title: "Product", links: [["Features", "#features"], ["Pricing", "#pricing"], ["FAQ", "#faq"]] },
   { title: "Company", links: [["Merger", "#merger"], ["Journey", "#timeline"], ["Team", "#team"]] },
+  { title: "Legal", links: [["Terms of Service", "/terms"], ["Privacy Policy", "/privacy"]] },
   { title: "Account", links: [["Log in", "/auth"], ["Start free", "/auth"]] },
 ];
 
@@ -12,7 +13,7 @@ export default function Footer() {
   return (
     <footer className="w-full bg-[#381d2a] text-white/60">
       <div className={`${wrap} py-16`}>
-        <div className="grid gap-12 md:grid-cols-5">
+        <div className="grid gap-12 md:grid-cols-6">
           <div className="md:col-span-2">
             <div className="flex items-center gap-3">
               <Image src="/logo.png" alt="WebflowX" width={32} height={32} className="h-8 w-8 rounded-lg" />

@@ -10,6 +10,7 @@ import {
 } from "react";
 import Quill, { type QuillOptions } from "quill";
 import "./mention-blot";
+import { usePermissions } from "@/hooks/use-permissions";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useGetMembers } from "@/features/members/api/use-get-members";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ interface EditorProps {
     disabled?: boolean;
     innerRef?: MutableRefObject<Quill | null>;
     variant?: "create" | "update";
+    allowEveryone?: boolean;
 }
 
 const FORMATTING_COMMANDS = [
@@ -166,7 +168,7 @@ const formatFileSize = (bytes: number) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
-type MentionMember = { _id: string; user?: { name?: string | null; image?: string | null } | null };
+type MentionMember = { _id: string; special?: string; user?: { name?: string | null; image?: string | null } | null };
 
 const Editor = ({
     onCancel,
@@ -176,6 +178,7 @@ const Editor = ({
     disabled = false,
     innerRef,
     variant = "create",
+    allowEveryone = false,
 }: EditorProps) => {
     const [text, setText] = useState("");
     const [isToolbarVisible, setIsToolbarVisible] = useState(true);
@@ -190,6 +193,8 @@ const Editor = ({
     // @mentions
     const workspaceId = useWorkspaceId();
     const { data: members } = useGetMembers({ workspaceId });
+    const perms = usePermissions();
+    const canPingEveryone = allowEveryone && perms.can("mentionEveryone");
     const [mention, setMention] = useState<{ query: string; start: number } | null>(null);
     const [mentionSel, setMentionSel] = useState(0);
     const mentionRef = useRef<{ query: string; start: number } | null>(null);
@@ -199,7 +204,13 @@ const Editor = ({
     const mentionMatches: MentionMember[] = (() => {
         if (!mention) return [];
         const q = mention.query.toLowerCase();
-        return (members ?? [])
+        const specials: MentionMember[] = canPingEveryone
+            ? ([
+                  { _id: "everyone", special: "Notify everyone in this channel", user: { name: "everyone" } },
+                  { _id: "everyone", special: "Same as @everyone", user: { name: "channel" } },
+              ] as MentionMember[]).filter((m) => (m.user?.name ?? "").startsWith(q))
+            : [];
+        const people = (members ?? [])
             .filter((m) => (m.user?.name ?? "").toLowerCase().includes(q))
             .sort((a, b) => {
                 const an = (a.user?.name ?? "").toLowerCase().startsWith(q) ? 0 : 1;
@@ -207,6 +218,7 @@ const Editor = ({
                 return an - bn;
             })
             .slice(0, 6) as MentionMember[];
+        return [...specials, ...people];
     })();
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -547,7 +559,7 @@ const Editor = ({
                         </p>
                         {mentionMatches.map((m, i) => (
                             <button
-                                key={m._id}
+                                key={`${m._id}-${i}`}
                                 onMouseDown={(e) => {
                                     e.preventDefault();
                                     pickMention(m);
@@ -566,6 +578,7 @@ const Editor = ({
                                     )}
                                 </span>
                                 <span className="truncate text-sm font-medium">{m.user?.name}</span>
+                                {m.special && <span className="truncate text-xs text-[#1b1017]/45">{m.special}</span>}
                             </button>
                         ))}
                     </div>

@@ -12,9 +12,10 @@ import { useAuthActions } from "@convex-dev/auth/react";
 
 interface SignInCardProps {
   setState: (state: SignInFlow) => void;
+  onEmail: (email: string) => void;
 }
 
-export const SignInCard = ({ setState }: SignInCardProps) => {
+export const SignInCard = ({ setState, onEmail }: SignInCardProps) => {
   const { signIn } = useAuthActions();
 
   const [email, setEmail] = useState("");
@@ -25,7 +26,15 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
   const onPasswordSignIn = (e: React.FormEvent) => {
     e.preventDefault();
     setPending(true);
+    setError("");
     signIn("password", { email, password, flow: "signIn" })
+      .then((res) => {
+        // account exists but its email isn't verified yet: a code was just emailed
+        if (res && res.signingIn === false) {
+          onEmail(email);
+          setState("verify");
+        }
+      })
       .catch(() => setError("Invalid email or password. Please try again."))
       .finally(() => setPending(false));
   };
@@ -57,6 +66,11 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
       <form onSubmit={onPasswordSignIn} className="mt-8 space-y-4">
           <AuthField label="Email" disabled={pending} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" type="email" required />
           <AuthField label="Password" disabled={pending} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" type="password" required />
+        <div className="-mt-1 text-right">
+          <button type="button" onClick={() => { onEmail(email); setState("resetPassword"); }} className="cursor-pointer text-sm font-medium text-[#ff5018] underline-offset-4 hover:underline">
+            Forgot password?
+          </button>
+        </div>
         <Button
           type="submit"
           className="mt-2 h-12 w-full cursor-pointer rounded-xl bg-[#ff5018] text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_rgba(255,80,24,0.8)] hover:bg-[#e6430f]"

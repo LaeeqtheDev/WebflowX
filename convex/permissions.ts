@@ -15,13 +15,28 @@ export const PERMISSIONS = [
     "editWorkspace",        // workspace name, photo and description
     "moderateMeetings",     // mute / remove people and end calls
     "manageContent",        // edit or delete other people's tasks, notes, sprints and docs
+    "postInReadOnly",       // write in announcement (read-only) channels
+    "mentionEveryone",      // use @everyone / @channel
+    "uploadFiles",          // attach files and images
+    "startMeetings",        // start meetings
+    "createDocs",           // create documents
 ] as const
 export type Permission = (typeof PERMISSIONS)[number]
 
 export const DEFAULT_ROLE_PERMISSIONS: Record<"moderator" | "member", Permission[]> = {
-    moderator: ["createChannels", "manageChannels", "viewPrivateChannels", "deleteMessages", "invite", "moderateMeetings", "manageContent"],
-    member: [],
+    moderator: [
+        "createChannels", "manageChannels", "viewPrivateChannels", "deleteMessages", "invite", "moderateMeetings", "manageContent",
+        "postInReadOnly", "mentionEveryone", "uploadFiles", "startMeetings", "createDocs",
+    ],
+    member: ["uploadFiles", "startMeetings", "createDocs"],
 }
+
+// Abilities everyone had before they became configurable. Workspaces that saved permissions
+// earlier keep them until an admin saves the (longer) list again.
+const LEGACY_DEFAULT_ON: Permission[] = ["uploadFiles", "startMeetings", "createDocs"]
+
+const clean = (list: string[]): Permission[] =>
+    list.filter((p): p is Permission => (PERMISSIONS as readonly string[]).includes(p))
 
 export const isOwner = (workspace: Doc<"workspaces">, member: Doc<"members">) =>
     workspace.userId === member.userId
@@ -31,9 +46,12 @@ export const roleOf = (workspace: Doc<"workspaces">, member: Doc<"members">): "o
 
 export const permissionList = (workspace: Doc<"workspaces">, member: Doc<"members">): Permission[] => {
     if (isOwner(workspace, member) || member.role === "admin") return [...PERMISSIONS]
+    const custom = member.customRoleId ? workspace.customRoles?.find((r) => r.id === member.customRoleId) : undefined
+    if (custom) return clean(custom.permissions)
     const configured = workspace.rolePermissions?.[member.role]
-    const list = configured ?? DEFAULT_ROLE_PERMISSIONS[member.role]
-    return list.filter((p): p is Permission => (PERMISSIONS as readonly string[]).includes(p))
+    if (!configured) return DEFAULT_ROLE_PERMISSIONS[member.role]
+    const list = workspace.permsVersion === 2 ? configured : [...configured, ...LEGACY_DEFAULT_ON]
+    return clean(list)
 }
 
 export const hasPermission = (workspace: Doc<"workspaces">, member: Doc<"members">, perm: Permission) =>
@@ -94,6 +112,7 @@ export const mine = query({
         return {
             memberId: member._id,
             role: roleOf(workspace, member),
+            customRoleName: workspace.customRoles?.find((r) => r.id === member.customRoleId)?.name ?? null,
             isOwner: isOwner(workspace, member),
             isAdmin: isAdminLike(workspace, member),
             permissions: permissionList(workspace, member),
@@ -114,9 +133,16 @@ export const rolePermissions = query({
         if (!member) return null
         const workspace = await ctx.db.get(args.workspaceId)
         if (!workspace) return null
+        const legacy = workspace.permsVersion !== 2
+        const effective = (role: "moderator" | "member") => {
+            const configured = workspace.rolePermissions?.[role]
+            if (!configured) return DEFAULT_ROLE_PERMISSIONS[role]
+            return legacy ? Array.from(new Set([...configured, ...LEGACY_DEFAULT_ON])) : configured
+        }
         return {
-            moderator: workspace.rolePermissions?.moderator ?? DEFAULT_ROLE_PERMISSIONS.moderator,
-            member: workspace.rolePermissions?.member ?? DEFAULT_ROLE_PERMISSIONS.member,
+            moderator: effective("moderator"),
+            member: effective("member"),
+            customRoles: workspace.customRoles ?? [],
         }
     },
 })
@@ -131,15 +157,16 @@ export const setRolePermissions = mutation({
         const { member, workspace } = await requireActor(ctx, args.workspaceId)
         if (!isAdminLike(workspace, member)) throw new ConvexError("Only the owner or an admin can change permissions")
 
-        const clean = Array.from(new Set(args.permissions)).filter((p): p is Permission =>
-            (PERMISSIONS as readonly string[]).includes(p)
-        )
-        const current = {
-            moderator: workspace.rolePermissions?.moderator ?? DEFAULT_ROLE_PERMISSIONS.moderator,
-            member: workspace.rolePermissions?.member ?? DEFAULT_ROLE_PERMISSIONS.member,
+        const next = Array.from(new Set(clean(args.permissions)))
+        const legacy = workspace.permsVersion !== 2
+        const base = (role: "moderator" | "member") => {
+            const configured = workspace.rolePermissions?.[role]
+            if (!configured) return DEFAULT_ROLE_PERMISSIONS[role]
+            return legacy ? Array.from(new Set([...configured, ...LEGACY_DEFAULT_ON])) : configured
         }
-        await ctx.db.patch(args.workspaceId, { rolePermissions: { ...current, [args.role]: clean } })
-        await logAudit(ctx, args.workspaceId, member._id, "permissions.update", `${args.role}: ${clean.join(", ") || "none"}`)
+        const current = { moderator: base("moderator"), member: base("member") }
+        await ctx.db.patch(args.workspaceId, { rolePermissions: { ...current, [args.role]: next }, permsVersion: 2 })
+        await logAudit(ctx, args.workspaceId, member._id, "permissions.update", `${args.role}: ${next.join(", ") || "none"}`)
         return args.workspaceId
     },
 })
@@ -162,3 +189,55 @@ export const can = async (ctx: QueryCtx | MutationCtx, member: Doc<"members">, p
     const workspace = await ctx.db.get(member.workspaceId)
     return !!workspace && hasPermission(workspace, member, perm)
 }
+
+
+const newId = () => Math.random().toString(36).slice(2, 10)
+
+// Create or edit a custom role (a named permission set that sits on top of the moderator or member rank).
+export const saveCustomRole = mutation({
+    args: {
+        workspaceId: v.id("workspaces"),
+        id: v.optional(v.string()),
+        name: v.string(),
+        baseRole: v.union(v.literal("moderator"), v.literal("member")),
+        permissions: v.array(v.string()),
+    },
+    handler: async (ctx, args) => {
+        const { member, workspace } = await requireActor(ctx, args.workspaceId)
+        if (!isAdminLike(workspace, member)) throw new ConvexError("Only the owner or an admin can manage roles")
+        const name = args.name.trim().replace(/\s+/g, " ")
+        if (name.length < 2 || name.length > 30) throw new ConvexError("Role names must be 2 to 30 characters")
+        if (["owner", "admin", "moderator", "member"].includes(name.toLowerCase())) throw new ConvexError("That name is reserved")
+        const roles = workspace.customRoles ?? []
+        if (roles.some((r) => r.id !== args.id && r.name.toLowerCase() === name.toLowerCase())) throw new ConvexError("A role with that name already exists")
+        if (!args.id && roles.length >= 10) throw new ConvexError("You can create up to 10 custom roles")
+
+        const role = { id: args.id ?? newId(), name, baseRole: args.baseRole, permissions: Array.from(new Set(clean(args.permissions))) }
+        const next = args.id ? roles.map((r) => (r.id === args.id ? role : r)) : [...roles, role]
+        if (args.id && !roles.some((r) => r.id === args.id)) throw new ConvexError("Role not found")
+        await ctx.db.patch(args.workspaceId, { customRoles: next })
+
+        // people already holding this role move to its (possibly new) base rank
+        if (args.id) {
+            const holders = await ctx.db.query("members").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId)).collect()
+            for (const m of holders) if (m.customRoleId === args.id && m.role !== "admin") await ctx.db.patch(m._id, { role: args.baseRole })
+        }
+        await logAudit(ctx, args.workspaceId, member._id, args.id ? "role.update" : "role.create", name)
+        return role.id
+    },
+})
+
+export const deleteCustomRole = mutation({
+    args: { workspaceId: v.id("workspaces"), id: v.string() },
+    handler: async (ctx, args) => {
+        const { member, workspace } = await requireActor(ctx, args.workspaceId)
+        if (!isAdminLike(workspace, member)) throw new ConvexError("Only the owner or an admin can manage roles")
+        const role = workspace.customRoles?.find((r) => r.id === args.id)
+        if (!role) throw new ConvexError("Role not found")
+        await ctx.db.patch(args.workspaceId, { customRoles: (workspace.customRoles ?? []).filter((r) => r.id !== args.id) })
+        const holders = await ctx.db.query("members").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId)).collect()
+        for (const m of holders) if (m.customRoleId === args.id) await ctx.db.patch(m._id, { customRoleId: undefined })
+        await logAudit(ctx, args.workspaceId, member._id, "role.delete", role.name)
+        return args.id
+    },
+})

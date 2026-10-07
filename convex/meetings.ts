@@ -214,6 +214,7 @@ export const create = mutation({
             ).unique()
 
         if (!member) throw new Error("Unauthorized")
+        if (!(await can(ctx, member, "startMeetings"))) throw new ConvexError("You don't have permission to start meetings")
 
         // Only count meetings from this month for limit check
         const now = new Date()
