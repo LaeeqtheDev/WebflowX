@@ -71,7 +71,13 @@ export const ResetPasswordCard = ({ initialEmail, setState }: { initialEmail: st
     setError("");
     signIn("password", { email, flow: "reset" })
       .then(() => setStep("code"))
-      .catch(() => setError("We couldn't send a reset email. Check the address, or contact support@northfoundry.co if this keeps happening."))
+      .catch((e: unknown) =>
+        setError(
+          String((e as Error)?.message ?? "").includes("not enabled")
+            ? "Password reset by email isn't switched on for this app yet. Please contact support@northfoundry.co."
+            : "We couldn't send a reset email. Check the address, or contact support@northfoundry.co if this keeps happening."
+        )
+      )
       .finally(() => setPending(false));
   };
 
