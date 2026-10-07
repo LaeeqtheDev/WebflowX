@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useMutation, useQuery } from "convex/react"
 import { addMonths, format, startOfMonth } from "date-fns"
@@ -48,8 +48,16 @@ const SubscribeDialog = ({ open, setOpen }: { open: boolean; setOpen: (v: boolea
         finally { setBusy(false) }
     }
 
+    // The dialog is opened from a button elsewhere on the page, so react to `open` itself
+    // (onOpenChange only fires for changes made inside the dialog).
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch the link the first time the dialog opens
+        if (open && !url) void load()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open])
+
     return (
-        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (v && !url) void load() }}>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="rounded-2xl bg-cream sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="font-semibold tracking-tight">Add to your calendar app</DialogTitle>
@@ -58,7 +66,7 @@ const SubscribeDialog = ({ open, setOpen }: { open: boolean; setOpen: (v: boolea
                     </DialogDescription>
                 </DialogHeader>
                 <div className="flex gap-2">
-                    <Input readOnly value={url ?? "Creating your link…"} onFocus={(e) => e.currentTarget.select()} aria-label="Calendar subscription link" className="bg-surface text-xs" />
+                    <Input readOnly value={url ?? (busy ? "Creating your link…" : "Couldn't create the link. Close and try again.")} onFocus={(e) => e.currentTarget.select()} aria-label="Calendar subscription link" className="bg-surface text-xs" />
                     <Button
                         type="button"
                         variant="outline"
