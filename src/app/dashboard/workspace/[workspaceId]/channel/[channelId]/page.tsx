@@ -3,6 +3,7 @@
 import { useGetChannel } from "@/features/channels/api/use-get-channel";
 import { useChannelId } from "@/hooks/use-channel-id";
 import { Loader, TriangleAlert, TriangleAlertIcon } from "lucide-react";
+import { cleanChannelName } from "../../components/channel-icon";
 import { Header } from "../../components/header";
 import { ChatInput } from "../../components/Chat-Input";
 import { useGetMessages } from "@/features/messages/api/use-get-messages";
@@ -53,7 +54,7 @@ const ChannelIdPage = () => {
             isLoadingMore={status === "LoadingMore"}
             canLoadMore={status === "CanLoadMore"}
             />
-            <ChatInput placeholder={`Message #${channel.name}`} />
+            <ChatInput placeholder={`Message ${cleanChannelName(channel.name)}`} />
 
            
          

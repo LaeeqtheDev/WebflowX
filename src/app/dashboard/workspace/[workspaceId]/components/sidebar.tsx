@@ -19,6 +19,8 @@ import { useGetConversations } from "@/features/conversations/api/use-get-conver
 import { useState } from "react"
 import { MoreModal } from "./more-modal"
 
+const Divider = () => <div aria-hidden className="my-0.5 h-px w-8 bg-white/[0.08]" />
+
 export const Sidebar = () => {
     const pathname = usePathname()
     const router = useRouter()
@@ -29,8 +31,11 @@ export const Sidebar = () => {
     const [showMore, setShowMore] = useState(false)
 
     return (
-        <aside className="w-17.5 h-full bg-[#381d2a] border-r border-black/20 flex flex-col gap-y-2.5 items-center pt-2.25 pb-4">
-            <WorkspaceSwitcher />
+        <aside className="w-[72px] h-full shrink-0 bg-[#381d2a] border-r border-white/[0.06] flex flex-col gap-y-1.5 items-center pt-3 pb-4">
+            <div className="mb-1.5">
+                <WorkspaceSwitcher />
+            </div>
+            <Divider />
             <SidebarButton
                 icon={Home24Regular}
                 activeIcon={Home24Filled}
@@ -63,7 +68,7 @@ export const Sidebar = () => {
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/activity`)}
                 badge={unreadCount}
             />
-
+            <Divider />
             <SidebarButton
                 icon={TaskListSquareLtr24Regular}
                 activeIcon={TaskListSquareLtr24Filled}
@@ -71,7 +76,7 @@ export const Sidebar = () => {
                 isActive={pathname.includes("/tasks")}
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/tasks`)}
             />
-                        <SidebarButton
+            <SidebarButton
                 icon={Notebook24Regular}
                 activeIcon={Notebook24Filled}
                 label="Notes"
@@ -85,20 +90,20 @@ export const Sidebar = () => {
                 isActive={pathname.includes("/docs")}
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}
             />
-
-                        <SidebarButton
+            <SidebarButton
                 icon={Video24Regular}
                 activeIcon={Video24Filled}
                 label="Meetings"
                 isActive={pathname.includes("/meeting")}
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/meeting`)}
             />
+            <Divider />
             <SidebarButton
                 icon={MoreHorizontal24Regular}
                 label="More"
                 onClick={() => setShowMore(true)}
             />
-            <div className="flex flex-col items-center justify-center gap-y-1 mt-auto">
+            <div className="mt-auto flex w-full flex-col items-center justify-center gap-y-3 border-t border-white/[0.08] pt-4">
                 <UserButton />
             </div>
             <MoreModal open={showMore} onClose={() => setShowMore(false)} />

@@ -143,7 +143,7 @@ export const MoreModal = ({ open, onClose }: MoreModalProps) => {
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="flex max-h-[92vh] max-w-5xl flex-col gap-0 overflow-hidden rounded-3xl border-[#381d2a]/10 bg-[#fbf9f7] p-0 sm:max-w-5xl">
+            <DialogContent className="[&>button]:text-white [&>button]:opacity-80 [&>button]:hover:opacity-100 [&>button]:top-5 [&>button]:right-5 flex h-[min(760px,90vh)] w-[min(1040px,calc(100vw-2rem))] max-w-none flex-col gap-0 overflow-hidden rounded-3xl border-[#381d2a]/10 bg-[#fbf9f7] p-0 sm:max-w-none">
                 <DialogHeader className="shrink-0 bg-[#381d2a] px-7 pb-0 pt-6 text-white">
                     <DialogTitle className="flex items-center gap-4">
                         <span className="flex size-11 items-center justify-center rounded-2xl bg-[#ff5018] text-white">

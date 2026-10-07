@@ -27,27 +27,35 @@ export const SidebarButton = ({
             onClick={onClick}
             aria-label={label}
             aria-current={isActive ? "page" : undefined}
-            className="group relative flex w-14 flex-col items-center gap-1 outline-none"
+            className="group relative flex w-full flex-col items-center gap-1 px-2 outline-none"
         >
+            {/* active rail */}
+            <span
+                aria-hidden
+                className={cn(
+                    "absolute left-0 top-1.5 h-6 w-[3px] rounded-r-full bg-[#ff5018] transition-all duration-200",
+                    isActive ? "opacity-100" : "scale-y-0 opacity-0"
+                )}
+            />
             <span
                 className={cn(
-                    "relative flex h-8 w-12 items-center justify-center rounded-xl transition-all duration-200",
+                    "relative flex h-9 w-11 items-center justify-center rounded-xl transition-all duration-200",
                     isActive
-                        ? "bg-[#ff5018] text-white shadow-[0_6px_16px_-6px_rgba(255,80,24,0.8)]"
-                        : "text-white/70 group-hover:bg-white/10 group-hover:text-white group-focus-visible:ring-2 group-focus-visible:ring-[#ff5018]"
+                        ? "bg-[#ff5018] text-white shadow-[0_8px_18px_-8px_rgba(255,80,24,0.9)]"
+                        : "text-white/65 group-hover:bg-white/[0.08] group-hover:text-white group-active:scale-95 group-focus-visible:ring-2 group-focus-visible:ring-[#ff5018]/70"
                 )}
             >
                 <Shown className="size-[22px]" />
                 {badge && badge > 0 ? (
-                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ff5018] px-1 text-[9px] font-bold text-white ring-2 ring-[#381d2a]">
+                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ff5018] px-1 text-[9px] font-bold leading-none text-white ring-2 ring-[#381d2a]">
                         {badge > 9 ? "9+" : badge}
                     </span>
                 ) : null}
             </span>
             <span
                 className={cn(
-                    "text-[11px] font-medium transition-colors",
-                    isActive ? "text-white" : "text-white/60 group-hover:text-white"
+                    "text-[10.5px] font-medium tracking-tight transition-colors",
+                    isActive ? "text-white" : "text-white/55 group-hover:text-white/90"
                 )}
             >
                 {label}

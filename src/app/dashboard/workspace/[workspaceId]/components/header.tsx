@@ -13,6 +13,7 @@ import {
 }
 from "@/components/ui/dialog"
 import { TrashIcon } from "lucide-react";
+import { channelIcon, cleanChannelName } from "./channel-icon";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { DialogClose } from "@radix-ui/react-dialog";
@@ -31,6 +32,7 @@ interface HeaderProps {
 }
 
 export const Header = ({title}: HeaderProps) => {
+    const TitleIcon = channelIcon(title);
     const router = useRouter()
     const workspaceId = useWorkspaceId()
     const [value, setValue] = useState(title);
@@ -98,7 +100,7 @@ export const Header = ({title}: HeaderProps) => {
             className="text-lg font-semibold tracking-tight px-2 overflow-hidden w-auto rounded-lg hover:bg-[#f7f2ee]"
             size={"sm"}
             >
-                <span className="truncate font-semibold tracking-tight">#{title}</span>
+                <span className="flex items-center gap-2 truncate font-semibold tracking-tight"><TitleIcon className="size-5 shrink-0 text-[#ff5018]" />{cleanChannelName(title)}</span>
                 <FaChevronDown className="text-[#ff5018] size-2.5 ml-2"/>
             </Button>
 
@@ -107,7 +109,7 @@ export const Header = ({title}: HeaderProps) => {
                 <DialogContent className="p-0 bg-[#f7f2ee] overflow-hidden rounded-2xl">
                     <DialogHeader className="px-6 py-5 border-b bg-white ">
                         <DialogTitle className="font-semibold tracking-tight">
-                            #{title}
+                            {cleanChannelName(title)}
                         </DialogTitle>
 
                     </DialogHeader>
@@ -122,7 +124,7 @@ export const Header = ({title}: HeaderProps) => {
                                   <p className="text-sm text-[#ff5018] hover:underline hover:underline-offset-4 font-semibold">Edit</p>
                               )}
                             </div>
-                            <p className="text-sm">#{title}</p>
+                            <p className="text-sm">{cleanChannelName(title)}</p>
                         </div> 
                             </DialogTrigger>
                             <DialogContent>

@@ -563,7 +563,7 @@ const Editor = ({
 
                 <div
                     className={cn(
-                        "flex flex-col border border-[#381d2a]/15 rounded-xl focus-within:border-[#ff5018] focus-within:ring-[3px] focus-within:ring-[#ff5018]/12 shadow-[0_1px_0_rgba(56,29,42,0.04)] transition bg-white",
+                        "flex flex-col rounded-2xl border border-transparent bg-white shadow-[0_0_0_1px_rgba(56,29,42,0.12),0_10px_30px_-18px_rgba(56,29,42,0.35)] transition-shadow focus-within:shadow-[0_0_0_1px_rgba(56,29,42,0.28),0_14px_34px_-16px_rgba(56,29,42,0.45)]",
                         disabled && "opacity-50"
                     )}
                 >
