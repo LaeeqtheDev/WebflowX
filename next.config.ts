@@ -14,7 +14,8 @@ const csp = [
   "font-src 'self' data:",
   `connect-src 'self' https: wss:${isDev ? " ws: http://localhost:*" : ""}`,
   "worker-src 'self' blob:",
-  "frame-src 'none'",
+  // PDFs shared in chat can be previewed in place; they are served from Convex storage
+  "frame-src https://*.convex.cloud",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -35,7 +36,11 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // the service worker must always be fetched fresh so updates roll out
+      { source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }, { key: "Service-Worker-Allowed", value: "/" }] },
+    ];
   },
   compress: true,
   images: {

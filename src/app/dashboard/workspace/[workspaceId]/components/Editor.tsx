@@ -32,6 +32,7 @@ import { Delta, Op } from "quill/core";
 import { cn } from "@/lib/utils";
 import { EmojiPopover } from "./emoji-popover";
 import Image from "next/image";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type EditorValue = {
     image: File | null;
@@ -48,6 +49,8 @@ interface EditorProps {
     innerRef?: MutableRefObject<Quill | null>;
     variant?: "create" | "update";
     allowEveryone?: boolean;
+    // called as the person types (the caller throttles it); used for the "is typing" indicator
+    onTyping?: () => void;
 }
 
 const FORMATTING_COMMANDS = [
@@ -179,6 +182,7 @@ const Editor = ({
     innerRef,
     variant = "create",
     allowEveryone = false,
+    onTyping,
 }: EditorProps) => {
     const [text, setText] = useState("");
     const [isToolbarVisible, setIsToolbarVisible] = useState(true);
@@ -223,6 +227,7 @@ const Editor = ({
 
     const containerRef = useRef<HTMLDivElement>(null);
     const submitRef = useRef(onSubmit);
+    const typingRef = useRef(onTyping);
     const placeholderRef = useRef(placeholder);
     const quilRef = useRef<Quill | null>(null);
     const defaultValueRef = useRef(defaultValue);
@@ -238,6 +243,7 @@ const Editor = ({
 
     useLayoutEffect(() => {
         submitRef.current = onSubmit;
+        typingRef.current = onTyping;
         placeholderRef.current = placeholder;
         defaultValueRef.current = defaultValue;
         disabledRef.current = disabled;
@@ -471,9 +477,10 @@ const Editor = ({
         quill.setContents(defaultValueRef.current);
         setText(quill.getText());
 
-        quill.on(Quill.events.TEXT_CHANGE, () => {
+        quill.on(Quill.events.TEXT_CHANGE, (_delta: unknown, _old: unknown, source: string) => {
             const fullText = quill.getText();
             setText(fullText);
+            if (source === "user" && fullText.trim().length > 0) typingRef.current?.();
 
             const selection = quill.getSelection();
             if (!selection) return;
@@ -570,14 +577,12 @@ const Editor = ({
                                     mentionSel === i && "bg-cream"
                                 )}
                             >
-                                <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#ff5018] text-xs font-semibold text-white">
-                                    {m.user?.image ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={m.user.image} alt="" className="size-full object-cover" />
-                                    ) : (
-                                        (m.user?.name ?? "?").charAt(0).toUpperCase()
-                                    )}
-                                </span>
+                                <Avatar className="size-7 rounded-md">
+                                    <AvatarImage className="rounded-md" src={m.user?.image ?? undefined} />
+                                    <AvatarFallback className="rounded-md bg-[#ff5018] text-xs font-semibold text-white">
+                                        {(m.user?.name ?? "?").charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
                                 <span className="truncate text-sm font-medium">{m.user?.name}</span>
                                 {m.special && <span className="truncate text-xs text-ink/65">{m.special}</span>}
                             </button>

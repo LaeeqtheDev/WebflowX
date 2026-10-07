@@ -10,8 +10,10 @@
 
 import type * as ResendOTP from "../ResendOTP.js";
 import type * as access from "../access.js";
+import type * as attachments from "../attachments.js";
 import type * as audit from "../audit.js";
 import type * as auth from "../auth.js";
+import type * as calendar from "../calendar.js";
 import type * as channels from "../channels.js";
 import type * as conversations from "../conversations.js";
 import type * as crons from "../crons.js";
@@ -23,6 +25,7 @@ import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as limits from "../limits.js";
 import type * as liveblocks from "../liveblocks.js";
+import type * as marks from "../marks.js";
 import type * as meetings from "../meetings.js";
 import type * as members from "../members.js";
 import type * as messages from "../messages.js";
@@ -30,6 +33,9 @@ import type * as newsletter from "../newsletter.js";
 import type * as notes from "../notes.js";
 import type * as notifications from "../notifications.js";
 import type * as permissions from "../permissions.js";
+import type * as presence from "../presence.js";
+import type * as push from "../push.js";
+import type * as pushSend from "../pushSend.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as reactions from "../reactions.js";
 import type * as sent from "../sent.js";
@@ -37,6 +43,8 @@ import type * as sprints from "../sprints.js";
 import type * as taskComments from "../taskComments.js";
 import type * as tasks from "../tasks.js";
 import type * as threads from "../threads.js";
+import type * as twoFactor from "../twoFactor.js";
+import type * as typing from "../typing.js";
 import type * as upload from "../upload.js";
 import type * as usage from "../usage.js";
 import type * as users from "../users.js";
@@ -52,8 +60,10 @@ import type {
 declare const fullApi: ApiFromModules<{
   ResendOTP: typeof ResendOTP;
   access: typeof access;
+  attachments: typeof attachments;
   audit: typeof audit;
   auth: typeof auth;
+  calendar: typeof calendar;
   channels: typeof channels;
   conversations: typeof conversations;
   crons: typeof crons;
@@ -65,6 +75,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   limits: typeof limits;
   liveblocks: typeof liveblocks;
+  marks: typeof marks;
   meetings: typeof meetings;
   members: typeof members;
   messages: typeof messages;
@@ -72,6 +83,9 @@ declare const fullApi: ApiFromModules<{
   notes: typeof notes;
   notifications: typeof notifications;
   permissions: typeof permissions;
+  presence: typeof presence;
+  push: typeof push;
+  pushSend: typeof pushSend;
   rateLimit: typeof rateLimit;
   reactions: typeof reactions;
   sent: typeof sent;
@@ -79,6 +93,8 @@ declare const fullApi: ApiFromModules<{
   taskComments: typeof taskComments;
   tasks: typeof tasks;
   threads: typeof threads;
+  twoFactor: typeof twoFactor;
+  typing: typeof typing;
   upload: typeof upload;
   usage: typeof usage;
   users: typeof users;

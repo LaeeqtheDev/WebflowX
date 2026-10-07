@@ -21,6 +21,7 @@ export const usePermissions = (workspaceIdArg?: Id<"workspaces">) => {
     memberId: data?.memberId ?? null,
     isOwner: !!data?.isOwner,
     isAdmin: !!data?.isAdmin,
+    isGuest: data?.role === "guest",
     can: (perm: PermissionKey) => !!data && (data.isAdmin || list.includes(perm)),
   }
 }

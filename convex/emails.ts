@@ -86,6 +86,13 @@ export const prepare = internalMutation({
                 link = `${base}/tasks`
                 cta = "Open tasks"
                 break
+            case "task_due":
+                subject = `Task due soon: ${clip(liveBody ?? "your task", 80)}`
+                heading = "A task is due soon"
+                line = `A task assigned to you in ${workspace.name} is due soon.`
+                link = `${base}/tasks`
+                cta = "Open tasks"
+                break
             default:
                 return null
         }

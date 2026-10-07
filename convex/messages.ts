@@ -107,18 +107,20 @@ const populateReactions = (ctx: QueryCtx, messageId: Id<"messages">) => {
 };
 
 const populateThread = async (ctx: QueryCtx, messageId: Id<"messages">) => {
-    const messages = await ctx.db
+    // newest reply first; the count is capped so a huge thread can't make every list load slow
+    const recent = await ctx.db
         .query("messages")
         .withIndex("by_parent_message_id", (q) =>
             q.eq("parentMessagesId", messageId)
         )
-        .collect();
+        .order("desc")
+        .take(200);
 
-    if (messages.length === 0) {
+    if (recent.length === 0) {
         return { count: 0, image: undefined, timestamp: 0, name: "" };
     }
 
-    const lastMessage = messages[messages.length - 1];
+    const lastMessage = recent[0];
     const lastMessageMember = await populateMember(ctx, lastMessage.memberId);
 
     if (!lastMessageMember) {
@@ -128,7 +130,7 @@ const populateThread = async (ctx: QueryCtx, messageId: Id<"messages">) => {
     const lastMessageUser = await populateUser(ctx, lastMessageMember.userId);
 
     return {
-        count: messages.length,
+        count: recent.length,
         image: lastMessageUser?.image,
         timestamp: lastMessage._creationTime,
         name: lastMessageUser?.name,
@@ -168,6 +170,14 @@ export const deleteMessageCascade = async (
         .withIndex("by_message_id", (q) => q.eq("messageId", message._id))
         .collect();
     for (const reaction of reactions) await ctx.db.delete(reaction._id);
+
+    // pins and saved copies of this message go with it
+    const pins = await ctx.db.query("pins").withIndex("by_message_id", (q) => q.eq("messageId", message._id)).collect();
+    for (const pin of pins) await ctx.db.delete(pin._id);
+    const saves = await ctx.db.query("savedMessages").withIndex("by_message_id", (q) => q.eq("messageId", message._id)).collect();
+    for (const save of saves) await ctx.db.delete(save._id);
+    const attached = await ctx.db.query("attachments").withIndex("by_message_id", (q) => q.eq("messageId", message._id)).collect();
+    for (const a of attached) await ctx.db.delete(a._id);
 
     for (const fileId of [message.image, message.file]) {
         if (fileId) await release(ctx, fileId);
@@ -214,8 +224,9 @@ export const get = query({
             allowed =
                 !!viewer &&
                 (!conversationForCheck ||
-                    conversationForCheck.memberOneId === viewer._id ||
-                    conversationForCheck.memberTwoId === viewer._id);
+                    (viewer.role !== "guest" &&
+                        (conversationForCheck.memberOneId === viewer._id ||
+                            conversationForCheck.memberTwoId === viewer._id)));
         }
 
         // locked channels (and threads inside them) are only readable by people with access
@@ -226,6 +237,17 @@ export const get = query({
             }
             if (channelForAccess && !(await canViewChannel(ctx, channelForAccess, userId))) allowed = false;
         }
+
+        const memberMemo = new Map<string, Promise<Doc<"members"> | null>>();
+        const userMemo = new Map<string, Promise<Doc<"users"> | null>>();
+        const authorOf = (id: Id<"members">) => {
+            if (!memberMemo.has(id)) memberMemo.set(id, populateMember(ctx, id));
+            return memberMemo.get(id)!;
+        };
+        const userOf = (id: Id<"users">) => {
+            if (!userMemo.has(id)) userMemo.set(id, populateUser(ctx, id));
+            return userMemo.get(id)!;
+        };
 
         const results: PaginationResult<Doc<"messages">> = allowed
             ? await ctx.db
@@ -245,9 +267,10 @@ export const get = query({
             page: (
                 await Promise.all(
                     results.page.map(async (message) => {
-                        const member = await populateMember(ctx, message.memberId);
+                        // one author usually wrote many of the messages on screen: look each up once
+                        const member = await authorOf(message.memberId);
                         const user = member
-                            ? await populateUser(ctx, member.userId)
+                            ? await userOf(member.userId)
                             : null;
 
                         if (!member || !user) return null;
@@ -362,7 +385,7 @@ export const create = mutation({
             const conv = await ctx.db.get(_conversationId);
             if (!conv || conv.workspaceId !== args.workspaceId)
                 throw new Error("Conversation not found");
-            if (conv.memberOneId !== member._id && conv.memberTwoId !== member._id)
+            if (member.role === "guest" || (conv.memberOneId !== member._id && conv.memberTwoId !== member._id))
                 throw new Error("Unauthorized");
         }
         if (!channelId && !_conversationId) throw new Error("Nothing to post to");
@@ -405,6 +428,20 @@ export const create = mutation({
             parentMessagesId: args.parentMessageId,
         });
 
+        // the Files page lists these
+        if (args.image) {
+            const row = await ctx.db.query("files").withIndex("by_storage_id", (q) => q.eq("storageId", args.image!)).unique();
+            await ctx.db.insert("attachments", {
+                workspaceId: args.workspaceId, messageId, memberId: member._id, channelId, conversationId: _conversationId,
+                kind: "image", name: "Image", contentType: row?.contentType ?? "image/png", size: row?.size ?? 0, storageId: args.image,
+            });
+        }
+        if (args.file) {
+            await ctx.db.insert("attachments", {
+                workspaceId: args.workspaceId, messageId, memberId: member._id, channelId, conversationId: _conversationId,
+                kind: "file", name: fileName ?? "file", contentType: fileType ?? "application/octet-stream", size: fileSize ?? 0, storageId: args.file,
+            });
+        }
 
         const alreadyNotified = new Set<string>();
 
@@ -540,7 +577,7 @@ export const getById = query({
         if (message.channelId && !(await canViewChannel(ctx, message.channelId, userId))) return null;
         if (message.conversationId) {
             const conv = await ctx.db.get(message.conversationId);
-            if (!conv || (conv.memberOneId !== currentMember._id && conv.memberTwoId !== currentMember._id)) return null;
+            if (!conv || (currentMember.role === "guest" || (conv.memberOneId !== currentMember._id && conv.memberTwoId !== currentMember._id))) return null;
         }
 
         const member = await populateMember(ctx, message.memberId);
@@ -631,7 +668,7 @@ export const search = query({
                 let ok = convOk.get(m.conversationId);
                 if (ok === undefined) {
                     const conv = await ctx.db.get(m.conversationId);
-                    ok = !!conv && (conv.memberOneId === member._id || conv.memberTwoId === member._id);
+                    ok = !!conv && member.role !== "guest" && (conv.memberOneId === member._id || conv.memberTwoId === member._id);
                     convOk.set(m.conversationId, ok);
                 }
                 if (!ok) continue;

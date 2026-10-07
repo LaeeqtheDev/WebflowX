@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { formatDue } from "@/lib/due"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -256,12 +257,12 @@ export const TaskDetail = ({
                             <p className="text-[11px] font-medium text-ink/65 mb-1.5">Due date</p>
                             {isAdmin ? (
                                 <Input aria-label="Due date" type="date"
-                                    defaultValue={task.dueDate ? format(task.dueDate, "yyyy-MM-dd") : ""}
+                                    defaultValue={task.dueDate ? formatDue(task.dueDate, "yyyy-MM-dd") : ""}
                                     onChange={e => onUpdate(task._id, { dueDate: e.target.value ? new Date(e.target.value).getTime() : undefined })}
                                     className="h-8 text-xs rounded-lg" />
                             ) : (
                                 <span className={cn("text-xs", isOverdue ? "text-red-600 dark:text-red-400 font-medium" : "text-ink/60")}>
-                                    {task.dueDate ? format(task.dueDate, "MMM d, yyyy") : "No due date"}
+                                    {task.dueDate ? formatDue(task.dueDate, "MMM d, yyyy") : "No due date"}
                                 </span>
                             )}
                         </div>

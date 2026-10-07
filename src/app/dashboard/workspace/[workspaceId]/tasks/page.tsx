@@ -1,5 +1,6 @@
 "use client"
 import { usePermissions } from "@/hooks/use-permissions"
+import { formatDue } from "@/lib/due"
 
 import { useState } from "react"
 import { useSearchParams } from "next/navigation"
@@ -267,7 +268,7 @@ export default function TasksPage() {
                                             </td>
                                             <td className="px-4 py-2.5 text-xs text-ink/60">{safeSprints.find(s => s._id === task.sprintId)?.name ?? "—"}</td>
                                             <td className={cn("px-4 py-2.5 text-xs", task.dueDate && task.dueDate < getNow() && task.status !== "done" ? "text-red-600 dark:text-red-400 font-medium" : "text-ink/60")}>
-                                                {task.dueDate ? format(task.dueDate, "MMM d, yyyy") : "—"}
+                                                {task.dueDate ? formatDue(task.dueDate, "MMM d, yyyy") : "—"}
                                             </td>
                                             <td className="px-4 py-2.5 text-xs text-ink/60">{task.storyPoints ?? "—"}</td>
                                             <td className="px-4 py-2.5">

@@ -16,6 +16,7 @@ import { useMutation, useQuery } from "convex/react"
 import { api } from "../../../../convex/_generated/api"
 import { usePermissions } from "@/hooks/use-permissions"
 import { errMsg } from "@/lib/errors"
+import { lastSeenLabel, usePresence } from "@/features/presence/presence"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -60,6 +61,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
     const { data: member, isLoading: isLoadingMember } = useGetMember({ id: memberId })
     const { mutate: updateMember, isPending: isUpdatingMember } = useUpdateMember()
     const { mutate: removeMember, isPending: isRemovingMember } = useRemoveMember()
+    const presence = usePresence(memberId)
 
     const onRemove = async () => {
         const ok = await confirmRemove()
@@ -102,7 +104,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
         }
     }
 
-    const onUpdate = async (role: "admin" | "moderator" | "member") => {
+    const onUpdate = async (role: "admin" | "moderator" | "member" | "guest") => {
         const ok = await confirmUpdate()
         if (!ok) return
         updateMember({ id: memberId, role }, {
@@ -189,6 +191,10 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                     <p className="text-2xl font-semibold tracking-tight text-ink">{member.user.name}</p>
 
                     {member.user.title && <p className="text-sm text-ink/60 mt-0.5">{member.user.title}</p>}
+                    <p className="mt-1 flex items-center gap-1.5 text-xs text-ink/60">
+                        <span aria-hidden className={`size-2 rounded-full ${presence.online ? "bg-emerald-500" : "bg-ink/25"}`} />
+                        {lastSeenLabel(presence.online, presence.lastSeen)}
+                    </p>
                     <span className="mt-2 w-fit text-[11px] font-semibold uppercase tracking-wide rounded-full px-2 py-0.5 bg-[#ff5018]/10 text-orange-ink">
                         {isTargetOwner ? "Owner" : customRoleName ?? member.role}
                     </span>
@@ -211,11 +217,12 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                                     <DropdownMenuContent className="w-full rounded-xl p-1.5">
                                         <DropdownMenuRadioGroup
                                             value={member.role}
-                                            onValueChange={(role) => onUpdate(role as "admin" | "moderator" | "member")}
+                                            onValueChange={(role) => onUpdate(role as "admin" | "moderator" | "member" | "guest")}
                                         >
                                             {perms.isOwner && <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>}
                                             <DropdownMenuRadioItem value="moderator">Moderator</DropdownMenuRadioItem>
                                             <DropdownMenuRadioItem value="member">Member</DropdownMenuRadioItem>
+                                            <DropdownMenuRadioItem value="guest">Guest</DropdownMenuRadioItem>
                                         </DropdownMenuRadioGroup>
                                     </DropdownMenuContent>
                                 </DropdownMenu>

@@ -1,4 +1,6 @@
-import { Download, FileText } from "lucide-react";
+import { Download, Eye, FileText } from "lucide-react";
+import { useState } from "react";
+import { AttachmentPreview, canPreview } from "./attachment-preview";
 import { Button } from "@/components/ui/button";
 
 interface FileAttachmentProps {
@@ -51,6 +53,8 @@ export const FileAttachment = ({
     };
 
     const extension = getFileExtension(fileName);
+    const [previewOpen, setPreviewOpen] = useState(false);
+    const previewable = canPreview(fileType);
 
     return (
         <div className="flex items-center gap-3 p-3 bg-surface border border-plum/12 rounded-xl hover:bg-cream/70 transition-colors max-w-sm group">
@@ -77,13 +81,28 @@ export const FileAttachment = ({
                 </div>
             </div>
 
+            {previewable && (
+                <>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label="Preview file"
+                        onClick={() => setPreviewOpen(true)}
+                        className="shrink-0 rounded-lg md:opacity-0 md:transition-opacity md:group-hover:opacity-100 focus-visible:opacity-100"
+                    >
+                        <Eye className="size-4" />
+                    </Button>
+                    <AttachmentPreview open={previewOpen} onOpenChange={setPreviewOpen} url={url} name={fileName || "File"} type={fileType} />
+                </>
+            )}
+
             {/* Download Button */}
             <Button
                 variant="ghost"
                 size="sm"
                 aria-label="Download file"
                 onClick={handleDownload}
-                className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 rounded-lg"
+                className="md:opacity-0 md:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity shrink-0 rounded-lg"
             >
                 <Download className="size-4" />
             </Button>

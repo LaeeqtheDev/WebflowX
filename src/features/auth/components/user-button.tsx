@@ -4,7 +4,7 @@ import { useCurrentUser } from "@/app/auth/api/user-current-user"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator} from "@/components/ui/dropdown-menu"
 import { useAuthActions } from "@convex-dev/auth/react"
-import { Download, Loader, LogOut, Monitor, Moon, Sun, UserPen } from "lucide-react"
+import { Download, Loader, LogOut, Monitor, Moon, ShieldCheck, Sun, UserPen } from "lucide-react"
 import { useSetTheme } from "@/hooks/use-theme-pref"
 import { isThemePref, type ThemePref } from "@/lib/theme"
 import { errMsg } from "@/lib/errors"
@@ -12,11 +12,13 @@ import { toast } from "sonner"
 import { useDataExport } from "@/lib/export-data"
 import { useState } from "react"
 import { EditProfileModal } from "./edit-profile-modal"
+import { SecurityModal } from "@/features/security/security-modal"
 
 export const UserButton = () => {
     const {data, isLoading} = useCurrentUser();
     const {signOut} = useAuthActions();
     const [editOpen, setEditOpen] = useState(false)
+    const [securityOpen, setSecurityOpen] = useState(false)
     const { exportMine, busy, progress } = useDataExport()
     const setTheme = useSetTheme()
 
@@ -34,6 +36,7 @@ export const UserButton = () => {
     return(
         <>
         <EditProfileModal open={editOpen} setOpen={setEditOpen} user={data} />
+        <SecurityModal open={securityOpen} setOpen={setSecurityOpen} />
         <DropdownMenu modal={false}>
             <DropdownMenuTrigger className="outline-none relative">
                 <Avatar className=" rounded-lg size-10 hover:opacity-80 transition ring-1 ring-white/15">
@@ -52,6 +55,10 @@ export const UserButton = () => {
                 <DropdownMenuItem onClick={() => setEditOpen(true)} className="h-10 rounded-lg cursor-pointer">
                     <UserPen className="size-4 mr-2" />
                     Edit profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSecurityOpen(true)} className="h-10 rounded-lg cursor-pointer">
+                    <ShieldCheck className="size-4 mr-2" />
+                    Security &amp; notifications
                 </DropdownMenuItem>
                 <div className="px-2 pt-1 pb-2">
                     <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink/55">Appearance</p>

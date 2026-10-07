@@ -7,6 +7,7 @@ import dynamic from "next/dynamic"
 import Quill from "quill"
 import { useRef, useState } from "react"
 import { Id } from "../../../../../../../convex/_generated/dataModel";
+import { TypingIndicator, useTypingPing } from "@/features/presence/typing";
 
 
 
@@ -37,6 +38,7 @@ export const ChatInput = ({placeholder, conversationId}: ChatInputProps) => {
   const [isPending, setIsPending] = useState(false)
   const { upload } = useUploader()
   const { handleLimitError } = useLimitHandler()
+  const onTyping = useTypingPing({ workspaceId, conversationId })
 
 
   const handleSubmit = async({
@@ -73,7 +75,9 @@ export const ChatInput = ({placeholder, conversationId}: ChatInputProps) => {
 
   return (
     <div data-chat-input className="px-3 md:px-5 w-full pb-[env(safe-area-inset-bottom)]">
-      <Editor 
+      <TypingIndicator conversationId={conversationId} />
+      <Editor
+      onTyping={onTyping}
       key={editorKey}
       placeholder={placeholder}
       onSubmit={handleSubmit}

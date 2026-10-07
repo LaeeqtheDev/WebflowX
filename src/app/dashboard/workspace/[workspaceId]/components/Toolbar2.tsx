@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ListChecks, MessageSquareTextIcon, MoreHorizontal, Pencil, Smile, TrashIcon } from "lucide-react";
+import { Bookmark, ListChecks, MessageSquareTextIcon, MoreHorizontal, Pencil, Pin, Smile, TrashIcon } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Hint } from "./hints";
 import { EmojiPopover } from "./emoji-popover";
@@ -15,6 +15,11 @@ interface ToolbarProps{
     handleReaction: (value: string) => void;
     handleCreateTask?: () => void;
     hideThreadButton?: boolean
+    // pin (channel/DM messages only) and save-for-later
+    handlePin?: () => void;
+    handleSave?: () => void;
+    isPinned?: boolean;
+    isSaved?: boolean;
 }
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👀", "🙏"];
@@ -30,7 +35,11 @@ export const Toolbar2 =({
     handleReaction,
     hideThreadButton,
     handleThread,
-    handleCreateTask
+    handleCreateTask,
+    handlePin,
+    handleSave,
+    isPinned,
+    isSaved,
 }: ToolbarProps) =>{
     const [sheetOpen, setSheetOpen] = useState(false)
     const canDelete = isAuthor || !!canModerate
@@ -80,6 +89,16 @@ export const Toolbar2 =({
                             <MessageSquareTextIcon className="size-5 text-orange-ink" /> Reply in thread
                         </button>
                     )}
+                    {handleSave && (
+                        <button type="button" className={sheetRow} disabled={isPending} onClick={run(handleSave)}>
+                            <Bookmark className={`size-5 text-orange-ink ${isSaved ? "fill-current" : ""}`} /> {isSaved ? "Remove from saved" : "Save for later"}
+                        </button>
+                    )}
+                    {handlePin && (
+                        <button type="button" className={sheetRow} disabled={isPending} onClick={run(handlePin)}>
+                            <Pin className={`size-5 text-orange-ink ${isPinned ? "fill-current" : ""}`} /> {isPinned ? "Unpin from channel" : "Pin to channel"}
+                        </button>
+                    )}
                     {handleCreateTask && (
                         <button type="button" className={sheetRow} disabled={isPending} onClick={run(handleCreateTask)}>
                             <ListChecks className="size-5 text-orange-ink" /> Create task from message
@@ -116,6 +135,22 @@ export const Toolbar2 =({
                             <MessageSquareTextIcon className="size-4 text-[#ff5018]"/>
                         </Button>
                         </Hint>
+        )}
+
+        {handleSave && (
+            <Hint label={isSaved ? "Remove from saved" : "Save for later"}>
+                <Button variant={"ghost"} size={"iconSm"} aria-label={isSaved ? "Remove from saved" : "Save for later"} aria-pressed={isSaved} className="rounded-md hover:bg-cream" disabled={isPending} onClick={handleSave}>
+                    <Bookmark className={`size-4 text-[#ff5018] ${isSaved ? "fill-current" : ""}`}/>
+                </Button>
+            </Hint>
+        )}
+
+        {handlePin && (
+            <Hint label={isPinned ? "Unpin" : "Pin to channel"}>
+                <Button variant={"ghost"} size={"iconSm"} aria-label={isPinned ? "Unpin message" : "Pin message"} aria-pressed={isPinned} className="rounded-md hover:bg-cream" disabled={isPending} onClick={handlePin}>
+                    <Pin className={`size-4 text-[#ff5018] ${isPinned ? "fill-current" : ""}`}/>
+                </Button>
+            </Hint>
         )}
 
         {handleCreateTask && (

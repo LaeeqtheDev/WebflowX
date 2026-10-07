@@ -18,6 +18,7 @@ import { useGetUnreadCount } from "@/features/notifications/use-get-unread-count
 import { useGetConversations } from "@/features/conversations/api/use-get-conversations"
 import { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
+import { usePermissions } from "@/hooks/use-permissions"
 
 const MoreModal = dynamic(() => import("./more-modal").then((m) => m.MoreModal), { ssr: false })
 
@@ -31,6 +32,7 @@ export const Sidebar = () => {
     const { data: conversations } = useGetConversations({ workspaceId })
     const totalDmUnread = conversations?.reduce((acc, c) => acc + (c.unreadCount ?? 0), 0) ?? 0
     const [showMore, setShowMore] = useState(false)
+    const { isGuest } = usePermissions()
 
     // Warm up every section once the shell is idle so navigation feels instant.
     useEffect(() => {
@@ -64,6 +66,7 @@ export const Sidebar = () => {
                 }
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}`)}
             />
+            {!isGuest && (
             <SidebarButton
                 icon={Chat24Regular}
                 activeIcon={Chat24Filled}
@@ -72,6 +75,7 @@ export const Sidebar = () => {
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/dms`)}
                 badge={totalDmUnread}
             />
+            )}
             <SidebarButton
                 icon={Alert24Regular}
                 activeIcon={Alert24Filled}
@@ -81,6 +85,7 @@ export const Sidebar = () => {
                 badge={unreadCount}
             />
             <Divider />
+            {!isGuest && (
             <SidebarButton
                 icon={TaskListSquareLtr24Regular}
                 activeIcon={TaskListSquareLtr24Filled}
@@ -88,6 +93,8 @@ export const Sidebar = () => {
                 isActive={pathname.includes("/tasks")}
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/tasks`)}
             />
+            )}
+            {!isGuest && (
             <SidebarButton
                 icon={Notebook24Regular}
                 activeIcon={Notebook24Filled}
@@ -95,6 +102,8 @@ export const Sidebar = () => {
                 isActive={pathname.includes("/notes")}
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/notes`)}
             />
+            )}
+            {!isGuest && (
             <SidebarButton
                 icon={DocumentText24Regular}
                 activeIcon={DocumentText24Filled}
@@ -102,6 +111,8 @@ export const Sidebar = () => {
                 isActive={pathname.includes("/docs")}
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}
             />
+            )}
+            {!isGuest && (
             <SidebarButton
                 icon={Video24Regular}
                 activeIcon={Video24Filled}
@@ -109,6 +120,7 @@ export const Sidebar = () => {
                 isActive={pathname.includes("/meeting")}
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/meeting`)}
             />
+            )}
             <Divider />
             <SidebarButton
                 icon={MoreHorizontal24Regular}

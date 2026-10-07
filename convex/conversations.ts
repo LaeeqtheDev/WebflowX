@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { auth } from "./auth";
+import { ConvexError } from "convex/values";
 
 export const CreateOrGet = mutation({
     args: {
@@ -23,6 +24,9 @@ export const CreateOrGet = mutation({
 
         if(!currentMember || !otherMember || otherMember.workspaceId !== args.workspaceId){
             throw new Error("Member not found");
+        }
+        if (currentMember.role === "guest" || otherMember.role === "guest") {
+            throw new ConvexError("Guests can't use direct messages");
         }
 
         const existingConversation =
@@ -71,7 +75,7 @@ export const getAll = query({
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) return []
+        if (!member || member.role === "guest") return []
 
         // only this member's conversations, found through their own indexes (not by scanning the workspace)
         const [asOne, asTwo] = await Promise.all([

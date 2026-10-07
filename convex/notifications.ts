@@ -6,7 +6,8 @@ import { auth } from "./auth"
 import { canAccessChannel } from "./permissions"
 
 // Types that are worth an email when the person hasn't looked at them yet.
-const EMAILED = new Set<Doc<"notifications">["type"]>(["mention", "dm_received", "thread_reply", "task_assigned", "task_comment"])
+const EMAILED = new Set<Doc<"notifications">["type"]>(["mention", "dm_received", "thread_reply", "task_assigned", "task_comment", "task_due"])
+const PUSHED = EMAILED
 // Wait a few minutes first: if they open the app and read it, no email is sent.
 const EMAIL_DELAY_MS = 4 * 60 * 1000
 
@@ -17,6 +18,10 @@ export async function notify(
     opts: { email?: boolean } = {}
 ): Promise<Id<"notifications">> {
     const id = await ctx.db.insert("notifications", doc)
+    // phone / desktop push right away (skipped when the person is looking at the app, or push isn't configured)
+    if (PUSHED.has(doc.type) && process.env.VAPID_PRIVATE_KEY) {
+        await ctx.scheduler.runAfter(0, internal.pushSend.send, { notificationId: id })
+    }
     if (opts.email !== false && EMAILED.has(doc.type)) {
         await ctx.scheduler.runAfter(EMAIL_DELAY_MS, internal.emails.sendNotification, { notificationId: id })
     }
@@ -30,7 +35,8 @@ const typeValidator = v.union(
     v.literal("task_comment"),
     v.literal("note_added"),
     v.literal("dm_received"),
-    v.literal("mention")
+    v.literal("mention"),
+    v.literal("task_due")
 )
 
 export const get = query({

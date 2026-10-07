@@ -22,6 +22,7 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { errMsg } from "@/lib/errors"
 import { ChannelIcon, cleanChannelName } from "./channel-icon"
 import { useConfirm } from "../../hooks/use-confirm"
+import { PinnedMessages } from "@/features/marks/pinned-messages"
 
 interface HeaderProps {
     title: string;
@@ -36,9 +37,10 @@ export const Header = ({ title }: HeaderProps) => {
 
     const channel = useQuery(api.channels.getById, { id: channelId })
     const channelMembers = useQuery(api.channels.getMembers, channel?.isPrivate ? { id: channelId } : "skip")
-    const workspaceMembers = useQuery(api.members.get, canManage && channel?.isPrivate ? { workspaceId } : "skip")
+    const workspaceMembers = useQuery(api.members.get, canManage ? { workspaceId } : "skip")
     const setAccess = useMutation(api.channels.setAccess)
     const setReadOnly = useMutation(api.channels.setReadOnly)
+    const setGuests = useMutation(api.channels.setGuests)
 
     const [value, setValue] = useState(title)
     const [description, setDescription] = useState("")
@@ -85,7 +87,9 @@ export const Header = ({ title }: HeaderProps) => {
     }
 
     const ids = (channelMembers ?? []).map((m) => m._id)
-    const addable = (workspaceMembers ?? []).filter((m) => !ids.includes(m._id))
+    const addable = (workspaceMembers ?? []).filter((m) => !ids.includes(m._id) && m.role !== "guest")
+    const guestList = (workspaceMembers ?? []).filter((m) => m.role === "guest")
+    const guestIds = (channel?.guestIds ?? []) as Id<"members">[]
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setValue(e.target.value.replace(/\s+/g, "-").toLowerCase())
@@ -198,6 +202,25 @@ export const Header = ({ title }: HeaderProps) => {
                             </div>
                         )}
 
+                        {canManage && channel && guestList.length > 0 && (
+                            <div className="px-5 py-4 bg-surface rounded-xl border border-plum/12">
+                                <p className="text-sm font-semibold">Guests in this channel</p>
+                                <p className="text-xs text-ink/55 mb-2">Guests can only open channels you tick here.</p>
+                                <div className="flex flex-col gap-1.5">
+                                    {guestList.map((g) => (
+                                        <label key={g._id} className="flex items-center gap-2.5 cursor-pointer">
+                                            <input type="checkbox" className="size-4 accent-[#ff5018]" checked={guestIds.includes(g._id as Id<"members">)}
+                                                onChange={(e) => run(() => setGuests({
+                                                    id: channelId,
+                                                    guestIds: e.target.checked ? [...guestIds, g._id as Id<"members">] : guestIds.filter((id) => id !== g._id),
+                                                }), "Couldn't change guest access")} />
+                                            <span className="text-sm truncate">{g.user.name}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         {canManage && channel && (
                             <label className="px-5 py-4 bg-surface rounded-xl border border-plum/12 flex items-center justify-between gap-3 cursor-pointer">
                                 <span>
@@ -218,6 +241,7 @@ export const Header = ({ title }: HeaderProps) => {
                     </div>
                 </DialogContent>
             </Dialog>
+            <PinnedMessages channelId={channelId} />
         </div>
     )
 }

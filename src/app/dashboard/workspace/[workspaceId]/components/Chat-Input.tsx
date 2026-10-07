@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import Quill from "quill";
 import { useRef, useState } from "react";
 import { Id } from "../../../../../../convex/_generated/dataModel";
+import { TypingIndicator, useTypingPing } from "@/features/presence/typing";
 
 const Editor = dynamic(() => import("./Editor"), { ssr: false });
 
@@ -35,6 +36,7 @@ export const ChatInput = ({ placeholder }: ChatInputProps) => {
     const [isPending, setIsPending] = useState(false);
     const { upload } = useUploader();
     const { handleLimitError } = useLimitHandler();
+    const onTyping = useTypingPing({ workspaceId, channelId });
 
     const handleSubmit = async ({
         body,
@@ -84,7 +86,9 @@ export const ChatInput = ({ placeholder }: ChatInputProps) => {
 
     return (
         <div data-chat-input className="px-3 md:px-5 w-full pb-[env(safe-area-inset-bottom)]">
+            <TypingIndicator channelId={channelId} />
             <Editor
+                onTyping={onTyping}
                 key={editorKey}
                 placeholder={placeholder}
                 allowEveryone

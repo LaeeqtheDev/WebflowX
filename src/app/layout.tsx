@@ -64,9 +64,11 @@ export const metadata: Metadata = {
     title: "WebflowX: chat, docs, tasks and meetings in one workspace",
     description: SITE_DESCRIPTION,
   },
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "WebflowX", statusBarStyle: "black-translucent" },
   icons: {
     icon: [{ url: "/favicon.ico" }, { url: "/logo.png", type: "image/png" }],
-    apple: [{ url: "/logo.png" }],
+    apple: [{ url: "/icons/apple-touch-icon.png" }],
   },
 };
 

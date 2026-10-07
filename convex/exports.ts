@@ -29,6 +29,7 @@ export const workspacePage = query({
     },
     handler: async (ctx, args) => {
         const { member, workspace } = await requireActor(ctx, args.workspaceId)
+        if (member.role === "guest") throw new ConvexError("Guests can't export workspace data")
         if (!isAdminLike(workspace, member)) throw new ConvexError("Only the owner or an admin can export the workspace")
         const opts = { numItems: PAGE, cursor: args.cursor }
         const wid = args.workspaceId

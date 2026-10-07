@@ -54,6 +54,8 @@ const ACTION_LABEL: Record<string, string> = {
   "invite.disable": "Paused invites",
   "invite.open_link": "Turned on open invite link",
   "invite.close_link": "Turned off open invite link",
+  "security.require_2fa": "Required two-step verification",
+  "security.allow_no_2fa": "Stopped requiring two-step verification",
   "member.role": "Changed a role",
   "member.remove": "Removed a member",
   "member.leave": "Member left",
@@ -64,6 +66,7 @@ const ACTION_LABEL: Record<string, string> = {
   "channel.unlock": "Unlocked a channel",
   "channel.delete": "Deleted a channel",
   "channel.create_private": "Created a locked channel",
+  "channel.guests": "Changed guest access to a channel",
   "channel.readonly_on": "Made a channel read-only",
   "channel.readonly_off": "Made a channel writable",
   "role.create": "Created a custom role",
@@ -91,6 +94,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
   const audit = useQuery(api.audit.list, perms.isAdmin && open ? { workspaceId } : "skip")
 
   const updateWorkspace = useMutation(api.workspaces.update)
+  const setRequire2fa = useMutation(api.workspaces.setRequire2fa)
   const setRolePermissions = useMutation(api.permissions.setRolePermissions)
   const saveCustomRole = useMutation(api.permissions.saveCustomRole)
   const deleteCustomRole = useMutation(api.permissions.deleteCustomRole)
@@ -160,7 +164,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
   ]
 
   const shownMembers = (members ?? []).filter((m) => (m.user.name ?? "").toLowerCase().includes(filter.toLowerCase()))
-  const order = (m: { isOwner: boolean; role: string }) => (m.isOwner ? 0 : m.role === "admin" ? 1 : m.role === "moderator" ? 2 : 3)
+  const order = (m: { isOwner: boolean; role: string }) => (m.isOwner ? 0 : m.role === "admin" ? 1 : m.role === "moderator" ? 2 : m.role === "guest" ? 4 : 3)
 
   return (
     <>
@@ -223,6 +227,25 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                     </Button>
                   )}
                 </form>
+
+                {perms.isAdmin && (
+                  <label className="flex items-start gap-3 rounded-xl border border-plum/12 bg-surface px-5 py-4 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="mt-1 size-4 accent-[#ff5018]"
+                      checked={!!workspace?.require2fa}
+                      onChange={(e) =>
+                        setRequire2fa({ workspaceId, require: e.target.checked })
+                          .then(() => toast.success(e.target.checked ? "Everyone must now use two-step verification" : "Two-step verification is optional again"))
+                          .catch((err) => toast.error(errMsg(err, "Couldn't change that setting")))
+                      }
+                    />
+                    <span>
+                      <span className="block text-sm font-semibold text-ink">Require two-step verification</span>
+                      <span className="block text-xs text-ink/65">Everyone must set up an authenticator app before they can open this workspace. Business plan and up.</span>
+                    </span>
+                  </label>
+                )}
 
                 {perms.isAdmin && (
                   <button disabled={exporting}

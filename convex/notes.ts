@@ -22,7 +22,7 @@ export const get = query({
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) return []
+        if (!member || member.role === "guest") return []
 
         if (args.type === "personal") {
             return await ctx.db
@@ -60,7 +60,7 @@ export const create = mutation({
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) throw new Error("Member not found")
+        if (!member || member.role === "guest") throw new Error("Member not found")
 
         await throttle(ctx, userId, "note-write", 30, 60_000, "saving notes")
         const title = text(args.title, MAX.noteTitle, "Title", { required: true, collapse: true })
@@ -134,7 +134,7 @@ export const update = mutation({
                 q.eq("workspaceId", note.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) throw new Error("Unauthorized")
+        if (!member || member.role === "guest") throw new Error("Unauthorized")
 
         const isAuthor = note.authorId === member._id
         const isAdmin = await can(ctx, member, "manageContent")
@@ -169,7 +169,7 @@ export const remove = mutation({
                 q.eq("workspaceId", note.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) throw new Error("Unauthorized")
+        if (!member || member.role === "guest") throw new Error("Unauthorized")
 
         const isAuthor = note.authorId === member._id
         const isAdmin = await can(ctx, member, "manageContent")

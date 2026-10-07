@@ -1,6 +1,7 @@
 "use client"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { formatDue } from "@/lib/due"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { Trash2, Flag, Star, Calendar, UserPlus } from "lucide-react"
@@ -73,7 +74,7 @@ export const TaskCard = ({
                 {task.dueDate && (
                     <span className={cn("text-[11px] flex items-center gap-1 rounded-md px-2 py-0.5", isOverdue ? "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300" : "bg-cream text-ink/60")}>
                         <Calendar className="size-3" />
-                        {format(task.dueDate, "MMM d")}
+                        {formatDue(task.dueDate, "MMM d")}
                     </span>
                 )}
             </div>

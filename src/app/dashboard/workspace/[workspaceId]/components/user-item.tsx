@@ -10,6 +10,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { PresenceDot } from "@/features/presence/presence";
 
 
 const userItemVariants = cva(
@@ -51,12 +52,15 @@ export const UserItem= ({id, label = "Member", image, variant, unread = 0, isSel
         >
             <Link href={`/dashboard/workspace/${workspaceId}/member/${id}`} aria-current={variant === "active" ? "page" : undefined}>
                 {variant === "active" && <span aria-hidden className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-[#ff5018]" />}
-                <Avatar className="size-5 rounded-md">
-                    <AvatarImage className="rounded-md" src={image} alt=""/>
-                    <AvatarFallback className="rounded-md bg-[#ff5018] text-white text-center text-[11px]">
-                        {fallbackInitial}
-                    </AvatarFallback>
-                </Avatar>
+                <span className="relative shrink-0">
+                    <Avatar className="size-5 rounded-md">
+                        <AvatarImage className="rounded-md" src={image} alt=""/>
+                        <AvatarFallback className="rounded-md bg-[#ff5018] text-white text-center text-[11px]">
+                            {fallbackInitial}
+                        </AvatarFallback>
+                    </Avatar>
+                    <PresenceDot memberId={id} />
+                </span>
                 <span className="truncate">{label}</span>
                 {isSelf && <span className="shrink-0 text-xs text-white/45">you</span>}
                 {unread > 0 && (

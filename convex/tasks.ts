@@ -56,7 +56,7 @@ export const get = query({
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) return []
+        if (!member || member.role === "guest") return []
 
         // newest 1,000 tasks (a board that big should be archived or split by sprint anyway)
         let tasks = await ctx.db
@@ -107,7 +107,7 @@ export const create = mutation({
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) throw new ConvexError("Unauthorized")
+        if (!member || member.role === "guest") throw new ConvexError("Unauthorized")
 
         await throttle(ctx, userId, "task-create", 60, 60_000, "creating tasks")
         const title = text(args.title, MAX.taskTitle, "Task title", { required: true, collapse: true })
@@ -175,7 +175,7 @@ export const update = mutation({
                 q.eq("workspaceId", task.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) throw new Error("Unauthorized")
+        if (!member || member.role === "guest") throw new Error("Unauthorized")
 
         const isAdmin = await can(ctx, member, "manageContent")
         const { id, unassign, ...updates } = args
@@ -236,7 +236,7 @@ export const remove = mutation({
                 q.eq("workspaceId", task.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) throw new ConvexError("Unauthorized")
+        if (!member || member.role === "guest") throw new ConvexError("Unauthorized")
         if (task.createdBy !== member._id && !(await can(ctx, member, "manageContent"))) {
             throw new ConvexError("Only admins or the task creator can delete tasks")
         }
@@ -267,7 +267,7 @@ export const assignToMe = mutation({
                 q.eq("workspaceId", task.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) throw new Error("Unauthorized")
+        if (!member || member.role === "guest") throw new Error("Unauthorized")
 
         if (task.assigneeId && task.assigneeId !== member._id && !(await can(ctx, member, "manageContent"))) {
             throw new ConvexError("This task is already assigned to someone else")

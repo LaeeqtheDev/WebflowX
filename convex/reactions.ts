@@ -36,7 +36,7 @@ export const toggle = mutation({
         if (message.channelId && !(await canViewChannel(ctx, message.channelId, userId))) throw new Error("Unauthorized")
         if (message.conversationId) {
             const conv = await ctx.db.get(message.conversationId)
-            if (!conv || (conv.memberOneId !== member._id && conv.memberTwoId !== member._id)) throw new Error("Unauthorized")
+            if (!conv || (member.role === "guest" || (conv.memberOneId !== member._id && conv.memberTwoId !== member._id))) throw new Error("Unauthorized")
         }
 
         const existingReaction = await ctx.db

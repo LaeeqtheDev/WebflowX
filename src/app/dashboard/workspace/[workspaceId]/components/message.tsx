@@ -19,6 +19,8 @@ import { Reactions } from "./reactions";
 import { usePanel } from "@/hooks/use-panel";
 import { ThreadBar } from "./theadBar";
 import { FileAttachment } from "./File-attachment";
+import { useMessageMarks } from "@/features/marks/use-marks";
+import { Pin } from "lucide-react";
 
 
 const Renderer = dynamic(() => import("@/components/renderer"), { ssr: false });
@@ -95,6 +97,7 @@ const MessageImpl = ({
 }: MessageProps) => {
     const { parentMessageId, onOpenMessage, onOpenProfile, onClose } = usePanel();
     const [showTaskModal, setShowTaskModal] = useState(false);
+    const marks = useMessageMarks(id);
 
     const [ConfirmDialog, confirm] = useConfirm(
         "Delete Message",
@@ -174,6 +177,7 @@ const MessageImpl = ({
                     className={cn(
                         "flex flex-col gap-2 p-1.5 px-5 max-md:pl-3 max-md:pr-11 max-md:min-h-10 hover:bg-cream/70 group relative",
                         isEditing && "bg-[#ff5018]/10 hover:bg-[#ff5018]/10",
+                    marks.isPinned && !isEditing && "bg-[#ff5018]/[0.06] hover:bg-[#ff5018]/[0.09]",
                         isRemovingMessage &&
                             "bg-rose-500/50 transform transition-all scale-y-0 origin-bottom duration-200"
                     )}
@@ -236,6 +240,10 @@ const MessageImpl = ({
                             handleDelete={handleRemove}
                             handleReaction={handleReaction}
                             hideThreadButton={hideThreadButton}
+                            handlePin={hideThreadButton ? undefined : marks.pin}
+                            handleSave={marks.save}
+                            isPinned={marks.isPinned}
+                            isSaved={marks.isSaved}
                         />
                     )}
                 </div>
@@ -261,6 +269,7 @@ const MessageImpl = ({
                 className={cn(
                     "flex flex-col gap-2 p-1.5 px-5 max-md:pl-3 max-md:pr-11 max-md:min-h-10 hover:bg-cream/70 group relative",
                     isEditing && "bg-[#ff5018]/10 hover:bg-[#ff5018]/10",
+                    marks.isPinned && !isEditing && "bg-[#ff5018]/[0.06] hover:bg-[#ff5018]/[0.09]",
                     isRemovingMessage &&
                         "bg-rose-500/50 transform transition-all scale-y-0 origin-bottom duration-200"
                 )}
@@ -299,6 +308,11 @@ const MessageImpl = ({
                                         {format(new Date(createdAt), "h:mm a")}
                                     </button>
                                 </Hint>
+                                {marks.isPinned && (
+                                    <span className="ml-2 inline-flex items-center gap-1 text-[11px] font-medium text-orange-ink">
+                                        <Pin className="size-3 fill-current" aria-hidden /> Pinned
+                                    </span>
+                                )}
                             </div>
                             <Renderer value={body} />
                             <Thumbnail url={image} />
@@ -339,6 +353,10 @@ const MessageImpl = ({
                         handleDelete={handleRemove}
                         handleReaction={handleReaction}
                         hideThreadButton={hideThreadButton}
+                        handlePin={hideThreadButton ? undefined : marks.pin}
+                        handleSave={marks.save}
+                        isPinned={marks.isPinned}
+                        isSaved={marks.isSaved}
                     />
                 )}
             </div>

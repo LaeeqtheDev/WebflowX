@@ -19,6 +19,10 @@ import { Id } from "../../../../../convex/_generated/dataModel"
 import dynamic from "next/dynamic"
 import { UsageWarning } from "./components/usage-warning"
 import { QuickSwitcher } from "./components/quick-switcher"
+import { PresenceProvider } from "@/features/presence/presence"
+import { useWorkspaceId } from "@/hooks/use-workspace-id"
+import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace"
+import { RequireTwoFactor } from "@/features/security/two-factor-gate"
 
 const Thread = dynamic(() => import("./components/threads").then((m) => m.Thread), { ssr: false })
 const Profile = dynamic(() => import("@/features/members/components/profile").then((m) => m.Profile), { ssr: false })
@@ -27,7 +31,7 @@ interface WorkspaceIdLayoutProps {
   children: React.ReactNode
 }
 
-const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
+const WorkspaceShell = ({ children }: WorkspaceIdLayoutProps) => {
   const {profileMemberId,parentMessageId, onClose} = usePanel()
   const isMobile = useIsMobile()
   const pathname = usePathname()
@@ -136,5 +140,16 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
     </div>
   </div>
   )
+}
+const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
+  const workspaceId = useWorkspaceId()
+  const { data: workspace } = useGetWorkspace({ id: workspaceId })
+  const shell = (
+    <PresenceProvider workspaceId={workspaceId}>
+      <WorkspaceShell>{children}</WorkspaceShell>
+    </PresenceProvider>
+  )
+  // owners and admins can require everyone to use two-step verification (Business plan and up)
+  return workspace?.require2fa ? <RequireTwoFactor workspaceName={workspace.name}>{shell}</RequireTwoFactor> : shell
 }
 export default WorkspaceLayout

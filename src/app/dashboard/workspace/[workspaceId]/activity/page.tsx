@@ -43,6 +43,12 @@ const TYPE_CONFIG = {
         bg: "bg-[#ff5018]/10",
         label: "assigned a task to you"
     },
+    task_due: {
+        icon: CheckSquare,
+        color: "text-orange-ink",
+        bg: "bg-[#ff5018]/10",
+        label: "a task assigned to you is due soon"
+    },
     task_comment: {
         icon: MessageSquare,
         color: "text-plum",
@@ -154,6 +160,7 @@ export default function ActivityPage() {
                 router.push(`${base}/member/${notification.senderId}${notification.messageId ? `?message=${notification.messageId}` : ""}`)
                 break
             case "task_assigned":
+            case "task_due":
             case "task_comment":
                 router.push(`${base}/tasks${notification.taskId ? `?task=${notification.taskId}` : ""}`)
                 break
@@ -274,7 +281,7 @@ export default function ActivityPage() {
                                         <div className="flex items-start justify-between gap-2">
                                             <p className="text-sm leading-snug">
                                                 <span className="font-semibold">
-                                                    {notification.sender?.user?.name ?? "Someone"}
+                                                    {notification.type === "task_due" ? "Reminder:" : (notification.sender?.user?.name ?? "Someone")}
                                                 </span>
                                                 {" "}
                                                 <span className="text-ink/60">

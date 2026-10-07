@@ -25,13 +25,15 @@ export const updateProfile = mutation({
         imageStorageId: v.optional(v.id("_storage")),
         removeImage: v.optional(v.boolean()),
         emailNotifications: v.optional(v.boolean()),
+        pushNotifications: v.optional(v.boolean()),
     },
     handler: async (ctx, args) => {
         const userId = await auth.getUserId(ctx)
         if (!userId) throw new ConvexError("Please sign in")
 
-        const patch: { name?: string; title?: string; bio?: string; image?: string; emailNotifications?: boolean } = {}
+        const patch: { name?: string; title?: string; bio?: string; image?: string; emailNotifications?: boolean; pushNotifications?: boolean } = {}
         if (args.emailNotifications !== undefined) patch.emailNotifications = args.emailNotifications
+        if (args.pushNotifications !== undefined) patch.pushNotifications = args.pushNotifications
         if (args.name !== undefined) {
             const name = args.name.trim().replace(/\s+/g, " ")
             if (!name) throw new ConvexError("Name can't be empty")

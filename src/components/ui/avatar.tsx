@@ -29,6 +29,8 @@ function AvatarImage({
     <AvatarPrimitive.Image
       data-slot="avatar-image"
       alt=""
+      // Google and GitHub photos can refuse to load when the page sends a Referer
+      referrerPolicy="no-referrer"
       className={cn("aspect-square size-full object-cover", className)}
       {...props}
     />

@@ -14,7 +14,7 @@ import { useCreateChannelModal } from "@/features/channels/store/use-create-chan
 import { useChannelId } from '@/hooks/use-channel-id'
 import { useMemberId } from "@/hooks/use-member-id"
 import { useRouter } from "next/navigation"
-import { Lock, Megaphone } from "lucide-react"
+import { Bookmark, CalendarDays, Files, Lock, Megaphone } from "lucide-react"
 import { usePermissions } from "@/hooks/use-permissions"
 import { usePathname } from "next/navigation"
 import { useGetConversations } from "@/features/conversations/api/use-get-conversations"
@@ -58,6 +58,7 @@ export const WorkSpaceSidebar = () => {
             <WorkspaceHeader workspace={workspace} isAdmin={perms.isAdmin} canInvite={perms.can("invite")} canEdit={perms.can("editWorkspace")} />
 
             <div className="flex flex-col px-2 mt-3 gap-0.5">
+                {!perms.isGuest && (
                 <SidebarItem
                     label="Threads"
                     icon={CommentMultiple20Regular}
@@ -65,12 +66,40 @@ export const WorkSpaceSidebar = () => {
                     variant={pathname.endsWith("/threads") ? "active" : "default"}
                     onClick={() => router.push(`/dashboard/workspace/${workspaceId}/threads`)}
                 />
+                )}
+                {!perms.isGuest && (
                 <SidebarItem
                     label="Drafts & Sent"
                     icon={Send20Regular}
                     id="drafts"
                     variant={pathname.endsWith("/drafts") ? "active" : "default"}
                     onClick={() => router.push(`/dashboard/workspace/${workspaceId}/drafts`)}
+                />
+                )}
+                {!perms.isGuest && (
+                <SidebarItem
+                    label="Calendar"
+                    icon={CalendarDays}
+                    id="calendar"
+                    variant={pathname.endsWith("/calendar") ? "active" : "default"}
+                    onClick={() => router.push(`/dashboard/workspace/${workspaceId}/calendar`)}
+                />
+                )}
+                {!perms.isGuest && (
+                <SidebarItem
+                    label="Files"
+                    icon={Files}
+                    id="files"
+                    variant={pathname.endsWith("/files") ? "active" : "default"}
+                    onClick={() => router.push(`/dashboard/workspace/${workspaceId}/files`)}
+                />
+                )}
+                <SidebarItem
+                    label="Saved"
+                    icon={Bookmark}
+                    id="saved"
+                    variant={pathname.endsWith("/saved") ? "active" : "default"}
+                    onClick={() => router.push(`/dashboard/workspace/${workspaceId}/saved`)}
                 />
             </div>
 
@@ -90,7 +119,7 @@ export const WorkSpaceSidebar = () => {
                 ))}
             </WorkspaceSection>
 
-            <WorkspaceSection
+            {!perms.isGuest && <WorkspaceSection
                 label="Direct Messages"
                 hint="New Direct Message"
                 onNew={() => setSwitcher({ open: true, mode: "dm" })}
@@ -113,7 +142,7 @@ export const WorkSpaceSidebar = () => {
                             />
                         )
                     })}
-            </WorkspaceSection>
+            </WorkspaceSection>}
         </div>
     )
 }

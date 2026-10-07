@@ -5,6 +5,7 @@ import { auth } from "./auth"
 import { requireActor, hasPermission } from "./permissions"
 import { PLANS, getPlan } from "./limits"
 import { consume } from "./rateLimit"
+import { internal } from "./_generated/api"
 
 const MB = 1024 * 1024
 
@@ -200,18 +201,27 @@ export const cleanupUnattached = internalMutation({
 const SWEEP_AFTER = Date.UTC(2026, 9, 8)
 
 export const sweepOrphans = internalMutation({
-    args: {},
-    handler: async (ctx) => {
+    args: { before: v.optional(v.number()) },
+    handler: async (ctx, args) => {
         const cutoff = Date.now() - 60 * 60 * 1000
-        const recent = await ctx.db.system.query("_storage").order("desc").filter((q) => q.lt(q.field("_creationTime"), cutoff)).take(300)
+        const upper = Math.min(cutoff, args.before ?? cutoff)
+        const BATCH = 200
+        const batch = await ctx.db.system
+            .query("_storage")
+            .order("desc")
+            .filter((q) => q.and(q.lt(q.field("_creationTime"), upper), q.gte(q.field("_creationTime"), SWEEP_AFTER)))
+            .take(BATCH)
         let removed = 0
-        for (const f of recent) {
-            if (f._creationTime > cutoff || f._creationTime < SWEEP_AFTER) continue
+        for (const f of batch) {
             const row = await ctx.db.query("files").withIndex("by_storage_id", (q) => q.eq("storageId", f._id)).unique()
             if (!row) {
                 await discard(ctx, f._id)
                 removed++
             }
+        }
+        // a flood of junk uploads can't outrun the cleanup: keep going down the list until it is exhausted
+        if (batch.length === BATCH) {
+            await ctx.scheduler.runAfter(0, internal.files.sweepOrphans, { before: batch[batch.length - 1]._creationTime })
         }
         return removed
     },

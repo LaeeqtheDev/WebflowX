@@ -8,7 +8,7 @@ import { Id } from "../../../../convex/_generated/dataModel";
 
 type RequestType = {
     id: Id<"members">
-    role: "admin" | "moderator" | "member"
+    role: "admin" | "moderator" | "member" | "guest"
 }; 
 
 type ResponseType = Id<"members"> | null

@@ -254,6 +254,9 @@ export const purge = internalMutation({
             await ctx.db.query("aiSummaryLog").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
             await ctx.db.query("notifications").withIndex("by_workspace_recipient", (q) => q.eq("workspaceId", wid)).take(BATCH),
             await ctx.db.query("auditLog").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("pins").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("savedMessages").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("attachments").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
         ]
         for (const rows of simple) {
             for (const row of rows) await ctx.db.delete(row._id)
@@ -312,6 +315,27 @@ export const setOpenInviteLink = mutation({
         await ctx.db.patch(args.workspaceId, { openInviteLink: args.open })
         await logAudit(ctx, args.workspaceId, member._id, args.open ? "invite.open_link" : "invite.close_link")
         return args.workspaceId;
+    }
+})
+
+// Require everyone to use two-step verification (Business and Enterprise). Owner and admins only.
+export const setRequire2fa = mutation({
+    args: { workspaceId: v.id("workspaces"), require: v.boolean() },
+    handler: async (ctx, args) => {
+        const { workspace, member } = await requireActor(ctx, args.workspaceId)
+        if (!isOwner(workspace, member) && member.role !== "admin") throw new ConvexError("Only the owner and admins can change this")
+        const plan = getPlan(workspace.plan)
+        if (args.require && plan !== "growth" && plan !== "enterprise") {
+            throw new ConvexError("Requiring two-step verification is part of the Business plan and up")
+        }
+        // the person switching it on must have it on themselves, or they would lock themselves out
+        if (args.require) {
+            const tf = await ctx.db.query("twoFactor").withIndex("by_user_id", (q) => q.eq("userId", member.userId)).unique()
+            if (!tf?.enabled) throw new ConvexError("Turn on two-step verification for your own account first (profile menu, Security)")
+        }
+        await ctx.db.patch(args.workspaceId, { require2fa: args.require })
+        await logAudit(ctx, args.workspaceId, member._id, args.require ? "security.require_2fa" : "security.allow_no_2fa")
+        return args.workspaceId
     }
 })
 
@@ -387,7 +411,7 @@ export const join = mutation({
             .collect()
 
         const { allowed, limit, plan } = await checkLimit(
-            ctx, workspace._id, "members", existingMembers.length
+            ctx, workspace._id, "members", existingMembers.filter((m) => m.role !== "guest").length
         )
 
         if (!allowed) {

@@ -19,7 +19,7 @@ export const get = query({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
-        if (!member) return EMPTY
+        if (!member || member.role === "guest") return EMPTY
         const workspace = await ctx.db.get(args.workspaceId)
         if (!workspace) return EMPTY
 

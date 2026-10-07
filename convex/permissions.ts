@@ -41,11 +41,13 @@ const clean = (list: string[]): Permission[] =>
 export const isOwner = (workspace: Doc<"workspaces">, member: Doc<"members">) =>
     workspace.userId === member.userId
 
-export const roleOf = (workspace: Doc<"workspaces">, member: Doc<"members">): "owner" | "admin" | "moderator" | "member" =>
+export const roleOf = (workspace: Doc<"workspaces">, member: Doc<"members">): "owner" | "admin" | "moderator" | "member" | "guest" =>
     isOwner(workspace, member) ? "owner" : member.role
 
 export const permissionList = (workspace: Doc<"workspaces">, member: Doc<"members">): Permission[] => {
     if (isOwner(workspace, member) || member.role === "admin") return [...PERMISSIONS]
+    // guests can read, write and attach files in their channels, and nothing else
+    if (member.role === "guest") return ["uploadFiles"]
     const custom = member.customRoleId ? workspace.customRoles?.find((r) => r.id === member.customRoleId) : undefined
     if (custom) return clean(custom.permissions)
     const configured = workspace.rolePermissions?.[member.role]
@@ -66,6 +68,8 @@ export const canAccessChannel = (
     member: Doc<"members">,
     channel: Doc<"channels">
 ) => {
+    // guests open only the channels they were added to, locked or not
+    if (member.role === "guest") return (channel.guestIds ?? []).includes(member._id)
     if (!channel.isPrivate) return true
     if ((channel.memberIds ?? []).includes(member._id)) return true
     return hasPermission(workspace, member, "viewPrivateChannels")

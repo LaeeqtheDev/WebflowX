@@ -1,0 +1,16 @@
+{
+  "name": "WebflowX",
+  "short_name": "WebflowX",
+  "description": "Chat, docs, tasks and meetings in one workspace.",
+  "id": "/dashboard",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#2a1420",
+  "theme_color": "#2a1420",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

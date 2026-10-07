@@ -50,7 +50,7 @@ export const create = mutation({
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) throw new Error("Unauthorized")
+        if (!member || member.role === "guest") throw new Error("Unauthorized")
 
         const taskForCheck = await ctx.db.get(args.taskId)
         if (!taskForCheck || taskForCheck.workspaceId !== args.workspaceId)
@@ -99,7 +99,7 @@ export const remove = mutation({
                 q.eq("workspaceId", comment.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) throw new Error("Unauthorized")
+        if (!member || member.role === "guest") throw new Error("Unauthorized")
         if (comment.memberId !== member._id && !(await can(ctx, member, "manageContent")))
             throw new Error("Unauthorized")
 

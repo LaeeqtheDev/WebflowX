@@ -24,7 +24,7 @@ export const list = query({
             .query("members")
             .withIndex("byWorkspaceId_user_id", (q) => q.eq("workspaceId", args.workspaceId).eq("userId", userId))
             .unique()
-        if (!member) return []
+        if (!member || member.role === "guest") return []
         const workspace = await ctx.db.get(args.workspaceId)
         if (!workspace) return []
         if (workspace.userId !== member.userId && member.role !== "admin") throw new ConvexError("Only admins can view the audit log")

@@ -5,6 +5,7 @@ import { mutation, query, QueryCtx } from "./_generated/server";
 import { ConvexError } from "convex/values";
 import { requireActor, isAdminLike, isOwner, hasPermission, roleOf } from "./permissions";
 import { logAudit } from "./audit";
+import { PLANS, getPlan } from "./limits";
 
 const populateUser = (ctx: QueryCtx, id: Id<"users">) => {
     return ctx.db.get(id)
@@ -57,9 +58,11 @@ export const get = query({
 
         const workspace = await ctx.db.get(args.workspaceId)
         const members = []
-        for (const member of data) {
-            const user = await populateUser(ctx, member.userId)
-            if (user) members.push({ ...member, user, isOwner: workspace?.userId === member.userId })
+        for (const m of data) {
+            // guests see only themselves and the people who run the workspace
+            if (member.role === "guest" && m._id !== member._id && m.role !== "admin" && workspace?.userId !== m.userId) continue
+            const user = await populateUser(ctx, m.userId)
+            if (user) members.push({ ...m, user, isOwner: workspace?.userId === m.userId })
         }
         return members
     }
@@ -82,12 +85,12 @@ export const current = query({
     }
 })
 
-const RANK = { member: 0, moderator: 1, admin: 2, owner: 3 } as const
+const RANK = { guest: 0, member: 0, moderator: 1, admin: 2, owner: 3 } as const
 
 export const update = mutation({
     args: {
         id: v.id("members"),
-        role: v.union(v.literal("admin"), v.literal("moderator"), v.literal("member")),
+        role: v.union(v.literal("admin"), v.literal("moderator"), v.literal("member"), v.literal("guest")),
     },
     handler: async (ctx, args) => {
         const target = await ctx.db.get(args.id);
@@ -101,6 +104,16 @@ export const update = mutation({
         // Only the owner can make admins or change an admin's role
         if ((args.role === "admin" || target.role === "admin") && !isOwner(workspace, actor)) {
             throw new ConvexError("Only the workspace owner can promote or demote admins")
+        }
+
+        // guests are capped per plan; they don't count toward the member cap
+        if (args.role === "guest") {
+            const limit = PLANS[getPlan(workspace.plan)].guests
+            if (limit === 0) throw new ConvexError(`LIMIT_REACHED:guests:0:${getPlan(workspace.plan)}`)
+            if (limit > 0) {
+                const all = await ctx.db.query("members").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", target.workspaceId)).take(1000)
+                if (all.filter((m) => m.role === "guest").length >= limit) throw new ConvexError(`LIMIT_REACHED:guests:${limit}:${getPlan(workspace.plan)}`)
+            }
         }
 
         await ctx.db.patch(args.id, { role: args.role, customRoleId: undefined })
@@ -185,6 +198,10 @@ export const remove = mutation({
                 .collect(),
         ])
         for (const n of notifications) await ctx.db.delete(n._id)
+        const saved = await ctx.db.query("savedMessages").withIndex("by_member_id", (q) => q.eq("memberId", member._id)).collect()
+        for (const s of saved) await ctx.db.delete(s._id)
+        const attachmentRows = await ctx.db.query("attachments").withIndex("by_member_id", (q) => q.eq("memberId", member._id)).collect()
+        for (const a of attachmentRows) await ctx.db.delete(a._id)
         for (const t of assignedTasks) await ctx.db.patch(t._id, { assigneeId: undefined, updatedAt: Date.now() })
 
         // take them out of any locked channels they were added to
@@ -195,6 +212,9 @@ export const remove = mutation({
         for (const ch of lockedChannels) {
             if (ch.memberIds?.includes(args.id)) {
                 await ctx.db.patch(ch._id, { memberIds: ch.memberIds.filter((id) => id !== args.id) })
+            }
+            if (ch.guestIds?.includes(args.id)) {
+                await ctx.db.patch(ch._id, { guestIds: ch.guestIds.filter((id) => id !== args.id) })
             }
         }
 

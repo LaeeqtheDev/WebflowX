@@ -19,6 +19,8 @@ const schema = defineSchema({
         emailNotifications: v.optional(v.boolean()),
         // each member's own appearance setting
         theme: v.optional(v.union(v.literal("light"), v.literal("dark"), v.literal("system"))),
+        // false turns off browser push notifications. Default is on once a device has subscribed.
+        pushNotifications: v.optional(v.boolean()),
     })
         .index("email", ["email"])
         .index("phone", ["phone"]),
@@ -61,6 +63,8 @@ const schema = defineSchema({
         invitesDisabled: v.optional(v.boolean()),
         // when on, the invite link works without the 6-character code (still revoked by turning invites off)
         openInviteLink: v.optional(v.boolean()),
+        // when on, members must have two-step verification switched on to use the workspace (Business and up)
+        require2fa: v.optional(v.boolean()),
         // workspace profile
         image: v.optional(v.id("_storage")),
         description: v.optional(v.string()),
@@ -91,7 +95,7 @@ const schema = defineSchema({
     members: defineTable({
         userId: v.id("users"),
         workspaceId: v.id("workspaces"),
-        role: v.union(v.literal("admin"), v.literal("moderator"), v.literal("member")),
+        role: v.union(v.literal("admin"), v.literal("moderator"), v.literal("member"), v.literal("guest")),
         // optional custom role (its permissions replace the base role's)
         customRoleId: v.optional(v.string()),
     })
@@ -108,6 +112,8 @@ const schema = defineSchema({
         memberIds: v.optional(v.array(v.id("members"))),
         // announcement channel: everyone can read, only roles with "post in read-only channels" can write
         readOnly: v.optional(v.boolean()),
+        // guests (limited members) who may open this channel; guests can open nothing else
+        guestIds: v.optional(v.array(v.id("members"))),
     }).index("byWorkspaceId", ["workspaceId"]),
 
     conversations: defineTable({
@@ -201,8 +207,12 @@ const schema = defineSchema({
         storyPoints: v.optional(v.number()),
         updatedAt: v.optional(v.number()),
         sprintId: v.optional(v.id("sprints")),
+        // the due date a reminder was already sent for, so each deadline reminds once
+        reminderSentFor: v.optional(v.number()),
     })
         .index("by_workspace_id", ["workspaceId"])
+        .index("by_workspace_due", ["workspaceId", "dueDate"])
+        .index("by_due_date", ["dueDate"])
         .index("by_assignee_id", ["assigneeId"])
         .index("by_workspace_id_status", ["workspaceId", "status"])
         .index("by_workspace_id_assignee", ["workspaceId", "assigneeId"]),
@@ -271,6 +281,104 @@ const schema = defineSchema({
         count: v.number(),
     }).index("by_key", ["key"]),
 
+    // one row per file or image attached to a message, so the Files page can list and search them
+    attachments: defineTable({
+        workspaceId: v.id("workspaces"),
+        messageId: v.id("messages"),
+        memberId: v.id("members"),
+        channelId: v.optional(v.id("channels")),
+        conversationId: v.optional(v.id("conversations")),
+        kind: v.union(v.literal("image"), v.literal("file")),
+        name: v.string(),
+        contentType: v.string(),
+        size: v.number(),
+        storageId: v.id("_storage"),
+    })
+        .index("by_workspace_id", ["workspaceId"])
+        .index("by_message_id", ["messageId"])
+        .index("by_member_id", ["memberId"])
+        .searchIndex("search_name", { searchField: "name", filterFields: ["workspaceId", "kind"] }),
+
+    // last time each person had the app open (updated every ~30 seconds while a tab is visible)
+    presence: defineTable({
+        userId: v.id("users"),
+        lastSeen: v.number(),
+    }).index("by_user_id", ["userId"]),
+
+    // "someone is typing" markers; they expire a few seconds after the last keystroke
+    typing: defineTable({
+        workspaceId: v.id("workspaces"),
+        channelId: v.optional(v.id("channels")),
+        conversationId: v.optional(v.id("conversations")),
+        memberId: v.id("members"),
+        until: v.number(),
+    })
+        .index("by_channel_id", ["channelId"])
+        .index("by_conversation_id", ["conversationId"])
+        .index("by_until", ["until"]),
+
+    // messages pinned to a channel or conversation (visible to everyone who can open it)
+    pins: defineTable({
+        workspaceId: v.id("workspaces"),
+        channelId: v.optional(v.id("channels")),
+        conversationId: v.optional(v.id("conversations")),
+        messageId: v.id("messages"),
+        pinnedBy: v.id("members"),
+    })
+        .index("by_channel_id", ["channelId"])
+        .index("by_conversation_id", ["conversationId"])
+        .index("by_message_id", ["messageId"])
+        .index("by_workspace_id", ["workspaceId"]),
+
+    // a member's private "saved for later" list
+    savedMessages: defineTable({
+        workspaceId: v.id("workspaces"),
+        memberId: v.id("members"),
+        messageId: v.id("messages"),
+    })
+        .index("by_member_id", ["memberId"])
+        .index("by_member_message", ["memberId", "messageId"])
+        .index("by_message_id", ["messageId"])
+        .index("by_workspace_id", ["workspaceId"]),
+
+    // browser push subscriptions, one per device
+    pushSubscriptions: defineTable({
+        userId: v.id("users"),
+        endpoint: v.string(),
+        p256dh: v.string(),
+        authKey: v.string(),
+    })
+        .index("by_user_id", ["userId"])
+        .index("by_endpoint", ["endpoint"]),
+
+    // two-step verification (authenticator app). One row per user once setup has started.
+    twoFactor: defineTable({
+        userId: v.id("users"),
+        secret: v.string(), // base32
+        enabled: v.boolean(),
+        // sha-256 of each unused backup code
+        backupCodes: v.array(v.string()),
+        // last accepted 30-second step, so a code can't be used twice
+        lastStep: v.optional(v.number()),
+    }).index("by_user_id", ["userId"]),
+
+    // which sign-in sessions have passed the second step
+    twoFactorSessions: defineTable({
+        userId: v.id("users"),
+        sessionId: v.id("authSessions"),
+        verifiedAt: v.number(),
+    })
+        .index("by_session_id", ["sessionId"])
+        .index("by_user_id", ["userId"]),
+
+    // secret link that lets a calendar app (Google Calendar, Outlook, Apple) subscribe to my due dates
+    calendarFeeds: defineTable({
+        userId: v.id("users"),
+        token: v.string(),
+    })
+        .index("by_user_id", ["userId"])
+        .index("by_token", ["token"]),
+
     newsletterSubscribers: defineTable({
         email: v.string(), // lowercased
         status: v.union(v.literal("pending"), v.literal("subscribed"), v.literal("unsubscribed")),
@@ -305,7 +413,8 @@ const schema = defineSchema({
             v.literal("task_comment"),
             v.literal("note_added"),
             v.literal("dm_received"),
-            v.literal("mention")
+            v.literal("mention"),
+            v.literal("task_due")
         ),
         read: v.boolean(),
         messageId: v.optional(v.id("messages")),

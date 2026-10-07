@@ -37,7 +37,7 @@ export const get = query({
         const channels = await ctx.db.query("channels")
             .withIndex("byWorkspaceId", (q) =>
                 q.eq("workspaceId", args.workspaceId))
-            .collect()
+            .take(500)
 
         return channels.filter((c) => canAccessChannel(workspace, member, c))
     }
@@ -175,6 +175,24 @@ export const setAccess = mutation({
         }
         await ctx.db.patch(args.id, { isPrivate: args.isPrivate ? true : undefined, memberIds })
         await logAudit(ctx, channel.workspaceId, member._id, args.isPrivate ? "channel.lock" : "channel.unlock", `#${channel.name}`)
+        return args.id
+    }
+})
+
+// Choose which guests can open this channel. Guests can open nothing else.
+export const setGuests = mutation({
+    args: { id: v.id("channels"), guestIds: v.array(v.id("members")) },
+    handler: async (ctx, args) => {
+        const channel = await ctx.db.get(args.id);
+        if (!channel) throw new ConvexError("Channel not found");
+        const { member } = await requirePermission(ctx, channel.workspaceId, "manageChannels", "You don't have permission to change who can open this channel")
+        const valid: Id<"members">[] = []
+        for (const id of new Set(args.guestIds.slice(0, 200))) {
+            const m = await ctx.db.get(id)
+            if (m && m.workspaceId === channel.workspaceId && m.role === "guest") valid.push(id)
+        }
+        await ctx.db.patch(args.id, { guestIds: valid })
+        await logAudit(ctx, channel.workspaceId, member._id, "channel.guests", `#${channel.name}: ${valid.length} guest${valid.length === 1 ? "" : "s"}`)
         return args.id
     }
 })

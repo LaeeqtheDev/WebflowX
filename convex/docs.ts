@@ -25,7 +25,7 @@ export const get = query({
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) return []
+        if (!member || member.role === "guest") return []
 
         const docs = await ctx.db
             .query("docs")
@@ -57,7 +57,7 @@ export const create = mutation({
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) throw new Error("Unauthorized")
+        if (!member || member.role === "guest") throw new Error("Unauthorized")
         if (!(await can(ctx, member, "createDocs"))) throw new ConvexError("You don't have permission to create documents")
 
         await throttle(ctx, userId, "doc-create", 20, 60 * 60_000, "creating documents")
@@ -100,7 +100,7 @@ export const rename = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", doc.workspaceId).eq("userId", userId)
             ).unique()
-        if (!member) throw new Error("Unauthorized")
+        if (!member || member.role === "guest") throw new Error("Unauthorized")
 
         await ctx.db.patch(args.id, {
             title: cleanTitle(args.title),
@@ -124,7 +124,7 @@ export const touch = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", doc.workspaceId).eq("userId", userId)
             ).unique()
-        if (!member) return null
+        if (!member || member.role === "guest") return null
         // skip if touched in the last few seconds to avoid write churn
         if (doc.updatedAt && Date.now() - doc.updatedAt < 5000) return null
         await ctx.db.patch(args.id, { updatedAt: Date.now(), updatedBy: member._id })
@@ -147,7 +147,7 @@ export const remove = mutation({
                 q.eq("workspaceId", doc.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) throw new Error("Unauthorized")
+        if (!member || member.role === "guest") throw new Error("Unauthorized")
 
         const isCreator = doc.createdBy === member._id
         const isAdmin = await can(ctx, member, "manageContent")
@@ -176,7 +176,7 @@ export const authorizeRoom = query({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", doc.workspaceId).eq("userId", userId)
             ).unique()
-        if (!member) return null
+        if (!member || member.role === "guest") return null
         const user = await ctx.db.get(userId)
         return {
             userId: userId as string,

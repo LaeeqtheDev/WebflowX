@@ -16,7 +16,7 @@ const requireMeetingMember = async (ctx: MutationCtx, meetingId: Id<"meetings">)
     const meeting = await ctx.db.get(meetingId)
     if (!meeting) throw new Error("Meeting not found")
     const member = await findMember(ctx, meeting.workspaceId, userId)
-    if (!member) throw new Error("Unauthorized")
+    if (!member || member.role === "guest") throw new Error("Unauthorized")
     return { meeting, member }
 }
 
@@ -32,7 +32,7 @@ export const get = query({
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) return []
+        if (!member || member.role === "guest") return []
 
         const meetings = await ctx.db
             .query("meetings")
@@ -130,7 +130,7 @@ export const getTranscript = query({
         const meeting = await ctx.db.get(args.id)
         if (!meeting) return ""
         const member = await findMember(ctx, meeting.workspaceId, userId)
-        if (!member) return ""
+        if (!member || member.role === "guest") return ""
 
         const rows = await ctx.db
             .query("meetingTranscripts")
@@ -214,7 +214,7 @@ export const create = mutation({
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) throw new Error("Unauthorized")
+        if (!member || member.role === "guest") throw new Error("Unauthorized")
         if (!(await can(ctx, member, "startMeetings"))) throw new ConvexError("You don't have permission to start meetings")
         await throttle(ctx, userId, "meeting-create", 10, 60 * 60_000, "starting meetings")
         const title = text(args.title, MAX.meetingTitle, "Meeting title", { required: true, collapse: true })
@@ -311,7 +311,7 @@ export const authorizeRoom = query({
             .first()
         if (!meeting || meeting.endedAt) return null
         const member = await findMember(ctx, meeting.workspaceId, userId)
-        if (!member) return null
+        if (!member || member.role === "guest") return null
         if ((meeting.kicked ?? []).includes(member._id)) return null
         const user = await ctx.db.get(userId)
         return {
@@ -362,7 +362,7 @@ export const hasSummaryClaim = query({
         const meeting = await ctx.db.get(args.id)
         if (!meeting) return false
         const member = await findMember(ctx, meeting.workspaceId, userId)
-        if (!member) return false
+        if (!member || member.role === "guest") return false
         const rows = await ctx.db
             .query("aiSummaryLog")
             .withIndex("by_meeting_id", (q) => q.eq("meetingId", args.id))

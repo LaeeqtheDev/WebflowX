@@ -16,7 +16,7 @@ export const get = query({
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member) return []
+        if (!member || member.role === "guest") return []
 
         return await ctx.db
             .query("sprints")

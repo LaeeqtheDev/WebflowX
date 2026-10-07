@@ -2,12 +2,16 @@
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FaChevronDown } from "react-icons/fa";
+import { PinnedMessages } from "@/features/marks/pinned-messages";
+import type { Id } from "../../../../../../../convex/_generated/dataModel";
 
 
 interface HeaderProps {
    memberName?: string;
    memberImage?: string;
    onClick?: () => void;
+   conversationId?: Id<"conversations">;
+   otherMemberId?: string;
 
 }
 
@@ -15,7 +19,8 @@ export const Header = ({
     memberName ="Member",
     memberImage,
     onClick,
-
+    conversationId,
+    otherMemberId,
 }: HeaderProps) => {
 
 
@@ -40,7 +45,7 @@ export const Header = ({
             </span>
             <FaChevronDown className="size-2.5 ml-2 text-[#ff5018]"/>
             </Button>
-           
+            {conversationId && <PinnedMessages conversationId={conversationId} memberId={otherMemberId} />}
         </div>
     )
 }
