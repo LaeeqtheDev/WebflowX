@@ -165,6 +165,7 @@ export const MessageList = ({
                                 image={message.image}
                                 file={message.file}
                                 fileName={message.fileName}
+                                isBot={!!message.integrationName}
                                 fileType={message.fileType}
                                 fileSize={message.fileSize}
                                 updatedAt={message.updatedAt}

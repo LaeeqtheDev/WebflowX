@@ -62,7 +62,7 @@ export const create = mutation({
         const existingChannels = await ctx.db
             .query("channels")
             .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId))
-            .collect()
+            .take(1000)
 
         if (existingChannels.some((c) => c.name === parseName)) {
             throw new ConvexError("A channel with that name already exists")

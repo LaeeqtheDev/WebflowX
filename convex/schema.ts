@@ -53,6 +53,8 @@ const schema = defineSchema({
         // signs outgoing deliveries / verifies GitHub deliveries
         secret: v.optional(v.string()),
         events: v.optional(v.array(v.string())),
+        // outgoing webhooks only: also send events from locked channels (off unless an admin turns it on)
+        includePrivate: v.optional(v.boolean()),
         active: v.boolean(),
         lastUsedAt: v.optional(v.number()),
         failCount: v.optional(v.number()),
@@ -153,6 +155,7 @@ const schema = defineSchema({
         // File attachment support
         file: v.optional(v.id("_storage")),
         fileName: v.optional(v.string()),
+        imageName: v.optional(v.string()),
         fileType: v.optional(v.string()),
         fileSize: v.optional(v.number()),
         memberId: v.id("members"),

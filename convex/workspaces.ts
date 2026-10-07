@@ -33,7 +33,7 @@ export const create = mutation({
         const owned = await ctx.db
             .query("workspaces")
             .withIndex("by_user_id", (q) => q.eq("userId", userId))
-            .collect()
+            .take(100)
         if (owned.length > 0) {
             const bestLimit = owned.reduce((best, w) => {
                 const limit = PLANS[getPlan(w.plan)].workspaces
@@ -409,7 +409,7 @@ export const join = mutation({
         const existingMembers = await ctx.db
             .query("members")
             .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", workspace._id))
-            .collect()
+            .take(2000)
 
         const { allowed, limit, plan } = await checkLimit(
             ctx, workspace._id, "members", existingMembers.filter((m) => m.role !== "guest").length

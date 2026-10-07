@@ -54,7 +54,7 @@ export const get = query({
         const data = await ctx.db
             .query("members")
             .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId))
-            .collect()
+            .take(1000)
 
         const workspace = await ctx.db.get(args.workspaceId)
         const members = []

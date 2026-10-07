@@ -1,7 +1,7 @@
 import { v } from "convex/values"
 import { query } from "./_generated/server"
 import { auth } from "./auth"
-import { canAccessChannel } from "./permissions"
+import { canAccessChannel, assert2fa } from "./permissions"
 
 export const get = query({
     args: { workspaceId: v.id("workspaces") },
@@ -14,6 +14,7 @@ export const get = query({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") return []
         const workspace = await ctx.db.get(args.workspaceId)

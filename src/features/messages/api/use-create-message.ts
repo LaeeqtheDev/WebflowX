@@ -8,6 +8,7 @@ type RequestType = {
     image?: Id<"_storage">;
     file?: Id<"_storage">;
     fileName?: string;
+    imageName?: string;
     fileType?: string;
     fileSize?: number;
     workspaceId: Id<"workspaces">;

@@ -3,7 +3,7 @@ import { mutation, query, internalMutation, MutationCtx } from "./_generated/ser
 import { Id } from "./_generated/dataModel"
 import { findMember } from "./access"
 import { auth } from "./auth"
-import { can } from "./permissions"
+import { can, assert2fa } from "./permissions"
 import { checkLimit } from "./limits"
 import { MAX, text } from "./validate"
 import { throttle } from "./rateLimit"
@@ -31,6 +31,7 @@ export const get = query({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") return []
 
@@ -135,7 +136,7 @@ export const getTranscript = query({
         const rows = await ctx.db
             .query("meetingTranscripts")
             .withIndex("by_meeting_id", (q) => q.eq("meetingId", args.id))
-            .collect()
+            .take(300)
 
         const lines: { t: number; speaker: string; text: string }[] = []
         for (const row of rows) {
@@ -182,7 +183,7 @@ export const claimSummary = mutation({
             .withIndex("by_workspace_id", (q) =>
                 q.eq("workspaceId", meeting.workspaceId).gte("_creationTime", startOfMonth)
             )
-            .collect()
+            .take(2000)
 
         const { allowed, limit, plan } = await checkLimit(ctx, meeting.workspaceId, "aiSummaries", used.length)
         if (!allowed) {
@@ -213,6 +214,7 @@ export const create = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") throw new Error("Unauthorized")
         if (!(await can(ctx, member, "startMeetings"))) throw new ConvexError("You don't have permission to start meetings")
@@ -228,7 +230,7 @@ export const create = mutation({
             .query("meetings")
             .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
             .filter((q) => q.gte(q.field("startedAt"), startOfMonth))
-            .collect()
+            .take(2000)
 
         const { allowed, limit, plan } = await checkLimit(
             ctx, args.workspaceId, "meetings", existingMeetings.length

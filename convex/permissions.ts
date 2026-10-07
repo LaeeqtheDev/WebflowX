@@ -75,6 +75,16 @@ export const canAccessChannel = (
     return hasPermission(workspace, member, "viewPrivateChannels")
 }
 
+// Workspaces that require two-step verification refuse every request from an account that hasn't turned it on.
+// (Signing in with a password alone is already blocked for accounts that have it on, see auth.ts.)
+export const REQUIRE_2FA_MESSAGE = "This workspace requires two-step verification. Turn it on in your security settings to continue."
+export const assert2fa = async (ctx: QueryCtx | MutationCtx, member: Doc<"members">, workspace?: Doc<"workspaces"> | null) => {
+    const ws = workspace ?? (await ctx.db.get(member.workspaceId))
+    if (!ws?.require2fa) return
+    const tf = await ctx.db.query("twoFactor").withIndex("by_user_id", (q) => q.eq("userId", member.userId)).unique()
+    if (!tf?.enabled) throw new ConvexError(REQUIRE_2FA_MESSAGE)
+}
+
 // Loads the signed-in member + workspace, or throws a friendly error.
 export const requireActor = async (ctx: QueryCtx | MutationCtx, workspaceId: Id<"workspaces">) => {
     const userId = await auth.getUserId(ctx)
@@ -86,6 +96,7 @@ export const requireActor = async (ctx: QueryCtx | MutationCtx, workspaceId: Id<
     if (!member) throw new ConvexError("You are not a member of this workspace")
     const workspace = await ctx.db.get(workspaceId)
     if (!workspace) throw new ConvexError("This workspace no longer exists")
+    await assert2fa(ctx, member, workspace)
     return { userId, member, workspace }
 }
 
@@ -223,7 +234,7 @@ export const saveCustomRole = mutation({
 
         // people already holding this role move to its (possibly new) base rank
         if (args.id) {
-            const holders = await ctx.db.query("members").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId)).collect()
+            const holders = await ctx.db.query("members").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId)).take(2000)
             for (const m of holders) if (m.customRoleId === args.id && m.role !== "admin") await ctx.db.patch(m._id, { role: args.baseRole })
         }
         await logAudit(ctx, args.workspaceId, member._id, args.id ? "role.update" : "role.create", name)
@@ -239,7 +250,7 @@ export const deleteCustomRole = mutation({
         const role = workspace.customRoles?.find((r) => r.id === args.id)
         if (!role) throw new ConvexError("Role not found")
         await ctx.db.patch(args.workspaceId, { customRoles: (workspace.customRoles ?? []).filter((r) => r.id !== args.id) })
-        const holders = await ctx.db.query("members").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId)).collect()
+        const holders = await ctx.db.query("members").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId)).take(2000)
         for (const m of holders) if (m.customRoleId === args.id) await ctx.db.patch(m._id, { customRoleId: undefined })
         await logAudit(ctx, args.workspaceId, member._id, "role.delete", role.name)
         return args.id

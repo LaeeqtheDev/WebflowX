@@ -2,7 +2,7 @@ import { v } from "convex/values"
 import { notify } from "./notifications"
 import { mutation, query } from "./_generated/server"
 import { auth } from "./auth"
-import { can } from "./permissions"
+import { can, assert2fa } from "./permissions"
 import { MAX, text } from "./validate"
 import { throttle } from "./rateLimit"
 
@@ -19,6 +19,7 @@ export const get = query({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", task.workspaceId).eq("userId", userId)
             ).unique()
+        if (viewer) await assert2fa(ctx, viewer)
         if (!viewer) return []
 
         const comments = await ctx.db
@@ -49,6 +50,7 @@ export const create = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") throw new Error("Unauthorized")
 
@@ -98,6 +100,7 @@ export const remove = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", comment.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") throw new Error("Unauthorized")
         if (comment.memberId !== member._id && !(await can(ctx, member, "manageContent")))

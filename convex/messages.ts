@@ -4,7 +4,7 @@ import { auth } from "./auth";
 import { Id, Doc } from "./_generated/dataModel";
 import { paginationOptsValidator, PaginationResult } from "convex/server";
 import { ConvexError } from "convex/values";
-import { canViewChannel, can, canAccessChannel, requireActor, hasPermission } from "./permissions";
+import { canViewChannel, can, canAccessChannel, requireActor, hasPermission, assert2fa } from "./permissions";
 import { claim, release } from "./files";
 import { assertDeltaBody, snippetOf } from "./validate";
 import { throttle } from "./rateLimit";
@@ -144,12 +144,14 @@ export const getMember = async (
     workspaceId: Id<"workspaces">,
     userId: Id<"users">
 ) => {
-    return ctx.db
+    const member = await ctx.db
         .query("members")
         .withIndex("byWorkspaceId_user_id", (q) =>
             q.eq("workspaceId", workspaceId).eq("userId", userId)
         )
         .unique();
+    if (member) await assert2fa(ctx, member);
+    return member;
 };
 
 // Deletes a message together with its reactions, thread replies and stored files.
@@ -353,6 +355,7 @@ export const create = mutation({
         image: v.optional(v.id("_storage")),
         file: v.optional(v.id("_storage")),
         fileName: v.optional(v.string()),
+        imageName: v.optional(v.string()),
         fileType: v.optional(v.string()),
         fileSize: v.optional(v.number()),
         workspaceId: v.id("workspaces"),
@@ -413,6 +416,7 @@ export const create = mutation({
         // attachments must be files this member uploaded to this workspace (type, size and storage cap were checked on upload)
         let fileName = args.fileName, fileType = args.fileType, fileSize = args.fileSize;
         if (args.image) await claim(ctx, args.image, args.workspaceId, userId);
+        const imageName = args.image && args.imageName ? args.imageName.replace(/[\u0000-\u001f]/g, "").trim().slice(0, 200) || undefined : undefined;
         if (args.file) {
             const row = await claim(ctx, args.file, args.workspaceId, userId);
             fileType = row.contentType;
@@ -428,6 +432,7 @@ export const create = mutation({
             image: args.image,
             file: args.file,
             fileName,
+            imageName,
             fileType,
             fileSize,
             channelId,
@@ -441,7 +446,7 @@ export const create = mutation({
             const row = await ctx.db.query("files").withIndex("by_storage_id", (q) => q.eq("storageId", args.image!)).unique();
             await ctx.db.insert("attachments", {
                 workspaceId: args.workspaceId, messageId, memberId: member._id, channelId, conversationId: _conversationId,
-                kind: "image", name: "Image", contentType: row?.contentType ?? "image/png", size: row?.size ?? 0, storageId: args.image,
+                kind: "image", name: imageName ?? "Image", contentType: row?.contentType ?? "image/png", size: row?.size ?? 0, storageId: args.image,
             });
         }
         if (args.file) {
@@ -512,10 +517,10 @@ export const create = mutation({
             alreadyNotified,
         });
 
-        // outgoing webhooks (public channels only)
+        // outgoing webhooks (locked channels only reach hooks an admin opted in)
         if (channelId) {
             const ch = await ctx.db.get(channelId);
-            if (ch && !ch.isPrivate) {
+            if (ch) {
                 await emit(ctx, args.workspaceId, "message.created", async () => ({
                     id: messageId,
                     channelId,
@@ -523,7 +528,7 @@ export const create = mutation({
                     author: (await ctx.db.get(userId))?.name ?? null,
                     text: snippetOf(args.body, 2000),
                     threadParentId: args.parentMessageId ?? null,
-                }));
+                }), { fromPrivate: !!ch.isPrivate });
             }
         }
 
@@ -668,7 +673,8 @@ export const search = query({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             )
-            .unique();
+            .unique()
+        if (member) await assert2fa(ctx, member);
 
         if (!member) return [];
 

@@ -3,7 +3,7 @@ import { notify } from "./notifications"
 import { mutation, query, QueryCtx } from "./_generated/server"
 import { Id } from "./_generated/dataModel"
 import { auth } from "./auth"
-import { can } from "./permissions"
+import { can, assert2fa } from "./permissions"
 import { ConvexError } from "convex/values"
 import { MAX, text, cleanLabels } from "./validate"
 import { throttle } from "./rateLimit"
@@ -56,6 +56,7 @@ export const get = query({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") return []
 
@@ -107,6 +108,7 @@ export const create = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") throw new ConvexError("Unauthorized")
 
@@ -181,6 +183,7 @@ export const update = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", task.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") throw new Error("Unauthorized")
 
@@ -246,6 +249,7 @@ export const remove = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", task.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") throw new ConvexError("Unauthorized")
         if (task.createdBy !== member._id && !(await can(ctx, member, "manageContent"))) {
@@ -255,7 +259,7 @@ export const remove = mutation({
         const comments = await ctx.db
             .query("taskComments")
             .withIndex("by_task_id", (q) => q.eq("taskId", args.id))
-            .collect()
+            .take(1000)
         for (const c of comments) await ctx.db.delete(c._id)
 
         await ctx.db.delete(args.id)
@@ -277,6 +281,7 @@ export const assignToMe = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", task.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") throw new Error("Unauthorized")
 

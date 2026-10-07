@@ -1,7 +1,7 @@
 import { v, ConvexError } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { auth } from "./auth"
-import { can } from "./permissions"
+import { can, assert2fa } from "./permissions"
 import { checkLimitLazy } from "./limits"
 import { throttle } from "./rateLimit"
 import { internal } from "./_generated/api"
@@ -24,6 +24,7 @@ export const get = query({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") return []
 
@@ -56,6 +57,7 @@ export const create = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") throw new Error("Unauthorized")
         if (!(await can(ctx, member, "createDocs"))) throw new ConvexError("You don't have permission to create documents")
@@ -100,6 +102,7 @@ export const rename = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", doc.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
         if (!member || member.role === "guest") throw new Error("Unauthorized")
 
         await ctx.db.patch(args.id, {
@@ -124,6 +127,7 @@ export const touch = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", doc.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
         if (!member || member.role === "guest") return null
         // skip if touched in the last few seconds to avoid write churn
         if (doc.updatedAt && Date.now() - doc.updatedAt < 5000) return null
@@ -146,6 +150,7 @@ export const remove = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", doc.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") throw new Error("Unauthorized")
 
@@ -176,6 +181,7 @@ export const authorizeRoom = query({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", doc.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
         if (!member || member.role === "guest") return null
         const user = await ctx.db.get(userId)
         return {

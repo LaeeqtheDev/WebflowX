@@ -15,8 +15,11 @@ const card = "rounded-xl border border-plum/12 bg-surface p-4"
 
 const Notifications = () => {
   const { state, busy, error, enable, disable, canInstall, install } = usePush()
+  const isIos = typeof navigator !== "undefined" && /iPhone|iPad|iPod/.test(navigator.userAgent)
   const note: Record<string, string> = {
-    unsupported: "This browser can't show notifications. On iPhone, add WebflowX to your Home Screen first, then open it from there.",
+    unsupported: isIos
+      ? "On iPhone and iPad, notifications work from the Home Screen app. Tap the Share button in Safari, choose Add to Home Screen, then open WebflowX from there and turn this on."
+      : "This browser can't show notifications. Try Chrome, Edge, Firefox or Safari.",
     unconfigured: "Browser notifications aren't switched on for this site yet.",
     blocked: "Notifications are blocked for this site. Allow them in your browser's site settings, then come back.",
   }

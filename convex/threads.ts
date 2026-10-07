@@ -2,7 +2,7 @@ import { v } from "convex/values"
 import { query } from "./_generated/server"
 import { Doc, Id } from "./_generated/dataModel"
 import { auth } from "./auth"
-import { canAccessChannel } from "./permissions"
+import { canAccessChannel, assert2fa } from "./permissions"
 
 const EMPTY = { myThreads: [], participatedThreads: [] }
 
@@ -19,6 +19,7 @@ export const get = query({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
         if (!member || member.role === "guest") return EMPTY
         const workspace = await ctx.db.get(args.workspaceId)
         if (!workspace) return EMPTY

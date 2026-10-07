@@ -25,6 +25,7 @@ type CreateMessageValues = {
   workspaceId: Id<"workspaces">;
   body: string;
   image: Id<"_storage"> | undefined;
+    imageName?: string;
 }
 
 export const ChatInput = ({placeholder, conversationId}: ChatInputProps) => {
@@ -58,6 +59,7 @@ export const ChatInput = ({placeholder, conversationId}: ChatInputProps) => {
 
       if(image){
         values.image = await upload(image, "image", workspaceId)
+        values.imageName = image.name
       }
 
     await createMessage(

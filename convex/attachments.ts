@@ -3,7 +3,7 @@ import { query, internalMutation } from "./_generated/server"
 import { Doc, Id } from "./_generated/dataModel"
 import { internal } from "./_generated/api"
 import { auth } from "./auth"
-import { canAccessChannel } from "./permissions"
+import { canAccessChannel, assert2fa } from "./permissions"
 
 const LIMIT = 100
 
@@ -17,6 +17,7 @@ export const list = query({
             .query("members")
             .withIndex("byWorkspaceId_user_id", (q) => q.eq("workspaceId", args.workspaceId).eq("userId", userId))
             .unique()
+        if (me) await assert2fa(ctx, me)
         const workspace = await ctx.db.get(args.workspaceId)
         if (!me || !workspace) return null
 
@@ -97,7 +98,7 @@ export const backfill = internalMutation({
                     channelId: m.channelId,
                     conversationId: m.conversationId,
                     kind,
-                    name: kind === "file" ? (m.fileName ?? "file") : "Image",
+                    name: kind === "file" ? (m.fileName ?? "file") : (m.imageName ?? "Image"),
                     contentType: kind === "file" ? (m.fileType ?? row?.contentType ?? "application/octet-stream") : (row?.contentType ?? "image/png"),
                     size: kind === "file" ? (m.fileSize ?? row?.size ?? 0) : (row?.size ?? 0),
                     storageId,

@@ -1,3 +1,4 @@
+import { assert2fa } from "./permissions"
 import { v, ConvexError } from "convex/values"
 import { mutation, query, internalMutation } from "./_generated/server"
 import { auth } from "./auth"
@@ -17,6 +18,7 @@ export const events = query({
             .query("members")
             .withIndex("byWorkspaceId_user_id", (q) => q.eq("workspaceId", args.workspaceId).eq("userId", userId))
             .unique()
+        if (member) await assert2fa(ctx, member)
         if (!member || member.role === "guest") return null
         if (args.to <= args.from || args.to - args.from > MAX_RANGE) return null
 

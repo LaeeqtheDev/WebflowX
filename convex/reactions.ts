@@ -3,7 +3,7 @@ import { notify } from "./notifications"
 import { Id } from "./_generated/dataModel"
 import { mutation, QueryCtx } from "./_generated/server"
 import { auth } from "./auth"
-import { canViewChannel } from "./permissions"
+import { canViewChannel, assert2fa } from "./permissions"
 import { throttle } from "./rateLimit"
 
 export const getMember = async (
@@ -11,9 +11,11 @@ export const getMember = async (
     workspaceId: Id<"workspaces">,
     userId: Id<"users">
 ) => {
-    return ctx.db.query("members")
+    const member = await ctx.db.query("members")
         .withIndex("byWorkspaceId_user_id", (q) =>
             q.eq("workspaceId", workspaceId).eq("userId", userId)).unique()
+    if (member) await assert2fa(ctx, member)
+    return member
 }
 
 export const toggle = mutation({

@@ -60,6 +60,52 @@ const checkUrl = (raw: string): string => {
     return u.toString()
 }
 
+// ---- DNS check: a public-looking name can still point at a private address (or be switched to one later) ----
+
+const privateV4 = (ip: string) => {
+    const p = ip.split(".").map(Number)
+    if (p.length !== 4 || p.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return true
+    const [a, b] = p
+    return (
+        a === 0 || a === 10 || a === 127 ||
+        (a === 100 && b >= 64 && b <= 127) ||   // carrier-grade NAT
+        (a === 169 && b === 254) ||             // link-local, cloud metadata
+        (a === 172 && b >= 16 && b <= 31) ||
+        (a === 192 && b === 168) ||
+        (a === 192 && b === 0) ||
+        (a === 198 && (b === 18 || b === 19)) ||
+        a >= 224                                // multicast and reserved
+    )
+}
+const privateV6 = (ip: string) => {
+    const x = ip.toLowerCase()
+    if (x === "::" || x === "::1") return true
+    if (x.startsWith("fc") || x.startsWith("fd") || /^fe[89ab]/.test(x) || x.startsWith("ff")) return true
+    const mapped = x.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/)
+    return mapped ? privateV4(mapped[1]) : false
+}
+
+// Looks the host up through a public DNS-over-HTTPS resolver and refuses it if any answer is a private address.
+async function hostIsPublic(host: string): Promise<boolean> {
+    try {
+        for (const type of ["A", "AAAA"]) {
+            const res = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(host)}&type=${type}`, {
+                headers: { accept: "application/dns-json" },
+                signal: AbortSignal.timeout(4000),
+            })
+            if (!res.ok) return false
+            const json = (await res.json()) as { Answer?: { type: number; data: string }[] }
+            for (const a of json.Answer ?? []) {
+                if (a.type === 1 && privateV4(a.data)) return false
+                if (a.type === 28 && privateV6(a.data)) return false
+            }
+        }
+        return true
+    } catch {
+        return false // can't verify, so don't send
+    }
+}
+
 const publicRow = (r: Doc<"integrations">) => ({
     _id: r._id,
     kind: r.kind,
@@ -68,6 +114,7 @@ const publicRow = (r: Doc<"integrations">) => ({
     channelId: r.channelId,
     url: r.url,
     events: r.events,
+    includePrivate: !!r.includePrivate,
     active: r.active,
     lastUsedAt: r.lastUsedAt,
     failCount: r.failCount ?? 0,
@@ -100,6 +147,7 @@ export const create = mutation({
         channelId: v.optional(v.id("channels")),
         url: v.optional(v.string()),
         events: v.optional(v.array(v.string())),
+        includePrivate: v.optional(v.boolean()),
     },
     handler: async (ctx, args) => {
         const { member } = await requirePermission(ctx, args.workspaceId, "editWorkspace", "Only admins can manage integrations")
@@ -143,6 +191,7 @@ export const create = mutation({
             url,
             secret,
             events,
+            includePrivate: args.kind === "outgoing" ? !!args.includePrivate : undefined,
             active: true,
         })
         await logAudit(ctx, args.workspaceId, member._id, "integration.create", `${args.kind}: ${name}`)
@@ -357,9 +406,9 @@ export const apiCreateTask = internalMutation({
 // ---- outgoing webhooks ----
 
 // Called from the mutations that create messages / tasks. Does nothing unless a hook wants the event.
-export async function emit(ctx: MutationCtx, workspaceId: Id<"workspaces">, event: (typeof EVENTS)[number], data: Record<string, unknown> | (() => Promise<Record<string, unknown>>)) {
+export async function emit(ctx: MutationCtx, workspaceId: Id<"workspaces">, event: (typeof EVENTS)[number], data: Record<string, unknown> | (() => Promise<Record<string, unknown>>), opts?: { fromPrivate?: boolean }) {
     const hooks = await ctx.db.query("integrations").withIndex("by_workspace_kind", (q) => q.eq("workspaceId", workspaceId).eq("kind", "outgoing")).take(20)
-    const live = hooks.filter((h) => h.active && (h.events ?? []).includes(event))
+    const live = hooks.filter((h) => h.active && (h.events ?? []).includes(event) && (!opts?.fromPrivate || h.includePrivate))
     if (live.length === 0) return
     const workspace = await ctx.db.get(workspaceId)
     if (!workspace || PLANS[getPlan(workspace.plan)].outgoingHooks === 0) return
@@ -398,6 +447,10 @@ export const deliver = internalAction({
             let ok = false
             let status = "error"
             try {
+                if (!(await hostIsPublic(new URL(hook.url).hostname))) {
+                    await ctx.runMutation(internal.integrations.recordDelivery, { id, ok: false, status: "blocked address" })
+                    return
+                }
                 const res = await fetch(hook.url, {
                     method: "POST",
                     redirect: "manual",

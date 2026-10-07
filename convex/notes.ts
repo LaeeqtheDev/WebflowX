@@ -2,7 +2,7 @@ import { v, ConvexError } from "convex/values"
 import { notify } from "./notifications"
 import { mutation, query } from "./_generated/server"
 import { auth } from "./auth"
-import { can } from "./permissions"
+import { can, assert2fa } from "./permissions"
 import { checkLimitLazy } from "./limits"
 import { MAX, text } from "./validate"
 import { throttle } from "./rateLimit"
@@ -21,6 +21,7 @@ export const get = query({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") return []
 
@@ -31,7 +32,7 @@ export const get = query({
                     q.eq("workspaceId", args.workspaceId).eq("type", "personal")
                 )
                 .filter((q) => q.eq(q.field("authorId"), member._id))
-                .collect()
+                .take(500)
         }
 
         return await ctx.db
@@ -39,7 +40,7 @@ export const get = query({
             .withIndex("by_workspace_id_type", (q) =>
                 q.eq("workspaceId", args.workspaceId).eq("type", "workspace")
             )
-            .collect()
+            .take(500)
     }
 })
 
@@ -59,6 +60,7 @@ export const create = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") throw new Error("Member not found")
 
@@ -133,6 +135,7 @@ export const update = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", note.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") throw new Error("Unauthorized")
 
@@ -168,6 +171,7 @@ export const remove = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", note.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") throw new Error("Unauthorized")
 
@@ -196,6 +200,7 @@ export const togglePin = mutation({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", note.workspaceId).eq("userId", userId)
             ).unique()
+        if (member) await assert2fa(ctx, member)
 
         if (!member || !(await can(ctx, member, "manageContent"))) throw new Error("You don't have permission to pin notes")
 

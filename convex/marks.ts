@@ -2,7 +2,7 @@ import { v, ConvexError } from "convex/values"
 import { mutation, query, QueryCtx, MutationCtx } from "./_generated/server"
 import { Doc, Id } from "./_generated/dataModel"
 import { auth } from "./auth"
-import { canViewChannel } from "./permissions"
+import { canViewChannel, assert2fa } from "./permissions"
 import { snippetOf } from "./validate"
 import { throttle } from "./rateLimit"
 
@@ -15,6 +15,7 @@ async function memberFor(ctx: QueryCtx | MutationCtx, userId: Id<"users">, messa
         .query("members")
         .withIndex("byWorkspaceId_user_id", (q) => q.eq("workspaceId", message.workspaceId).eq("userId", userId))
         .unique()
+        if (member) await assert2fa(ctx, member)
     if (!member) return null
     if (message.channelId && !(await canViewChannel(ctx, message.channelId, userId))) return null
     if (message.conversationId) {
@@ -95,6 +96,7 @@ export const mine = query({
             .query("members")
             .withIndex("byWorkspaceId_user_id", (q) => q.eq("workspaceId", args.workspaceId).eq("userId", userId))
             .unique()
+        if (member) await assert2fa(ctx, member)
         if (!member) return { pinned: [], saved: [] }
         const [pins, saved] = await Promise.all([
             ctx.db.query("pins").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId)).take(500),
@@ -160,6 +162,7 @@ export const savedList = query({
             .query("members")
             .withIndex("byWorkspaceId_user_id", (q) => q.eq("workspaceId", args.workspaceId).eq("userId", userId))
             .unique()
+        if (member) await assert2fa(ctx, member)
         if (!member) return []
         const rows = await ctx.db.query("savedMessages").withIndex("by_member_id", (q) => q.eq("memberId", member._id)).order("desc").take(MAX_SAVED)
         const out = []

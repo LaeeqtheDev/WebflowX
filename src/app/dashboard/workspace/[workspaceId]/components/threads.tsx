@@ -27,6 +27,7 @@ type CreateMessageValues = {
     parentMessageId: Id<"messages">;
     body: string;
     image: Id<"_storage"> | undefined
+    imageName?: string;
   }
 
 
@@ -82,6 +83,7 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
     
           if(image){
             values.image = await upload(image, "image", workspaceId)
+            values.imageName = image.name
           }
     
         await createMessage(

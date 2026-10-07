@@ -73,6 +73,7 @@ export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces
   const [channelId, setChannelId] = useState("")
   const [url, setUrl] = useState("")
   const [events, setEvents] = useState<string[]>(EVENTS.map((e) => e.id))
+  const [includePrivate, setIncludePrivate] = useState(false)
   const [busy, setBusy] = useState(false)
   const [reveal, setReveal] = useState<{ kind: Kind; token?: string; secret?: string } | null>(null)
   const [doc, setDoc] = useState(0)
@@ -93,9 +94,10 @@ export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces
         channelId: adding === "incoming" || adding === "github" ? ((channelId || channels?.[0]?._id) as Id<"channels">) : undefined,
         url: adding === "outgoing" ? url : undefined,
         events: adding === "outgoing" ? events : undefined,
+        includePrivate: adding === "outgoing" ? includePrivate : undefined,
       })
       setReveal({ kind: adding, token: r.token, secret: r.secret })
-      setAdding(null); setName(""); setUrl("")
+      setAdding(null); setName(""); setUrl(""); setIncludePrivate(false)
     } catch (e) {
       handleLimitError(e, "Couldn't create that")
     } finally {
@@ -213,6 +215,10 @@ export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces
                         })}
                       </div>
                     </div>
+                    <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-plum/10 bg-surface p-3">
+                      <input type="checkbox" className="mt-0.5 size-4 accent-[#ff5018]" checked={includePrivate} onChange={(e) => setIncludePrivate(e.target.checked)} />
+                      <span className="text-xs text-ink/70"><b className="text-ink">Include locked channels.</b> Off by default, so messages from private channels never leave WebflowX unless you turn this on.</span>
+                    </label>
                   </>
                 )}
                 <div className="flex gap-2 pt-1">

@@ -68,6 +68,40 @@ async function matchTotp(secretB32: string, code: string): Promise<number | null
     return found
 }
 
+// ---- secret at rest ----
+// With TWO_FACTOR_KEY set (any long random string) secrets are stored AES-GCM encrypted ("enc1:" prefix).
+// Without it they stay readable as before, so nothing breaks before the key is added. Old plain secrets are
+// encrypted the next time their owner signs in with a code.
+const ENC = "enc1:"
+const toB64 = (b: Uint8Array) => btoa(String.fromCharCode(...b))
+const fromB64 = (s: string) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0))
+
+async function aesKey(): Promise<CryptoKey | null> {
+    const raw = process.env.TWO_FACTOR_KEY
+    if (!raw) return null
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw))
+    return crypto.subtle.importKey("raw", digest, { name: "AES-GCM" }, false, ["encrypt", "decrypt"])
+}
+
+async function sealSecret(plain: string): Promise<string> {
+    const key = await aesKey()
+    if (!key) return plain
+    const iv = crypto.getRandomValues(new Uint8Array(12))
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(plain)))
+    const out = new Uint8Array(iv.length + ct.length)
+    out.set(iv); out.set(ct, iv.length)
+    return ENC + toB64(out)
+}
+
+async function openSecret(stored: string): Promise<string> {
+    if (!stored.startsWith(ENC)) return stored
+    const key = await aesKey()
+    if (!key) throw new Error("TWO_FACTOR_KEY is missing")
+    const data = fromB64(stored.slice(ENC.length))
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: data.slice(0, 12) }, key, data.slice(12))
+    return new TextDecoder().decode(pt)
+}
+
 async function sha256(text: string): Promise<string> {
     const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text))
     return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("")
@@ -106,10 +140,13 @@ async function markSessionVerified(ctx: MutationCtx, userId: Id<"users">) {
 // Accepts an authenticator code or an unused backup code. Spends it on success.
 async function checkCode(ctx: MutationCtx, row: Doc<"twoFactor">, raw: string): Promise<boolean> {
     const code = raw.trim()
-    const step = await matchTotp(row.secret, code.replace(/\s/g, ""))
+    const plainSecret = await openSecret(row.secret)
+    const step = await matchTotp(plainSecret, code.replace(/\s/g, ""))
     if (step !== null) {
         if (row.lastStep !== undefined && step <= row.lastStep) return false // already used
-        await ctx.db.patch(row._id, { lastStep: step })
+        // upgrade an old plain-text secret to the encrypted form while we have it
+        const upgrade = row.secret.startsWith(ENC) ? {} : { secret: await sealSecret(plainSecret) }
+        await ctx.db.patch(row._id, { lastStep: step, ...upgrade })
         return true
     }
     const norm = normaliseBackup(code)
@@ -159,8 +196,9 @@ export const beginSetup = mutation({
         const bytes = new Uint8Array(20)
         crypto.getRandomValues(bytes)
         const secret = b32encode(bytes)
-        if (row) await ctx.db.patch(row._id, { secret, backupCodes: [], lastStep: undefined })
-        else await ctx.db.insert("twoFactor", { userId, secret, enabled: false, backupCodes: [] })
+        const stored = await sealSecret(secret)
+        if (row) await ctx.db.patch(row._id, { secret: stored, backupCodes: [], lastStep: undefined })
+        else await ctx.db.insert("twoFactor", { userId, secret: stored, enabled: false, backupCodes: [] })
 
         const user = await ctx.db.get(userId)
         const label = encodeURIComponent(`WebflowX:${user?.email ?? user?.name ?? "account"}`)
@@ -180,7 +218,7 @@ export const confirmSetup = mutation({
         if (!row) return { error: "Start the setup again" }
         if (row.enabled) return { error: "Two-step verification is already on" }
 
-        const step = await matchTotp(row.secret, args.code.replace(/\s/g, ""))
+        const step = await matchTotp(await openSecret(row.secret), args.code.replace(/\s/g, ""))
         if (step === null) return { error: "That code didn't match. Check the code in your app and try again." }
 
         const { plain, hashes } = await makeBackupCodes()
@@ -215,8 +253,14 @@ export const disable = mutation({
         if (!(await consume(ctx, `2fa:${userId}`, 8, 10 * 60_000))) return { ok: false, error: TOO_MANY }
         const row = await getRow(ctx, userId)
         if (!row?.enabled) return { ok: true }
+        // someone in a workspace that requires two-step verification can't switch it off
+        const memberships = await ctx.db.query("members").withIndex("byUserId", (q) => q.eq("userId", userId)).take(200)
+        for (const m of memberships) {
+            const ws = await ctx.db.get(m.workspaceId)
+            if (ws?.require2fa) return { ok: false, error: `"${ws.name}" requires two-step verification, so it can't be turned off while you're a member.` }
+        }
         if (!(await checkCode(ctx, row, args.code))) return { ok: false, error: "That code didn't work." }
-        const sessions = await ctx.db.query("twoFactorSessions").withIndex("by_user_id", (q) => q.eq("userId", userId)).collect()
+        const sessions = await ctx.db.query("twoFactorSessions").withIndex("by_user_id", (q) => q.eq("userId", userId)).take(200)
         for (const s of sessions) await ctx.db.delete(s._id)
         await ctx.db.delete(row._id)
         return { ok: true }

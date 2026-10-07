@@ -46,6 +46,7 @@ interface MessageProps {
     image: string | null | undefined;
     file?: string | null | undefined;
     fileName?: string | null | undefined;
+    isBot?: boolean;
     fileType?: string | null | undefined;
     fileSize?: number | null | undefined;
     createdAt: Doc<"messages">["_creationTime"];
@@ -77,6 +78,7 @@ const MessageImpl = ({
     fileName,
     fileType,
     fileSize,
+    isBot,
     isAuthor,
     canModerate,
     memberId,
@@ -275,7 +277,7 @@ const MessageImpl = ({
                 )}
             >
                 <div className="flex items-start gap-2">
-                    <button type="button" aria-label={`View ${authorName} profile`} onClick={() => onOpenProfile(memberId)}>
+                    <button type="button" aria-label={`View ${authorName} profile`} disabled={isBot} className={isBot ? "cursor-default" : undefined} onClick={() => onOpenProfile(memberId)}>
                         <Avatar className="rounded-md mr-1 size-9">
                             <AvatarImage className="rounded-md" src={authorImage} />
                             <AvatarFallback className="rounded-md bg-[#381d2a] dark:bg-[#4a2838] text-white text-center text-sm font-semibold">
@@ -297,11 +299,13 @@ const MessageImpl = ({
                         <div className="flex flex-col w-full overflow-hidden">
                             <div className="text-sm">
                                 <button
+                                    disabled={isBot}
                                     onClick={() => onOpenProfile(memberId)}
-                                    className="font-semibold tracking-tight text-ink hover:underline"
+                                    className={cn("font-semibold tracking-tight text-ink", isBot ? "cursor-default" : "hover:underline")}
                                 >
                                     {authorName}
                                 </button>
+                                {isBot && <span className="ml-1.5 rounded bg-plum/10 px-1.5 py-0.5 align-middle text-[10px] font-bold uppercase tracking-wide text-plum dark:bg-white/10 dark:text-white/70">App</span>}
                                 <span>&nbsp;&nbsp;</span>
                                 <Hint label={formatFullTime(new Date(createdAt))}>
                                     <button className="text-xs text-ink/50 hover:underline">
