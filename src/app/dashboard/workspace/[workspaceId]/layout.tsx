@@ -48,7 +48,7 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
       onClose={onClose}
     />
   ) : (
-    <div className="flex h-full items-center justify-center bg-white">
+    <div className="flex h-full items-center justify-center bg-surface">
       <Loader className="size-5 animate-spin text-muted-foreground"/>
     </div>
   )
@@ -67,7 +67,7 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
         </main>
 
         <Sheet open={drawerOpen} onOpenChange={(open) => setDrawerPath(open ? pathname : null)}>
-          <SheetContent side="left" closeLabel="Close navigation menu" className="bg-[#402633] text-white" closeClassName="bottom-3 right-3 top-auto bg-white/10 hover:bg-white/20">
+          <SheetContent side="left" closeLabel="Close navigation menu" className="bg-[#402633] dark:bg-[#2a1722] text-white" closeClassName="bottom-3 right-3 top-auto bg-white/10 hover:bg-white/20">
             <SheetTitle className="sr-only">Workspace navigation</SheetTitle>
             <SheetDescription className="sr-only">Switch sections, channels and direct messages.</SheetDescription>
             {/* Tapping a link to the page you are already on does not change the route, so close explicitly */}
@@ -85,7 +85,7 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
 
         {/* Thread / profile take over the whole screen */}
         {showPanel && (
-          <div className="fixed inset-0 z-40 flex h-dvh flex-col bg-white">
+          <div className="fixed inset-0 z-40 flex h-dvh flex-col bg-surface">
             {panelContent}
           </div>
         )}
@@ -108,7 +108,7 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
           <ResizablePanel
             defaultSize={220}  // percentage of total width
             minSize={220}      // min width percentage
-            className="bg-[#402633] text-white overflow-y-auto overflow-x-hidden border-r border-white/5"
+            className="bg-[#402633] dark:bg-[#2a1722] text-white overflow-y-auto overflow-x-hidden border-r border-white/5"
           >
             <WorkSpaceSidebar />
           </ResizablePanel>

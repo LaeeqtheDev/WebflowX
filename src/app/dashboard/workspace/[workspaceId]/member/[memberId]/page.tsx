@@ -34,8 +34,8 @@ const MemberIdPage = () => {
 
     if(isPending){
       return(
-         <div className="h-full flex items-center justify-center bg-[#fbf9f7]">
-                <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#c2370d] flex items-center justify-center">
+         <div className="h-full flex items-center justify-center bg-cream-soft">
+                <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-orange-ink flex items-center justify-center">
                   <Loader className="size-6 animate-spin"/>
                 </div>
             </div>

@@ -14,7 +14,7 @@ const customPassword = Password<DataModel>({
   profile(params){
     return{
       email: params.email as string,
-      name: params.name as string
+      name: String(params.name ?? "").replace(/\s+/g, " ").trim().slice(0, 60) || undefined,
 
     }
   },

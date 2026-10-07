@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import { FolderOpen, Layers, MessageSquare, NotebookPen } from "lucide-react";
+import {
+  AtSign, Bell, Command, FileSpreadsheet, FileText, FolderOpen, Layers, ListChecks, MessageSquare,
+  MessagesSquare, Moon, NotebookPen, Paperclip, Search, Smartphone, SmilePlus,
+} from "lucide-react";
 import { gsap, MOTION_OK } from "./landing/gsap";
 import { Heading, Label, Reveal } from "./landing/ui";
 import { ChatPane, DocPane, MeetingPane, PaneFrame, ScaledFrame, TasksPane } from "./landing/mock";
@@ -46,15 +49,11 @@ function AssistantVisual() {
   return (
     <div className="m-card space-y-3 pt-1">
       <div className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-[#381d2a] px-4 py-2.5 text-[13px] text-white">
-        Summarize this week&apos;s customer feedback.
+        Make this announcement shorter and friendlier.
       </div>
       <div className="m-card w-fit max-w-[92%] rounded-2xl rounded-bl-sm bg-white px-4 py-3 text-[13px] leading-snug text-[#1b1017]">
-        Three themes this week:
-        <ul className="mt-1.5 space-y-1 text-[#1b1017]/75">
-          <li>1. Simpler onboarding</li>
-          <li>2. Faster file uploads</li>
-          <li>3. Calendar integration</li>
-        </ul>
+        Suggested rewrite:
+        <p className="mt-1.5 text-[#1b1017]/75">Hi team, the new onboarding doc is live. Have a look and tell us what is missing.</p>
       </div>
     </div>
   );
@@ -62,9 +61,21 @@ function AssistantVisual() {
 
 const small = [
   { icon: Layers, t: "Workspaces", b: "Separate spaces for each team or project." },
-  { icon: MessageSquare, t: "Direct messages", b: "Private one-to-one conversations." },
-  { icon: NotebookPen, t: "Notes", b: "Personal and workspace notes." },
-  { icon: FolderOpen, t: "File sharing", b: "Share files with your team." },
+  { icon: MessageSquare, t: "Direct messages", b: "Private one-to-one conversations, with drafts and sent kept in one place." },
+  { icon: MessagesSquare, t: "Threads and activity", b: "A Threads view, an Activity feed and notifications so nothing gets lost." },
+  { icon: SmilePlus, t: "Reactions and rich text", b: "React to messages and write with a rich-text composer." },
+  { icon: AtSign, t: "Mentions", b: "@mention people, highlighted in orange, and open their profile with a click. @everyone and @channel are permission-gated." },
+  { icon: Paperclip, t: "Files and images", b: "Attach files and images. Type and size are checked, and storage is capped per workspace by plan." },
+  { icon: Search, t: "Message search", b: "Find past messages without scrolling." },
+  { icon: Command, t: "Quick switcher", b: "Press Ctrl/Cmd+K to jump to any channel, person or page." },
+  { icon: NotebookPen, t: "Notes", b: "Personal notes and shared workspace notes." },
+  { icon: FileSpreadsheet, t: "Spreadsheets", b: "Edit spreadsheets together in real time, with a clear reconnecting status if your connection drops." },
+  { icon: ListChecks, t: "Getting-started checklist", b: "A first-run checklist walks new workspaces through setup." },
+  { icon: Bell, t: "Email notifications", b: "Mentions, DMs, thread replies and task assignments, only if still unread. Each member can switch them off." },
+  { icon: Moon, t: "Light, Dark or Auto", b: "Every member picks their own theme, saved to their account." },
+  { icon: Smartphone, t: "Works on phones", b: "A mobile layout with drawer navigation." },
+  { icon: FolderOpen, t: "Profiles", b: "Profile photo, title and bio for people. Photo and description for the workspace." },
+  { icon: FileText, t: "Documents", b: "Real-time collaborative documents with a rich-text editor." },
 ];
 
 const NewFeatures = () => {
@@ -108,6 +119,9 @@ const NewFeatures = () => {
         <Reveal>
           <Label>Product</Label>
           <Heading className="mt-5 max-w-3xl">Everything your team works in, in one app.</Heading>
+          <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-[#1b1017]/70">
+            Chat, tasks, notes, documents, spreadsheets and meetings share one workspace, one search and one set of permissions.
+          </p>
         </Reveal>
 
         <div className="mt-14 grid gap-4 lg:grid-cols-6">
@@ -115,7 +129,7 @@ const NewFeatures = () => {
             tone="white"
             className="lg:col-span-3"
             title="Channels and threads"
-            body="Talk to the whole team in channels, keep replies in threads, and share files and documents right in the conversation."
+            body="Talk to the whole team in channels and direct messages, keep replies in threads, react, @mention people and share files right in the conversation."
             visualH="h-[300px]"
           >
             <ScaledFrame w={680} h={440}>
@@ -128,7 +142,7 @@ const NewFeatures = () => {
             tone="white"
             className="lg:col-span-3"
             title="Tasks next to the conversation"
-            body="Create, assign and track tasks without leaving the workspace. Everyone sees what is waiting, in progress and done."
+            body="A tasks board with sprints, priorities, assignees and comments, right next to the conversation. Everyone sees what is waiting, in progress and done."
             visualH="h-[300px]"
           >
             <ScaledFrame w={680} h={440}>
@@ -141,8 +155,8 @@ const NewFeatures = () => {
           <Cell
             tone="white"
             className="lg:col-span-2"
-            title="Documents"
-            body="Write and edit together in a rich text editor."
+            title="Documents and spreadsheets"
+            body="Write and edit together in real time. Documents and spreadsheets are powered by Liveblocks."
             visualH="h-[220px]"
           >
             <ScaledFrame w={680} h={440}>
@@ -155,7 +169,7 @@ const NewFeatures = () => {
             tone="plum"
             className="lg:col-span-2"
             title="Meetings with AI summaries"
-            body="Start a video call from any channel and get key points and action items afterwards."
+            body="Start a video meeting, follow a live transcript, then get an AI summary with action items and decisions."
             visualH="h-[220px]"
           >
             <ScaledFrame w={680} h={440}>
@@ -167,23 +181,27 @@ const NewFeatures = () => {
           <Cell
             tone="orange"
             className="lg:col-span-2"
-            title="AI assistant"
-            body="Draft, brainstorm and summarize without leaving your workspace."
+            title="AI writing help"
+            body="Get writing help in the editor to draft, rewrite and tidy text without leaving the page."
             visualH="h-[220px]"
           >
             <AssistantVisual />
           </Cell>
         </div>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <h3 className="lp-h mt-16 text-3xl text-[#1b1017] sm:text-4xl">Everything in the box.</h3>
+        <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-[#1b1017]/70">
+          The details that make a workspace pleasant to live in every day.
+        </p>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {small.map(({ icon: Icon, t, b }) => (
             <Reveal key={t}>
               <div className="h-full rounded-3xl border border-[#381d2a]/10 bg-[#f7f2ee] p-7">
                 <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#381d2a] text-[#ff5018]">
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
-                <p className="mt-6 text-lg font-semibold tracking-tight text-[#1b1017]">{t}</p>
-                <p className="mt-1.5 text-sm text-[#1b1017]/65">{b}</p>
+                <h4 className="mt-6 text-lg font-semibold tracking-tight text-[#1b1017]">{t}</h4>
+                <p className="mt-1.5 text-sm leading-relaxed text-[#1b1017]/70">{b}</p>
               </div>
             </Reveal>
           ))}

@@ -5,7 +5,8 @@ import "./globals.css";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { Modals } from "@/components/Modals";
-import { Toaster } from "sonner";
+import { ThemedToaster } from "@/components/theme/themed-toaster";
+import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 import { JotaiProvider } from "./dashboard/workspace/[workspaceId]/components/jotai-provider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
@@ -21,7 +22,7 @@ const geistMono = Geist_Mono({
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://webflow-x.vercel.app";
 const SITE_DESCRIPTION =
-  "WebflowX brings team chat, docs, tasks, meetings and AI summaries into one workspace. Built by North Foundry.";
+  "WebflowX brings team chat, tasks, real-time docs and spreadsheets, video meetings with live transcripts and AI summaries into one workspace, with roles, permissions and data export. Built by North Foundry.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -38,6 +39,10 @@ export const metadata: Metadata = {
     "collaborative docs",
     "video meetings",
     "AI meeting summaries",
+    "role-based permissions",
+    "audit log",
+    "collaborative spreadsheets",
+    "meeting transcripts",
     "Slack alternative",
     "WebflowX",
     "North Foundry",
@@ -78,14 +83,17 @@ export default function RootLayout({
 }>) {
   return (
     <ConvexAuthNextjsServerProvider>
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
+        <head>
+          <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+        </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
           <ConvexClientProvider>
             <JotaiProvider>
               <NuqsAdapter>
-                <Toaster />
+                <ThemedToaster />
                 <Modals />
                 {children}
               </NuqsAdapter>

@@ -7,6 +7,7 @@ const AppleCardsCarouselDemo = dynamic(() => import('@/components/Team').then(m 
 const TestimonialSection16 = dynamic(() => import('@/components/Testimonials'))
 import FeaturesSection from '@/components/Features'
 import Footer from '@/components/Footer'
+import SecuritySection from '@/components/landing/Security'
 const FAQSection = dynamic(() => import('@/components/FAQ').then(m => m.FAQSection))
 const NewsletterSignup = dynamic(() => import('@/components/newslettersignup').then(m => m.NewsletterSignup))
 const PricingSection = dynamic(() => import('@/components/pricing'))
@@ -24,7 +25,7 @@ const jsonLd = {
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',
       description:
-        'Team chat, docs, tasks, meetings and AI summaries in one workspace.',
+        'Team chat, tasks, real-time documents and spreadsheets, video meetings with live transcripts and AI summaries, with roles and permissions, in one workspace.',
       publisher: { '@type': 'Organization', name: 'North Foundry' },
     },
     {
@@ -47,6 +48,7 @@ const page = () => {
       <Hero />
       <FeaturesSection />
       <WhyChooseUs />
+      <SecuritySection />
       <MergerSection />
       <TimelineDemo />
       <AppleCardsCarouselDemo />

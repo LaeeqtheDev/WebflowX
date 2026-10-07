@@ -17,6 +17,8 @@ const schema = defineSchema({
         bio: v.optional(v.string()),
         // false turns off notification emails (mentions, DMs, replies, tasks). Default is on.
         emailNotifications: v.optional(v.boolean()),
+        // each member's own appearance setting
+        theme: v.optional(v.union(v.literal("light"), v.literal("dark"), v.literal("system"))),
     })
         .index("email", ["email"])
         .index("phone", ["phone"]),

@@ -16,12 +16,12 @@ export function NotFoundState({
   linkLabel = "Go back",
 }: NotFoundStateProps) {
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-[#fbf9f7] px-6 text-center">
-      <div className="flex size-14 items-center justify-center rounded-2xl bg-[#ff5018]/10 text-[#c2370d]">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-cream-soft px-6 text-center">
+      <div className="flex size-14 items-center justify-center rounded-2xl bg-[#ff5018]/10 text-orange-ink">
         <TriangleAlert className="size-6" />
       </div>
-      <h2 className="text-lg font-semibold tracking-tight text-[#1b1017]">{title}</h2>
-      <p className="max-w-sm text-sm text-[#1b1017]/65">{description}</p>
+      <h2 className="text-lg font-semibold tracking-tight text-ink">{title}</h2>
+      <p className="max-w-sm text-sm text-ink/65">{description}</p>
       <Link
         href={href}
         className="mt-2 rounded-xl bg-[#ff5018] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#e6430f]"

@@ -25,19 +25,19 @@ export default function DmsPage() {
     const totalUnread = conversations?.reduce((acc, c) => acc + (c.unreadCount ?? 0), 0) ?? 0
 
     return (
-        <div className="h-full flex flex-col overflow-hidden bg-[#fbf9f7]">
+        <div className="h-full flex flex-col overflow-hidden bg-cream-soft">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 md:px-6 h-14 border-b bg-white shrink-0 shadow-none">
+            <div className="flex items-center justify-between px-4 md:px-6 h-14 border-b bg-surface shrink-0 shadow-none">
                 <div className="flex items-center gap-3">
                     <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
                         <MessageSquare className="size-4 text-[#ff5018]" />
                     </div>
                     <div>
-                        <h1 className="tracking-tight text-[17px] font-semibold leading-none text-[#1b1017]">Direct Messages</h1>
-                        <p className="text-[11px] text-[#1b1017]/60 mt-1">
+                        <h1 className="tracking-tight text-[17px] font-semibold leading-none text-ink">Direct Messages</h1>
+                        <p className="text-[11px] text-ink/60 mt-1">
                             {conversations?.length ?? 0} conversation{conversations?.length !== 1 ? "s" : ""}
                             {totalUnread > 0 && (
-                                <span className="ml-1.5 text-[#c2370d] font-semibold">
+                                <span className="ml-1.5 text-orange-ink font-semibold">
                                     · {totalUnread} unread
                                 </span>
                             )}
@@ -47,38 +47,38 @@ export default function DmsPage() {
             </div>
 
             {/* Search */}
-            <div className="px-4 py-3 bg-white border-b border-[#381d2a]/10">
+            <div className="px-4 py-3 bg-surface border-b border-plum/10">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
                     <Input aria-label="Search conversations"
                         placeholder="Search conversations..."
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        className="pl-8 h-9 text-sm rounded-lg border-[#381d2a]/15 focus-visible:ring-[#ff5018]/40 focus-visible:border-[#ff5018]"
+                        className="pl-8 h-9 text-sm rounded-lg border-plum/15 focus-visible:ring-[#ff5018]/40 focus-visible:border-[#ff5018]"
                     />
                 </div>
             </div>
 
             {/* Conversations list */}
-            <div className="flex-1 overflow-y-auto bg-white">
+            <div className="flex-1 overflow-y-auto bg-surface">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full">
                         <Loader className="size-5 animate-spin text-[#ff5018]" />
                     </div>
                 ) : !filtered || filtered.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full gap-4 text-[#1b1017]/60">
+                    <div className="flex flex-col items-center justify-center h-full gap-4 text-ink/60">
                         <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
                             <MessageSquare className="size-6 text-[#ff5018]" />
                         </div>
                         <div className="text-center">
-                            <p className="font-semibold tracking-tight text-[#1b1017]">No conversations yet</p>
+                            <p className="font-semibold tracking-tight text-ink">No conversations yet</p>
                             <p className="text-sm mt-1">
                                 Click on a member in the sidebar to start a DM
                             </p>
                         </div>
                     </div>
                 ) : (
-                    <div className="divide-y divide-[#381d2a]/10">
+                    <div className="divide-y divide-plum/10">
                         {filtered.map(conv => {
                             const lastMessageText = conv.lastMessage?.body
                                 ? quillToText(conv.lastMessage.body)
@@ -95,7 +95,7 @@ export default function DmsPage() {
                                         parentMessageId: conv.lastMessage?.parentMessagesId,
                                     }))}
                                     className={cn(
-                                        "flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[#f7f2ee] transition-colors",
+                                        "flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-cream transition-colors",
                                         hasUnread && "bg-[#ff5018]/5"
                                     )}
                                 >
@@ -103,11 +103,11 @@ export default function DmsPage() {
                                     <div className="relative shrink-0">
                                         <Avatar className="size-11 rounded-md">
                                             <AvatarImage src={conv.otherMember?.user?.image} />
-                                            <AvatarFallback className="text-sm font-medium rounded-md bg-[#381d2a] text-white">
+                                            <AvatarFallback className="text-sm font-medium rounded-md bg-[#381d2a] dark:bg-[#4a2838] text-white">
                                                 {conv.otherMember?.user?.name?.[0] ?? "?"}
                                             </AvatarFallback>
                                         </Avatar>
-                                        <div className="absolute bottom-0 right-0 size-2.5 rounded-full bg-green-500 border-2 border-white" />
+                                        <div className="absolute bottom-0 right-0 size-2.5 rounded-full bg-green-500 border-2 border-white dark:border-[#241620]" />
                                     </div>
 
                                     {/* Content */}
@@ -123,7 +123,7 @@ export default function DmsPage() {
                                             {conv.lastMessage && (
                                                 <span className={cn(
                                                     "text-[11px] shrink-0",
-                                                    hasUnread ? "text-[#c2370d] font-semibold" : "text-[#1b1017]/60"
+                                                    hasUnread ? "text-orange-ink font-semibold" : "text-ink/60"
                                                 )}>
                                                     {format(conv.lastMessage._creationTime, "MMM d, h:mm a")}
                                                 </span>
@@ -135,8 +135,8 @@ export default function DmsPage() {
                                             <p className={cn(
                                                 "text-xs truncate flex-1",
                                                 hasUnread
-                                                    ? "text-[#1b1017] font-medium"
-                                                    : "text-[#1b1017]/60"
+                                                    ? "text-ink font-medium"
+                                                    : "text-ink/60"
                                             )}>
                                                 {lastMessageText}
                                             </p>

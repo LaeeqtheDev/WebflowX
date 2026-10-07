@@ -55,3 +55,21 @@ export function cleanLabels(labels: string[] | undefined): string[] | undefined 
     if (!labels) return undefined
     return labels.slice(0, MAX.labelCount).map((l) => text(l, MAX.label, "Label", { collapse: true })).filter(Boolean)
 }
+
+
+// Quill delta JSON -> plain text (mentions are plain "@Name" text in the delta).
+export const deltaToText = (body: string): string => {
+    try {
+        const parsed = JSON.parse(body)
+        const ops: { insert?: unknown }[] = Array.isArray(parsed) ? parsed : (parsed?.ops ?? [])
+        return ops.map((o) => (typeof o.insert === "string" ? o.insert : "")).join("").replace(/\s+/g, " ").trim()
+    } catch {
+        return body
+    }
+}
+
+// Short plain-text copy of a message body, small enough to store on hundreds of notifications.
+export const snippetOf = (body: string, n = 300): string => {
+    const t = deltaToText(body)
+    return t.length > n ? t.slice(0, n - 1).trimEnd() + "…" : t
+}

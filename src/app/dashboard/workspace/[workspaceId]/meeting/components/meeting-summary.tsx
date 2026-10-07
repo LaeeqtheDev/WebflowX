@@ -210,20 +210,20 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
 
     return (
         <>
-            <div className="border rounded-xl p-5 flex flex-col gap-5 hover:border-[#ff5018]/40 hover:shadow-sm transition-colors bg-white">
+            <div className="border rounded-xl p-5 flex flex-col gap-5 hover:border-[#ff5018]/40 hover:shadow-sm transition-colors bg-surface">
                 {/* Header */}
                 <div className="flex items-start justify-between">
                     <div className="flex flex-col gap-1.5">
                         <div className="flex items-center gap-2">
-                            <h3 className="font-semibold tracking-tight text-[17px] text-[#1b1017]">{meeting.title}</h3>
+                            <h3 className="font-semibold tracking-tight text-[17px] text-ink">{meeting.title}</h3>
                             {!meeting.endedAt && (
-                                <Badge className="bg-red-50 text-red-700 border-transparent rounded-md px-2 py-0.5 text-[11px] font-medium">
+                                <Badge className="bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 border-transparent rounded-md px-2 py-0.5 text-[11px] font-medium">
                                     <span className="size-1.5 rounded-full bg-red-500 animate-pulse mr-1.5" />
                                     Live
                                 </Badge>
                             )}
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-[#1b1017]/60">
+                        <div className="flex items-center gap-3 text-xs text-ink/60">
                             <span className="flex items-center gap-1">
                                 <Clock className="size-3" />
                                 {format(meeting.startedAt, "MMM d, yyyy · h:mm a")}
@@ -244,11 +244,11 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                     <div className="flex items-center gap-1.5 shrink-0">
                         <Avatar className="size-7 rounded-md">
                             <AvatarImage src={meeting.creator?.user?.image} />
-                            <AvatarFallback className="text-[10px] rounded-md bg-[#381d2a] text-white">
+                            <AvatarFallback className="text-[10px] rounded-md bg-[#381d2a] dark:bg-[#4a2838] text-white">
                                 {meeting.creator?.user?.name?.[0] ?? "?"}
                             </AvatarFallback>
                         </Avatar>
-                        <span className="text-xs text-[#1b1017]/60">
+                        <span className="text-xs text-ink/60">
                             {meeting.creator?.user?.name}
                         </span>
                     </div>
@@ -256,14 +256,14 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
 
                 {/* AI Summary */}
                 {meeting.summary && meeting.summary !== "No transcript was captured for this meeting." ? (
-                    <div className="bg-[#f7f2ee] border border-[#381d2a]/10 rounded-xl p-4">
+                    <div className="bg-cream border border-plum/10 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-1.5">
-                                <span className="inline-flex items-center gap-1 bg-[#ff5018]/10 text-[#c2370d] rounded-md px-2 py-0.5 text-[11px] font-medium">
+                                <span className="inline-flex items-center gap-1 bg-[#ff5018]/10 text-orange-ink rounded-md px-2 py-0.5 text-[11px] font-medium">
                                     <Sparkles className="size-3" />
                                     AI
                                 </span>
-                                <span className="text-sm font-semibold tracking-tight text-[#1b1017]">Summary</span>
+                                <span className="text-sm font-semibold tracking-tight text-ink">Summary</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 {!isEditing && (
@@ -272,17 +272,17 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                                             <>
                                                 <button
                                                     onClick={openTasksDialog}
-                                                    className="text-[11px] font-medium text-[#c2370d] hover:text-[#a82d0a] flex items-center gap-1 transition-colors"
+                                                    className="text-[11px] font-medium text-orange-ink hover:text-orange-ink-hover flex items-center gap-1 transition-colors"
                                                 >
                                                     <ListChecks className="size-3" /> Create tasks ({actionItems.length})
                                                 </button>
-                                                <span className="text-[#1b1017]/40">·</span>
+                                                <span className="text-ink/40">·</span>
                                             </>
                                         )}
                                         <button
                                             onClick={handleRegenerateSummary}
                                             disabled={isGenerating}
-                                            className="text-[11px] font-medium text-[#1b1017]/60 hover:text-[#a82d0a] flex items-center gap-1 transition-colors disabled:opacity-50"
+                                            className="text-[11px] font-medium text-ink/60 hover:text-orange-ink-hover flex items-center gap-1 transition-colors disabled:opacity-50"
                                         >
                                             {isGenerating ? (
                                                 <Loader2 className="size-3 animate-spin" />
@@ -291,10 +291,10 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                                             )}
                                             {isGenerating ? "Generating..." : "Regenerate"}
                                         </button>
-                                        <span className="text-[#1b1017]/40">·</span>
+                                        <span className="text-ink/40">·</span>
                                         <button
                                             onClick={() => setIsEditing(true)}
-                                            className="text-[11px] font-medium text-[#1b1017]/60 hover:text-[#a82d0a] flex items-center gap-1 transition-colors"
+                                            className="text-[11px] font-medium text-ink/60 hover:text-orange-ink-hover flex items-center gap-1 transition-colors"
                                         >
                                             <Pencil className="size-3" /> Edit
                                         </button>
@@ -304,14 +304,14 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                                     <div className="flex items-center gap-1">
                                         <button
                                             onClick={handleSave}
-                                            className="text-[11px] font-medium text-green-700 hover:text-green-800 flex items-center gap-1"
+                                            className="text-[11px] font-medium text-green-700 dark:text-green-300 hover:text-green-800 dark:hover:text-green-300 flex items-center gap-1"
                                         >
                                             <Check className="size-3" /> Save
                                         </button>
-                                        <span className="text-[#1b1017]/40">·</span>
+                                        <span className="text-ink/40">·</span>
                                         <button
                                             onClick={handleCancel}
-                                            className="text-[11px] font-medium text-[#1b1017]/60 hover:text-destructive flex items-center gap-1"
+                                            className="text-[11px] font-medium text-ink/60 hover:text-destructive flex items-center gap-1"
                                         >
                                             <X className="size-3" /> Cancel
                                         </button>
@@ -323,17 +323,17 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                             <textarea aria-label="Edit summary"
                                 value={editedSummary}
                                 onChange={e => setEditedSummary(e.target.value)}
-                                className="w-full text-sm text-[#1b1017]/80 bg-white border border-[#381d2a]/15 rounded-lg p-3 resize-none h-48 outline-none focus:border-[#ff5018] focus:ring-2 focus:ring-[#ff5018]/20 transition-colors leading-relaxed"
+                                className="w-full text-sm text-ink/80 bg-surface border border-plum/15 rounded-lg p-3 resize-none h-48 outline-none focus:border-[#ff5018] focus:ring-2 focus:ring-[#ff5018]/20 transition-colors leading-relaxed"
                             />
                         ) : (
-                            <div className="text-sm text-[#1b1017]/80 whitespace-pre-wrap leading-relaxed">
+                            <div className="text-sm text-ink/80 whitespace-pre-wrap leading-relaxed">
                                 {meeting.summary}
                             </div>
                         )}
                     </div>
                 ) : meeting.endedAt ? (
-                    <div className="bg-[#f7f2ee] border border-[#381d2a]/10 rounded-xl p-4 flex flex-col gap-3">
-                        <div className="flex items-center gap-2 text-sm text-[#1b1017]/60">
+                    <div className="bg-cream border border-plum/10 rounded-xl p-4 flex flex-col gap-3">
+                        <div className="flex items-center gap-2 text-sm text-ink/60">
                             <Sparkles className="size-3.5" />
                             No summary available for this meeting.
                         </div>
@@ -342,7 +342,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                             disabled={isGenerating}
                             variant="outline"
                             size="sm"
-                            className="w-fit text-xs rounded-lg border-[#381d2a]/15 hover:bg-[#f3eeea]"
+                            className="w-fit text-xs rounded-lg border-plum/15 hover:bg-cream-deep"
                         >
                             {isGenerating ? (
                                 <>
@@ -361,10 +361,10 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
 
                 {/* Transcript toggle */}
                 {meeting.transcript && meeting.transcript.length > 0 && (
-                    <div className="border-t border-[#381d2a]/10 pt-4">
+                    <div className="border-t border-plum/10 pt-4">
                         <button
                             onClick={() => setShowTranscript(v => !v)}
-                            className="text-xs font-medium text-[#1b1017]/60 flex items-center gap-1 hover:text-[#a82d0a] transition-colors"
+                            className="text-xs font-medium text-ink/60 flex items-center gap-1 hover:text-orange-ink-hover transition-colors"
                         >
                             {showTranscript
                                 ? <ChevronUp className="size-3" />
@@ -372,7 +372,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                             {showTranscript ? "Hide" : "Show"} transcript ({meeting.transcript.length} chars)
                         </button>
                         {showTranscript && (
-                            <div className="mt-3 bg-[#f7f2ee] border border-[#381d2a]/10 rounded-xl p-4 text-xs text-[#1b1017]/70 whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed font-mono">
+                            <div className="mt-3 bg-cream border border-plum/10 rounded-xl p-4 text-xs text-ink/70 whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed font-mono">
                                 {meeting.transcript}
                             </div>
                         )}
@@ -396,7 +396,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                         {actionItems.map((item, i) => (
                             <label
                                 key={i}
-                                className="flex items-start gap-2.5 p-2.5 rounded-lg border border-[#381d2a]/10 hover:bg-[#f7f2ee] cursor-pointer text-sm"
+                                className="flex items-start gap-2.5 p-2.5 rounded-lg border border-plum/10 hover:bg-cream cursor-pointer text-sm"
                             >
                                 <input aria-label="Select action item"
                                     type="checkbox"
@@ -404,7 +404,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                                     onChange={() => toggleItem(i)}
                                     className="mt-0.5 accent-[#ff5018]"
                                 />
-                                <span className="text-[#1b1017]/80">{item}</span>
+                                <span className="text-ink/80">{item}</span>
                             </label>
                         ))}
                     </div>
@@ -449,14 +449,14 @@ Example:
                             className="min-h-50 text-sm font-mono rounded-lg focus-visible:ring-[#ff5018]/40 focus-visible:border-[#ff5018]"
                         />
                         <div className="flex items-center justify-between">
-                            <span className="text-xs text-[#1b1017]/60">
+                            <span className="text-xs text-ink/60">
                                 {manualTranscript.length} characters
                             </span>
                             <div className="flex gap-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="rounded-lg border-[#381d2a]/15 hover:bg-[#f3eeea]"
+                                    className="rounded-lg border-plum/15 hover:bg-cream-deep"
                                     onClick={() => {
                                         setShowTranscriptDialog(false)
                                         setManualTranscript("")

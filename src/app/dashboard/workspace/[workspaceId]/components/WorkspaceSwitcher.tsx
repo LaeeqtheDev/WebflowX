@@ -51,7 +51,7 @@ export const WorkspaceSwitcher = () => {
                     className="cursor-pointer capitalize overflow-hidden rounded-lg"
                     onClick={()=> router.push(`/dashboard/workspace/${workspace._id}`)}
                     >
-                        <div className=" shrink-0 size-9 overflow-hidden bg-[#381d2a] text-white font-semibold rounded-lg flex items-center justify-center">
+                        <div className=" shrink-0 size-9 overflow-hidden bg-[#381d2a] dark:bg-[#4a2838] text-white font-semibold rounded-lg flex items-center justify-center">
                             {workspace.imageUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img src={workspace.imageUrl} alt="" className="size-full object-cover" />
@@ -65,7 +65,7 @@ export const WorkspaceSwitcher = () => {
             <DropdownMenuItem
             className="cursor-pointer flex items-center gap-2 rounded-lg"
             onClick={() => setOpen(true)}>
-            <div className="size-9 bg-[#f7f2ee] text-[#1b1017] rounded-lg flex items-center justify-center">
+            <div className="size-9 bg-cream text-ink rounded-lg flex items-center justify-center">
                 <Plus />
             </div>
 

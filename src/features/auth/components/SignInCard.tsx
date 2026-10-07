@@ -49,13 +49,13 @@ export const SignInCard = ({ setState, onEmail }: SignInCardProps) => {
 
   return (
     <div className="w-full">
-      <Link href="/" className="mb-10 inline-flex items-center gap-1.5 text-sm text-[#1b1017]/55 transition-colors hover:text-[#1b1017]">
+      <Link href="/" className="mb-10 inline-flex items-center gap-1.5 text-sm text-ink/55 transition-colors hover:text-ink">
         <ArrowLeft size={16} />
         Back to home
       </Link>
 
-      <h1 className="text-[2rem] font-semibold leading-tight tracking-[-0.03em] text-[#1b1017]">Welcome back</h1>
-      <p className="mt-2 text-[15px] text-[#1b1017]/65">Log in to your workspace.</p>
+      <h1 className="text-[2rem] font-semibold leading-tight tracking-[-0.03em] text-ink">Welcome back</h1>
+      <p className="mt-2 text-[15px] text-ink/65">Log in to your workspace.</p>
 
       {!!error && (
         <div className="mt-6 flex items-start gap-x-2 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
@@ -90,7 +90,7 @@ export const SignInCard = ({ setState, onEmail }: SignInCardProps) => {
           onClick={() => handleProviderSignIn("google")}
           variant="outline"
           size="lg"
-          className="h-12 cursor-pointer gap-2.5 rounded-xl border-[#381d2a]/15 bg-white text-[15px] hover:bg-[#f3eeea]"
+          className="h-12 cursor-pointer gap-2.5 rounded-xl border-plum/15 bg-surface text-[15px] hover:bg-cream-deep"
         >
           <FcGoogle className="size-5" />
           Google
@@ -100,14 +100,14 @@ export const SignInCard = ({ setState, onEmail }: SignInCardProps) => {
           onClick={() => handleProviderSignIn("github")}
           variant="outline"
           size="lg"
-          className="h-12 cursor-pointer gap-2.5 rounded-xl border-[#381d2a]/15 bg-white text-[15px] hover:bg-[#f3eeea]"
+          className="h-12 cursor-pointer gap-2.5 rounded-xl border-plum/15 bg-surface text-[15px] hover:bg-cream-deep"
         >
           <FaGithub className="size-5" />
           GitHub
         </Button>
       </div>
 
-      <p className="mt-8 text-center text-sm text-[#1b1017]/65">
+      <p className="mt-8 text-center text-sm text-ink/65">
         Don&apos;t have an account?{" "}
         <button
           type="button"

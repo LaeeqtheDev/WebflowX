@@ -71,7 +71,7 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-w-lg rounded-2xl border-[#381d2a]/12">
+            <DialogContent className="max-w-lg rounded-2xl border-plum/12">
                 <DialogHeader>
                     <DialogTitle className="text-[17px] font-semibold tracking-tight">Create New Task</DialogTitle>
                 </DialogHeader>
@@ -85,7 +85,7 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
                     />
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Status</label>
+                            <label className="text-xs font-medium text-ink/60 mb-1 block">Status</label>
                             <Select value={status} onValueChange={v => setStatus(v as Status)}>
                                 <SelectTrigger aria-label="Status" className="h-8 text-xs"><SelectValue /></SelectTrigger>
                                 <SelectContent>
@@ -94,7 +94,7 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
                             </Select>
                         </div>
                         <div>
-                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Priority</label>
+                            <label className="text-xs font-medium text-ink/60 mb-1 block">Priority</label>
                             <Select value={priority} onValueChange={v => setPriority(v as Priority)}>
                                 <SelectTrigger aria-label="Priority" className="h-8 text-xs"><SelectValue /></SelectTrigger>
                                 <SelectContent>
@@ -103,7 +103,7 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
                             </Select>
                         </div>
                         <div>
-                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Assignee</label>
+                            <label className="text-xs font-medium text-ink/60 mb-1 block">Assignee</label>
                             <Select value={assigneeId} onValueChange={setAssigneeId}>
                                 <SelectTrigger aria-label="Assignee" className="h-8 text-xs"><SelectValue placeholder="Unassigned" /></SelectTrigger>
                                 <SelectContent>
@@ -112,7 +112,7 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
                             </Select>
                         </div>
                         <div>
-                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Sprint</label>
+                            <label className="text-xs font-medium text-ink/60 mb-1 block">Sprint</label>
                             <Select value={sprintId} onValueChange={setSprintId}>
                                 <SelectTrigger aria-label="Sprint" className="h-8 text-xs"><SelectValue placeholder="No sprint" /></SelectTrigger>
                                 <SelectContent>
@@ -122,22 +122,22 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
                             </Select>
                         </div>
                         <div>
-                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Due Date</label>
+                            <label className="text-xs font-medium text-ink/60 mb-1 block">Due Date</label>
                             <Input aria-label="Due date" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div>
-                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Story Points</label>
+                            <label className="text-xs font-medium text-ink/60 mb-1 block">Story Points</label>
                             <Input aria-label="Story points" type="number" placeholder="0" value={storyPoints} onChange={e => setStoryPoints(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div className="col-span-2">
-                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Labels (press Enter)</label>
+                            <label className="text-xs font-medium text-ink/60 mb-1 block">Labels (press Enter)</label>
                             <Input aria-label="Add label" placeholder="Add label..." value={labelInput} onChange={e => setLabelInput(e.target.value)} onKeyDown={handleAddLabel} className="h-8 text-xs" />
                         </div>
                     </div>
                     {labels.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                             {labels.map((l, index) => (
-                                <Badge key={index} variant="secondary" className="cursor-pointer text-[11px] rounded-md bg-[#f7f2ee] text-[#381d2a] hover:bg-[#efe8e3]"
+                                <Badge key={index} variant="secondary" className="cursor-pointer text-[11px] rounded-md bg-cream text-plum hover:bg-cream-deep2"
                                     onClick={() => setLabels(prev => prev.filter((_, i) => i !== index))}>
                                     {l} ×
                                 </Badge>

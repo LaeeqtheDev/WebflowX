@@ -75,15 +75,15 @@ export const EditProfileModal = ({ open, setOpen, user }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="rounded-2xl p-0 overflow-hidden bg-[#f7f2ee] max-w-md">
-        <DialogHeader className="px-6 py-5 border-b bg-white">
+      <DialogContent className="rounded-2xl p-0 overflow-hidden bg-cream max-w-md">
+        <DialogHeader className="px-6 py-5 border-b bg-surface">
           <DialogTitle className="font-semibold tracking-tight">Edit your profile</DialogTitle>
         </DialogHeader>
         <form onSubmit={onSave} className="px-6 py-5 flex flex-col gap-4">
           <div className="flex items-center gap-4">
             <Avatar className="size-20 rounded-2xl">
               <AvatarImage className="rounded-2xl" src={shownImage} />
-              <AvatarFallback className="rounded-2xl bg-[#381d2a] text-white text-2xl font-semibold">
+              <AvatarFallback className="rounded-2xl bg-[#381d2a] dark:bg-[#4a2838] text-white text-2xl font-semibold">
                 {(name || "?").charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -94,7 +94,7 @@ export const EditProfileModal = ({ open, setOpen, user }: Props) => {
                 {shownImage ? "Change photo" : "Upload photo"}
               </Button>
               {shownImage && (
-                <Button type="button" variant="ghost" size="sm" className="rounded-lg text-rose-600 hover:text-rose-700" onClick={() => { setPhoto(null); setRemovePhoto(true) }}>
+                <Button type="button" variant="ghost" size="sm" className="rounded-lg text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300" onClick={() => { setPhoto(null); setRemovePhoto(true) }}>
                   <Trash2 className="size-4 mr-2" /> Remove
                 </Button>
               )}
@@ -112,10 +112,10 @@ export const EditProfileModal = ({ open, setOpen, user }: Props) => {
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="pf-bio">About</Label>
             <Textarea id="pf-bio" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={300} rows={3} placeholder="A line or two about you" disabled={saving} />
-            <p className="text-xs text-[#1b1017]/50 text-right">{bio.length}/300</p>
+            <p className="text-xs text-ink/50 text-right">{bio.length}/300</p>
           </div>
 
-          <label htmlFor="pf-email-notifs" className="flex items-start gap-3 rounded-xl border border-[#1b1017]/10 bg-white px-4 py-3 cursor-pointer">
+          <label htmlFor="pf-email-notifs" className="flex items-start gap-3 rounded-xl border border-ink/10 bg-surface px-4 py-3 cursor-pointer">
             <input
               id="pf-email-notifs"
               type="checkbox"
@@ -125,8 +125,8 @@ export const EditProfileModal = ({ open, setOpen, user }: Props) => {
               className="mt-1 size-4 accent-[#ff5018]"
             />
             <span className="flex flex-col">
-              <span className="text-sm font-medium text-[#1b1017]">Email notifications</span>
-              <span className="text-xs text-[#1b1017]/65">Get an email when you are mentioned, get a direct message or thread reply, or a task is assigned to you and you haven&apos;t seen it yet.</span>
+              <span className="text-sm font-medium text-ink">Email notifications</span>
+              <span className="text-xs text-ink/65">Get an email when you are mentioned, get a direct message or thread reply, or a task is assigned to you and you haven&apos;t seen it yet.</span>
             </span>
           </label>
 

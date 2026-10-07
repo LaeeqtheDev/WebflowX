@@ -13,17 +13,57 @@ const faqData = [
   {
     id: "pricing",
     question: "What is WebflowX's pricing model?",
-    answer: "There are four plans: Free ($0), Startup ($19), Growth ($49) and Enterprise ($149) per month, billed per workspace. Higher plans raise limits on workspaces, members, channels, notes, documents, meetings and AI summaries. Enterprise is unlimited.",
+    answer: "There are four plans: Free ($0), Startup ($19), Growth ($49) and Enterprise ($149) per month, with limits applied per workspace. Higher plans raise limits on workspaces, members, channels, notes, documents, meetings per month, AI summaries per month and file storage (250 MB, 5 GB, 50 GB and 1 TB under fair use). Enterprise is unlimited apart from storage.",
   },
   {
     id: "file-sharing",
     question: "Can I share files and documents with my team?",
-    answer: "Yes. You can share files and documents within your workspace, and write and edit documents together with your team.",
+    answer: "Yes. Attach files and images to messages, and write and edit documents and spreadsheets together in real time. Uploads are checked for type and size, and each workspace has a storage cap that depends on its plan.",
   },
   {
     id: "video-calls",
     question: "Does WebflowX support video calls?",
-    answer: "Yes. You can host meetings inside your workspace, and AI summaries can capture the key points afterwards. The number of meetings and summaries depends on your plan.",
+    answer: "Yes. You can host video meetings inside your workspace, follow a live transcript, and get an AI summary with action items and decisions afterwards. The number of meetings and summaries depends on your plan.",
+  },
+  {
+    id: "security",
+    question: "Is my data safe?",
+    answer: "Permissions are enforced on the server, not just hidden in the interface. Uploads are checked against an allowed-type list and size caps, rate limits and size limits guard against spam and abuse, and the site sends strict security headers. Read our Terms and Privacy Policy for the details of how data is handled.",
+  },
+  {
+    id: "permissions",
+    question: "Can I control who sees what?",
+    answer: "Yes. There are four built-in roles (owner, admin, moderator and member) plus custom roles built from 14 permissions. You can lock channels to members you choose, make channels read-only for announcements, create invite links that expire or switch them off, review an audit log of admin actions, and transfer ownership.",
+  },
+  {
+    id: "email",
+    question: "Will I get verification and password reset emails?",
+    answer: "Yes. New accounts confirm their email with an 8-digit code that expires after 15 minutes, and you can reset a forgotten password with a code sent by email. You can also sign in with Google or GitHub.",
+  },
+  {
+    id: "notifications",
+    question: "How do email notifications work?",
+    answer: "WebflowX emails you about mentions, direct messages, thread replies, task assignments and task comments, but only if you have not already read them. Each member can switch email notifications off.",
+  },
+  {
+    id: "export",
+    question: "Can I export my data?",
+    answer: "Yes. Anyone can download their own data, and owners and admins can export the workspace (direct messages, channels they cannot open and other people's personal notes are left out).",
+  },
+  {
+    id: "dark-mode",
+    question: "Is there a dark mode?",
+    answer: "Yes. Each member chooses Light, Dark or Auto, and the choice is saved to their account, so it does not change anyone else's view.",
+  },
+  {
+    id: "mobile",
+    question: "Does it work on mobile?",
+    answer: "Yes. WebflowX has a mobile layout with drawer navigation, so you can use it in a phone browser.",
+  },
+  {
+    id: "limits",
+    question: "What happens when I hit a plan limit?",
+    answer: "WebflowX explains which limit you reached and shows an upgrade prompt for the next plan. Limits cover workspaces, members, channels, notes, documents, meetings per month, AI summaries per month and file storage.",
   },
   {
     id: "merger",
@@ -50,13 +90,14 @@ export const FAQSection = () => {
                 <button
                   type="button"
                   aria-expanded={isOpen}
+                  aria-controls={`faq-${item.id}`}
                   onClick={() => setOpen(isOpen ? null : item.id)}
                   className="flex w-full items-center justify-between gap-4 py-6 text-left"
                 >
                   <span className="text-lg font-semibold tracking-tight text-[#1b1017]">{item.question}</span>
-                  <Plus className={`h-5 w-5 shrink-0 text-[#ff5018] transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`} />
+                  <Plus aria-hidden="true" className={`h-5 w-5 shrink-0 text-[#ff5018] transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`} />
                 </button>
-                <div className={`grid transition-all duration-300 ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+                <div id={`faq-${item.id}`} role="region" className={`grid transition-all duration-300 ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
                   <div className="overflow-hidden">
                     <p className="pb-6 pr-10 text-sm leading-relaxed text-neutral-600 sm:text-base">{item.answer}</p>
                   </div>

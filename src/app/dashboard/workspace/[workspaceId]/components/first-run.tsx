@@ -52,16 +52,16 @@ const ActionRow = ({ icon: Icon, title, description, onClick }: {
     <button
         type="button"
         onClick={onClick}
-        className="group flex min-h-14 w-full items-center gap-3 rounded-xl border border-[#381d2a]/12 bg-white px-3.5 py-2.5 text-left transition-colors hover:border-[#ff5018]/40 hover:bg-[#fbf9f7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70"
+        className="group flex min-h-14 w-full items-center gap-3 rounded-xl border border-plum/12 bg-surface px-3.5 py-2.5 text-left transition-colors hover:border-[#ff5018]/40 hover:bg-cream-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70"
     >
-        <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#ff5018]/10 text-[#c2370d]">
+        <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#ff5018]/10 text-orange-ink">
             <Icon className="size-[18px]" />
         </span>
         <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold tracking-tight text-[#1b1017]">{title}</span>
-            <span className="block text-[13px] leading-snug text-[#1b1017]/65">{description}</span>
+            <span className="block text-sm font-semibold tracking-tight text-ink">{title}</span>
+            <span className="block text-[13px] leading-snug text-ink/65">{description}</span>
         </span>
-        <ChevronRight aria-hidden className="size-4 shrink-0 text-[#1b1017]/40 transition-transform group-hover:translate-x-0.5" />
+        <ChevronRight aria-hidden className="size-4 shrink-0 text-ink/40 transition-transform group-hover:translate-x-0.5" />
     </button>
 )
 
@@ -79,12 +79,12 @@ export const ChannelWelcome = ({ channelName, canPost }: { channelName: string; 
     if (!canInvite && !canCreate && !canPost) return null
 
     return (
-        <section aria-label="Getting started" className="mx-3 mb-4 mt-2 max-w-xl rounded-2xl border border-[#381d2a]/12 bg-[#f7f2ee] p-4 md:mx-5">
+        <section aria-label="Getting started" className="mx-3 mb-4 mt-2 max-w-xl rounded-2xl border border-plum/12 bg-cream p-4 md:mx-5">
             {dialog}
-            <h2 className="text-lg font-semibold tracking-tight text-[#1b1017]">
+            <h2 className="text-lg font-semibold tracking-tight text-ink">
                 Welcome to #{cleanChannelName(channelName)}
             </h2>
-            <p className="mt-1 text-sm text-[#1b1017]/70">It&apos;s quiet in here. A few good ways to get things started:</p>
+            <p className="mt-1 text-sm text-ink/70">It&apos;s quiet in here. A few good ways to get things started:</p>
             <div className="mt-3 flex flex-col gap-2">
                 {canInvite && (
                     <ActionRow icon={UserPlus} title="Invite teammates" description="Share a link or code so your team can join." onClick={openInvite} />
@@ -151,18 +151,18 @@ export const useGetStarted = () => {
 }
 
 const Step = ({ done, title, children }: { done: boolean; title: string; children: React.ReactNode }) => (
-    <li className="flex min-h-12 items-center gap-3 rounded-xl bg-white px-3 py-2 ring-1 ring-[#381d2a]/10">
+    <li className="flex min-h-12 items-center gap-3 rounded-xl bg-surface px-3 py-2 ring-1 ring-plum/10">
         <span
             aria-hidden
             className={cn(
                 "flex size-6 shrink-0 items-center justify-center rounded-full border-2",
-                done ? "border-[#ff5018] bg-[#ff5018] text-white" : "border-[#381d2a]/25"
+                done ? "border-[#ff5018] bg-[#ff5018] text-white" : "border-plum/25"
             )}
         >
             {done && <Check className="size-3.5" strokeWidth={3} />}
         </span>
         <span className="min-w-0 flex-1">
-            <span className={cn("block text-sm font-semibold tracking-tight", done ? "text-[#1b1017]/55" : "text-[#1b1017]")}>
+            <span className={cn("block text-sm font-semibold tracking-tight", done ? "text-ink/55" : "text-ink")}>
                 {title}
                 <span className="sr-only">{done ? " (done)" : " (to do)"}</span>
             </span>
@@ -171,7 +171,7 @@ const Step = ({ done, title, children }: { done: boolean; title: string; childre
     </li>
 )
 
-const pill = "inline-flex h-10 items-center rounded-lg border border-[#381d2a]/15 bg-[#fbf9f7] px-3 text-[13px] font-semibold text-[#c2370d] transition-colors hover:bg-[#f7f2ee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70 md:h-8"
+const pill = "inline-flex h-10 items-center rounded-lg border border-plum/15 bg-cream-soft px-3 text-[13px] font-semibold text-orange-ink transition-colors hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70 md:h-8"
 
 export const GetStartedCard = () => {
     const router = useRouter()
@@ -183,23 +183,23 @@ export const GetStartedCard = () => {
     if (!show) return null
 
     return (
-        <section aria-label="Get started" className="w-full rounded-2xl border border-[#381d2a]/12 bg-[#f7f2ee] p-4">
+        <section aria-label="Get started" className="w-full rounded-2xl border border-plum/12 bg-cream p-4">
             {dialog}
             <div className="flex items-start justify-between gap-3">
                 <div>
-                    <h2 className="text-lg font-semibold tracking-tight text-[#1b1017]">Get started</h2>
-                    <p className="mt-0.5 text-[13px] text-[#1b1017]/65">{doneCount} of 3 done</p>
+                    <h2 className="text-lg font-semibold tracking-tight text-ink">Get started</h2>
+                    <p className="mt-0.5 text-[13px] text-ink/65">{doneCount} of 3 done</p>
                 </div>
                 <button
                     type="button"
                     onClick={dismiss}
                     aria-label="Dismiss get started checklist"
-                    className="-mr-1 -mt-1 flex size-10 items-center justify-center rounded-lg text-[#1b1017]/55 transition-colors hover:bg-white hover:text-[#1b1017] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70"
+                    className="-mr-1 -mt-1 flex size-10 items-center justify-center rounded-lg text-ink/55 transition-colors hover:bg-surface hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70"
                 >
                     <X className="size-4" />
                 </button>
             </div>
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#381d2a]/10" aria-hidden>
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-plum/10" aria-hidden>
                 <div className="h-full rounded-full bg-[#ff5018] transition-all" style={{ width: `${(doneCount / 3) * 100}%` }} />
             </div>
             <ul className="mt-3 flex flex-col gap-2">

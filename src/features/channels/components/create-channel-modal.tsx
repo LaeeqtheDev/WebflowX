@@ -82,30 +82,30 @@ export const CreateChannelModal = () => {
                         maxLength={80}
                         placeholder="e.g. plan-budget"
                     />
-                    <label className="flex items-start gap-3 rounded-xl border border-[#381d2a]/12 bg-[#fbf9f7] px-4 py-3 cursor-pointer">
+                    <label className="flex items-start gap-3 rounded-xl border border-plum/12 bg-cream-soft px-4 py-3 cursor-pointer">
                         <input type="checkbox" className="mt-1 size-4 accent-[#ff5018]" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} disabled={isPending} />
                         <span>
                             <span className="flex items-center gap-1.5 text-sm font-semibold"><Lock className="size-3.5 text-[#ff5018]" /> Make this channel locked</span>
-                            <span className="block text-xs text-[#1b1017]/65">Only people you choose (and roles allowed to see locked channels) can open it.</span>
+                            <span className="block text-xs text-ink/65">Only people you choose (and roles allowed to see locked channels) can open it.</span>
                         </span>
                     </label>
-                    <label className="flex items-start gap-3 rounded-xl border border-[#381d2a]/12 bg-[#fbf9f7] px-4 py-3 cursor-pointer">
+                    <label className="flex items-start gap-3 rounded-xl border border-plum/12 bg-cream-soft px-4 py-3 cursor-pointer">
                         <input type="checkbox" className="mt-1 size-4 accent-[#ff5018]" checked={readOnly} onChange={(e) => setReadOnly(e.target.checked)} disabled={isPending} />
                         <span>
                             <span className="block text-sm font-semibold">Announcement channel (read-only)</span>
-                            <span className="block text-xs text-[#1b1017]/65">Everyone can read; only admins and allowed roles can post.</span>
+                            <span className="block text-xs text-ink/65">Everyone can read; only admins and allowed roles can post.</span>
                         </span>
                     </label>
                     {isPrivate && (
-                        <div className="max-h-40 overflow-y-auto rounded-xl border border-[#381d2a]/12 divide-y">
+                        <div className="max-h-40 overflow-y-auto rounded-xl border border-plum/12 divide-y">
                             {(members ?? []).filter((m) => m._id !== me?.memberId).map((m) => (
-                                <label key={m._id} className="flex items-center gap-3 px-3 py-2 text-sm cursor-pointer hover:bg-[#fbf9f7]">
+                                <label key={m._id} className="flex items-center gap-3 px-3 py-2 text-sm cursor-pointer hover:bg-cream-soft">
                                     <input type="checkbox" className="size-4 accent-[#ff5018]" checked={picked.includes(m._id)}
                                         onChange={(e) => setPicked((p) => e.target.checked ? [...p, m._id] : p.filter((id) => id !== m._id))} />
                                     <span className="truncate">{m.user.name}</span>
                                 </label>
                             ))}
-                            {members && members.length <= 1 && <p className="px-3 py-2 text-xs text-[#1b1017]/65">No one else is in this workspace yet.</p>}
+                            {members && members.length <= 1 && <p className="px-3 py-2 text-xs text-ink/65">No one else is in this workspace yet.</p>}
                         </div>
                     )}
                     <div className="flex justify-end">

@@ -259,20 +259,20 @@ export default function MeetingPage() {
     // Generating summary screen
     if (isGenerating) {
         return (
-            <div className="h-full flex items-center justify-center flex-col gap-3 px-4 bg-[#fbf9f7]">
+            <div className="h-full flex items-center justify-center flex-col gap-3 px-4 bg-cream-soft">
                 <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
                     <Sparkles className="size-6 text-[#ff5018] animate-pulse" />
                 </div>
-                <p className="font-semibold tracking-tight text-center text-[#1b1017]">Generating AI summary...</p>
-                <p className="text-sm text-[#1b1017]/60 text-center">This will just take a moment</p>
+                <p className="font-semibold tracking-tight text-center text-ink">Generating AI summary...</p>
+                <p className="text-sm text-ink/60 text-center">This will just take a moment</p>
             </div>
         )
     }
 
     return (
-        <div className="h-full flex flex-col bg-[#fbf9f7]">
+        <div className="h-full flex flex-col bg-cream-soft">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 sm:px-6 h-14 border-b bg-white shrink-0">
+            <div className="flex items-center justify-between px-4 sm:px-6 h-14 border-b bg-surface shrink-0">
                 <div className="flex items-center gap-2">
                     {showMobileDetail && (
                         <Button
@@ -288,7 +288,7 @@ export default function MeetingPage() {
                     <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
                         <Video className="size-4 text-[#ff5018]" />
                     </div>
-                    <h1 className="tracking-tight text-[17px] font-semibold text-[#1b1017]">Meetings</h1>
+                    <h1 className="tracking-tight text-[17px] font-semibold text-ink">Meetings</h1>
                 </div>
                 <Button
                     onClick={() => setShowCreate(true)}
@@ -301,18 +301,18 @@ export default function MeetingPage() {
 
             {/* Error banner */}
             {generationError && (
-                <div className="mx-4 sm:mx-6 mt-3 sm:mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2">
-                    <AlertTriangle className="size-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="mx-4 sm:mx-6 mt-3 sm:mt-4 p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl flex items-start gap-2">
+                    <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
-                        <p className="text-xs sm:text-sm font-medium text-amber-800">Summary generation had an issue</p>
-                        <p className="text-[10px] sm:text-xs text-amber-600 mt-0.5">{generationError}</p>
-                        <p className="text-[10px] sm:text-xs text-amber-600 mt-1">You can add a transcript manually from the meeting details.</p>
+                        <p className="text-xs sm:text-sm font-medium text-amber-800 dark:text-amber-200">Summary generation had an issue</p>
+                        <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 mt-0.5">{generationError}</p>
+                        <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 mt-1">You can add a transcript manually from the meeting details.</p>
                     </div>
                     <button 
                         type="button"
                         aria-label="Dismiss"
                         onClick={() => setGenerationError(null)}
-                        className="text-amber-600 hover:text-amber-800 text-lg shrink-0"
+                        className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 text-lg shrink-0"
                     >
                         <span aria-hidden="true">×</span>
                     </button>
@@ -328,11 +328,11 @@ export default function MeetingPage() {
                         </div>
                     </div>
                 ) : meetings?.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center gap-3 text-[#1b1017]/60 px-4">
+                    <div className="flex-1 flex flex-col items-center justify-center gap-3 text-ink/60 px-4">
                         <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
                             <Video className="size-6 text-[#ff5018]" />
                         </div>
-                        <p className="font-semibold tracking-tight text-[#1b1017] text-center">No meetings yet</p>
+                        <p className="font-semibold tracking-tight text-ink text-center">No meetings yet</p>
                         <p className="text-sm text-center">Start a meeting to talk with your team</p>
                         <Button onClick={() => setShowCreate(true)} size="sm" className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold">
                             <Plus className="size-4 mr-1" /> Start a Meeting
@@ -342,7 +342,7 @@ export default function MeetingPage() {
                     <>
                         {/* Left panel: meeting list - Hidden on mobile when detail is shown */}
                         <div className={cn(
-                            "w-full md:w-80 border-r bg-white flex flex-col overflow-y-auto shrink-0 p-3 gap-2",
+                            "w-full md:w-80 border-r bg-surface flex flex-col overflow-y-auto shrink-0 p-3 gap-2",
                             showMobileDetail && "hidden md:flex"
                         )}>
                             {meetings?.map(meeting => (
@@ -350,20 +350,20 @@ export default function MeetingPage() {
                                     key={meeting._id}
                                     onClick={() => handleSelectMeeting(meeting)}
                                     className={cn(
-                                        "flex flex-col gap-1 px-3 sm:px-4 py-3 bg-white rounded-xl border cursor-pointer hover:border-[#ff5018]/40 hover:shadow-sm transition-colors",
-                                        selectedMeeting?._id === meeting._id && "border-[#ff5018]/60 bg-[#f7f2ee]"
+                                        "flex flex-col gap-1 px-3 sm:px-4 py-3 bg-surface rounded-xl border cursor-pointer hover:border-[#ff5018]/40 hover:shadow-sm transition-colors",
+                                        selectedMeeting?._id === meeting._id && "border-[#ff5018]/60 bg-cream"
                                     )}
                                 >
                                     <div className="flex items-center justify-between gap-2">
-                                        <p className="text-sm font-semibold tracking-tight truncate text-[#1b1017]">{meeting.title}</p>
+                                        <p className="text-sm font-semibold tracking-tight truncate text-ink">{meeting.title}</p>
                                         {!meeting.endedAt && (
-                                            <Badge className="bg-red-50 text-red-700 border-transparent rounded-md px-2 py-0.5 text-[11px] font-medium shrink-0">
+                                            <Badge className="bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 border-transparent rounded-md px-2 py-0.5 text-[11px] font-medium shrink-0">
                                                 <span className="size-1.5 rounded-full bg-red-500 animate-pulse mr-1.5" />
                                                 Live{(meeting.activeMembers?.length ?? 0) > 0 ? ` · ${meeting.activeMembers?.length} in call` : ""}
                                             </Badge>
                                         )}
                                     </div>
-                                    <div className="flex items-center gap-2 text-xs text-[#1b1017]/60 flex-wrap">
+                                    <div className="flex items-center gap-2 text-xs text-ink/60 flex-wrap">
                                         <span className="flex items-center gap-1">
                                             <Clock className="size-3" />
                                             {format(meeting.startedAt, "MMM d · h:mm a")}
@@ -375,11 +375,11 @@ export default function MeetingPage() {
                                     <div className="flex items-center gap-1.5 mt-0.5">
                                         <Avatar className="size-4 rounded-md">
                                             <AvatarImage src={meeting.creator?.user?.image} />
-                                            <AvatarFallback className="text-[8px] rounded-md bg-[#381d2a] text-white">
+                                            <AvatarFallback className="text-[8px] rounded-md bg-[#381d2a] dark:bg-[#4a2838] text-white">
                                                 {meeting.creator?.user?.name?.[0] ?? "?"}
                                             </AvatarFallback>
                                         </Avatar>
-                                        <span className="text-[11px] text-[#1b1017]/60 truncate">
+                                        <span className="text-[11px] text-ink/60 truncate">
                                             {meeting.creator?.user?.name}
                                         </span>
                                     </div>
@@ -397,8 +397,8 @@ export default function MeetingPage() {
                                     {/* Meeting header */}
                                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                                         <div className="min-w-0">
-                                            <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-[#1b1017] break-words">{selectedMeeting.title}</h2>
-                                            <div className="flex items-center gap-2 sm:gap-3 text-xs text-[#1b1017]/60 mt-1 flex-wrap">
+                                            <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-ink break-words">{selectedMeeting.title}</h2>
+                                            <div className="flex items-center gap-2 sm:gap-3 text-xs text-ink/60 mt-1 flex-wrap">
                                                 <span className="flex items-center gap-1">
                                                     <Clock className="size-3" />
                                                     {format(selectedMeeting.startedAt, "MMM d, yyyy · h:mm a")}
@@ -441,7 +441,7 @@ export default function MeetingPage() {
                                     <MeetingSummary meeting={selectedMeeting} />
                                 </div>
                             ) : (
-                                <div className="flex flex-col items-center justify-center h-full text-[#1b1017]/60 gap-3 px-4">
+                                <div className="flex flex-col items-center justify-center h-full text-ink/60 gap-3 px-4">
                                     <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
                                         <Video className="size-6 text-[#ff5018]" />
                                     </div>
@@ -468,7 +468,7 @@ export default function MeetingPage() {
                             className="text-sm rounded-lg focus-visible:ring-[#ff5018]/40 focus-visible:border-[#ff5018]"
                         />
                         <div>
-                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">
+                            <label className="text-xs font-medium text-ink/60 mb-1 block">
                                 Post to channel (optional)
                             </label>
                             <Select value={selectedChannelId} onValueChange={setSelectedChannelId}>
@@ -484,7 +484,7 @@ export default function MeetingPage() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-700">
+                        <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-300">
                             <p className="font-medium">Tip for transcripts</p>
                             <p className="mt-1">Keep this tab in focus during the meeting for best transcript capture. You can also add transcripts manually after the meeting.</p>
                         </div>

@@ -10,8 +10,8 @@ const rows = [
   "Personal notes",
   "Workspace notes",
   "Documents",
-  "Meetings",
-  "AI summaries",
+  "Meetings / month",
+  "AI summaries / month",
   "File storage",
 ];
 
@@ -29,7 +29,7 @@ const PricingSection = () => (
         <Label>Pricing</Label>
         <Heading className="mt-5 max-w-3xl">Four plans. Clear limits.</Heading>
         <p className="mt-5 max-w-lg text-[17px] leading-relaxed text-[#1b1017]/70">
-          Pick the limits that fit your team. Plans are billed per workspace, per month.
+          Pick the limits that fit your team. Limits and storage apply per workspace (the number of workspaces is per owner); meetings and AI summaries reset each month. Paid billing is coming soon, so during early access owners can switch plans in workspace settings.
         </p>
       </Reveal>
       <Reveal delay={80}>
@@ -60,12 +60,16 @@ const PricingSection = () => (
                     dark ? "bg-[#ff5018] text-white hover:bg-[#e6430f]" : "bg-[#381d2a] text-white hover:bg-[#ff5018]"
                   }`}
                 >
-                  {p.price === "$0" ? "Start free" : `Choose ${p.name}`}
+                  {p.price === "$0" ? "Start free" : "Get started"}
                 </Link>
               </div>
             );
           })}
         </div>
+        <p className="mt-6 max-w-2xl text-sm leading-relaxed text-[#1b1017]/70">
+          Enterprise storage is 1 TB under fair use. When a workspace reaches a limit, WebflowX tells you which
+          one and shows the next plan.
+        </p>
       </Reveal>
     </div>
   </section>

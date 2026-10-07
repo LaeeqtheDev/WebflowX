@@ -33,15 +33,15 @@ export const TaskCard = ({
 
     return (
         <div
-            className="bg-white border border-[#381d2a]/12 rounded-xl p-3.5 flex flex-col gap-2.5 group cursor-pointer hover:border-[#ff5018]/40 hover:shadow-sm transition-all"
+            className="bg-surface border border-plum/12 rounded-xl p-3.5 flex flex-col gap-2.5 group cursor-pointer hover:border-[#ff5018]/40 hover:shadow-sm transition-all"
             onClick={() => onOpen(task)}
         >
             <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-semibold tracking-tight leading-snug text-[#1b1017]">{task.title}</p>
+                <p className="text-sm font-semibold tracking-tight leading-snug text-ink">{task.title}</p>
                 {isAdmin && (
                     <button aria-label="Delete task" type="button"
                         onClick={(e) => { e.stopPropagation(); onDelete(task._id) }}
-                        className="opacity-0 max-md:opacity-100 group-hover:opacity-100 transition-opacity text-[#1b1017]/50 hover:text-destructive shrink-0"
+                        className="opacity-0 max-md:opacity-100 group-hover:opacity-100 transition-opacity text-ink/50 hover:text-destructive shrink-0"
                     >
                         <Trash2 className="size-3.5" />
                     </button>
@@ -49,13 +49,13 @@ export const TaskCard = ({
             </div>
 
             {task.description && (
-                <p className="text-xs text-[#1b1017]/60 line-clamp-2">{task.description}</p>
+                <p className="text-xs text-ink/60 line-clamp-2">{task.description}</p>
             )}
 
             {task.labels && task.labels.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                     {task.labels.map((l, index) => (
-                        <span key={index} className="bg-[#f7f2ee] text-[#381d2a] rounded-md px-2 py-0.5 text-[11px] font-medium">{l}</span>
+                        <span key={index} className="bg-cream text-plum rounded-md px-2 py-0.5 text-[11px] font-medium">{l}</span>
                     ))}
                 </div>
             )}
@@ -66,34 +66,34 @@ export const TaskCard = ({
                     {PRIORITY_TEXT[task.priority]}
                 </span>
                 {task.storyPoints !== undefined && (
-                    <span className="text-[11px] text-[#1b1017]/60 flex items-center gap-1 rounded-md bg-[#f7f2ee] px-2 py-0.5">
+                    <span className="text-[11px] text-ink/60 flex items-center gap-1 rounded-md bg-cream px-2 py-0.5">
                         <Star className="size-3" /> {task.storyPoints}pts
                     </span>
                 )}
                 {task.dueDate && (
-                    <span className={cn("text-[11px] flex items-center gap-1 rounded-md px-2 py-0.5", isOverdue ? "bg-red-50 text-red-700" : "bg-[#f7f2ee] text-[#1b1017]/60")}>
+                    <span className={cn("text-[11px] flex items-center gap-1 rounded-md px-2 py-0.5", isOverdue ? "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300" : "bg-cream text-ink/60")}>
                         <Calendar className="size-3" />
                         {format(task.dueDate, "MMM d")}
                     </span>
                 )}
             </div>
 
-            <div className="flex items-center justify-between pt-2.5 border-t border-[#381d2a]/8" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between pt-2.5 border-t border-plum/8" onClick={e => e.stopPropagation()}>
                 {task.assignee ? (
                     <div className="flex items-center gap-1.5">
                         <Avatar className="size-5 rounded-md">
                             <AvatarImage src={task.assignee.user?.image} />
                             <AvatarFallback className="text-[9px]">{task.assignee.user?.name?.[0] ?? "?"}</AvatarFallback>
                         </Avatar>
-                        <span className="text-[11px] text-[#1b1017]/60">{task.assignee.user?.name}</span>
+                        <span className="text-[11px] text-ink/60">{task.assignee.user?.name}</span>
                     </div>
                 ) : (
-                    <span className="text-[11px] text-[#1b1017]/65">Unassigned</span>
+                    <span className="text-[11px] text-ink/65">Unassigned</span>
                 )}
                 {!isAssignedToMe && !isAdmin && (
                     <button
                         onClick={(e) => { e.stopPropagation(); onAssignToMe(task._id) }}
-                        className="text-[11px] font-medium text-[#c2370d] hover:text-[#a82d0a] flex items-center gap-0.5"
+                        className="text-[11px] font-medium text-orange-ink hover:text-orange-ink-hover flex items-center gap-0.5"
                     >
                         <UserPlus className="size-3" /> Assign to me
                     </button>

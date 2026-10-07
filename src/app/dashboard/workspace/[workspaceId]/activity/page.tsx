@@ -27,43 +27,43 @@ import { useGetUnreadCount } from "@/features/notifications/use-get-unread-count
 const TYPE_CONFIG = {
     thread_reply: {
         icon: MessagesSquare,
-        color: "text-[#c2370d]",
+        color: "text-orange-ink",
         bg: "bg-[#ff5018]/10",
         label: "replied to your message"
     },
     reaction: {
         icon: Smile,
-        color: "text-[#381d2a]",
-        bg: "bg-[#efe8e3]",
+        color: "text-plum",
+        bg: "bg-cream-deep2",
         label: "reacted to your message"
     },
     task_assigned: {
         icon: CheckSquare,
-        color: "text-[#c2370d]",
+        color: "text-orange-ink",
         bg: "bg-[#ff5018]/10",
         label: "assigned a task to you"
     },
     task_comment: {
         icon: MessageSquare,
-        color: "text-[#381d2a]",
-        bg: "bg-[#efe8e3]",
+        color: "text-plum",
+        bg: "bg-cream-deep2",
         label: "commented on your task"
     },
     note_added: {
         icon: FileText,
-        color: "text-[#381d2a]",
-        bg: "bg-[#efe8e3]",
+        color: "text-plum",
+        bg: "bg-cream-deep2",
         label: "added a workspace note"
     },
     mention: {
         icon: AtSign,
-        color: "text-[#c2370d]",
+        color: "text-orange-ink",
         bg: "bg-[#ff5018]/10",
         label: "mentioned you"
     },
     dm_received: {
         icon: MessageSquare,
-        color: "text-[#c2370d]",
+        color: "text-orange-ink",
         bg: "bg-[#ff5018]/10",
         label: "sent you a direct message"
     },
@@ -164,16 +164,16 @@ export default function ActivityPage() {
     }
 
     return (
-        <div className="h-full flex flex-col overflow-hidden bg-[#fbf9f7]">
+        <div className="h-full flex flex-col overflow-hidden bg-cream-soft">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 md:px-6 h-14 border-b bg-white shrink-0 shadow-none">
+            <div className="flex items-center justify-between px-4 md:px-6 h-14 border-b bg-surface shrink-0 shadow-none">
                 <div className="flex items-center gap-3">
                     <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
                         <Bell className="size-4 text-[#ff5018]" />
                     </div>
                     <div>
-                        <h1 className="tracking-tight text-[17px] font-semibold leading-none text-[#1b1017]">Activity</h1>
-                        <p className="text-[11px] text-[#1b1017]/60 mt-1">
+                        <h1 className="tracking-tight text-[17px] font-semibold leading-none text-ink">Activity</h1>
+                        <p className="text-[11px] text-ink/60 mt-1">
                             {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}` : "All caught up!"}
                         </p>
                     </div>
@@ -188,7 +188,7 @@ export default function ActivityPage() {
                     <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 text-xs gap-1.5 rounded-lg border-[#381d2a]/15 hover:bg-[#f3eeea]"
+                        className="h-8 text-xs gap-1.5 rounded-lg border-plum/15 hover:bg-cream-deep"
                         onClick={() => window.location.reload()}
                     >
                         <RefreshCw className="size-3" /> Refresh
@@ -197,7 +197,7 @@ export default function ActivityPage() {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 text-xs gap-1.5 rounded-lg border-[#381d2a]/15 hover:bg-[#f3eeea]"
+                            className="h-8 text-xs gap-1.5 rounded-lg border-plum/15 hover:bg-cream-deep"
                             onClick={handleMarkAllRead}
                             disabled={isMarkingAll}
                         >
@@ -208,7 +208,7 @@ export default function ActivityPage() {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 text-xs gap-1.5 rounded-lg border-[#381d2a]/15 hover:bg-red-50 text-red-600 hover:text-red-700"
+                            className="h-8 text-xs gap-1.5 rounded-lg border-plum/15 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                             onClick={handleClearAll}
                             disabled={isClearing}
                         >
@@ -225,12 +225,12 @@ export default function ActivityPage() {
                         <Loader className="size-5 animate-spin text-[#ff5018]" />
                     </div>
                 ) : !notifications || notifications.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full gap-4 text-[#1b1017]/60">
+                    <div className="flex flex-col items-center justify-center h-full gap-4 text-ink/60">
                         <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
                             <Bell className="size-6 text-[#ff5018]" />
                         </div>
                         <div className="text-center">
-                            <p className="font-semibold tracking-tight text-[#1b1017]">No activity yet</p>
+                            <p className="font-semibold tracking-tight text-ink">No activity yet</p>
                             <p className="text-sm mt-1 max-w-xs">
                                 You&apos;ll be notified when someone replies to your messages,
                                 reacts, assigns tasks, or adds workspace notes
@@ -238,7 +238,7 @@ export default function ActivityPage() {
                         </div>
                     </div>
                 ) : (
-                    <div className="divide-y divide-[#381d2a]/10 bg-white">
+                    <div className="divide-y divide-plum/10 bg-surface">
                         {notifications.map(notification => {
                             const config = TYPE_CONFIG[notification.type as keyof typeof TYPE_CONFIG]
                             if (!config) return null
@@ -249,7 +249,7 @@ export default function ActivityPage() {
                                     key={notification._id}
                                     onClick={() => handleClick(notification)}
                                     className={cn(
-                                        "flex items-start gap-4 px-4 md:px-6 py-4 cursor-pointer hover:bg-[#f7f2ee] transition-colors",
+                                        "flex items-start gap-4 px-4 md:px-6 py-4 cursor-pointer hover:bg-cream transition-colors",
                                         !notification.read && "border-l-2 border-l-[#ff5018] bg-[#ff5018]/5"
                                     )}
                                 >
@@ -257,12 +257,12 @@ export default function ActivityPage() {
                                     <div className="relative shrink-0">
                                         <Avatar className="size-9 rounded-md">
                                             <AvatarImage src={notification.sender?.user?.image} />
-                                            <AvatarFallback className="text-xs rounded-md bg-[#381d2a] text-white">
+                                            <AvatarFallback className="text-xs rounded-md bg-[#381d2a] dark:bg-[#4a2838] text-white">
                                                 {notification.sender?.user?.name?.[0] ?? "?"}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className={cn(
-                                            "absolute -bottom-0.5 -right-0.5 size-4 rounded-md flex items-center justify-center border border-white",
+                                            "absolute -bottom-0.5 -right-0.5 size-4 rounded-md flex items-center justify-center border border-white dark:border-[#241620]",
                                             config.bg
                                         )}>
                                             <Icon className={cn("size-2.5", config.color)} />
@@ -277,7 +277,7 @@ export default function ActivityPage() {
                                                     {notification.sender?.user?.name ?? "Someone"}
                                                 </span>
                                                 {" "}
-                                                <span className="text-[#1b1017]/60">
+                                                <span className="text-ink/60">
                                                     {config.label}
                                                 </span>
                                             </p>
@@ -285,7 +285,7 @@ export default function ActivityPage() {
                                                 {!notification.read && (
                                                     <div className="size-2 rounded-full bg-[#ff5018]" />
                                                 )}
-                                                <span className="text-[11px] text-[#1b1017]/60 whitespace-nowrap">
+                                                <span className="text-[11px] text-ink/60 whitespace-nowrap">
                                                     {format(notification._creationTime, "MMM d, h:mm a")}
                                                 </span>
                                             </div>

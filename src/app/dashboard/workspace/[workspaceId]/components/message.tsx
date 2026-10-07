@@ -172,7 +172,7 @@ const MessageImpl = ({
                 <div
                     id={`msg-${id}`}
                     className={cn(
-                        "flex flex-col gap-2 p-1.5 px-5 max-md:pl-3 max-md:pr-11 max-md:min-h-10 hover:bg-[#f7f2ee]/70 group relative",
+                        "flex flex-col gap-2 p-1.5 px-5 max-md:pl-3 max-md:pr-11 max-md:min-h-10 hover:bg-cream/70 group relative",
                         isEditing && "bg-[#ff5018]/10 hover:bg-[#ff5018]/10",
                         isRemovingMessage &&
                             "bg-rose-500/50 transform transition-all scale-y-0 origin-bottom duration-200"
@@ -180,7 +180,7 @@ const MessageImpl = ({
                 >
                     <div className="flex items-start gap-2">
                         <Hint label={formatFullTime(new Date(createdAt))}>
-                            <button className="text-xs text-[#1b1017]/50 opacity-0 group-hover:opacity-100 w-10 leading-5.5 text-center hover:underline">
+                            <button className="text-xs text-ink/50 opacity-0 group-hover:opacity-100 w-10 leading-5.5 text-center hover:underline">
                                 {format(new Date(createdAt), "hh:mm")}
                             </button>
                         </Hint>
@@ -210,7 +210,7 @@ const MessageImpl = ({
                                     </div>
                                 )}
                                 {updatedAt ? (
-                                    <span className="text-xs text-[#1b1017]/50">
+                                    <span className="text-xs text-ink/50">
                                         (edited)
                                     </span>
                                 ) : null}
@@ -259,7 +259,7 @@ const MessageImpl = ({
             <div
                 id={`msg-${id}`}
                 className={cn(
-                    "flex flex-col gap-2 p-1.5 px-5 max-md:pl-3 max-md:pr-11 max-md:min-h-10 hover:bg-[#f7f2ee]/70 group relative",
+                    "flex flex-col gap-2 p-1.5 px-5 max-md:pl-3 max-md:pr-11 max-md:min-h-10 hover:bg-cream/70 group relative",
                     isEditing && "bg-[#ff5018]/10 hover:bg-[#ff5018]/10",
                     isRemovingMessage &&
                         "bg-rose-500/50 transform transition-all scale-y-0 origin-bottom duration-200"
@@ -269,7 +269,7 @@ const MessageImpl = ({
                     <button type="button" aria-label={`View ${authorName} profile`} onClick={() => onOpenProfile(memberId)}>
                         <Avatar className="rounded-md mr-1 size-9">
                             <AvatarImage className="rounded-md" src={authorImage} />
-                            <AvatarFallback className="rounded-md bg-[#381d2a] text-white text-center text-sm font-semibold">
+                            <AvatarFallback className="rounded-md bg-[#381d2a] dark:bg-[#4a2838] text-white text-center text-sm font-semibold">
                                 {fallbackInitial}
                             </AvatarFallback>
                         </Avatar>
@@ -289,13 +289,13 @@ const MessageImpl = ({
                             <div className="text-sm">
                                 <button
                                     onClick={() => onOpenProfile(memberId)}
-                                    className="font-semibold tracking-tight text-[#1b1017] hover:underline"
+                                    className="font-semibold tracking-tight text-ink hover:underline"
                                 >
                                     {authorName}
                                 </button>
                                 <span>&nbsp;&nbsp;</span>
                                 <Hint label={formatFullTime(new Date(createdAt))}>
-                                    <button className="text-xs text-[#1b1017]/50 hover:underline">
+                                    <button className="text-xs text-ink/50 hover:underline">
                                         {format(new Date(createdAt), "h:mm a")}
                                     </button>
                                 </Hint>
@@ -314,7 +314,7 @@ const MessageImpl = ({
                                 </div>
                             )}
                             {updatedAt ? (
-                                <span className="text-xs text-[#1b1017]/50">
+                                <span className="text-xs text-ink/50">
                                     (edited)
                                 </span>
                             ) : null}

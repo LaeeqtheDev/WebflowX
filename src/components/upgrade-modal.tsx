@@ -55,35 +55,35 @@ export const UpgradeModal = ({ info, fallbackPlan = "free", onClose, onViewPlans
         <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
             <DialogContent className="gap-5 rounded-2xl p-6 sm:max-w-md">
                 <DialogHeader className="gap-3 text-left">
-                    <span aria-hidden className="flex size-11 items-center justify-center rounded-xl bg-[#ff5018]/10 text-[#c2370d]">
+                    <span aria-hidden className="flex size-11 items-center justify-center rounded-xl bg-[#ff5018]/10 text-orange-ink">
                         <Zap className="size-5" />
                     </span>
-                    <DialogTitle className="text-xl font-semibold tracking-tight text-[#1b1017]">
+                    <DialogTitle className="text-xl font-semibold tracking-tight text-ink">
                         You&apos;ve reached your {nounTitle} limit
                     </DialogTitle>
-                    <DialogDescription className="text-sm text-[#1b1017]/70">
+                    <DialogDescription className="text-sm text-ink/70">
                         {sentence(info.feature, limit, planName)}
                     </DialogDescription>
                 </DialogHeader>
 
                 {nextLimits && next ? (
-                    <div className="rounded-xl border border-[#381d2a]/12 bg-[#fbf9f7] p-4">
+                    <div className="rounded-xl border border-plum/12 bg-cream-soft p-4">
                         <div className="flex items-baseline justify-between gap-3">
-                            <p className="text-sm font-semibold text-[#1b1017]">Next up: {nextLimits.name}</p>
-                            <p className="text-sm font-semibold text-[#c2370d]">${nextLimits.price}<span className="font-normal text-[#1b1017]/60"> / month</span></p>
+                            <p className="text-sm font-semibold text-ink">Next up: {nextLimits.name}</p>
+                            <p className="text-sm font-semibold text-orange-ink">${nextLimits.price}<span className="font-normal text-ink/60"> / month</span></p>
                         </div>
                         <ul className="mt-3 flex flex-col gap-2">
                             {rows.map((r) => (
-                                <li key={r.feature} className="flex flex-wrap items-center gap-x-2 text-[13px] text-[#1b1017]/75">
-                                    <span className={r.hit ? "font-semibold text-[#1b1017]" : undefined}>{r.from}</span>
-                                    <ArrowRight aria-hidden className="size-3.5 shrink-0 text-[#c2370d]" />
-                                    <span className="font-semibold text-[#1b1017]">{r.to}</span>
+                                <li key={r.feature} className="flex flex-wrap items-center gap-x-2 text-[13px] text-ink/75">
+                                    <span className={r.hit ? "font-semibold text-ink" : undefined}>{r.from}</span>
+                                    <ArrowRight aria-hidden className="size-3.5 shrink-0 text-orange-ink" />
+                                    <span className="font-semibold text-ink">{r.to}</span>
                                 </li>
                             ))}
                         </ul>
                     </div>
                 ) : (
-                    <p className="rounded-xl border border-[#381d2a]/12 bg-[#fbf9f7] p-4 text-sm text-[#1b1017]/70">
+                    <p className="rounded-xl border border-plum/12 bg-cream-soft p-4 text-sm text-ink/70">
                         You&apos;re on our highest plan. Contact us and we&apos;ll raise this limit for you.
                     </p>
                 )}

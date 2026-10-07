@@ -93,24 +93,24 @@ const UsageCard = ({ label, icon: Icon, current, limit }: {
     const near = !unlimited && pct >= 80
 
     return (
-        <div className="rounded-2xl border border-[#381d2a]/10 bg-white p-4 shadow-[0_1px_0_rgba(56,29,42,0.04)]">
+        <div className="rounded-2xl border border-plum/10 bg-surface p-4 shadow-[0_1px_0_rgba(56,29,42,0.04)]">
             <div className="flex items-center justify-between">
                 <span className="flex size-9 items-center justify-center rounded-xl bg-[#ff5018]/10 text-[#ff5018]">
                     <Icon className="size-5" />
                 </span>
                 <span className={cn(
                     "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                    atLimit ? "bg-red-50 text-red-600" : near ? "bg-amber-50 text-amber-700" : "bg-[#381d2a]/5 text-[#381d2a]/60"
+                    atLimit ? "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400" : near ? "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300" : "bg-plum/5 text-plum/60"
                 )}>
                     {unlimited ? "Unlimited" : atLimit ? "Limit reached" : near ? "Near limit" : "On track"}
                 </span>
             </div>
-            <p className="mt-4 text-xs font-medium text-[#381d2a]/60">{label}</p>
-            <p className="mt-0.5 flex items-baseline gap-1 text-2xl font-semibold tracking-tight text-[#1b1017]">
+            <p className="mt-4 text-xs font-medium text-plum/60">{label}</p>
+            <p className="mt-0.5 flex items-baseline gap-1 text-2xl font-semibold tracking-tight text-ink">
                 {current}
-                <span className="text-sm font-medium text-[#381d2a]/40">/ {unlimited ? "∞" : limit}</span>
+                <span className="text-sm font-medium text-plum/40 dark:text-plum/60">/ {unlimited ? "∞" : limit}</span>
             </p>
-            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[#381d2a]/8">
+            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-plum/8">
                 <div
                     className={cn("h-full rounded-full transition-all", atLimit ? "bg-red-500" : near ? "bg-amber-500" : "bg-[#ff5018]")}
                     style={{ width: unlimited ? "8%" : `${Math.max(pct, current > 0 ? 6 : 0)}%` }}
@@ -148,7 +148,7 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="[&>button]:text-white [&>button]:opacity-80 [&>button]:hover:opacity-100 [&>button]:top-5 [&>button]:right-5 flex h-[min(760px,90vh)] w-[min(1040px,calc(100vw-2rem))] max-w-none flex-col gap-0 overflow-hidden rounded-3xl border-[#381d2a]/10 bg-[#fbf9f7] p-0 sm:max-w-none">
+            <DialogContent className="[&>button]:text-white [&>button]:opacity-80 [&>button]:hover:opacity-100 [&>button]:top-5 [&>button]:right-5 flex h-[min(760px,90vh)] w-[min(1040px,calc(100vw-2rem))] max-w-none flex-col gap-0 overflow-hidden rounded-3xl border-plum/10 bg-cream-soft p-0 sm:max-w-none">
                 <DialogHeader className="shrink-0 bg-[#381d2a] px-7 pb-0 pt-6 text-white">
                     <DialogTitle className="flex items-center gap-4">
                         <span className="flex size-11 items-center justify-center rounded-2xl bg-[#ff5018] text-white">
@@ -169,7 +169,7 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                 className={cn(
                                     "rounded-t-xl px-5 py-2.5 text-sm font-medium transition-colors",
                                     activeTab === tab
-                                        ? "bg-[#fbf9f7] text-[#1b1017]"
+                                        ? "bg-cream-soft text-ink"
                                         : "text-white/65 hover:text-white"
                                 )}
                             >
@@ -219,10 +219,10 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                         <div className="flex flex-col gap-5">
                             <div className="flex flex-wrap items-end justify-between gap-2">
                                 <div>
-                                    <h3 className="text-xl font-semibold tracking-tight text-[#1b1017]">Choose your plan</h3>
-                                    <p className="mt-1 text-sm text-[#381d2a]/60">Billed per workspace. Change or cancel any time.</p>
+                                    <h3 className="text-xl font-semibold tracking-tight text-ink">Choose your plan</h3>
+                                    <p className="mt-1 text-sm text-plum/60">Billed per workspace. Change or cancel any time.</p>
                                 </div>
-                                <span className="flex items-center gap-1.5 text-xs text-[#381d2a]/60">
+                                <span className="flex items-center gap-1.5 text-xs text-plum/60">
                                     <ShieldCheckmark20Regular className="size-4 text-[#ff5018]" />
                                     No card needed while upgrades are simulated
                                 </span>
@@ -238,8 +238,8 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                             className={cn(
                                                 "relative flex flex-col rounded-2xl border p-5 transition-shadow",
                                                 plan.popular
-                                                    ? "border-[#381d2a] bg-[#381d2a] text-white shadow-[0_20px_40px_-24px_rgba(56,29,42,0.9)]"
-                                                    : "border-[#381d2a]/10 bg-white text-[#1b1017]",
+                                                    ? "border-plum dark:border-white/20 bg-[#381d2a] text-white shadow-[0_20px_40px_-24px_rgba(56,29,42,0.9)]"
+                                                    : "border-plum/10 bg-surface text-ink",
                                                 isCurrent && !plan.popular && "border-[#ff5018] ring-2 ring-[#ff5018]/20"
                                             )}
                                         >
@@ -260,19 +260,19 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                             <p className="mt-4 text-sm font-semibold">{plan.label}</p>
                                             <p className="mt-1 flex items-baseline gap-1">
                                                 <span className="text-3xl font-semibold tracking-tight">${plan.price}</span>
-                                                <span className={cn("text-xs", plan.popular ? "text-white/60" : "text-[#381d2a]/50")}>/ month</span>
+                                                <span className={cn("text-xs", plan.popular ? "text-white/60" : "text-plum/50")}>/ month</span>
                                             </p>
-                                            <p className={cn("mt-2 min-h-8 text-xs leading-relaxed", plan.popular ? "text-white/65" : "text-[#381d2a]/60")}>{plan.tagline}</p>
+                                            <p className={cn("mt-2 min-h-8 text-xs leading-relaxed", plan.popular ? "text-white/65" : "text-plum/60")}>{plan.tagline}</p>
 
                                             {isCurrent ? (
                                                 <div className={cn(
                                                     "mt-4 rounded-full py-2 text-center text-xs font-semibold",
-                                                    plan.popular ? "bg-white/10 text-white" : "bg-[#381d2a]/5 text-[#381d2a]/70"
+                                                    plan.popular ? "bg-white/10 text-white" : "bg-plum/5 text-plum/70"
                                                 )}>
                                                     Your current plan
                                                 </div>
                                             ) : plan.key === "free" ? (
-                                                <div className="mt-4 rounded-full py-2 text-center text-xs font-medium text-[#381d2a]/40">
+                                                <div className="mt-4 rounded-full py-2 text-center text-xs font-medium text-plum/40 dark:text-plum/60">
                                                     Included
                                                 </div>
                                             ) : (
@@ -283,18 +283,18 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                                         "mt-4 flex items-center justify-center rounded-full py-2 text-xs font-semibold transition-colors disabled:opacity-60",
                                                         plan.popular
                                                             ? "bg-[#ff5018] text-white hover:bg-[#e6430f]"
-                                                            : "bg-[#381d2a] text-white hover:bg-[#2a1420]"
+                                                            : "bg-[#381d2a] dark:bg-[#4a2838] text-white hover:bg-[#2a1420] dark:hover:bg-[#5a3246]"
                                                     )}
                                                 >
                                                     {upgradingPlan === plan.key ? <Loader className="size-4 animate-spin" /> : `Upgrade to ${plan.label}`}
                                                 </button>
                                             )}
 
-                                            <ul className={cn("mt-5 flex flex-col gap-2 border-t pt-5", plan.popular ? "border-white/15" : "border-[#381d2a]/10")}>
+                                            <ul className={cn("mt-5 flex flex-col gap-2 border-t pt-5", plan.popular ? "border-white/15" : "border-plum/10")}>
                                                 {plan.features.map((f) => (
                                                     <li key={f} className="flex items-start gap-2 text-xs">
                                                         <Checkmark16Filled className="mt-px size-3.5 shrink-0 text-[#ff5018]" />
-                                                        <span className={plan.popular ? "text-white/85" : "text-[#381d2a]/80"}>{f}</span>
+                                                        <span className={plan.popular ? "text-white/85" : "text-plum/80"}>{f}</span>
                                                     </li>
                                                 ))}
                                             </ul>
@@ -303,7 +303,7 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                 })}
                             </div>
 
-                            <p className="text-center text-[11px] text-[#381d2a]/50">
+                            <p className="text-center text-[11px] text-plum/50">
                                 Payment integration is coming soon. Plan upgrades are simulated for demo purposes.
                             </p>
                         </div>

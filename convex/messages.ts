@@ -6,7 +6,7 @@ import { paginationOptsValidator, PaginationResult } from "convex/server";
 import { ConvexError } from "convex/values";
 import { canViewChannel, can, canAccessChannel, requireActor, hasPermission } from "./permissions";
 import { claim, release } from "./files";
-import { assertDeltaBody } from "./validate";
+import { assertDeltaBody, snippetOf } from "./validate";
 import { throttle } from "./rateLimit";
 import { notify } from "./notifications";
 
@@ -63,7 +63,7 @@ const notifyMentions = async (
                     type: "mention",
                     messageId: opts.messageId,
                     channelId: opts.channelId,
-                    body: opts.body,
+                    body: snippetOf(opts.body),
                     read: false,
                 }, { email: false }); // @everyone: in-app only, no mass email
             }

@@ -158,18 +158,18 @@ export default function NotesPage() {
         <div className="h-full flex">
             {/* LEFT: Notes list - Hidden on mobile when editor is shown */}
             <div className={cn(
-                "w-full md:w-80 border-r border-[#381d2a]/12 bg-[#fbf9f7] flex flex-col h-full",
+                "w-full md:w-80 border-r border-plum/12 bg-cream-soft flex flex-col h-full",
                 showMobileEditor && "hidden md:flex"
             )}>
                 {/* Tabs */}
-                <div className="flex border-b border-[#381d2a]/12 bg-white px-2">
+                <div className="flex border-b border-plum/12 bg-surface px-2">
                     <button
                         onClick={() => { setTab("personal"); setSelectedNote(null); setIsCreating(false); setShowMobileEditor(false) }}
                         className={cn(
                             "flex-1 flex items-center justify-center gap-1.5 h-14 text-sm font-semibold tracking-tight border-b-2 transition-colors",
                             tab === "personal"
-                                ? "border-[#ff5018] text-[#c2370d]"
-                                : "border-transparent text-[#1b1017]/60 hover:text-[#1b1017]"
+                                ? "border-[#ff5018] text-orange-ink"
+                                : "border-transparent text-ink/60 hover:text-ink"
                         )}
                     >
                         <FileText className="size-4" /> 
@@ -180,8 +180,8 @@ export default function NotesPage() {
                         className={cn(
                             "flex-1 flex items-center justify-center gap-1.5 h-14 text-sm font-semibold tracking-tight border-b-2 transition-colors",
                             tab === "workspace"
-                                ? "border-[#ff5018] text-[#c2370d]"
-                                : "border-transparent text-[#1b1017]/60 hover:text-[#1b1017]"
+                                ? "border-[#ff5018] text-orange-ink"
+                                : "border-transparent text-ink/60 hover:text-ink"
                         )}
                     >
                         <Users className="size-4" /> 
@@ -190,7 +190,7 @@ export default function NotesPage() {
                 </div>
 
                 {/* New note button */}
-                <div className="px-4 py-3 border-b border-[#381d2a]/12">
+                <div className="px-4 py-3 border-b border-plum/12">
                     <Button
                         onClick={handleNewNote}
                         className="w-full bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold"
@@ -211,7 +211,7 @@ export default function NotesPage() {
                             <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
                                 <FileText className="size-6" />
                             </div>
-                            <p className="text-sm font-semibold tracking-tight text-[#1b1017]">No notes yet</p>
+                            <p className="text-sm font-semibold tracking-tight text-ink">No notes yet</p>
                         </div>
                     ) : (
                         sortedNotes.map((note) => (
@@ -219,20 +219,20 @@ export default function NotesPage() {
                                 key={note._id}
                                 onClick={() => handleSelectNote(note as Note)}
                                 className={cn(
-                                    "p-3.5 bg-white border border-[#381d2a]/12 rounded-xl cursor-pointer hover:border-[#ff5018]/40 hover:shadow-sm transition-all group",
+                                    "p-3.5 bg-surface border border-plum/12 rounded-xl cursor-pointer hover:border-[#ff5018]/40 hover:shadow-sm transition-all group",
                                     selectedNote?._id === note._id && "border-[#ff5018] ring-1 ring-[#ff5018]/20"
                                 )}
                             >
                                 <div className="flex items-start justify-between gap-1">
                                     <div className="flex items-center gap-1 flex-1 min-w-0">
                                         {note.isPinned && <Pin className="size-3 text-[#ff5018] shrink-0" />}
-                                        <p className="text-sm font-semibold tracking-tight text-[#1b1017] truncate">{note.title}</p>
+                                        <p className="text-sm font-semibold tracking-tight text-ink truncate">{note.title}</p>
                                     </div>
                                     <div className="flex items-center gap-1 opacity-0 max-md:opacity-100 group-hover:opacity-100 transition-opacity shrink-0">
                                         {isAdmin && tab === "workspace" && (
                                             <button aria-label="Pin or unpin note" type="button"
                                                 onClick={(e) => { e.stopPropagation(); handleTogglePin(note._id) }}
-                                                className="p-1 rounded-md text-[#1b1017]/50 hover:text-[#a82d0a] hover:bg-[#ff5018]/10 transition-colors"
+                                                className="p-1 rounded-md text-ink/50 hover:text-orange-ink-hover hover:bg-[#ff5018]/10 transition-colors"
                                             >
                                                 {note.isPinned
                                                     ? <PinOff className="size-3.5" />
@@ -242,18 +242,18 @@ export default function NotesPage() {
                                         {canDelete(note as Note) && (
                                             <button aria-label="Delete note" type="button"
                                                 onClick={(e) => { e.stopPropagation(); handleDelete(note._id) }}
-                                                className="p-1 rounded-md text-[#1b1017]/50 hover:text-destructive hover:bg-red-50 transition-colors"
+                                                className="p-1 rounded-md text-ink/50 hover:text-destructive hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                                             >
                                                 <Trash2 className="size-3.5" />
                                             </button>
                                         )}
                                     </div>
                                 </div>
-                                <p className="text-xs text-[#1b1017]/60 mt-1 truncate">
+                                <p className="text-xs text-ink/60 mt-1 truncate">
                                     {quillToText(note.body) || "No content"}
                                 </p>
                                 {note.updatedAt && (
-                                    <p className="text-[11px] text-[#1b1017]/65 mt-1.5">
+                                    <p className="text-[11px] text-ink/65 mt-1.5">
                                         {format(note.updatedAt, "MMM d, yyyy")}
                                     </p>
                                 )}
@@ -269,7 +269,7 @@ export default function NotesPage() {
                 !showMobileEditor && !isCreating && "hidden md:flex"
             )}>
                 {isCreating ? (
-                    <div className="flex flex-col h-full px-4 md:px-6 py-5 gap-4 bg-white">
+                    <div className="flex flex-col h-full px-4 md:px-6 py-5 gap-4 bg-surface">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <Button 
@@ -281,14 +281,14 @@ export default function NotesPage() {
                                 >
                                     <ArrowLeft className="size-4" />
                                 </Button>
-                                <h2 className="text-[17px] font-semibold tracking-tight text-[#1b1017]">
+                                <h2 className="text-[17px] font-semibold tracking-tight text-ink">
                                     New {tab === "personal" ? "Personal" : "Workspace"} Note
                                 </h2>
                             </div>
                             <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                className="rounded-lg text-[#1b1017]/70 hover:bg-[#f3eeea]"
+                                className="rounded-lg text-ink/70 hover:bg-cream-deep"
                                 onClick={() => {
                                     setIsCreating(false)
                                     setShowMobileEditor(false)
@@ -301,13 +301,13 @@ export default function NotesPage() {
                             placeholder="Note title..."
                             value={newTitle}
                             onChange={(e) => setNewTitle(e.target.value)}
-                            className="text-lg sm:text-2xl font-semibold tracking-tight text-[#1b1017] border-none shadow-none focus-visible:ring-0 px-0 h-auto"
+                            className="text-lg sm:text-2xl font-semibold tracking-tight text-ink border-none shadow-none focus-visible:ring-0 px-0 h-auto"
                         />
                         <textarea aria-label="Note body"
                             placeholder="Start writing..."
                             value={newBody}
                             onChange={(e) => setNewBody(e.target.value)}
-                            className="flex-1 resize-none border-none outline-none text-sm leading-relaxed text-[#1b1017]/75 bg-transparent"
+                            className="flex-1 resize-none border-none outline-none text-sm leading-relaxed text-ink/75 bg-transparent"
                         />
                         <div className="flex justify-end">
                             <Button
@@ -320,7 +320,7 @@ export default function NotesPage() {
                         </div>
                     </div>
                 ) : selectedNote ? (
-                    <div className="flex flex-col h-full px-4 md:px-6 py-5 gap-4 bg-white">
+                    <div className="flex flex-col h-full px-4 md:px-6 py-5 gap-4 bg-surface">
                         <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2 min-w-0 flex-1">
                                 <Button 
@@ -334,7 +334,7 @@ export default function NotesPage() {
                                 </Button>
                                 <div className="flex items-center gap-2 min-w-0">
                                     {selectedNote.isPinned && <Pin className="size-4 text-[#ff5018] shrink-0" />}
-                                    <span className="text-xs font-medium text-[#1b1017]/60 capitalize truncate rounded-md bg-[#f7f2ee] px-2 py-0.5">
+                                    <span className="text-xs font-medium text-ink/60 capitalize truncate rounded-md bg-cream px-2 py-0.5">
                                         {selectedNote.type} note
                                     </span>
                                 </div>
@@ -356,21 +356,21 @@ export default function NotesPage() {
                             value={editTitle}
                             onChange={(e) => setEditTitle(e.target.value)}
                             disabled={!canEdit(selectedNote)}
-                            className="text-lg sm:text-2xl font-semibold tracking-tight text-[#1b1017] border-none shadow-none focus-visible:ring-0 px-0 h-auto"
+                            className="text-lg sm:text-2xl font-semibold tracking-tight text-ink border-none shadow-none focus-visible:ring-0 px-0 h-auto"
                         />
                         <textarea aria-label="Note body"
                             value={editBody}
                             onChange={(e) => setEditBody(e.target.value)}
                             disabled={!canEdit(selectedNote)}
-                            className="flex-1 resize-none border-none outline-none text-sm leading-relaxed text-[#1b1017]/75 bg-transparent disabled:cursor-not-allowed"
+                            className="flex-1 resize-none border-none outline-none text-sm leading-relaxed text-ink/75 bg-transparent disabled:cursor-not-allowed"
                         />
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-full gap-3 p-4 bg-[#fbf9f7]">
+                    <div className="flex flex-col items-center justify-center h-full gap-3 p-4 bg-cream-soft">
                         <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
                             <FileText className="size-6" />
                         </div>
-                        <p className="text-sm text-[#1b1017]/60 text-center">Select a note or create a new one</p>
+                        <p className="text-sm text-ink/60 text-center">Select a note or create a new one</p>
                         <Button
                             onClick={handleNewNote}
                             size="sm"

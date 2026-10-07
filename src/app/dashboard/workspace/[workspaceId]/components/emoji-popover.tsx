@@ -19,7 +19,7 @@ import { useState } from "react";
 
 const EmojiPickerLazy = dynamic(() => import("./emoji-picker-lazy"), {
     ssr: false,
-    loading: () => <div className="h-[435px] w-[352px] animate-pulse bg-[#f7f2ee]" />,
+    loading: () => <div className="h-[435px] w-[352px] animate-pulse bg-cream" />,
 })
 
 interface EmojiPopoverProps {
@@ -55,12 +55,12 @@ export const EmojiPopover = ({
             {children}
             </TooltipTrigger>
             </PopoverTrigger>
-            <TooltipContent className="bg-[#1b1017] text-white border border-white/5 rounded-lg px-2.5 py-1.5 shadow-sm">
+            <TooltipContent className="bg-[#1b1017] dark:bg-[#f4ece7] text-white dark:text-[#1b1017] border border-white/5 dark:border-transparent rounded-lg px-2.5 py-1.5 shadow-sm">
                 <p className="font-medium text-xs">{hint}</p>
             </TooltipContent>
            
             </Tooltip>
-            <PopoverContent className="p-0 w-full border border-[#381d2a]/12 rounded-xl overflow-hidden shadow-md">
+            <PopoverContent className="p-0 w-full border border-plum/12 rounded-xl overflow-hidden shadow-md">
                 <EmojiPickerLazy onEmojiSelect={onEmojiSelect}/>
             </PopoverContent>
             </Popover>

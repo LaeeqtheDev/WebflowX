@@ -91,8 +91,8 @@ export const MessageToTaskModal = ({ open, onClose, messageId, body, authorName 
                         placeholder="Task title"
                         className="text-sm rounded-lg focus-visible:ring-[#ff5018]/40 focus-visible:border-[#ff5018]"
                     />
-                    <div className="bg-[#f7f2ee] border border-[#381d2a]/10 rounded-lg p-3 text-xs text-[#1b1017]/70 max-h-24 overflow-y-auto whitespace-pre-wrap">
-                        <span className="font-semibold text-[#1b1017]">{authorName}: </span>
+                    <div className="bg-cream border border-plum/10 rounded-lg p-3 text-xs text-ink/70 max-h-24 overflow-y-auto whitespace-pre-wrap">
+                        <span className="font-semibold text-ink">{authorName}: </span>
                         {text || "Attachment"}
                     </div>
                     <Textarea aria-label="Task notes"
@@ -103,7 +103,7 @@ export const MessageToTaskModal = ({ open, onClose, messageId, body, authorName 
                     />
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Priority</label>
+                            <label className="text-xs font-medium text-ink/60 mb-1 block">Priority</label>
                             <Select value={priority} onValueChange={(v) => setPriority(v as Priority)}>
                                 <SelectTrigger aria-label="Priority" className="h-9 text-xs rounded-lg"><SelectValue /></SelectTrigger>
                                 <SelectContent>
@@ -114,7 +114,7 @@ export const MessageToTaskModal = ({ open, onClose, messageId, body, authorName 
                             </Select>
                         </div>
                         <div>
-                            <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Assignee</label>
+                            <label className="text-xs font-medium text-ink/60 mb-1 block">Assignee</label>
                             <Select value={assigneeId} onValueChange={setAssigneeId}>
                                 <SelectTrigger aria-label="Assignee" className="h-9 text-xs rounded-lg"><SelectValue /></SelectTrigger>
                                 <SelectContent>

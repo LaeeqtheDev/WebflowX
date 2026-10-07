@@ -4,8 +4,9 @@ import { wrap } from "./landing/tokens";
 
 const highlights = [
   { title: "One place for the work", body: "Keep conversations, tasks, documents and meetings in the same workspace instead of juggling separate tools." },
-  { title: "Live collaboration", body: "Channels, threads and shared documents update as your team works, so everyone sees the same thing." },
-  { title: "Meetings that leave notes", body: "Host a call from your workspace and get key points and action items from an AI summary afterwards." },
+  { title: "Live collaboration", body: "Messages, threads, notifications and shared documents and spreadsheets update in real time as your team works, so everyone sees the same thing." },
+  { title: "Meetings that leave notes", body: "Host a video meeting from your workspace, follow a live transcript, and get action items and decisions from an AI summary afterwards." },
+  { title: "In control of access", body: "Built-in and custom roles, locked and read-only channels, an audit log and server-enforced permissions let you decide who can do what." },
   { title: "Clear limits, simple plans", body: "Start on the free plan and move up when you need more room. Every plan lists its limits up front." },
 ];
 

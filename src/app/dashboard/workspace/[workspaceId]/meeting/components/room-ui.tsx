@@ -166,7 +166,7 @@ function Tile({
                                 <VideoOff className="mr-2 size-4" /> Turn off camera
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => onKick(p)}>
+                            <DropdownMenuItem className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400" onClick={() => onKick(p)}>
                                 <UserMinus className="mr-2 size-4" /> Remove from meeting
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -287,7 +287,7 @@ function PersonRow({
                             <VideoOff className="mr-2 size-4" /> Turn off camera
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => onKick(p)}>
+                        <DropdownMenuItem className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400" onClick={() => onKick(p)}>
                             <UserMinus className="mr-2 size-4" /> Remove from meeting
                         </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -510,7 +510,7 @@ function ControlBar({
                         <DropdownMenuItem onClick={() => room.disconnect()}>
                             <PhoneOff className="mr-2 size-4" /> Leave meeting
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={onEndAll}>
+                        <DropdownMenuItem className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400" onClick={onEndAll}>
                             <X className="mr-2 size-4" /> End for everyone
                         </DropdownMenuItem>
                     </DropdownMenuContent>

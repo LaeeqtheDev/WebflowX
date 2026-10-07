@@ -118,10 +118,10 @@ export const Toolbar = ({ onOpenMenu }: { onOpenMenu?: () => void }) => {
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
 
-            <CommandGroup heading="Channels" className="[&_[cmdk-group-heading]]:text-[#1b1017]/50 [&_[cmdk-group-heading]]:font-semibold">
+            <CommandGroup heading="Channels" className="[&_[cmdk-group-heading]]:text-ink/50 [&_[cmdk-group-heading]]:font-semibold">
               {channels?.map((channel) => (
                 <CommandItem
-                  className="rounded-lg data-[selected=true]:bg-[#f7f2ee] data-[selected=true]:text-[#1b1017]"
+                  className="rounded-lg data-[selected=true]:bg-cream data-[selected=true]:text-ink"
                   key={channel._id}
                   onSelect={() => onChannelClick(channel._id)}
                 >
@@ -132,10 +132,10 @@ export const Toolbar = ({ onOpenMenu }: { onOpenMenu?: () => void }) => {
 
             <CommandSeparator />
 
-            <CommandGroup heading="Members" className="[&_[cmdk-group-heading]]:text-[#1b1017]/50 [&_[cmdk-group-heading]]:font-semibold">
+            <CommandGroup heading="Members" className="[&_[cmdk-group-heading]]:text-ink/50 [&_[cmdk-group-heading]]:font-semibold">
               {members?.map((member) => (
                 <CommandItem
-                  className="rounded-lg data-[selected=true]:bg-[#f7f2ee] data-[selected=true]:text-[#1b1017]"
+                  className="rounded-lg data-[selected=true]:bg-cream data-[selected=true]:text-ink"
                   key={member._id}
                   onSelect={() => onMemberClick(member._id)}
                 >
@@ -147,10 +147,10 @@ export const Toolbar = ({ onOpenMenu }: { onOpenMenu?: () => void }) => {
             {messageResults && messageResults.length > 0 && (
               <>
                 <CommandSeparator />
-                <CommandGroup heading="Messages" className="[&_[cmdk-group-heading]]:text-[#1b1017]/50 [&_[cmdk-group-heading]]:font-semibold">
+                <CommandGroup heading="Messages" className="[&_[cmdk-group-heading]]:text-ink/50 [&_[cmdk-group-heading]]:font-semibold">
                   {messageResults.map((message) => (
                     <CommandItem
-                      className="rounded-lg data-[selected=true]:bg-[#f7f2ee] data-[selected=true]:text-[#1b1017]"
+                      className="rounded-lg data-[selected=true]:bg-cream data-[selected=true]:text-ink"
                       key={message._id}
                       onSelect={() => onMessageClick(message)}
                     >

@@ -9,23 +9,23 @@ export const PRIORITY_TEXT: Record<Priority, string> = {
 }
 
 export const PRIORITY_PILL: Record<Priority, string> = {
-    urgent: "bg-red-50 text-red-700",
-    high: "bg-orange-50 text-orange-700",
-    medium: "bg-amber-50 text-amber-700",
-    low: "bg-slate-100 text-slate-600",
+    urgent: "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300",
+    high: "bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300",
+    medium: "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300",
+    low: "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300",
 }
 
 export const STATUS_PILL: Record<Status, string> = {
-    backlog: "bg-slate-100 text-slate-600",
-    todo: "bg-[#efe8e3] text-[#381d2a]",
-    in_progress: "bg-[#ff5018]/10 text-[#c2370d]",
-    in_review: "bg-amber-50 text-amber-700",
-    done: "bg-green-50 text-green-700",
+    backlog: "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300",
+    todo: "bg-cream-deep2 text-plum",
+    in_progress: "bg-[#ff5018]/10 text-orange-ink",
+    in_review: "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300",
+    done: "bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300",
 }
 
 export const STATUS_DOT: Record<Status, string> = {
     backlog: "bg-slate-400",
-    todo: "bg-[#381d2a]/60",
+    todo: "bg-plum/60",
     in_progress: "bg-[#ff5018]",
     in_review: "bg-amber-500",
     done: "bg-green-500",

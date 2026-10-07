@@ -154,7 +154,7 @@ export default function DocPage() {
 
     if (isLoading || !currentMember) {
         return (
-            <div className="h-full flex items-center justify-center bg-[#fbf9f7]">
+            <div className="h-full flex items-center justify-center bg-cream-soft">
                 <Loader className="size-5 animate-spin text-[#ff5018]" />
             </div>
         )
@@ -162,11 +162,11 @@ export default function DocPage() {
 
     if (!doc) {
         return (
-            <div className="h-full flex flex-col items-center justify-center gap-3 bg-[#fbf9f7] px-4">
+            <div className="h-full flex flex-col items-center justify-center gap-3 bg-cream-soft px-4">
                 <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
                     <FileText className="size-6" />
                 </div>
-                <p className="text-sm font-semibold tracking-tight text-[#1b1017] text-center">Document not found</p>
+                <p className="text-sm font-semibold tracking-tight text-ink text-center">Document not found</p>
                 <Button
                     size="sm"
                     className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold"
@@ -179,25 +179,25 @@ export default function DocPage() {
     }
 
     return (
-        <div className="h-full flex flex-col overflow-hidden bg-[#fbf9f7]">
+        <div className="h-full flex flex-col overflow-hidden bg-cream-soft">
             {/* Header */}
-            <div className="flex items-center justify-between px-3 sm:px-6 h-14 border-b border-[#381d2a]/12 bg-white shrink-0 gap-2">
+            <div className="flex items-center justify-between px-3 sm:px-6 h-14 border-b border-plum/12 bg-surface shrink-0 gap-2">
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                     <Button
                         variant="ghost"
                         size="sm"
                         aria-label="Back to docs"
-                        className="h-8 text-xs gap-1 rounded-lg text-[#1b1017]/60 hover:text-[#1b1017] hover:bg-[#f3eeea] px-2 shrink-0"
+                        className="h-8 text-xs gap-1 rounded-lg text-ink/60 hover:text-ink hover:bg-cream-deep px-2 shrink-0"
                         onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}
                     >
                         <ArrowLeft className="size-3 sm:size-3.5" /> 
                         <span className="hidden xs:inline">Docs</span>
                     </Button>
-                    <span className="text-[#1b1017]/30 hidden xs:inline">/</span>
+                    <span className="text-ink/30 hidden xs:inline">/</span>
                     <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                        <div className={`size-5 sm:size-6 rounded-md flex items-center justify-center shrink-0 ${doc.type === "spreadsheet" ? "bg-green-50" : "bg-[#ff5018]/10"}`}>
+                        <div className={`size-5 sm:size-6 rounded-md flex items-center justify-center shrink-0 ${doc.type === "spreadsheet" ? "bg-green-50 dark:bg-green-500/10" : "bg-[#ff5018]/10"}`}>
                             {doc.type === "spreadsheet"
-                                ? <FileSpreadsheet className="size-3 sm:size-3.5 text-green-700" />
+                                ? <FileSpreadsheet className="size-3 sm:size-3.5 text-green-700 dark:text-green-300" />
                                 : <FileText className="size-3 sm:size-3.5 text-[#ff5018]" />
                             }
                         </div>
@@ -219,7 +219,7 @@ export default function DocPage() {
                                 title="Rename"
                                 aria-label={`Rename document: ${doc.title}`}
                                 onClick={() => { setTitleDraft(doc.title); setEditingTitle(true) }}
-                                className="text-sm font-semibold tracking-tight text-[#1b1017] truncate rounded-md px-1.5 py-0.5 hover:bg-[#f3eeea]"
+                                className="text-sm font-semibold tracking-tight text-ink truncate rounded-md px-1.5 py-0.5 hover:bg-cream-deep"
                             >
                                 {doc.title}
                             </button>
@@ -229,13 +229,13 @@ export default function DocPage() {
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                     <DropdownMenu open={showShareDialog} onOpenChange={setShowShareDialog}>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 px-3 rounded-lg border-[#381d2a]/15 hover:bg-[#f3eeea]">
+                            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 px-3 rounded-lg border-plum/15 hover:bg-cream-deep">
                                 <Share2 className="size-3 sm:size-3.5" /> 
                                 <span className="hidden xs:inline">Share</span>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-52 sm:w-56 p-3 rounded-xl border-[#381d2a]/12">
-                            <p className="text-xs font-semibold tracking-tight text-[#1b1017] mb-2">Share to channel</p>
+                        <DropdownMenuContent align="end" className="w-52 sm:w-56 p-3 rounded-xl border-plum/12">
+                            <p className="text-xs font-semibold tracking-tight text-ink mb-2">Share to channel</p>
                             <Select value={shareChannelId} onValueChange={setShareChannelId}>
                                 <SelectTrigger aria-label="Channel to share to" className="h-8 text-xs mb-2 rounded-lg">
                                     <SelectValue placeholder="Select channel..." />
@@ -262,7 +262,7 @@ export default function DocPage() {
                         onClick={handleDownloadPdf}
                         variant="outline"
                         size="sm"
-                        className="h-8 text-xs gap-1.5 px-3 rounded-lg border-[#381d2a]/15 hover:bg-[#f3eeea]"
+                        className="h-8 text-xs gap-1.5 px-3 rounded-lg border-plum/15 hover:bg-cream-deep"
                     >
                         <Download className="size-3 sm:size-3.5" /> 
                         <span className="hidden xs:inline">PDF</span>

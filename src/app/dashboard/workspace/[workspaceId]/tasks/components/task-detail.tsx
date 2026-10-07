@@ -62,18 +62,18 @@ export const TaskDetail = ({
 
     return (
         <Dialog open={!!task} onOpenChange={onClose}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 rounded-2xl border-[#381d2a]/12">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 rounded-2xl border-plum/12">
                 <VisuallyHidden><DialogTitle>Task Detail</DialogTitle></VisuallyHidden>
 
                 {/* Header */}
-                <div className="flex items-start justify-between px-4 md:px-6 pt-6 pb-4 border-b border-[#381d2a]/10">
+                <div className="flex items-start justify-between px-4 md:px-6 pt-6 pb-4 border-b border-plum/10">
                     <div className="flex flex-col gap-2 flex-1">
-                        <div className="flex items-center gap-2 text-xs text-[#1b1017]/60">
+                        <div className="flex items-center gap-2 text-xs text-ink/60">
                             <span className={cn("px-2 py-0.5 rounded-md text-[11px] font-medium", STATUS_PILL[task.status])}>
                                 {STATUS_LABELS[task.status]}
                             </span>
                             {activeSprint && (
-                                <span className="flex items-center gap-1 text-[11px] font-medium text-[#c2370d]">
+                                <span className="flex items-center gap-1 text-[11px] font-medium text-orange-ink">
                                     <Zap className="size-3" /> {activeSprint.name}
                                 </span>
                             )}
@@ -82,16 +82,16 @@ export const TaskDetail = ({
                             <input aria-label="Task title"
                                 defaultValue={task.title}
                                 onBlur={(e) => onUpdate(task._id, { title: e.target.value })}
-                                className="text-xl font-semibold tracking-tight text-[#1b1017] outline-none border-b border-transparent focus:border-[#ff5018] transition-colors bg-transparent"
+                                className="text-xl font-semibold tracking-tight text-ink outline-none border-b border-transparent focus:border-[#ff5018] transition-colors bg-transparent"
                             />
                         ) : (
-                            <h2 className="text-xl font-semibold tracking-tight text-[#1b1017]">{task.title}</h2>
+                            <h2 className="text-xl font-semibold tracking-tight text-ink">{task.title}</h2>
                         )}
                     </div>
                     {isAdmin && (
                         <Button aria-label="Delete task" variant="ghost" size="iconSm"
                             onClick={() => { onDelete(task._id); onClose() }}
-                            className="text-[#1b1017]/50 hover:text-destructive hover:bg-red-50 rounded-lg ml-4 shrink-0">
+                            className="text-ink/50 hover:text-destructive hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg ml-4 shrink-0">
                             <Trash2 className="size-4" />
                         </Button>
                     )}
@@ -101,7 +101,7 @@ export const TaskDetail = ({
                     {/* Left */}
                     <div className="flex-1 flex flex-col gap-5 min-w-0 md:pr-6">
                         <div>
-                            <p className="text-[13px] font-semibold tracking-tight text-[#1b1017] mb-1.5">Description</p>
+                            <p className="text-[13px] font-semibold tracking-tight text-ink mb-1.5">Description</p>
                             {isAdmin ? (
                                 <textarea aria-label="Task description"
                                     defaultValue={task.description ?? ""}
@@ -110,7 +110,7 @@ export const TaskDetail = ({
                                     className="w-full text-sm outline-none border border-input rounded-lg px-3 py-2 resize-none h-24 focus:border-[#ff5018] focus:ring-2 focus:ring-[#ff5018]/20 transition-colors bg-transparent"
                                 />
                             ) : (
-                                <p className="text-sm text-[#1b1017]/60 leading-relaxed">
+                                <p className="text-sm text-ink/60 leading-relaxed">
                                     {task.description || "No description provided."}
                                 </p>
                             )}
@@ -118,24 +118,24 @@ export const TaskDetail = ({
 
                         {task.labels && task.labels.length > 0 && (
                             <div>
-                                <p className="text-[13px] font-semibold tracking-tight text-[#1b1017] mb-1.5">Labels</p>
+                                <p className="text-[13px] font-semibold tracking-tight text-ink mb-1.5">Labels</p>
                                 <div className="flex flex-wrap gap-1">
                                     {task.labels.map((l, index) => (
-                                        <span key={index} className="bg-[#f7f2ee] text-[#381d2a] rounded-md px-2 py-0.5 text-[11px] font-medium">{l}</span>
+                                        <span key={index} className="bg-cream text-plum rounded-md px-2 py-0.5 text-[11px] font-medium">{l}</span>
                                     ))}
                                 </div>
                             </div>
                         )}
 
-                        <Separator className="bg-[#381d2a]/10" />
+                        <Separator className="bg-plum/10" />
 
                         <div>
-                            <p className="text-[13px] font-semibold tracking-tight text-[#1b1017] mb-3 flex items-center gap-1.5">
+                            <p className="text-[13px] font-semibold tracking-tight text-ink mb-3 flex items-center gap-1.5">
                                 <MessageSquare className="size-3.5 text-[#ff5018]" /> Activity
                             </p>
                             <div className="flex flex-col gap-3 mb-3">
                                 {comments?.length === 0 && (
-                                    <p className="text-xs text-[#1b1017]/65">No comments yet.</p>
+                                    <p className="text-xs text-ink/65">No comments yet.</p>
                                 )}
                                 {comments?.map(comment => (
                                     <div key={comment._id} className="flex items-start gap-2 group">
@@ -146,8 +146,8 @@ export const TaskDetail = ({
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="flex-1 min-w-0">
-                                            <span className="text-xs font-semibold text-[#1b1017]">{comment.member?.user?.name ?? "Unknown"}</span>
-                                            <p className="text-xs text-[#1b1017]/70 mt-0.5 leading-relaxed">{comment.body}</p>
+                                            <span className="text-xs font-semibold text-ink">{comment.member?.user?.name ?? "Unknown"}</span>
+                                            <p className="text-xs text-ink/70 mt-0.5 leading-relaxed">{comment.body}</p>
                                         </div>
                                         {(comment.memberId === currentMemberId || isAdmin) && (
                                             <button aria-label="Delete comment" type="button"
@@ -178,9 +178,9 @@ export const TaskDetail = ({
                     </div>
 
                     {/* Right */}
-                    <div className="w-52 max-md:w-full shrink-0 flex flex-col gap-4 md:border-l max-md:border-t border-[#381d2a]/10 md:pl-6 max-md:pt-4">
+                    <div className="w-52 max-md:w-full shrink-0 flex flex-col gap-4 md:border-l max-md:border-t border-plum/10 md:pl-6 max-md:pt-4">
                         <div>
-                            <p className="text-[11px] font-medium text-[#1b1017]/65 mb-1.5">Status</p>
+                            <p className="text-[11px] font-medium text-ink/65 mb-1.5">Status</p>
                             <Select value={task.status} onValueChange={v => onUpdate(task._id, { status: v as Task["status"] })}
                                 disabled={!isAdmin && task.assigneeId !== currentMemberId && task.createdBy !== currentMemberId}>
                                 <SelectTrigger aria-label="Status" className={cn("h-8 text-xs rounded-lg border-transparent font-medium", STATUS_PILL[task.status])}>
@@ -193,7 +193,7 @@ export const TaskDetail = ({
                         </div>
 
                         <div>
-                            <p className="text-[11px] font-medium text-[#1b1017]/65 mb-1.5">Priority</p>
+                            <p className="text-[11px] font-medium text-ink/65 mb-1.5">Priority</p>
                             <Select value={task.priority} onValueChange={v => isAdmin && onUpdate(task._id, { priority: v as Task["priority"] })} disabled={!isAdmin}>
                                 <SelectTrigger aria-label="Priority" className="h-8 text-xs rounded-lg"><SelectValue /></SelectTrigger>
                                 <SelectContent>
@@ -203,7 +203,7 @@ export const TaskDetail = ({
                         </div>
 
                         <div>
-                            <p className="text-[11px] font-medium text-[#1b1017]/65 mb-1.5">Assignee</p>
+                            <p className="text-[11px] font-medium text-ink/65 mb-1.5">Assignee</p>
                             {isAdmin ? (
                                 <Select value={task.assigneeId ?? "unassigned"}
                                     onValueChange={v => onUpdate(task._id, { assigneeId: v === "unassigned" ? undefined : v as Id<"members"> })}>
@@ -224,11 +224,11 @@ export const TaskDetail = ({
                                             <span className="text-xs">{task.assignee.user?.name}</span>
                                         </div>
                                     ) : (
-                                        <span className="text-xs text-[#1b1017]/60">Unassigned</span>
+                                        <span className="text-xs text-ink/60">Unassigned</span>
                                     )}
                                     {!isAssignedToMe && (
                                         <button onClick={() => onAssignToMe(task._id)}
-                                            className="text-[11px] font-medium text-[#c2370d] hover:text-[#a82d0a] flex items-center gap-0.5 mt-1">
+                                            className="text-[11px] font-medium text-orange-ink hover:text-orange-ink-hover flex items-center gap-0.5 mt-1">
                                             <UserPlus className="size-3" /> Assign to me
                                         </button>
                                     )}
@@ -237,7 +237,7 @@ export const TaskDetail = ({
                         </div>
 
                         <div>
-                            <p className="text-[11px] font-medium text-[#1b1017]/65 mb-1.5">Sprint</p>
+                            <p className="text-[11px] font-medium text-ink/65 mb-1.5">Sprint</p>
                             {isAdmin ? (
                                 <Select value={task.sprintId ?? "none"}
                                     onValueChange={v => onUpdate(task._id, { sprintId: v === "none" ? undefined : v as Id<"sprints"> })}>
@@ -248,45 +248,45 @@ export const TaskDetail = ({
                                     </SelectContent>
                                 </Select>
                             ) : (
-                                <span className="text-xs text-[#1b1017]/60">{activeSprint?.name ?? "No sprint"}</span>
+                                <span className="text-xs text-ink/60">{activeSprint?.name ?? "No sprint"}</span>
                             )}
                         </div>
 
                         <div>
-                            <p className="text-[11px] font-medium text-[#1b1017]/65 mb-1.5">Due date</p>
+                            <p className="text-[11px] font-medium text-ink/65 mb-1.5">Due date</p>
                             {isAdmin ? (
                                 <Input aria-label="Due date" type="date"
                                     defaultValue={task.dueDate ? format(task.dueDate, "yyyy-MM-dd") : ""}
                                     onChange={e => onUpdate(task._id, { dueDate: e.target.value ? new Date(e.target.value).getTime() : undefined })}
                                     className="h-8 text-xs rounded-lg" />
                             ) : (
-                                <span className={cn("text-xs", isOverdue ? "text-red-600 font-medium" : "text-[#1b1017]/60")}>
+                                <span className={cn("text-xs", isOverdue ? "text-red-600 dark:text-red-400 font-medium" : "text-ink/60")}>
                                     {task.dueDate ? format(task.dueDate, "MMM d, yyyy") : "No due date"}
                                 </span>
                             )}
                         </div>
 
                         <div>
-                            <p className="text-[11px] font-medium text-[#1b1017]/65 mb-1.5">Story points</p>
+                            <p className="text-[11px] font-medium text-ink/65 mb-1.5">Story points</p>
                             {isAdmin ? (
                                 <Input aria-label="Story points" type="number" defaultValue={task.storyPoints ?? ""}
                                     onBlur={e => onUpdate(task._id, { storyPoints: e.target.value ? parseInt(e.target.value) : undefined })}
                                     className="h-8 text-xs rounded-lg" />
                             ) : (
-                                <span className="text-xs text-[#1b1017]/60 flex items-center gap-1">
+                                <span className="text-xs text-ink/60 flex items-center gap-1">
                                     <Star className="size-3" /> {task.storyPoints ?? "—"} pts
                                 </span>
                             )}
                         </div>
 
                         <div>
-                            <p className="text-[11px] font-medium text-[#1b1017]/65 mb-1.5">Created by</p>
+                            <p className="text-[11px] font-medium text-ink/65 mb-1.5">Created by</p>
                             <div className="flex items-center gap-1.5">
                                 <Avatar className="size-5 rounded-md">
                                     <AvatarImage src={task.creator?.user?.image} />
                                     <AvatarFallback className="text-[9px]">{task.creator?.user?.name?.[0] ?? "?"}</AvatarFallback>
                                 </Avatar>
-                                <span className="text-xs text-[#1b1017]/60">{task.creator?.user?.name ?? "Unknown"}</span>
+                                <span className="text-xs text-ink/60">{task.creator?.user?.name ?? "Unknown"}</span>
                             </div>
                         </div>
                     </div>

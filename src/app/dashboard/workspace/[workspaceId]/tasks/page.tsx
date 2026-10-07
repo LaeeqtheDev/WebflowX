@@ -105,7 +105,7 @@ export default function TasksPage() {
     return (
         <div className="h-full flex max-md:flex-col overflow-hidden">
             {isAdmin && (
-                <div className="w-56 max-md:w-full max-md:max-h-44 max-md:border-b border-r max-md:border-r-0 border-[#381d2a]/12 bg-[#fbf9f7] flex flex-col px-3 py-5 max-md:py-3 gap-2 overflow-y-auto shrink-0">
+                <div className="w-56 max-md:w-full max-md:max-h-44 max-md:border-b border-r max-md:border-r-0 border-plum/12 bg-cream-soft flex flex-col px-3 py-5 max-md:py-3 gap-2 overflow-y-auto shrink-0">
                     <SprintPanel
                         sprints={safeSprints}
                         workspaceId={workspaceId}
@@ -118,19 +118,19 @@ export default function TasksPage() {
             )}
 
             <div className="flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden">
-                <div className="flex items-center justify-between px-4 md:px-6 min-h-14 py-2 border-b border-[#381d2a]/12 bg-white gap-4 flex-wrap">
+                <div className="flex items-center justify-between px-4 md:px-6 min-h-14 py-2 border-b border-plum/12 bg-surface gap-4 flex-wrap">
                     <div className="flex items-center gap-3">
-                        <h1 className="tracking-tight text-[17px] font-semibold text-[#1b1017]">Tasks</h1>
+                        <h1 className="tracking-tight text-[17px] font-semibold text-ink">Tasks</h1>
                         {activeSprint && (
-                            <span className="inline-flex items-center rounded-md bg-[#ff5018]/10 text-[#c2370d] px-2 py-0.5 text-[11px] font-medium">
+                            <span className="inline-flex items-center rounded-md bg-[#ff5018]/10 text-orange-ink px-2 py-0.5 text-[11px] font-medium">
                                 <Zap className="size-3 mr-1" /> {activeSprint.name}
                             </span>
                         )}
-                        <div className="flex items-center border border-[#381d2a]/15 rounded-lg overflow-hidden bg-white">
-                            <button aria-label="Board view" type="button" aria-pressed={view === "board"} onClick={() => setView("board")} className={cn("p-1.5 transition-colors", view === "board" ? "bg-[#ff5018] text-white" : "text-[#1b1017]/60 hover:bg-[#f3eeea]")}>
+                        <div className="flex items-center border border-plum/15 rounded-lg overflow-hidden bg-surface">
+                            <button aria-label="Board view" type="button" aria-pressed={view === "board"} onClick={() => setView("board")} className={cn("p-1.5 transition-colors", view === "board" ? "bg-[#ff5018] text-white" : "text-ink/60 hover:bg-cream-deep")}>
                                 <LayoutGrid className="size-4" />
                             </button>
-                            <button aria-label="List view" type="button" aria-pressed={view === "list"} onClick={() => setView("list")} className={cn("p-1.5 transition-colors", view === "list" ? "bg-[#ff5018] text-white" : "text-[#1b1017]/60 hover:bg-[#f3eeea]")}>
+                            <button aria-label="List view" type="button" aria-pressed={view === "list"} onClick={() => setView("list")} className={cn("p-1.5 transition-colors", view === "list" ? "bg-[#ff5018] text-white" : "text-ink/60 hover:bg-cream-deep")}>
                                 <List className="size-4" />
                             </button>
                         </div>
@@ -139,21 +139,21 @@ export default function TasksPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                         {totalTasks > 0 && (
                             <div className="flex items-center gap-2">
-                                <div className="w-24 bg-[#381d2a]/10 rounded-full h-1.5">
+                                <div className="w-24 bg-plum/10 rounded-full h-1.5">
                                     <div className="bg-[#ff5018] h-1.5 rounded-full transition-all" style={{ width: `${overallPct}%` }} />
                                 </div>
-                                <span className="text-xs font-medium text-[#1b1017]/60">{overallPct}%</span>
+                                <span className="text-xs font-medium text-ink/60">{overallPct}%</span>
                             </div>
                         )}
                         <Select value={filterStatus} onValueChange={v => setFilterStatus(v as Status | "all")}>
-                            <SelectTrigger aria-label="Filter by status" className="h-8 text-xs w-36 rounded-lg border-[#381d2a]/15"><SelectValue placeholder="All statuses" /></SelectTrigger>
+                            <SelectTrigger aria-label="Filter by status" className="h-8 text-xs w-36 rounded-lg border-plum/15"><SelectValue placeholder="All statuses" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Statuses</SelectItem>
                                 {STATUSES.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
                             </SelectContent>
                         </Select>
                         <Select value={filterAssignee} onValueChange={setFilterAssignee}>
-                            <SelectTrigger aria-label="Filter by assignee" className="h-8 text-xs w-36 rounded-lg border-[#381d2a]/15"><SelectValue placeholder="All members" /></SelectTrigger>
+                            <SelectTrigger aria-label="Filter by assignee" className="h-8 text-xs w-36 rounded-lg border-plum/15"><SelectValue placeholder="All members" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Members</SelectItem>
                                 {safeMembers.map(m => <SelectItem key={m._id} value={m._id}>{m.user.name ?? "Unknown"}</SelectItem>)}
@@ -170,18 +170,18 @@ export default function TasksPage() {
                         <Loader className="size-6 animate-spin text-[#ff5018]" />
                     </div>
                 ) : view === "board" ? (
-                    <div className="flex-1 overflow-x-auto px-4 md:px-6 py-5 bg-[#fbf9f7]">
+                    <div className="flex-1 overflow-x-auto px-4 md:px-6 py-5 bg-cream-soft">
                         <div className="flex gap-4 h-full min-w-max">
                             {STATUSES.map(status => {
                                 const colTasks = tasksByStatus[status]
                                 return (
-                                    <div key={status} className="w-72 flex flex-col gap-3 bg-[#f7f2ee] rounded-xl p-3">
+                                    <div key={status} className="w-72 flex flex-col gap-3 bg-cream rounded-xl p-3">
                                         <div className="px-1 flex items-center justify-between">
-                                            <span className="flex items-center gap-2 text-[13px] font-semibold tracking-tight text-[#1b1017]">
+                                            <span className="flex items-center gap-2 text-[13px] font-semibold tracking-tight text-ink">
                                                 <span className={cn("size-2 rounded-full", STATUS_DOT[status])} />
                                                 {STATUS_LABELS[status]}
                                             </span>
-                                            <span className="rounded-md bg-white px-1.5 py-0.5 text-[11px] font-medium text-[#1b1017]/60 border border-[#381d2a]/10">{colTasks.length}</span>
+                                            <span className="rounded-md bg-surface px-1.5 py-0.5 text-[11px] font-medium text-ink/60 border border-plum/10">{colTasks.length}</span>
                                         </div>
                                         <div className="flex flex-col gap-2 overflow-y-auto flex-1 pb-2">
                                             {colTasks.map(task => (
@@ -198,7 +198,7 @@ export default function TasksPage() {
                                                 />
                                             ))}
                                             {colTasks.length === 0 && (
-                                                <div className="text-xs text-[#1b1017]/65 text-center py-6 border border-dashed border-[#381d2a]/15 rounded-lg">No tasks</div>
+                                                <div className="text-xs text-ink/65 text-center py-6 border border-dashed border-plum/15 rounded-lg">No tasks</div>
                                             )}
                                         </div>
                                     </div>
@@ -207,30 +207,30 @@ export default function TasksPage() {
                         </div>
                     </div>
                 ) : (
-                    <div className="flex-1 overflow-y-auto px-4 md:px-6 py-5 bg-[#fbf9f7]">
-                        <div className="border border-[#381d2a]/12 rounded-xl overflow-hidden bg-white">
+                    <div className="flex-1 overflow-y-auto px-4 md:px-6 py-5 bg-cream-soft">
+                        <div className="border border-plum/12 rounded-xl overflow-hidden bg-surface">
                             <table className="w-full text-sm">
-                                <thead className="bg-[#f7f2ee]">
+                                <thead className="bg-cream">
                                     <tr>
-                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#1b1017]/70">Title</th>
-                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#1b1017]/70">Status</th>
-                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#1b1017]/70">Priority</th>
-                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#1b1017]/70">Assignee</th>
-                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#1b1017]/70">Sprint</th>
-                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#1b1017]/70">Due Date</th>
-                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#1b1017]/70">Points</th>
-                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#1b1017]/70">Labels</th>
+                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink/70">Title</th>
+                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink/70">Status</th>
+                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink/70">Priority</th>
+                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink/70">Assignee</th>
+                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink/70">Sprint</th>
+                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink/70">Due Date</th>
+                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink/70">Points</th>
+                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink/70">Labels</th>
                                         {isAdmin && <th className="px-4 py-2.5" />}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredTasks.length === 0 ? (
-                                        <tr><td colSpan={9} className="text-center py-10 text-[#1b1017]/65 text-xs">No tasks found</td></tr>
+                                        <tr><td colSpan={9} className="text-center py-10 text-ink/65 text-xs">No tasks found</td></tr>
                                     ) : filteredTasks.map(task => (
-                                        <tr key={task._id} className="border-t border-[#381d2a]/8 hover:bg-[#fbf9f7] transition-colors cursor-pointer" onClick={() => setSelectedTask(task)}>
+                                        <tr key={task._id} className="border-t border-plum/8 hover:bg-cream-soft transition-colors cursor-pointer" onClick={() => setSelectedTask(task)}>
                                             <td className="px-4 py-2.5">
-                                                <p className="font-semibold tracking-tight text-sm text-[#1b1017]">{task.title}</p>
-                                                {task.description && <p className="text-xs text-[#1b1017]/60 truncate max-w-48">{task.description}</p>}
+                                                <p className="font-semibold tracking-tight text-sm text-ink">{task.title}</p>
+                                                {task.description && <p className="text-xs text-ink/60 truncate max-w-48">{task.description}</p>}
                                             </td>
                                             <td className="px-4 py-2.5" onClick={e => e.stopPropagation()}>
                                                 <Select value={task.status} onValueChange={v => handleUpdate(task._id, { status: v as Status })}>
@@ -258,26 +258,26 @@ export default function TasksPage() {
                                                             <span className="text-xs">{task.assignee.user?.name}</span>
                                                         </>
                                                     ) : (
-                                                        <span className="text-xs text-[#1b1017]/65">Unassigned</span>
+                                                        <span className="text-xs text-ink/65">Unassigned</span>
                                                     )}
                                                     {task.assigneeId !== currentMember?._id && (
-                                                        <button aria-label="Assign task to me" type="button" onClick={(e) => { e.stopPropagation(); handleAssignToMe(task._id) }} className="text-[11px] font-medium text-[#c2370d] hover:text-[#a82d0a] ml-1">+ me</button>
+                                                        <button aria-label="Assign task to me" type="button" onClick={(e) => { e.stopPropagation(); handleAssignToMe(task._id) }} className="text-[11px] font-medium text-orange-ink hover:text-orange-ink-hover ml-1">+ me</button>
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-2.5 text-xs text-[#1b1017]/60">{safeSprints.find(s => s._id === task.sprintId)?.name ?? "—"}</td>
-                                            <td className={cn("px-4 py-2.5 text-xs", task.dueDate && task.dueDate < getNow() && task.status !== "done" ? "text-red-600 font-medium" : "text-[#1b1017]/60")}>
+                                            <td className="px-4 py-2.5 text-xs text-ink/60">{safeSprints.find(s => s._id === task.sprintId)?.name ?? "—"}</td>
+                                            <td className={cn("px-4 py-2.5 text-xs", task.dueDate && task.dueDate < getNow() && task.status !== "done" ? "text-red-600 dark:text-red-400 font-medium" : "text-ink/60")}>
                                                 {task.dueDate ? format(task.dueDate, "MMM d, yyyy") : "—"}
                                             </td>
-                                            <td className="px-4 py-2.5 text-xs text-[#1b1017]/60">{task.storyPoints ?? "—"}</td>
+                                            <td className="px-4 py-2.5 text-xs text-ink/60">{task.storyPoints ?? "—"}</td>
                                             <td className="px-4 py-2.5">
                                                 <div className="flex flex-wrap gap-1">
-                                                    {task.labels?.map((l, index) => <span key={index} className="bg-[#f7f2ee] text-[#381d2a] rounded-md px-2 py-0.5 text-[11px] font-medium">{l}</span>)}
+                                                    {task.labels?.map((l, index) => <span key={index} className="bg-cream text-plum rounded-md px-2 py-0.5 text-[11px] font-medium">{l}</span>)}
                                                 </div>
                                             </td>
                                             {isAdmin && (
                                                 <td className="px-4 py-2.5" onClick={e => e.stopPropagation()}>
-                                                    <button aria-label="Delete task" type="button" onClick={() => handleDelete(task._id)} className="text-[#1b1017]/40 hover:text-destructive transition-colors">
+                                                    <button aria-label="Delete task" type="button" onClick={() => handleDelete(task._id)} className="text-ink/40 hover:text-destructive transition-colors">
                                                         <Trash2 className="size-3.5" />
                                                     </button>
                                                 </td>

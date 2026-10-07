@@ -171,8 +171,9 @@ const Hero = () => {
           </h1>
 
           <p className="h-fade mt-5 max-w-xl text-lg leading-relaxed text-white/65">
-            Messaging, tasks, documents, meetings and AI summaries in one workspace. Built for teams
-            that are done juggling tools.
+            Channels and direct messages, a tasks board, real-time documents and spreadsheets, and video
+            meetings with live transcripts and AI summaries, all in one workspace with roles and
+            permissions you control.
           </p>
 
           <div className="h-fade mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -189,7 +190,7 @@ const Hero = () => {
               See plans
             </a>
           </div>
-          <p className="h-fade mt-5 text-sm text-white/45">Free plan available. Built by North Foundry.</p>
+          <p className="h-fade mt-5 text-sm text-white/45">Free plan available. Works on desktop and phones. Built by North Foundry.</p>
         </div>
 
         <div className="h-stage relative mt-10 w-full max-w-[1120px] lg:mt-12" style={{ perspective: 1800 }}>

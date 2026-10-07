@@ -53,3 +53,15 @@ export const updateProfile = mutation({
         return userId
     },
 })
+
+
+// Each member picks their own appearance; it is stored on their account and follows them across devices.
+export const setTheme = mutation({
+    args: { theme: v.union(v.literal("light"), v.literal("dark"), v.literal("system")) },
+    handler: async (ctx, args) => {
+        const userId = await auth.getUserId(ctx)
+        if (!userId) throw new ConvexError("Please sign in")
+        await ctx.db.patch(userId, { theme: args.theme })
+        return args.theme
+    },
+})

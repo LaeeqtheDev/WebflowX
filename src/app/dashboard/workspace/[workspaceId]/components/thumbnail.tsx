@@ -21,7 +21,7 @@ export const Thumbnail = ({url}: ThumbnailProps) => {
     return(
         <Dialog>
             <DialogTrigger aria-label="Open image full size">
-            <div className="relative overflow-hidden max-w-90 border border-[#381d2a]/12 rounded-xl my-2 cursor-zoom-in">
+            <div className="relative overflow-hidden max-w-90 border border-plum/12 rounded-xl my-2 cursor-zoom-in">
             <img
             src={url}
             alt="Image attached to message"

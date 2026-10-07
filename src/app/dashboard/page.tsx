@@ -29,7 +29,7 @@ export default function Home(){
 
 
   return(
-    <div className="min-h-screen bg-[#fbf9f7] flex flex-col items-center justify-center gap-4">
+    <div className="min-h-screen bg-cream-soft flex flex-col items-center justify-center gap-4">
       <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
         <Loader className="size-6 animate-spin text-[#ff5018]" />
       </div>

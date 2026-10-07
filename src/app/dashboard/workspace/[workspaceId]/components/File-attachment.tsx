@@ -26,12 +26,12 @@ const formatFileSize = (bytes?: number) => {
 
 // Get background color based on file type
 const getFileColor = (fileType?: string) => {
-    if (!fileType) return "bg-[#f7f2ee] text-[#381d2a]";
+    if (!fileType) return "bg-cream text-plum";
     if (fileType.startsWith("image/") || fileType.includes("video") || fileType.includes("audio"))
-        return "bg-[#381d2a] text-white";
+        return "bg-[#381d2a] dark:bg-[#4a2838] text-white";
     if (fileType.includes("pdf") || fileType.includes("presentation") || fileType.includes("powerpoint"))
         return "bg-[#ff5018]/10 text-[#ff5018]";
-    return "bg-[#f7f2ee] text-[#381d2a]";
+    return "bg-cream text-plum";
 };
 
 export const FileAttachment = ({
@@ -53,7 +53,7 @@ export const FileAttachment = ({
     const extension = getFileExtension(fileName);
 
     return (
-        <div className="flex items-center gap-3 p-3 bg-white border border-[#381d2a]/12 rounded-xl hover:bg-[#f7f2ee]/70 transition-colors max-w-sm group">
+        <div className="flex items-center gap-3 p-3 bg-surface border border-plum/12 rounded-xl hover:bg-cream/70 transition-colors max-w-sm group">
             {/* File Icon */}
             <div
                 className={`size-11 rounded-lg flex items-center justify-center shrink-0 ${getFileColor(
@@ -65,10 +65,10 @@ export const FileAttachment = ({
 
             {/* File Info */}
             <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[#1b1017] truncate">
+                <p className="text-sm font-medium text-ink truncate">
                     {fileName || "Untitled File"}
                 </p>
-                <div className="flex items-center gap-2 text-xs text-[#1b1017]/65">
+                <div className="flex items-center gap-2 text-xs text-ink/65">
                     {extension && (
                         <span className="uppercase font-medium">{extension}</span>
                     )}

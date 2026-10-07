@@ -60,7 +60,7 @@ export const AuthScreen = () => {
                     <p className="a-in mt-5 max-w-md text-lg text-white/65">{copy[state === "signUp" ? "signUp" : "signIn"].body}</p>
 
                     <div className="relative mt-12 h-[290px] max-w-xl">
-                        <div className="a-card absolute left-0 top-0 w-72 rounded-2xl bg-white p-4 text-[#1b1017] shadow-2xl">
+                        <div className="a-card absolute left-0 top-0 w-72 rounded-2xl bg-surface p-4 text-ink shadow-2xl">
                             <div className="flex gap-3">
                                 <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#7b3f61] text-sm font-semibold text-white">M</span>
                                 <div>
@@ -69,7 +69,7 @@ export const AuthScreen = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className="a-card absolute left-40 top-24 w-64 rounded-2xl bg-white p-4 text-[#1b1017] shadow-2xl">
+                        <div className="a-card absolute left-40 top-24 w-64 rounded-2xl bg-surface p-4 text-ink shadow-2xl">
                             <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
                                 <CheckSquare className="size-3.5 text-[#ff5018]" /> In progress
                             </p>
@@ -97,10 +97,10 @@ export const AuthScreen = () => {
             </aside>
 
             {/* Form */}
-            <main className="flex min-h-screen flex-col justify-center bg-[#fbf9f7] px-6 py-10 sm:px-12">
+            <main className="flex min-h-screen flex-col justify-center bg-cream-soft px-6 py-10 sm:px-12">
                 <div className="mx-auto mb-10 flex items-center gap-2.5 lg:hidden">
                     <Image src="/logo.png" alt="" width={28} height={28} className="h-7 w-7" />
-                    <span className="text-lg font-semibold tracking-tight text-[#1b1017]">WebflowX</span>
+                    <span className="text-lg font-semibold tracking-tight text-ink">WebflowX</span>
                 </div>
                 <div className="a-in mx-auto w-full max-w-[420px]">
                     {state === "signIn" && <SignInCard setState={setState} onEmail={setEmail} />}

@@ -18,11 +18,11 @@ const ThreadItem = ({ thread, onSelect }: { thread: ThreadData; onSelect: (threa
     return (
         <div
             onClick={() => thread.channel?._id && onSelect(thread)}
-            className="flex items-start gap-3 px-4 py-3 hover:bg-[#f7f2ee] cursor-pointer border-b border-[#381d2a]/10 transition-colors"
+            className="flex items-start gap-3 px-4 py-3 hover:bg-cream cursor-pointer border-b border-plum/10 transition-colors"
         >
             <Avatar className="size-9 shrink-0 mt-0.5 rounded-md">
                 <AvatarImage src={thread.author?.user?.image} />
-                <AvatarFallback className="text-xs rounded-md bg-[#381d2a] text-white">
+                <AvatarFallback className="text-xs rounded-md bg-[#381d2a] dark:bg-[#4a2838] text-white">
                     {thread.author?.user?.name?.[0] ?? "?"}
                 </AvatarFallback>
             </Avatar>
@@ -33,13 +33,13 @@ const ThreadItem = ({ thread, onSelect }: { thread: ThreadData; onSelect: (threa
                             {thread.author?.user?.name ?? "Unknown"}
                         </span>
                         {thread.channel && (
-                            <span className="flex items-center gap-0.5 text-[11px] font-medium text-[#1b1017]/70 bg-[#efe8e3] px-2 py-0.5 rounded-md">
+                            <span className="flex items-center gap-0.5 text-[11px] font-medium text-ink/70 bg-cream-deep2 px-2 py-0.5 rounded-md">
                                 <Hash className="size-2.5" />
                                 {thread.channel.name}
                             </span>
                         )}
                     </div>
-                    <span className="text-[11px] text-[#1b1017]/60 shrink-0">
+                    <span className="text-[11px] text-ink/60 shrink-0">
                         {format(thread._creationTime, "MMM d, h:mm a")}
                     </span>
                 </div>
@@ -48,7 +48,7 @@ const ThreadItem = ({ thread, onSelect }: { thread: ThreadData; onSelect: (threa
                 </p>
                 <div className="flex items-center gap-1 mt-1.5">
                     <div className="size-1.5 rounded-full bg-[#ff5018]" />
-                    <span className="text-[11px] text-[#c2370d] font-medium">
+                    <span className="text-[11px] text-orange-ink font-medium">
                         {thread.replyCount} {thread.replyCount === 1 ? "reply" : "replies"}
                     </span>
                     <span className="text-[11px] text-muted-foreground">
@@ -61,7 +61,7 @@ const ThreadItem = ({ thread, onSelect }: { thread: ThreadData; onSelect: (threa
 }
 
 const EmptySection = ({ label }: { label: string }) => (
-    <div className="flex flex-col items-center justify-center py-12 text-[#1b1017]/60 gap-3">
+    <div className="flex flex-col items-center justify-center py-12 text-ink/60 gap-3">
         <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
             <MessagesSquare className="size-6 text-[#ff5018]" />
         </div>
@@ -85,22 +85,22 @@ export default function ThreadsPage() {
 
 
     return (
-        <div className="h-full flex flex-col overflow-hidden bg-[#fbf9f7]">
+        <div className="h-full flex flex-col overflow-hidden bg-cream-soft">
             {/* Header */}
-            <div className="flex items-center gap-3 px-6 h-14 border-b bg-white shrink-0 shadow-none">
+            <div className="flex items-center gap-3 px-6 h-14 border-b bg-surface shrink-0 shadow-none">
                 <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
                     <MessagesSquare className="size-4 text-[#ff5018]" />
                 </div>
                 <div>
-                    <h1 className="tracking-tight text-[17px] font-semibold leading-none text-[#1b1017]">Threads</h1>
-                    <p className="text-[11px] text-[#1b1017]/60 mt-1">
+                    <h1 className="tracking-tight text-[17px] font-semibold leading-none text-ink">Threads</h1>
+                    <p className="text-[11px] text-ink/60 mt-1">
                         Conversations you started or joined
                     </p>
                 </div>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto bg-white">
+            <div className="flex-1 overflow-y-auto bg-surface">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full">
                         <Loader className="size-5 animate-spin text-[#ff5018]" />
@@ -109,11 +109,11 @@ export default function ThreadsPage() {
                     <>
                         {/* My Threads */}
                         <div>
-                            <div className="px-4 py-2 bg-[#f7f2ee] border-b">
-                                <p className="text-[11px] font-semibold text-[#1b1017]/60 uppercase tracking-wider">
+                            <div className="px-4 py-2 bg-cream border-b">
+                                <p className="text-[11px] font-semibold text-ink/60 uppercase tracking-wider">
                                     My Threads
                                     {(data?.myThreads?.length ?? 0) > 0 && (
-                                        <span className="ml-1.5 text-[#c2370d]">
+                                        <span className="ml-1.5 text-orange-ink">
                                             {data?.myThreads?.length}
                                         </span>
                                     )}
@@ -127,11 +127,11 @@ export default function ThreadsPage() {
 
                         {/* Participated */}
                         <div>
-                            <div className="px-4 py-2 bg-[#f7f2ee] border-b border-t">
-                                <p className="text-[11px] font-semibold text-[#1b1017]/60 uppercase tracking-wider">
+                            <div className="px-4 py-2 bg-cream border-b border-t">
+                                <p className="text-[11px] font-semibold text-ink/60 uppercase tracking-wider">
                                     Participated In
                                     {(data?.participatedThreads?.length ?? 0) > 0 && (
-                                        <span className="ml-1.5 text-[#c2370d]">
+                                        <span className="ml-1.5 text-orange-ink">
                                             {data?.participatedThreads?.length}
                                         </span>
                                     )}

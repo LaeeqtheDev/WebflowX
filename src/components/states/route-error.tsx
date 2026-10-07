@@ -27,15 +27,15 @@ export function RouteError({
   return (
     <div
       role="alert"
-      className={`flex w-full flex-col items-center justify-center gap-3 bg-[#fbf9f7] px-6 text-center ${
+      className={`flex w-full flex-col items-center justify-center gap-3 bg-cream-soft px-6 text-center ${
         variant === "screen" ? "min-h-screen" : "h-full min-h-[60vh]"
       }`}
     >
-      <div className="flex size-14 items-center justify-center rounded-2xl bg-[#ff5018]/10 text-[#c2370d]">
+      <div className="flex size-14 items-center justify-center rounded-2xl bg-[#ff5018]/10 text-orange-ink">
         <TriangleAlert className="size-6" />
       </div>
-      <h2 className="text-xl font-semibold tracking-tight text-[#1b1017]">Something went wrong</h2>
-      <p className="max-w-sm text-sm text-[#1b1017]/65">
+      <h2 className="text-xl font-semibold tracking-tight text-ink">Something went wrong</h2>
+      <p className="max-w-sm text-sm text-ink/65">
         This page could not be loaded. Try again, and if it keeps happening email support@northfoundry.co
         {error.digest ? ` with code ${error.digest}` : ""}.
       </p>
@@ -49,7 +49,7 @@ export function RouteError({
         </button>
         <Link
           href={backHref}
-          className="rounded-xl border border-[#381d2a]/20 bg-white px-5 py-2.5 text-sm font-semibold text-[#381d2a] transition-colors hover:bg-[#f7f2ee]"
+          className="rounded-xl border border-plum/20 bg-surface px-5 py-2.5 text-sm font-semibold text-plum transition-colors hover:bg-cream"
         >
           {backLabel}
         </Link>

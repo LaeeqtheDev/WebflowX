@@ -7,7 +7,7 @@ import { Heading, Label, Reveal } from "./landing/ui";
 import { wrap } from "./landing/tokens";
 
 const notes = [
-  ["WebflowX", "The team workspace: chat, tasks, notes, documents, meetings and AI summaries."],
+  ["WebflowX", "The team workspace: chat, tasks, notes, documents, spreadsheets, meetings and AI summaries."],
   ["North Foundry", "The digital studio: web design, engineering and growth for businesses."],
   ["Together", "Product and studio under one team, working on a better workspace and the support around it."],
 ];

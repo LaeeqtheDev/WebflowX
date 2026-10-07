@@ -181,20 +181,20 @@ const EditorInner = ({
     return (
         <div className="flex flex-col flex-1 min-h-0">
             {editor && (
-                <div className="bg-white border-b border-[#381d2a]/12 sticky top-0 z-10">
+                <div className="bg-surface border-b border-plum/12 sticky top-0 z-10">
                     <DocToolbar editor={editor} />
                 </div>
             )}
-            <div className="flex-1 overflow-y-auto bg-[#fbf9f7] py-8 px-4">
-                <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-sm border border-[#381d2a]/12 min-h-[calc(100vh-200px)]">
+            <div className="flex-1 overflow-y-auto bg-cream-soft py-8 px-4">
+                <div className="max-w-3xl mx-auto bg-surface rounded-xl shadow-sm border border-plum/12 min-h-[calc(100vh-200px)]">
                     <EditorContent editor={editor} />
                 </div>
             </div>
-            <div className="flex items-center justify-between gap-3 border-t border-[#381d2a]/12 bg-white px-4 py-1.5 text-[11px] text-[#1b1017]/60 shrink-0">
+            <div className="flex items-center justify-between gap-3 border-t border-plum/12 bg-surface px-4 py-1.5 text-[11px] text-ink/60 shrink-0">
                 <span>{words} word{words === 1 ? "" : "s"} · {Math.max(1, Math.ceil(words / 200))} min read</span>
                 <span className="flex items-center gap-1.5">
                     {status === "connected" ? (
-                        <><Cloud className="size-3.5 text-emerald-600" /> Saved</>
+                        <><Cloud className="size-3.5 text-emerald-600 dark:text-emerald-400" /> Saved</>
                     ) : status === "disconnected" ? (
                         <><CloudOff className="size-3.5 text-red-500" /> Offline, changes will sync when you reconnect</>
                     ) : (
@@ -288,11 +288,11 @@ export const DocEditor = ({
 
     if (failed) {
         return (
-            <div className="flex h-full items-center justify-center bg-[#fbf9f7]">
+            <div className="flex h-full items-center justify-center bg-cream-soft">
                 <div className="flex flex-col items-center gap-3 text-center px-4">
                     <AlertCircle className="size-6 text-red-500" />
-                    <p className="text-sm font-semibold text-[#1b1017]">Couldn&apos;t open this document</p>
-                    <p className="text-xs text-[#1b1017]/60">Check your connection and try again.</p>
+                    <p className="text-sm font-semibold text-ink">Couldn&apos;t open this document</p>
+                    <p className="text-xs text-ink/60">Check your connection and try again.</p>
                     <button
                         onClick={() => { setFailed(false); setAttempt((a) => a + 1) }}
                         className="rounded-lg bg-[#ff5018] px-4 py-2 text-xs font-semibold text-white hover:bg-[#e6430f]"
@@ -306,10 +306,10 @@ export const DocEditor = ({
 
     if (!ydoc || !provider) {
         return (
-            <div className="flex items-center justify-center h-full bg-[#fbf9f7]">
+            <div className="flex items-center justify-center h-full bg-cream-soft">
                 <div className="flex flex-col items-center gap-2">
                     <Loader className="size-5 animate-spin text-[#ff5018]" />
-                    <p className="text-xs text-[#1b1017]/60">Connecting to document...</p>
+                    <p className="text-xs text-ink/60">Connecting to document...</p>
                 </div>
             </div>
         )
@@ -318,7 +318,7 @@ export const DocEditor = ({
     return (
         <div className="flex flex-col h-full min-h-0">
             {(status === "reconnecting" || status === "disconnected") && (
-                <div role="status" className="flex shrink-0 items-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs font-medium text-amber-800">
+                <div role="status" className="flex shrink-0 items-center gap-2 border-b border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-2 text-xs font-medium text-amber-800 dark:text-amber-200">
                     <Loader className="size-3.5 animate-spin" />
                     {status === "reconnecting"
                         ? "Connection lost. Reconnecting… keep typing, your changes are kept on this device and will sync automatically."
@@ -327,10 +327,10 @@ export const DocEditor = ({
             )}
             {/* Also editing bar */}
             {others.length > 0 && (
-                <div className="flex items-center gap-2 px-4 py-1.5 bg-white border-b border-[#381d2a]/12 text-xs shrink-0">
+                <div className="flex items-center gap-2 px-4 py-1.5 bg-surface border-b border-plum/12 text-xs shrink-0">
                     <div className="flex items-center gap-1.5">
                         <div className="size-1.5 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-[#1b1017]/60 font-medium">Also editing:</span>
+                        <span className="text-ink/60 font-medium">Also editing:</span>
                     </div>
                     {others.map((o, i) => (
                         <div

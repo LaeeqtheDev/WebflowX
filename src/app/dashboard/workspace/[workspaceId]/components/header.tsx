@@ -92,11 +92,11 @@ export const Header = ({ title }: HeaderProps) => {
     }
 
     return (
-        <div className="bg-white border-b border-[#381d2a]/12 h-14 flex items-center px-4 overflow-hidden">
+        <div className="bg-surface border-b border-plum/12 h-14 flex items-center px-4 overflow-hidden">
             <ConfirmDialog />
             <Dialog>
                 <DialogTrigger asChild>
-                    <Button variant={"ghost"} className="text-lg font-semibold tracking-tight px-2 overflow-hidden w-auto rounded-lg hover:bg-[#f7f2ee] max-md:h-10" size={"sm"}>
+                    <Button variant={"ghost"} className="text-lg font-semibold tracking-tight px-2 overflow-hidden w-auto rounded-lg hover:bg-cream max-md:h-10" size={"sm"}>
                         <span className="flex items-center gap-2 truncate font-semibold tracking-tight">
                             {channel?.isPrivate ? <Lock className="size-5 shrink-0 text-[#ff5018]" /> : <ChannelIcon name={title} className="size-5 shrink-0 text-[#ff5018]" />}{cleanChannelName(title)}
                         </span>
@@ -104,8 +104,8 @@ export const Header = ({ title }: HeaderProps) => {
                     </Button>
                 </DialogTrigger>
 
-                <DialogContent className="p-0 bg-[#f7f2ee] overflow-hidden rounded-2xl">
-                    <DialogHeader className="px-6 py-5 border-b bg-white ">
+                <DialogContent className="p-0 bg-cream overflow-hidden rounded-2xl">
+                    <DialogHeader className="px-6 py-5 border-b bg-surface ">
                         <DialogTitle className="font-semibold tracking-tight flex items-center gap-2">
                             {channel?.isPrivate && <Lock className="size-4 text-[#ff5018]" />}
                             {cleanChannelName(title)}
@@ -115,7 +115,7 @@ export const Header = ({ title }: HeaderProps) => {
                     <div className="px-6 py-5 flex flex-col gap-y-2 max-h-[65vh] overflow-y-auto">
                         <Dialog open={editOpen} onOpenChange={(v) => canManage && setEditOpen(v)}>
                             <DialogTrigger asChild>
-                                <div className="px-5 py-4 bg-white rounded-xl border border-[#381d2a]/12 cursor-pointer hover:bg-[#f7f2ee]/60">
+                                <div className="px-5 py-4 bg-surface rounded-xl border border-plum/12 cursor-pointer hover:bg-cream/60">
                                     <div className="flex items-center justify-between">
                                         <p className="text-sm font-semibold">Channel Name</p>
                                         {canManage && <p className="text-sm text-[#ff5018] hover:underline hover:underline-offset-4 font-semibold">Edit</p>}
@@ -137,7 +137,7 @@ export const Header = ({ title }: HeaderProps) => {
                             </DialogContent>
                         </Dialog>
 
-                        <div className="px-5 py-4 bg-white rounded-xl border border-[#381d2a]/12">
+                        <div className="px-5 py-4 bg-surface rounded-xl border border-plum/12">
                             <p className="text-sm font-semibold mb-2">Description</p>
                             {canManage ? (
                                 <>
@@ -145,16 +145,16 @@ export const Header = ({ title }: HeaderProps) => {
                                     <Button size="sm" className="mt-2 bg-[#ff5018] hover:bg-[#e6430f] text-white" disabled={updatingChannel || description === (channel?.description ?? "")} onClick={saveDescription}>Save</Button>
                                 </>
                             ) : (
-                                <p className="text-sm text-[#1b1017]/65">{channel?.description || "No description yet."}</p>
+                                <p className="text-sm text-ink/65">{channel?.description || "No description yet."}</p>
                             )}
                         </div>
 
                         {canManage && channel && (
-                            <div className="px-5 py-4 bg-white rounded-xl border border-[#381d2a]/12">
+                            <div className="px-5 py-4 bg-surface rounded-xl border border-plum/12">
                                 <label className="flex items-center justify-between gap-3 cursor-pointer">
                                     <span>
                                         <span className="block text-sm font-semibold">Locked channel</span>
-                                        <span className="block text-xs text-[#1b1017]/55">Only people you add, plus roles allowed to see locked channels, can open it.</span>
+                                        <span className="block text-xs text-ink/55">Only people you add, plus roles allowed to see locked channels, can open it.</span>
                                     </span>
                                     <input type="checkbox" className="size-4 accent-[#ff5018]" checked={!!channel.isPrivate}
                                         onChange={(e) => run(() => setAccess({ id: channelId, isPrivate: e.target.checked }), "Couldn't change channel access")} />
@@ -163,7 +163,7 @@ export const Header = ({ title }: HeaderProps) => {
                                 {channel.isPrivate && (
                                     <div className="mt-4 flex flex-col gap-2">
                                         <div className="flex items-center justify-between">
-                                            <p className="text-xs font-semibold uppercase tracking-wide text-[#1b1017]/55">In this channel ({ids.length})</p>
+                                            <p className="text-xs font-semibold uppercase tracking-wide text-ink/55">In this channel ({ids.length})</p>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button size="sm" variant="outline" className="rounded-lg" disabled={addable.length === 0}>
@@ -184,10 +184,10 @@ export const Header = ({ title }: HeaderProps) => {
                                             <div key={m._id} className="flex items-center gap-2.5">
                                                 <Avatar className="size-7 rounded-md">
                                                     <AvatarImage className="rounded-md" src={m.user.image} />
-                                                    <AvatarFallback className="rounded-md bg-[#381d2a] text-white text-xs">{(m.user.name ?? "?").charAt(0).toUpperCase()}</AvatarFallback>
+                                                    <AvatarFallback className="rounded-md bg-[#381d2a] dark:bg-[#4a2838] text-white text-xs">{(m.user.name ?? "?").charAt(0).toUpperCase()}</AvatarFallback>
                                                 </Avatar>
                                                 <span className="text-sm flex-1 truncate">{m.user.name}</span>
-                                                <button aria-label={`Remove ${m.user.name}`} className="text-[#1b1017]/45 hover:text-rose-600"
+                                                <button aria-label={`Remove ${m.user.name}`} className="text-ink/45 hover:text-rose-600 dark:hover:text-rose-400"
                                                     onClick={() => run(() => setAccess({ id: channelId, isPrivate: true, memberIds: ids.filter((id) => id !== m._id) }), "Couldn't remove that person")}>
                                                     <X className="size-4" />
                                                 </button>
@@ -199,10 +199,10 @@ export const Header = ({ title }: HeaderProps) => {
                         )}
 
                         {canManage && channel && (
-                            <label className="px-5 py-4 bg-white rounded-xl border border-[#381d2a]/12 flex items-center justify-between gap-3 cursor-pointer">
+                            <label className="px-5 py-4 bg-surface rounded-xl border border-plum/12 flex items-center justify-between gap-3 cursor-pointer">
                                 <span>
                                     <span className="block text-sm font-semibold">Announcement channel (read-only)</span>
-                                    <span className="block text-xs text-[#1b1017]/55">Everyone can read and reply in threads; only roles allowed to post can start messages.</span>
+                                    <span className="block text-xs text-ink/55">Everyone can read and reply in threads; only roles allowed to post can start messages.</span>
                                 </span>
                                 <input type="checkbox" className="size-4 accent-[#ff5018]" checked={!!channel.readOnly}
                                     onChange={(e) => run(() => setReadOnly({ id: channelId, readOnly: e.target.checked }), "Couldn't change channel mode")} />
@@ -210,7 +210,7 @@ export const Header = ({ title }: HeaderProps) => {
                         )}
 
                         {canManage && (
-                            <button className="flex items-center gap-x-2 px-5 py-4 bg-white rounded-xl cursor-pointer border border-[#381d2a]/12 hover:bg-rose-50 text-rose-600" onClick={handleDelete}>
+                            <button className="flex items-center gap-x-2 px-5 py-4 bg-surface rounded-xl cursor-pointer border border-plum/12 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-rose-600 dark:text-rose-400" onClick={handleDelete}>
                                 <TrashIcon className="size-4" />
                                 <p className="text-sm font-semibold">Delete Channel</p>
                             </button>

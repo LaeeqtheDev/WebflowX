@@ -55,7 +55,7 @@ export const WorkspaceHeader = ({ workspace, isAdmin, canInvite, canEdit }: Work
 
         <DropdownMenuContent side="bottom" align="start" className="w-64 rounded-xl p-1.5">
           <DropdownMenuItem className="cursor-pointer capitalize rounded-lg">
-            <div className="size-9 relative overflow-hidden bg-[#381d2a] text-white font-semibold text-lg rounded-lg flex items-center justify-center mr-2">
+            <div className="size-9 relative overflow-hidden bg-[#381d2a] dark:bg-[#4a2838] text-white font-semibold text-lg rounded-lg flex items-center justify-center mr-2">
               {workspace.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={workspace.imageUrl} alt="" className="size-full object-cover" />

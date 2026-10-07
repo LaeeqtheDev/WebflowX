@@ -73,7 +73,7 @@ const ACTION_LABEL: Record<string, string> = {
 const RoleIcon = ({ role, isOwner }: { role: string; isOwner?: boolean }) =>
   isOwner ? <Crown className="size-3.5 text-[#ff5018]" /> :
   role === "admin" ? <ShieldCheck className="size-3.5 text-[#ff5018]" /> :
-  role === "moderator" ? <Shield className="size-3.5 text-[#381d2a]" /> : null
+  role === "moderator" ? <Shield className="size-3.5 text-plum" /> : null
 
 export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesModalProps) => {
   const workspaceId = useWorkspaceId()
@@ -164,16 +164,16 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
     <>
       <ConfirmDialog />
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bg-[#f7f2ee] p-0 overflow-hidden rounded-2xl max-w-2xl">
-          <DialogHeader className="px-6 py-5 border-b bg-white">
+        <DialogContent className="bg-cream p-0 overflow-hidden rounded-2xl max-w-2xl">
+          <DialogHeader className="px-6 py-5 border-b bg-surface">
             <DialogTitle className="font-semibold tracking-tight">Workspace settings</DialogTitle>
           </DialogHeader>
 
-          <div className="flex gap-1 px-4 pt-3 border-b bg-white overflow-x-auto">
+          <div className="flex gap-1 px-4 pt-3 border-b bg-surface overflow-x-auto">
             {tabs.filter((t) => t.show).map((t) => (
               <button key={t.id} onClick={() => setTab(t.id)}
                 className={cn("px-3 py-2 text-sm font-semibold whitespace-nowrap border-b-2 -mb-px transition",
-                  tab === t.id ? "border-[#ff5018] text-[#1b1017]" : "border-transparent text-[#1b1017]/65 hover:text-[#1b1017]")}>
+                  tab === t.id ? "border-[#ff5018] text-ink" : "border-transparent text-ink/65 hover:text-ink")}>
                 {t.label}
               </button>
             ))}
@@ -185,7 +185,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                 <div className="flex items-center gap-4">
                   <Avatar className="size-20 rounded-2xl">
                     <AvatarImage className="rounded-2xl" src={workspace?.imageUrl ?? undefined} />
-                    <AvatarFallback className="rounded-2xl bg-[#381d2a] text-white text-3xl font-semibold">
+                    <AvatarFallback className="rounded-2xl bg-[#381d2a] dark:bg-[#4a2838] text-white text-3xl font-semibold">
                       {(workspace?.name ?? name).charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -197,13 +197,13 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                         {workspace?.imageUrl ? "Change photo" : "Upload photo"}
                       </Button>
                       {workspace?.imageUrl && (
-                        <Button type="button" variant="ghost" size="sm" className="rounded-lg text-rose-600 hover:text-rose-700" disabled={saving}
+                        <Button type="button" variant="ghost" size="sm" className="rounded-lg text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300" disabled={saving}
                           onClick={() => save({ id: workspaceId, removeImage: true }, "Photo removed")}>
                           <Trash2 className="size-4 mr-2" /> Remove
                         </Button>
                       )}
                     </div>
-                  ) : <p className="text-sm text-[#1b1017]/65">You don&apos;t have permission to edit the workspace.</p>}
+                  ) : <p className="text-sm text-ink/65">You don&apos;t have permission to edit the workspace.</p>}
                 </div>
 
                 <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); save({ id: workspaceId, name, description }, "Workspace updated") }}>
@@ -225,7 +225,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                 {perms.isAdmin && (
                   <button disabled={exporting}
                     onClick={() => exportWorkspace(workspaceId, workspace?.name ?? name).then(() => toast.success("Export downloaded")).catch((e) => toast.error(errMsg(e, "Export failed. Please try again.")))}
-                    className="flex items-center gap-x-2 px-5 py-4 bg-white rounded-xl border border-[#381d2a]/12 hover:bg-[#fbf9f7] text-[#1b1017] disabled:opacity-60">
+                    className="flex items-center gap-x-2 px-5 py-4 bg-surface rounded-xl border border-plum/12 hover:bg-cream-soft text-ink disabled:opacity-60">
                     {exporting ? <Loader className="size-4 animate-spin" /> : <Download className="size-4" />}
                     <span className="text-sm font-semibold">{exporting ? progress || "Exporting…" : "Export workspace data (JSON)"}</span>
                   </button>
@@ -233,7 +233,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
 
                 {perms.isOwner && (
                   <button disabled={isRemoving} onClick={handleRemove}
-                    className="flex items-center gap-x-2 px-5 py-4 bg-white rounded-xl border border-[#381d2a]/12 hover:bg-rose-50 text-rose-600">
+                    className="flex items-center gap-x-2 px-5 py-4 bg-surface rounded-xl border border-plum/12 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-rose-600 dark:text-rose-400">
                     <TrashIcon className="size-4" />
                     <p className="text-sm font-semibold">Delete workspace</p>
                   </button>
@@ -243,43 +243,43 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
 
             {tab === "members" && (
               <div className="flex flex-col gap-3">
-                <Input aria-label="Search members" placeholder="Search members" value={filter} onChange={(e) => setFilter(e.target.value)} className="bg-white" />
+                <Input aria-label="Search members" placeholder="Search members" value={filter} onChange={(e) => setFilter(e.target.value)} className="bg-surface" />
                 <div className="flex flex-col gap-1.5">
                   {!members && <Loader className="size-5 animate-spin text-[#ff5018] mx-auto my-6" />}
                   {[...shownMembers].sort((a, b) => order(a) - order(b)).map((m) => (
                     <button key={m._id} onClick={() => { onOpenProfile(m._id); setOpen(false) }}
-                      className="flex items-center gap-3 bg-white rounded-xl border border-[#381d2a]/10 px-3 py-2.5 text-left hover:bg-[#fbf9f7]">
+                      className="flex items-center gap-3 bg-surface rounded-xl border border-plum/10 px-3 py-2.5 text-left hover:bg-cream-soft">
                       <Avatar className="size-9 rounded-lg">
                         <AvatarImage className="rounded-lg" src={m.user.image} />
-                        <AvatarFallback className="rounded-lg bg-[#381d2a] text-white font-semibold">{(m.user.name ?? "?").charAt(0).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback className="rounded-lg bg-[#381d2a] dark:bg-[#4a2838] text-white font-semibold">{(m.user.name ?? "?").charAt(0).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-[#1b1017] truncate">{m.user.name}</p>
-                        <p className="text-xs text-[#1b1017]/65 truncate">{m.user.title || m.user.email}</p>
+                        <p className="text-sm font-semibold text-ink truncate">{m.user.name}</p>
+                        <p className="text-xs text-ink/65 truncate">{m.user.title || m.user.email}</p>
                       </div>
-                      <span className="flex items-center gap-1 text-xs font-semibold capitalize text-[#1b1017]/70">
+                      <span className="flex items-center gap-1 text-xs font-semibold capitalize text-ink/70">
                         <RoleIcon role={m.role} isOwner={m.isOwner} />
                         {m.isOwner ? "Owner" : rolePerms?.customRoles.find((r) => r.id === m.customRoleId)?.name ?? m.role}
                       </span>
                     </button>
                   ))}
-                  {members && shownMembers.length === 0 && <p className="text-sm text-[#1b1017]/65 text-center py-6">No one matches that search.</p>}
+                  {members && shownMembers.length === 0 && <p className="text-sm text-ink/65 text-center py-6">No one matches that search.</p>}
                 </div>
               </div>
             )}
 
             {tab === "roles" && (
               <div className="flex flex-col gap-4">
-                <p className="text-sm text-[#1b1017]/65">Owner and admins can do everything. Choose what moderators and members are allowed to do. Changes apply immediately.</p>
-                <div className="bg-white rounded-xl border border-[#381d2a]/10 overflow-hidden">
-                  <div className="grid grid-cols-[1fr_88px_88px] px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-[#1b1017]/65 border-b">
+                <p className="text-sm text-ink/65">Owner and admins can do everything. Choose what moderators and members are allowed to do. Changes apply immediately.</p>
+                <div className="bg-surface rounded-xl border border-plum/10 overflow-hidden">
+                  <div className="grid grid-cols-[1fr_88px_88px] px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-ink/65 border-b">
                     <span>Permission</span><span className="text-center">Moderator</span><span className="text-center">Member</span>
                   </div>
                   {PERMISSION_INFO.map((p) => (
                     <div key={p.key} className="grid grid-cols-[1fr_88px_88px] items-center px-4 py-3 border-b last:border-b-0">
                       <div className="pr-3">
-                        <p className="text-sm font-semibold text-[#1b1017]">{p.label}</p>
-                        <p className="text-xs text-[#1b1017]/65">{p.hint}</p>
+                        <p className="text-sm font-semibold text-ink">{p.label}</p>
+                        <p className="text-xs text-ink/65">{p.hint}</p>
                       </div>
                       {(["moderator", "member"] as const).map((role) => (
                         <div key={role} className="flex justify-center">
@@ -294,8 +294,8 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
 
                 <div className="flex items-center justify-between pt-2">
                   <div>
-                    <p className="text-sm font-semibold text-[#1b1017]">Custom roles</p>
-                    <p className="text-xs text-[#1b1017]/65">Name a role, pick a rank and exactly what it can do. Assign it from a member&apos;s profile.</p>
+                    <p className="text-sm font-semibold text-ink">Custom roles</p>
+                    <p className="text-xs text-ink/65">Name a role, pick a rank and exactly what it can do. Assign it from a member&apos;s profile.</p>
                   </div>
                   <Button size="sm" variant="outline" className="rounded-lg" disabled={(rolePerms?.customRoles.length ?? 0) >= 10}
                     onClick={() => setRoleDraft({ name: "", baseRole: "member", permissions: [] })}>
@@ -303,15 +303,15 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                   </Button>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  {rolePerms?.customRoles.length === 0 && <p className="text-sm text-[#1b1017]/65">No custom roles yet.</p>}
+                  {rolePerms?.customRoles.length === 0 && <p className="text-sm text-ink/65">No custom roles yet.</p>}
                   {rolePerms?.customRoles.map((r) => (
-                    <div key={r.id} className="flex items-center gap-3 bg-white rounded-xl border border-[#381d2a]/10 px-4 py-2.5">
+                    <div key={r.id} className="flex items-center gap-3 bg-surface rounded-xl border border-plum/10 px-4 py-2.5">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold truncate">{r.name}</p>
-                        <p className="text-xs text-[#1b1017]/65">Ranks as {r.baseRole} · {r.permissions.length} permissions · {(members ?? []).filter((m) => m.customRoleId === r.id).length} people</p>
+                        <p className="text-xs text-ink/65">Ranks as {r.baseRole} · {r.permissions.length} permissions · {(members ?? []).filter((m) => m.customRoleId === r.id).length} people</p>
                       </div>
                       <Button size="icon" variant="ghost" aria-label="Edit role" onClick={() => setRoleDraft({ id: r.id, name: r.name, baseRole: r.baseRole, permissions: r.permissions })}><Pencil className="size-4" aria-hidden="true" /></Button>
-                      <Button size="icon" variant="ghost" aria-label="Delete role" className="text-rose-600"
+                      <Button size="icon" variant="ghost" aria-label="Delete role" className="text-rose-600 dark:text-rose-400"
                         onClick={() => deleteCustomRole({ workspaceId, id: r.id }).then(() => toast.success("Role deleted")).catch((e) => toast.error(errMsg(e, "Couldn't delete role")))}>
                         <Trash2 className="size-4" aria-hidden="true" />
                       </Button>
@@ -320,7 +320,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                 </div>
 
                 {roleDraft && (
-                  <form className="bg-white rounded-xl border border-[#ff5018]/40 p-4 flex flex-col gap-3"
+                  <form className="bg-surface rounded-xl border border-[#ff5018]/40 p-4 flex flex-col gap-3"
                     onSubmit={(e) => {
                       e.preventDefault()
                       saveCustomRole({ workspaceId, ...roleDraft })
@@ -362,11 +362,11 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
             {tab === "audit" && (
               <div className="flex flex-col gap-1.5">
                 {audit === undefined && <Loader className="size-5 animate-spin text-[#ff5018] mx-auto my-6" />}
-                {audit?.length === 0 && <p className="text-sm text-[#1b1017]/65 text-center py-6">Nothing recorded yet.</p>}
+                {audit?.length === 0 && <p className="text-sm text-ink/65 text-center py-6">Nothing recorded yet.</p>}
                 {audit?.map((a) => (
-                  <div key={a._id} className="bg-white rounded-xl border border-[#381d2a]/10 px-4 py-2.5">
-                    <p className="text-sm text-[#1b1017]"><span className="font-semibold">{a.actorName}</span> · {ACTION_LABEL[a.action] ?? a.action}</p>
-                    <p className="text-xs text-[#1b1017]/65">
+                  <div key={a._id} className="bg-surface rounded-xl border border-plum/10 px-4 py-2.5">
+                    <p className="text-sm text-ink"><span className="font-semibold">{a.actorName}</span> · {ACTION_LABEL[a.action] ?? a.action}</p>
+                    <p className="text-xs text-ink/65">
                       {a.detail ? `${a.detail} · ` : ""}{new Date(a._creationTime).toLocaleString()}
                     </p>
                   </div>

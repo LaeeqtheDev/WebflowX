@@ -553,8 +553,8 @@ const Editor = ({
             <div ref={wrapperRef} className="relative">
                 {/* @mention picker */}
                 {mention && mentionMatches.length > 0 && (
-                    <div className="absolute bottom-full left-0 z-9999 mb-2 w-64 overflow-hidden rounded-xl border border-[#381d2a]/12 bg-white shadow-lg">
-                        <p className="border-b bg-[#f7f2ee] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#1b1017]/65">
+                    <div className="absolute bottom-full left-0 z-9999 mb-2 w-64 overflow-hidden rounded-xl border border-plum/12 bg-surface shadow-lg">
+                        <p className="border-b bg-cream px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink/65">
                             People
                         </p>
                         {mentionMatches.map((m, i) => (
@@ -566,8 +566,8 @@ const Editor = ({
                                     pickMention(m);
                                 }}
                                 className={cn(
-                                    "flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-[#f7f2ee]",
-                                    mentionSel === i && "bg-[#f7f2ee]"
+                                    "flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-cream",
+                                    mentionSel === i && "bg-cream"
                                 )}
                             >
                                 <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#ff5018] text-xs font-semibold text-white">
@@ -579,7 +579,7 @@ const Editor = ({
                                     )}
                                 </span>
                                 <span className="truncate text-sm font-medium">{m.user?.name}</span>
-                                {m.special && <span className="truncate text-xs text-[#1b1017]/65">{m.special}</span>}
+                                {m.special && <span className="truncate text-xs text-ink/65">{m.special}</span>}
                             </button>
                         ))}
                     </div>
@@ -587,7 +587,7 @@ const Editor = ({
 
                 {/* Slash command menu — outside the overflow-hidden div */}
                 {showSlashMenu && (
-                    <div className="absolute bottom-full left-0 z-9999 bg-white border border-[#381d2a]/12 rounded-xl shadow-lg overflow-hidden w-72 mb-2">
+                    <div className="absolute bottom-full left-0 z-9999 bg-surface border border-plum/12 rounded-xl shadow-lg overflow-hidden w-72 mb-2">
                         {/* Tabs */}
                         <div className="flex border-b">
                             <button
@@ -599,8 +599,8 @@ const Editor = ({
                                 className={cn(
                                     "flex-1 py-2 text-xs font-semibold transition-colors",
                                     activeTab === "format"
-                                        ? "text-[#c2370d] border-b-2 border-[#ff5018] bg-[#ff5018]/5"
-                                        : "text-[#1b1017]/60 hover:text-[#1b1017]"
+                                        ? "text-orange-ink border-b-2 border-[#ff5018] bg-[#ff5018]/5"
+                                        : "text-ink/60 hover:text-ink"
                                 )}
                             >
                                 Formatting
@@ -614,8 +614,8 @@ const Editor = ({
                                 className={cn(
                                     "flex-1 py-2 text-xs font-semibold transition-colors flex items-center justify-center gap-1",
                                     activeTab === "ai"
-                                        ? "text-[#c2370d] border-b-2 border-[#ff5018] bg-[#ff5018]/5"
-                                        : "text-[#1b1017]/60 hover:text-[#1b1017]"
+                                        ? "text-orange-ink border-b-2 border-[#ff5018] bg-[#ff5018]/5"
+                                        : "text-ink/60 hover:text-ink"
                                 )}
                             >
                                 <Sparkles className="size-3" /> AI
@@ -633,8 +633,8 @@ const Editor = ({
                                               handleFormattingCommand(cmd);
                                           }}
                                           className={cn(
-                                              "w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-[#f7f2ee] transition-colors",
-                                              selectedSlashItem === i && "bg-[#f7f2ee]"
+                                              "w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-cream transition-colors",
+                                              selectedSlashItem === i && "bg-cream"
                                           )}
                                       >
                                           <div
@@ -642,7 +642,7 @@ const Editor = ({
                                                   "size-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0",
                                                   selectedSlashItem === i
                                                       ? "bg-[#ff5018] text-white"
-                                                      : "bg-[#f7f2ee] text-[#381d2a]"
+                                                      : "bg-cream text-plum"
                                               )}
                                           >
                                               {cmd.icon}
@@ -663,8 +663,8 @@ const Editor = ({
                                               handleAiCommand(cmd.command);
                                           }}
                                           className={cn(
-                                              "w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-[#f7f2ee] transition-colors",
-                                              selectedSlashItem === i && "bg-[#f7f2ee]"
+                                              "w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-cream transition-colors",
+                                              selectedSlashItem === i && "bg-cream"
                                           )}
                                       >
                                           <div
@@ -672,7 +672,7 @@ const Editor = ({
                                                   "size-8 rounded-lg flex items-center justify-center text-sm shrink-0",
                                                   selectedSlashItem === i
                                                       ? "bg-[#ff5018] text-white"
-                                                      : "bg-[#f7f2ee]"
+                                                      : "bg-cream"
                                               )}
                                           >
                                               {cmd.icon}
@@ -687,7 +687,7 @@ const Editor = ({
                                   ))}
                         </div>
 
-                        <div className="px-3 py-1.5 bg-[#f7f2ee] border-t">
+                        <div className="px-3 py-1.5 bg-cream border-t">
                             <p className="text-[9px] text-muted-foreground">
                                 ↑↓ navigate · Enter select · Esc close
                             </p>
@@ -697,7 +697,7 @@ const Editor = ({
 
                 <div
                     className={cn(
-                        "flex flex-col rounded-2xl border border-transparent bg-white shadow-[0_0_0_1px_rgba(56,29,42,0.12),0_10px_30px_-18px_rgba(56,29,42,0.35)] transition-shadow focus-within:shadow-[0_0_0_1px_rgba(56,29,42,0.28),0_14px_34px_-16px_rgba(56,29,42,0.45)]",
+                        "flex flex-col rounded-2xl border border-transparent bg-surface shadow-[0_0_0_1px_rgba(56,29,42,0.12),0_10px_30px_-18px_rgba(56,29,42,0.35)] transition-shadow focus-within:shadow-[0_0_0_1px_rgba(56,29,42,0.28),0_14px_34px_-16px_rgba(56,29,42,0.45)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.12),0_10px_30px_-18px_rgba(0,0,0,0.6)] dark:focus-within:shadow-[0_0_0_1px_rgba(255,255,255,0.3),0_14px_34px_-16px_rgba(0,0,0,0.7)]",
                         disabled && "opacity-50"
                     )}
                 >
@@ -705,7 +705,7 @@ const Editor = ({
 
                     {/* AI loading overlay */}
                     {isAiLoading && (
-                        <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-50 rounded">
+                        <div className="absolute inset-0 bg-white/80 dark:bg-[#1a0f15]/80 flex items-center justify-center z-50 rounded">
                             <div className="flex items-center gap-2">
                                 <Loader2 className="size-4 animate-spin text-[#ff5018]" />
                                 <span className="text-xs text-muted-foreground font-medium">
@@ -727,7 +727,7 @@ const Editor = ({
                                         }}
                                         type="button"
                                         aria-label="Remove image"
-                                        className="flex opacity-0 group-hover/image:opacity-100 focus-visible:opacity-100 rounded-full bg-[#1b1017]/80 hover:bg-[#1b1017] absolute -top-2.5 -right-2.5 text-white size-6 z-4 border-2 border-white items-center justify-center"
+                                        className="flex opacity-0 group-hover/image:opacity-100 focus-visible:opacity-100 rounded-full bg-[#1b1017]/80 hover:bg-[#1b1017] dark:bg-[#381d2a] dark:hover:bg-[#4d3040] absolute -top-2.5 -right-2.5 text-white size-6 z-4 border-2 border-white dark:border-[#241620] items-center justify-center"
                                     >
                                         <XIcon className="size-3.5" aria-hidden="true" />
                                     </button>
@@ -736,7 +736,7 @@ const Editor = ({
                                     src={URL.createObjectURL(image)}
                                     alt="Selected image to upload"
                                     fill
-                                    className="rounded-xl overflow-hidden border border-[#381d2a]/12 object-cover"
+                                    className="rounded-xl overflow-hidden border border-plum/12 object-cover"
                                 />
                             </div>
                         </div>
@@ -745,7 +745,7 @@ const Editor = ({
                     {/* File preview */}
                     {!!file && (
                         <div className="p-2">
-                            <div className="relative flex items-center gap-3 p-3 bg-[#f7f2ee] rounded-xl border border-[#381d2a]/12 group/file max-w-xs">
+                            <div className="relative flex items-center gap-3 p-3 bg-cream rounded-xl border border-plum/12 group/file max-w-xs">
                                 <Hint label="Remove File">
                                     <button
                                         onClick={() => {
@@ -754,7 +754,7 @@ const Editor = ({
                                         }}
                                         type="button"
                                         aria-label="Remove file"
-                                        className="flex opacity-0 group-hover/file:opacity-100 focus-visible:opacity-100 rounded-full bg-[#1b1017]/80 hover:bg-[#1b1017] absolute -top-2 -right-2 text-white size-5 z-4 border-2 border-white items-center justify-center"
+                                        className="flex opacity-0 group-hover/file:opacity-100 focus-visible:opacity-100 rounded-full bg-[#1b1017]/80 hover:bg-[#1b1017] dark:bg-[#381d2a] dark:hover:bg-[#4d3040] absolute -top-2 -right-2 text-white size-5 z-4 border-2 border-white dark:border-[#241620] items-center justify-center"
                                     >
                                         <XIcon className="size-3" aria-hidden="true" />
                                     </button>
@@ -918,7 +918,7 @@ const Editor = ({
                                 className={cn(
                                     "ml-auto rounded-lg",
                                     isEmpty
-                                        ? "bg-[#f7f2ee] hover:bg-[#f7f2ee] text-[#1b1017]/40"
+                                        ? "bg-cream hover:bg-cream text-ink/40"
                                         : "bg-[#ff5018] hover:bg-[#e6430f] text-white cursor-pointer"
                                 )}
                             >

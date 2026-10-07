@@ -41,8 +41,8 @@ const ToolbarButton = ({
         disabled={disabled}
         title={title}
         className={cn(
-            "p-1.5 rounded-lg text-sm text-[#1b1017]/70 transition-colors hover:bg-[#f3eeea] hover:text-[#1b1017] min-w-8 h-8 flex items-center justify-center",
-            active && "bg-[#ff5018]/10 text-[#c2370d] hover:bg-[#ff5018]/15 hover:text-[#a82d0a]",
+            "p-1.5 rounded-lg text-sm text-ink/70 transition-colors hover:bg-cream-deep hover:text-ink min-w-8 h-8 flex items-center justify-center",
+            active && "bg-[#ff5018]/10 text-orange-ink hover:bg-[#ff5018]/15 hover:text-orange-ink-hover",
             disabled && "opacity-40 cursor-not-allowed"
         )}
     >
@@ -50,7 +50,7 @@ const ToolbarButton = ({
     </button>
 )
 
-const Divider = () => <div className="w-px h-5 bg-[#381d2a]/12 mx-1.5" />
+const Divider = () => <div className="w-px h-5 bg-plum/12 mx-1.5" />
 
 export const DocToolbar = ({ editor }: DocToolbarProps) => {
     const imageInputRef = useRef<HTMLInputElement>(null)
@@ -105,7 +105,7 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
     }
 
     return (
-        <div className="flex items-center gap-0.5 px-3 sm:px-4 py-2 bg-white overflow-x-auto sticky top-0 z-10 [&>*]:shrink-0">
+        <div className="flex items-center gap-0.5 px-3 sm:px-4 py-2 bg-surface overflow-x-auto sticky top-0 z-10 [&>*]:shrink-0">
             {/* Hidden image input */}
             <input
                 ref={imageInputRef}
@@ -274,8 +274,8 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                     <button
                         title="Link"
                         className={cn(
-                            "p-1.5 rounded-lg text-sm text-[#1b1017]/70 transition-colors hover:bg-[#f3eeea] hover:text-[#1b1017] min-w-8 h-8 flex items-center justify-center",
-                            editor.isActive("link") && "bg-[#ff5018]/10 text-[#c2370d]"
+                            "p-1.5 rounded-lg text-sm text-ink/70 transition-colors hover:bg-cream-deep hover:text-ink min-w-8 h-8 flex items-center justify-center",
+                            editor.isActive("link") && "bg-[#ff5018]/10 text-orange-ink"
                         )}
                     >
                         <Link2 className="size-4" />
@@ -288,7 +288,7 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                             value={linkUrl}
                             onChange={(e) => setLinkUrl(e.target.value)}
                             placeholder="Paste a link…"
-                            className="h-9 rounded-lg border border-[#381d2a]/15 px-3 text-sm focus:border-[#ff5018] focus:outline-none"
+                            className="h-9 rounded-lg border border-plum/15 px-3 text-sm focus:border-[#ff5018] focus:outline-none"
                         />
                         <div className="flex gap-2">
                             <button type="submit" className="h-8 flex-1 rounded-lg bg-[#ff5018] text-xs font-semibold text-white hover:bg-[#e6430f]">
@@ -298,7 +298,7 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                                 <button
                                     type="button"
                                     onClick={() => { editor.chain().focus().extendMarkRange("link").unsetLink().run(); setLinkOpen(false) }}
-                                    className="flex h-8 items-center gap-1 rounded-lg border border-[#381d2a]/15 px-3 text-xs hover:bg-[#f3eeea]"
+                                    className="flex h-8 items-center gap-1 rounded-lg border border-plum/15 px-3 text-xs hover:bg-cream-deep"
                                 >
                                     <Unlink className="size-3.5" /> Remove
                                 </button>
@@ -323,22 +323,22 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                 <DropdownMenuTrigger asChild>
                     <button
                         className={cn(
-                            "p-1.5 rounded-lg text-sm text-[#1b1017]/70 transition-colors hover:bg-[#f3eeea] hover:text-[#1b1017] min-w-8 h-8 flex items-center justify-center gap-1",
-                            editor.isActive("table") && "bg-[#ff5018]/10 text-[#c2370d] hover:bg-[#ff5018]/15 hover:text-[#a82d0a]"
+                            "p-1.5 rounded-lg text-sm text-ink/70 transition-colors hover:bg-cream-deep hover:text-ink min-w-8 h-8 flex items-center justify-center gap-1",
+                            editor.isActive("table") && "bg-[#ff5018]/10 text-orange-ink hover:bg-[#ff5018]/15 hover:text-orange-ink-hover"
                         )}
                         title="Table options"
                     >
                         <Table className="size-4" />
                     </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="text-xs w-48 rounded-xl border-[#381d2a]/12">
-                    <DropdownMenuLabel className="text-[11px] font-medium text-[#1b1017]/65">Insert</DropdownMenuLabel>
+                <DropdownMenuContent align="start" className="text-xs w-48 rounded-xl border-plum/12">
+                    <DropdownMenuLabel className="text-[11px] font-medium text-ink/65">Insert</DropdownMenuLabel>
                     <DropdownMenuItem onClick={addTable}>
                         <Plus className="size-3.5 mr-2" /> Insert Table
                     </DropdownMenuItem>
 
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-[11px] font-medium text-[#1b1017]/65">Columns</DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-[11px] font-medium text-ink/65">Columns</DropdownMenuLabel>
                     <DropdownMenuItem
                         onClick={() => editor.chain().focus().addColumnBefore().run()}
                         disabled={!editor.can().addColumnBefore()}
@@ -360,7 +360,7 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                     </DropdownMenuItem>
 
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-[11px] font-medium text-[#1b1017]/65">Rows</DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-[11px] font-medium text-ink/65">Rows</DropdownMenuLabel>
                     <DropdownMenuItem
                         onClick={() => editor.chain().focus().addRowBefore().run()}
                         disabled={!editor.can().addRowBefore()}
@@ -382,7 +382,7 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                     </DropdownMenuItem>
 
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-[11px] font-medium text-[#1b1017]/65">Cells</DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-[11px] font-medium text-ink/65">Cells</DropdownMenuLabel>
                     <DropdownMenuItem
                         onClick={() => editor.chain().focus().mergeCells().run()}
                         disabled={!editor.can().mergeCells()}
@@ -436,13 +436,13 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                     <button
                         title="AI writing help (select text first)"
                         disabled={aiBusy}
-                        className="h-8 flex items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-[#c2370d] bg-[#ff5018]/10 hover:bg-[#ff5018]/15 disabled:opacity-60"
+                        className="h-8 flex items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-orange-ink bg-[#ff5018]/10 hover:bg-[#ff5018]/15 disabled:opacity-60"
                     >
                         {aiBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />} AI
                     </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="text-xs w-48 rounded-xl">
-                    <DropdownMenuLabel className="text-[11px] font-medium text-[#1b1017]/65">On selected text</DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-[11px] font-medium text-ink/65">On selected text</DropdownMenuLabel>
                     {([
                         ["improve", "Improve writing"],
                         ["grammar", "Fix grammar"],
@@ -464,7 +464,7 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                 type="color"
                 onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
                 value={editor.getAttributes("textStyle").color ?? "#000000"}
-                className="size-7 rounded-lg cursor-pointer border border-[#381d2a]/15 bg-transparent p-0.5"
+                className="size-7 rounded-lg cursor-pointer border border-plum/15 bg-transparent p-0.5"
                 title="Text color"
             />
         </div>

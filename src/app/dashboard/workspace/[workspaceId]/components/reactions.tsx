@@ -38,13 +38,13 @@ export const Reactions =({data, onChange}:ReactionsProps)=>{
                 aria-label={`${reaction.value} ${reaction.count}, ${reaction.memberIds.includes(currentMemberId) ? "remove your reaction" : "add your reaction"}`}
                 aria-pressed={reaction.memberIds.includes(currentMemberId)}
                 onClick={()=> onChange(reaction.value)}
-                className={cn("h-6 px-2 rounded-full bg-[#f7f2ee] border border-[#381d2a]/10 text-[#1b1017] flex items-center gap-x-1 transition-colors hover:border-[#381d2a]/25",
-                reaction.memberIds.includes(currentMemberId) && "bg-[#ff5018]/10 border-[#ff5018]/40 text-[#1b1017]"
+                className={cn("h-6 px-2 rounded-full bg-cream border border-plum/10 text-ink flex items-center gap-x-1 transition-colors hover:border-plum/25",
+                reaction.memberIds.includes(currentMemberId) && "bg-[#ff5018]/10 border-[#ff5018]/40 text-ink"
                 )}>
                     {reaction.value}
 
-                    <span className={cn("text-xs font-semibold text-[#1b1017]/60",
-                    reaction.memberIds.includes(currentMemberId) && "text-[#c2370d]"
+                    <span className={cn("text-xs font-semibold text-ink/60",
+                    reaction.memberIds.includes(currentMemberId) && "text-orange-ink"
                     )}>
                         {reaction.count}
                     </span>
@@ -55,7 +55,7 @@ export const Reactions =({data, onChange}:ReactionsProps)=>{
             hint="Add reaction"
             onEmojiSelect={(emoji)=> onChange(emoji.native)}
             >
-                <button type="button" className="h-6 px-2.5 rounded-full bg-[#f7f2ee] border border-[#381d2a]/10 hover:border-[#381d2a]/25 text-[#1b1017]/70 flex items-center gap-x-1">
+                <button type="button" className="h-6 px-2.5 rounded-full bg-cream border border-plum/10 hover:border-plum/25 text-ink/70 flex items-center gap-x-1">
                 <MdOutlineAddReaction className="size-4" aria-hidden="true"/>
                 </button>
 

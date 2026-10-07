@@ -21,7 +21,7 @@ export const Header = ({
 
     const avatarFallBack =memberName.charAt(0).toUpperCase() || "M"
     return(
-        <div className="bg-white border-b h-12.25 flex items-center px-4 overflow-hidden">
+        <div className="bg-surface border-b h-12.25 flex items-center px-4 overflow-hidden">
             <Button
             variant={"ghost"}
             className="text-lg font-semibold px-2 overflow-hidden w-auto max-md:h-10"

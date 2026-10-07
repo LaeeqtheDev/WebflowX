@@ -19,7 +19,7 @@ const ErrorBox = ({ text }: { text: string }) =>
   ) : null;
 
 const BackToSignIn = ({ onClick }: { onClick: () => void }) => (
-  <button type="button" onClick={onClick} className="mb-10 inline-flex cursor-pointer items-center gap-1.5 text-sm text-[#1b1017]/55 transition-colors hover:text-[#1b1017]">
+  <button type="button" onClick={onClick} className="mb-10 inline-flex cursor-pointer items-center gap-1.5 text-sm text-ink/55 transition-colors hover:text-ink">
     <ArrowLeft size={16} /> Back to log in
   </button>
 );
@@ -44,13 +44,18 @@ export const VerifyEmailCard = ({ email, setState }: { email: string; setState: 
     <div className="w-full">
       <BackToSignIn onClick={() => setState("signIn")} />
       <MailCheck className="size-9 text-[#ff5018]" />
-      <h1 className="mt-4 text-[2rem] font-semibold leading-tight tracking-[-0.03em] text-[#1b1017]">Check your email</h1>
-      <p className="mt-2 text-[15px] text-[#1b1017]/65">We sent an 8-digit code to <strong className="text-[#1b1017]">{email}</strong>. It expires in 15 minutes.</p>
+      <h1 className="mt-4 text-[2rem] font-semibold leading-tight tracking-[-0.03em] text-ink">Check your email</h1>
+      <p className="mt-2 text-[15px] text-ink/65">We sent an 8-digit code to <strong className="text-ink">{email}</strong>. It expires in 15 minutes.</p>
       <ErrorBox text={error} />
       <form onSubmit={onSubmit} className="mt-8 space-y-4">
         <AuthField label="Verification code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="12345678" inputMode="numeric" autoComplete="one-time-code" disabled={pending} required minLength={8} maxLength={8} />
         <Button type="submit" className={primary} size="lg" disabled={pending}>Verify and continue</Button>
       </form>
+      <p className="mt-6 text-sm text-ink/55">
+        Nothing yet? Check spam, or{" "}
+        <button type="button" onClick={() => setState("signIn")} className="cursor-pointer font-semibold text-orange-ink underline underline-offset-2">log in with your password</button>{" "}
+        and we&apos;ll send a fresh code.
+      </p>
     </div>
   );
 };
@@ -102,13 +107,13 @@ export const ResetPasswordCard = ({ initialEmail, setState }: { initialEmail: st
   return (
     <div className="w-full">
       <BackToSignIn onClick={() => setState("signIn")} />
-      <h1 className="text-[2rem] font-semibold leading-tight tracking-[-0.03em] text-[#1b1017]">Reset your password</h1>
-      <p className="mt-2 text-[15px] text-[#1b1017]/65">
+      <h1 className="text-[2rem] font-semibold leading-tight tracking-[-0.03em] text-ink">Reset your password</h1>
+      <p className="mt-2 text-[15px] text-ink/65">
         {step === "request" ? "Enter your email and we'll send you a code." : `Enter the code we sent to ${email} and choose a new password.`}
       </p>
       <ErrorBox text={error} />
       {step === "code" && notice && (
-        <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+        <div className="mt-6 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
           If <strong>{email}</strong> has a password account, a code is on its way (check spam too). If you normally log in with Google or GitHub, that account has no password, so go back and use that button.{" "}
           <button type="button" onClick={() => { setStep("request"); setNotice(false); }} className="cursor-pointer font-semibold underline underline-offset-2">Use a different email</button>
         </div>

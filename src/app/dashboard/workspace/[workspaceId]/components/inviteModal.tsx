@@ -112,7 +112,7 @@ export const InviteModal = ({
                     <DialogHeader>
                         <DialogTitle className="font-semibold tracking-tight">
                             Invite people to{" "}
-                            <span className="font-semibold text-[#c2370d]">
+                            <span className="font-semibold text-orange-ink">
                                 {name}
                             </span>
                         </DialogTitle>
@@ -120,11 +120,11 @@ export const InviteModal = ({
                             Share the link, or give people the code to enter themselves.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="flex flex-col gap-y-3 items-center justify-center py-6 my-1 rounded-xl bg-[#f7f2ee] border border-[#381d2a]/10">
-                        <p className={`text-4xl font-semibold tracking-widest uppercase ${invitesDisabled || expired ? "text-[#1b1017]/30 line-through" : "text-[#1b1017]"}`}>
+                    <div className="flex flex-col gap-y-3 items-center justify-center py-6 my-1 rounded-xl bg-cream border border-plum/10">
+                        <p className={`text-4xl font-semibold tracking-widest uppercase ${invitesDisabled || expired ? "text-ink/30 line-through" : "text-ink"}`}>
                             {joinCode}
                         </p>
-                        <p className={`text-xs ${invitesDisabled || expired ? "text-red-600" : "text-[#1b1017]/60"}`}>{statusText}</p>
+                        <p className={`text-xs ${invitesDisabled || expired ? "text-red-600 dark:text-red-400" : "text-ink/60"}`}>{statusText}</p>
                         <div className="flex items-center gap-1">
                             <Button variant={"ghost"} size={"sm"} onClick={handleCopyLink}>
                                 Copy link
@@ -157,7 +157,7 @@ export const InviteModal = ({
                             <button
                                 onClick={handleToggleInvites}
                                 disabled={toggling}
-                                className="text-xs font-medium text-left text-[#1b1017]/70 hover:text-[#a82d0a] transition-colors disabled:opacity-50"
+                                className="text-xs font-medium text-left text-ink/70 hover:text-orange-ink-hover transition-colors disabled:opacity-50"
                             >
                                 {invitesDisabled ? "Turn invites back on" : "Turn off invites (revoke access for new people)"}
                             </button>

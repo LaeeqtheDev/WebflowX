@@ -3,18 +3,8 @@ import { internalAction, internalMutation } from "./_generated/server"
 import { internal } from "./_generated/api"
 import { canAccessChannel } from "./permissions"
 import { consume } from "./rateLimit"
+import { deltaToText as deltaText } from "./validate"
 import { esc, FONT, para, shell, sendResend, siteUrl } from "./emailLayout"
-
-// Quill delta JSON -> plain text (mentions are plain "@Name" text in the delta).
-const deltaText = (body: string): string => {
-    try {
-        const parsed = JSON.parse(body)
-        const ops: { insert?: unknown }[] = Array.isArray(parsed) ? parsed : (parsed?.ops ?? [])
-        return ops.map((o) => (typeof o.insert === "string" ? o.insert : "")).join("").replace(/\s+/g, " ").trim()
-    } catch {
-        return body
-    }
-}
 
 const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s)
 
@@ -34,6 +24,16 @@ export const prepare = internalMutation({
         const workspace = await ctx.db.get(n.workspaceId)
         if (!workspace) return null
 
+        // The thing this email is about may have been deleted during the delay. Use the live text so an
+        // edited message shows its current wording, and send nothing for a deleted one.
+        let liveBody = n.body
+        if (n.messageId) {
+            const m = await ctx.db.get(n.messageId)
+            if (!m) return null
+            liveBody = m.body
+        }
+        if (n.taskId && !(await ctx.db.get(n.taskId))) return null
+
         const sender = await ctx.db.get(n.senderId)
         const senderUser = sender ? await ctx.db.get(sender.userId) : null
         const senderName = senderUser?.name ?? "Someone"
@@ -46,7 +46,7 @@ export const prepare = internalMutation({
 
         const base = `${siteUrl()}/dashboard/workspace/${n.workspaceId}`
         const isMessage = n.type === "mention" || n.type === "dm_received" || n.type === "thread_reply"
-        const snippet = clip(isMessage ? deltaText(n.body ?? "") : (n.body ?? ""), 280)
+        const snippet = clip(isMessage ? deltaText(liveBody ?? "") : (liveBody ?? ""), 280)
         const where = channel ? `#${channel.name}` : ""
 
         let subject: string, heading: string, line: string, link: string, cta: string

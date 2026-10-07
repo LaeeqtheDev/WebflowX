@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 
 // centralized container for all states
 const CenteredContainer = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex flex-col items-center justify-center h-full w-full gap-3 bg-[#fbf9f7]">
+  <div className="flex flex-col items-center justify-center h-full w-full gap-3 bg-cream-soft">
     {children}
   </div>
 );
@@ -61,7 +61,7 @@ const WorkspaceIdPage = () => {
         <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
           <TriangleAlert className="size-6 text-[#ff5018]" />
         </div>
-        <span className="font-semibold tracking-tight text-[#1b1017]">Workspace Not Found</span>
+        <span className="font-semibold tracking-tight text-ink">Workspace Not Found</span>
       </CenteredContainer>
     );
   }
@@ -70,7 +70,7 @@ const WorkspaceIdPage = () => {
     // redirecting to the first channel
     return (
       <CenteredContainer>
-        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#c2370d] flex items-center justify-center">
+        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-orange-ink flex items-center justify-center">
           <Loader className="size-6 animate-spin" />
         </div>
       </CenteredContainer>
@@ -83,7 +83,7 @@ const WorkspaceIdPage = () => {
         <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
           <TriangleAlert className="size-6 text-[#ff5018]" />
         </div>
-        <span className="font-semibold tracking-tight text-[#1b1017]">No channels found</span>
+        <span className="font-semibold tracking-tight text-ink">No channels found</span>
       </CenteredContainer>
     );
   }
@@ -91,17 +91,17 @@ const WorkspaceIdPage = () => {
   if (started.show) {
     const first = channels[0];
     return (
-      <div className="h-full overflow-y-auto bg-[#fbf9f7] px-4 py-8 md:py-14">
+      <div className="h-full overflow-y-auto bg-cream-soft px-4 py-8 md:py-14">
         <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-[#1b1017]">Welcome to {workspace.name}</h1>
-            <p className="mt-1 text-sm text-[#1b1017]/65">Three quick steps to get your workspace humming.</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">Welcome to {workspace.name}</h1>
+            <p className="mt-1 text-sm text-ink/65">Three quick steps to get your workspace humming.</p>
           </div>
           <GetStartedCard />
           {first && (
             <Button
               variant="outline"
-              className="h-11 self-start rounded-xl border-[#381d2a]/15 md:h-10"
+              className="h-11 self-start rounded-xl border-plum/15 md:h-10"
               onClick={() => router.push(`/dashboard/workspace/${workspaceId}/channel/${first._id}`)}
             >
               Open #{cleanChannelName(first.name)}
@@ -115,11 +115,11 @@ const WorkspaceIdPage = () => {
   // No channels yet. Admins get the "create channel" modal; everyone else sees guidance.
   return (
     <CenteredContainer>
-      <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#c2370d] flex items-center justify-center">
+      <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-orange-ink flex items-center justify-center">
         <TriangleAlert className="size-6" />
       </div>
-      <span className="font-semibold tracking-tight text-[#1b1017]">No channels yet</span>
-      <p className="max-w-xs text-center text-sm text-[#1b1017]/65">
+      <span className="font-semibold tracking-tight text-ink">No channels yet</span>
+      <p className="max-w-xs text-center text-sm text-ink/65">
         {isAdmin
           ? "Create your first channel to start the conversation."
           : "Ask a workspace admin to create a channel, or start a direct message."}
@@ -133,7 +133,7 @@ const WorkspaceIdPage = () => {
           Create a channel
         </button>
       ) : (
-        <Link href="/dashboard" className="mt-1 text-sm font-semibold text-[#c2370d] hover:underline">
+        <Link href="/dashboard" className="mt-1 text-sm font-semibold text-orange-ink hover:underline">
           Back to dashboard
         </Link>
       )}

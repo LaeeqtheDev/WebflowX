@@ -10,6 +10,16 @@ body,
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* WebflowX brand surfaces: these flip in dark mode (see :root and .dark below) */
+  --color-cream: var(--wfx-cream);
+  --color-cream-soft: var(--wfx-cream-soft);
+  --color-cream-deep: var(--wfx-cream-deep);
+  --color-cream-deep2: var(--wfx-cream-deep2);
+  --color-surface: var(--wfx-surface);
+  --color-ink: var(--wfx-ink);
+  --color-plum: var(--wfx-plum);
+  --color-orange-ink: var(--wfx-orange-ink);
+  --color-orange-ink-hover: var(--wfx-orange-ink-hover);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -51,6 +61,16 @@ body,
 
 /* WebflowX brand tokens: plum, orange and warm sand */
 :root {
+  --wfx-cream: #f7f2ee;
+  --wfx-cream-soft: #fbf9f7;
+  --wfx-cream-deep: #f3eeea;
+  --wfx-cream-deep2: #efe8e3;
+  --wfx-surface: #ffffff;
+  --wfx-ink: #1b1017;
+  --wfx-plum: #381d2a;
+  --wfx-orange-ink: #c2370d;
+  --wfx-orange-ink-hover: #a82d0a;
+  color-scheme: light;
   --radius: 0.75rem;
   --background: #fbf9f7;
   --foreground: #1b1017;
@@ -85,38 +105,51 @@ body,
   --sidebar-ring: #ff5018;
 }
 
+/* Dark mode: a deep plum-black with warm light text. It only applies inside the signed-in app
+   (the html element gets the "dark" class there; see ThemeSync). */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  color-scheme: dark;
+  --wfx-cream: #1a0f15;
+  --wfx-cream-soft: #20131b;
+  --wfx-cream-deep: #2a1a24;
+  --wfx-cream-deep2: #33212d;
+  --wfx-surface: #241620;
+  --wfx-ink: #f4ece7;
+  --wfx-plum: #f0dce6;
+  --wfx-orange-ink: #ff8a63;
+  --wfx-orange-ink-hover: #ffa584;
+
+  --background: #1a0f15;
+  --foreground: #f4ece7;
+  --card: #241620;
+  --card-foreground: #f4ece7;
+  --popover: #241620;
+  --popover-foreground: #f4ece7;
+  --primary: #ff5018;
+  --primary-foreground: #ffffff;
+  --secondary: #2e1d28;
+  --secondary-foreground: #f4ece7;
+  --muted: #2a1a24;
+  --muted-foreground: #b8a6b0;
+  --accent: #33212d;
+  --accent-foreground: #f4ece7;
+  --destructive: #ff6b6b;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.14);
+  --ring: #ff5018;
+  --chart-1: #ff5018;
+  --chart-2: #4fc3a1;
+  --chart-3: #f0dce6;
+  --chart-4: #ff8a63;
+  --chart-5: #c58ab0;
+  --sidebar: #2a1722;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ff5018;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #3a2330;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #ff5018;
 }
 
 @layer base {
@@ -246,7 +279,7 @@ body,
 
 .messages-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #ff5018  !important;
+  scrollbar-color: #ff5018 transparent;
 }
 
 .ProseMirror { outline: none; color: #1b1017; line-height: 1.7; caret-color: #ff5018; }
@@ -288,6 +321,106 @@ body,
 .ql-renderer span.mention:hover { background: rgba(255, 80, 24, 0.26); text-decoration: underline; }
 .ProseMirror p.is-editor-empty:first-child::before { color: rgba(56, 29, 42, 0.4); content: attr(data-placeholder); float: left; height: 0; pointer-events: none; }
 
+/* ---------- Dark mode overrides for the editors (only the signed-in app is ever dark) ---------- */
+.dark .ql-toolbar {
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  background-color: #20131b !important;
+}
+.dark .ql-toolbar .ql-formats:not(:last-child) { border-right-color: rgba(255, 255, 255, 0.12) !important; }
+.dark .ql-toolbar button { color: #e6d6de !important; }
+.dark .ql-toolbar button .ql-stroke { stroke: #c9b6c0 !important; }
+.dark .ql-toolbar button .ql-fill { fill: #c9b6c0 !important; }
+.dark .ql-toolbar button:hover { background-color: rgba(255, 255, 255, 0.09) !important; }
+.dark .ql-toolbar button:hover .ql-stroke { stroke: #f4ece7 !important; }
+.dark .ql-toolbar button:hover .ql-fill { fill: #f4ece7 !important; }
+.dark .ql-toolbar button.ql-active { background-color: rgba(255, 80, 24, 0.24) !important; }
+.dark .ql-toolbar button.ql-active .ql-stroke { stroke: #ff8a63 !important; }
+.dark .ql-toolbar button.ql-active .ql-fill { fill: #ff8a63 !important; }
+
+.dark .ql-editor { color: #f4ece7 !important; }
+.dark .ql-editor a,
+.dark .ql-snow a { color: #ff8a63 !important; text-decoration-color: rgba(255, 138, 99, 0.5); }
+.dark .ql-editor code,
+.dark .ql-renderer code,
+.dark .ql-snow .ql-editor code {
+  background: #2a1a24;
+  color: #ffb596;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.dark .ql-editor pre.ql-syntax,
+.dark .ql-renderer pre.ql-syntax,
+.dark .ql-snow .ql-editor pre.ql-syntax {
+  background: #120a0f !important;
+  color: #f4ece7 !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.dark .ql-editor blockquote,
+.dark .ql-renderer blockquote { background: rgba(255, 80, 24, 0.09); color: #e6d6de; }
+.dark .ql-editor.ql-blank::before { color: #a8969f !important; }
+.dark .ql-editor span.mention,
+.dark .ql-renderer span.mention,
+.dark .ql-container .ql-editor span.mention { background: rgba(255, 80, 24, 0.22); color: #ff9d7c !important; }
+.dark .ql-renderer span.mention:hover { background: rgba(255, 80, 24, 0.36); }
+.dark .ql-editor td { border-color: rgba(255, 255, 255, 0.2); }
+.dark .ql-editor li[data-list=checked] > .ql-ui,
+.dark .ql-editor li[data-list=unchecked] > .ql-ui { color: #b8a6b0; }
+.dark .ql-editor ::selection,
+.dark .ql-editor::selection,
+.dark .ProseMirror ::selection,
+.dark .ProseMirror::selection { background: rgba(255, 80, 24, 0.38); }
+
+/* Quill dropdown pickers and the link tooltip */
+.dark .ql-snow .ql-picker { color: #e6d6de; }
+.dark .ql-snow .ql-picker-options { background-color: #2a1a24; }
+.dark .ql-toolbar.ql-snow .ql-picker-options { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55); }
+.dark .ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-label,
+.dark .ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-options { border-color: rgba(255, 255, 255, 0.16); }
+.dark .ql-snow .ql-picker.ql-expanded .ql-picker-label { color: #f4ece7; }
+.dark .ql-snow .ql-picker.ql-expanded .ql-picker-label .ql-fill { fill: #f4ece7; }
+.dark .ql-snow .ql-picker.ql-expanded .ql-picker-label .ql-stroke { stroke: #f4ece7; }
+.dark .ql-snow .ql-tooltip {
+  background-color: #2a1a24;
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  color: #f4ece7;
+}
+.dark .ql-snow .ql-tooltip input[type=text] {
+  background: #1a0f15;
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #f4ece7;
+}
+.dark .ql-snow .ql-tooltip a.ql-action::after,
+.dark .ql-snow .ql-tooltip a.ql-remove::before { border-color: rgba(255, 255, 255, 0.2); }
+
+/* Docs editor (ProseMirror) */
+.dark .ProseMirror { color: #f4ece7; }
+.dark .ProseMirror a { color: #ff8a63; text-decoration-color: rgba(255, 138, 99, 0.5); }
+.dark .ProseMirror mark { background: rgba(255, 80, 24, 0.34); }
+.dark .ProseMirror code { background-color: #2a1a24; color: #ffb596; border-color: rgba(255, 255, 255, 0.1); }
+.dark .ProseMirror pre { background: #120a0f; color: #f4ece7; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); }
+.dark .ProseMirror pre code { background: none; border: none; color: inherit; }
+.dark .ProseMirror blockquote { background: rgba(255, 80, 24, 0.09); color: #e6d6de; }
+.dark .ProseMirror hr { border-top-color: rgba(255, 255, 255, 0.16); }
+.dark .ProseMirror table { border-color: rgba(255, 255, 255, 0.16); }
+.dark .ProseMirror td, .dark .ProseMirror th { border-right-color: rgba(255, 255, 255, 0.1); border-bottom-color: rgba(255, 255, 255, 0.1); }
+.dark .ProseMirror th { background-color: #2a1a24; }
+.dark .ProseMirror .selectedCell { background: rgba(255, 80, 24, 0.24); }
+.dark .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div { color: #b8a6b0; }
+.dark .ProseMirror p.is-editor-empty:first-child::before { color: #a8969f; }
+/* Text the author coloured pure black stays readable on the dark page */
+.dark .ProseMirror [style*="color: #000000"],
+.dark .ProseMirror [style*="color:#000000"],
+.dark .ProseMirror [style*="color: rgb(0, 0, 0)"] { color: inherit !important; }
+
+/* emoji-mart picker: match the app's dark surface */
+.dark em-emoji-picker {
+  --rgb-background: 36, 22, 32;
+  --rgb-input: 42, 26, 36;
+  --rgb-color: 244, 236, 231;
+  --rgb-accent: 255, 80, 24;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
 /* Landing page */
 .lp-label {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
@@ -308,3 +441,15 @@ body,
   0%, 49% { opacity: 1; }
   50%, 100% { opacity: 0; }
 }
+
+/* Brand scrollbars: thin orange thumb on a transparent track, everywhere in the app */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 80, 24, 0.6) transparent;
+}
+*:hover {
+  scrollbar-color: #ff5018 transparent;
+}
+
+.dark .ql-snow .ql-picker-item:hover,
+.dark .ql-snow .ql-picker-item.ql-selected { color: #ff8a63; }

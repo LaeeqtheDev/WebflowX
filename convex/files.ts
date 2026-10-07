@@ -203,7 +203,7 @@ export const sweepOrphans = internalMutation({
     args: {},
     handler: async (ctx) => {
         const cutoff = Date.now() - 60 * 60 * 1000
-        const recent = await ctx.db.system.query("_storage").order("desc").take(300)
+        const recent = await ctx.db.system.query("_storage").order("desc").filter((q) => q.lt(q.field("_creationTime"), cutoff)).take(300)
         let removed = 0
         for (const f of recent) {
             if (f._creationTime > cutoff || f._creationTime < SWEEP_AFTER) continue
