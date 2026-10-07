@@ -285,7 +285,7 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
                             </li>
                         ))}
                     </ul>
-                    <Button className={`${primary} mt-8`} size="lg" onClick={() => { try { window.sessionStorage.removeItem("wfx-setup") } catch { /* ignore */ } router.replace(`/dashboard/workspace/${setupId}`) }}>
+                    <Button className={`${primary} mt-8`} size="lg" onClick={() => { try { window.sessionStorage.removeItem("wfx-setup"); window.localStorage.setItem(`wfx:get-started-dismissed:${setupId}`, "1") } catch { /* ignore */ } router.replace(`/dashboard/workspace/${setupId}`) }}>
                         <Sparkles className="mr-2 size-4" /> Open my workspace
                     </Button>
                 </>

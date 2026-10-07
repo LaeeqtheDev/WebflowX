@@ -66,30 +66,8 @@ const WorkspaceIdPage = () => {
     );
   }
 
-  if (channelId) {
-    // redirecting to the first channel
-    return (
-      <CenteredContainer>
-        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-orange-ink flex items-center justify-center">
-          <Loader className="size-6 animate-spin" />
-        </div>
-      </CenteredContainer>
-    );
-  }
-
-  if (!channels ) {
-    return (
-      <CenteredContainer>
-        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
-          <TriangleAlert className="size-6 text-[#ff5018]" />
-        </div>
-        <span className="font-semibold tracking-tight text-ink">No channels found</span>
-      </CenteredContainer>
-    );
-  }
-
   if (started.show) {
-    const first = channels[0];
+    const first = channels?.[0];
     return (
       <div className="h-full overflow-y-auto bg-cream-soft px-4 py-8 md:py-14">
         <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
@@ -109,6 +87,28 @@ const WorkspaceIdPage = () => {
           )}
         </div>
       </div>
+    );
+  }
+
+  if (channelId) {
+    // redirecting to the first channel
+    return (
+      <CenteredContainer>
+        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-orange-ink flex items-center justify-center">
+          <Loader className="size-6 animate-spin" />
+        </div>
+      </CenteredContainer>
+    );
+  }
+
+  if (!channels ) {
+    return (
+      <CenteredContainer>
+        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
+          <TriangleAlert className="size-6 text-[#ff5018]" />
+        </div>
+        <span className="font-semibold tracking-tight text-ink">No channels found</span>
+      </CenteredContainer>
     );
   }
 
