@@ -78,17 +78,33 @@ export const MessageList = ({
     // One stable IntersectionObserver instead of a new one on every render.
     const searchParams = useSearchParams();
     const targetMessageId = searchParams.get("message");
-    const handledTarget = useRef<string | null>(null);
+    const targetReplyId = searchParams.get("reply");
+    const listRef = useRef<HTMLDivElement>(null);
+    const handledTargets = useRef<Set<string>>(new Set());
+    const loadAttempts = useRef(0);
     useEffect(() => {
-        if (!targetMessageId || handledTarget.current === targetMessageId) return;
-        const el = document.getElementById(`msg-${targetMessageId}`);
-        if (!el) return;
-        handledTarget.current = targetMessageId;
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.classList.add("bg-[#ff5018]/15", "transition-colors", "duration-700");
-        const t = setTimeout(() => el.classList.remove("bg-[#ff5018]/15"), 2500);
-        return () => clearTimeout(t);
-    }, [targetMessageId, data]);
+        const timers: ReturnType<typeof setTimeout>[] = [];
+        for (const id of [targetMessageId, targetReplyId]) {
+            if (!id || handledTargets.current.has(id)) continue;
+            const el = listRef.current?.querySelector<HTMLElement>(`#msg-${id}`);
+            if (!el) {
+                // Not loaded yet: page further back (bounded) until it shows up
+                if (canLoadMore && loadAttempts.current < 20) {
+                    loadAttempts.current += 1;
+                    loadMore();
+                }
+                continue;
+            }
+            handledTargets.current.add(id);
+            // wait a tick so layout (images, grouping) settles before scrolling
+            timers.push(setTimeout(() => {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                el.classList.add("bg-[#ff5018]/15", "transition-colors", "duration-700");
+                timers.push(setTimeout(() => el.classList.remove("bg-[#ff5018]/15"), 3000));
+            }, 150));
+        }
+        return () => { /* timers intentionally left to finish the highlight */ };
+    }, [targetMessageId, targetReplyId, data, canLoadMore, loadMore]);
 
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const loadMoreFn = useRef(loadMore);
@@ -109,7 +125,7 @@ export const MessageList = ({
     }, []);
 
     return (
-        <div className="flex-1 flex flex-col-reverse pb-4 overflow-y-auto messages-scrollbar">
+        <div ref={listRef} className="flex-1 flex flex-col-reverse pb-4 overflow-y-auto messages-scrollbar">
             {/* Add this anchor div at the very top (which is visual bottom due to flex-col-reverse) */}
             <div ref={bottomRef} />
 

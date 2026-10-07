@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { useConvex } from "convex/react"
+import { api } from "../../../../../../convex/_generated/api"
 import {
     Bell, MessageSquare, Smile, CheckSquare,
     FileText, RefreshCw, Loader, BellOff,
@@ -66,6 +68,7 @@ const TYPE_CONFIG = {
 export default function ActivityPage() {
     const workspaceId = useWorkspaceId()
     const router = useRouter()
+    const convex = useConvex()
 
     const { data: notifications, isLoading } = useGetNotifications({ workspaceId })
     const { count: unreadCount } = useGetUnreadCount({ workspaceId })
@@ -93,20 +96,44 @@ export default function ActivityPage() {
         }
 
         const base = `/dashboard/workspace/${workspaceId}`
-        const msg = notification.messageId ? `?message=${notification.messageId}` : ""
+        const where = notification.channelId
+            ? `${base}/channel/${notification.channelId}`
+            : `${base}/member/${notification.senderId}`
+
         switch (notification.type) {
             case "thread_reply":
-            case "reaction":
-                if (notification.channelId) {
-                    router.push(`${base}/channel/${notification.channelId}${msg}`)
-                } else if (notification.senderId) {
-                    router.push(`${base}/member/${notification.senderId}${msg}`)
-                } else {
-                    toast.info("This conversation is no longer available")
+            case "reaction": {
+                // Look the message up so we know whether it lives inside a thread
+                let target: { _id: string; parentMessagesId?: string } | null = null
+                if (notification.messageId) {
+                    try {
+                        target = await convex.query(api.messages.getById, { id: notification.messageId })
+                    } catch {
+                        target = null
+                    }
                 }
+                if (!target) {
+                    toast.info("That message no longer exists")
+                    router.push(where)
+                    break
+                }
+                const params = new URLSearchParams()
+                if (target.parentMessagesId) {
+                    // reply inside a thread: open the thread panel, scroll to the parent, highlight the reply
+                    params.set("parentMessageId", target.parentMessagesId)
+                    params.set("message", target.parentMessagesId)
+                    params.set("reply", target._id)
+                } else if (notification.type === "thread_reply") {
+                    params.set("parentMessageId", target._id)
+                    params.set("message", target._id)
+                } else {
+                    params.set("message", target._id)
+                }
+                router.push(`${where}?${params.toString()}`)
                 break
+            }
             case "dm_received":
-                router.push(`${base}/member/${notification.senderId}${msg}`)
+                router.push(`${base}/member/${notification.senderId}${notification.messageId ? `?message=${notification.messageId}` : ""}`)
                 break
             case "task_assigned":
             case "task_comment":
