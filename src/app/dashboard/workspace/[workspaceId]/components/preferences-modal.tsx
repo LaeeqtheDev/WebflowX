@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { useRouter } from "next/navigation"
-import { Camera, Loader, TrashIcon, Trash2, Crown, Shield, ShieldCheck, Download, Plus, Pencil } from "lucide-react"
+import { Camera, Loader, TrashIcon, Trash2, Crown, Shield, ShieldCheck, Download, Plus, Pencil, Settings2, Users, KeyRound, Plug, ScrollText } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "../../../../../../convex/_generated/api"
 import { Button } from "@/components/ui/button"
@@ -161,13 +161,14 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
     })
   }
 
-  const tabs: { id: Tab; label: string; show: boolean }[] = [
-    { id: "general", label: "General", show: true },
-    { id: "members", label: `Members${members ? ` (${members.length})` : ""}`, show: true },
-    { id: "roles", label: "Roles & permissions", show: perms.isAdmin },
-    { id: "integrations", label: "Integrations", show: perms.isAdmin },
-    { id: "audit", label: "Audit log", show: perms.isAdmin },
+  const tabs: { id: Tab; label: string; hint: string; icon: typeof Settings2; show: boolean }[] = [
+    { id: "general", label: "General", hint: "Name, photo, security and data", icon: Settings2, show: true },
+    { id: "members", label: "Members", hint: `${members ? members.length : "…"} ${members?.length === 1 ? "person" : "people"} in this workspace`, icon: Users, show: true },
+    { id: "roles", label: "Roles & permissions", hint: "Choose what each role is allowed to do", icon: KeyRound, show: perms.isAdmin },
+    { id: "integrations", label: "Integrations", hint: "API keys, webhooks and GitHub", icon: Plug, show: perms.isAdmin },
+    { id: "audit", label: "Audit log", hint: "The latest 100 admin actions", icon: ScrollText, show: perms.isAdmin },
   ]
+  const current = tabs.find((t) => t.id === tab) ?? tabs[0]
 
   const shownMembers = (members ?? []).filter((m) => (m.user.name ?? "").toLowerCase().includes(filter.toLowerCase()))
   const order = (m: { isOwner: boolean; role: string }) => (m.isOwner ? 0 : m.role === "admin" ? 1 : m.role === "moderator" ? 2 : m.role === "guest" ? 4 : 3)
@@ -176,25 +177,44 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
     <>
       <ConfirmDialog />
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bg-cream p-0 overflow-hidden rounded-2xl max-w-2xl">
-          <DialogHeader className="px-6 py-5 border-b bg-surface">
-            <DialogTitle className="font-semibold tracking-tight">Workspace settings</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="flex h-[min(88vh,740px)] flex-col gap-0 overflow-hidden rounded-2xl bg-cream p-0 sm:max-w-4xl md:flex-row">
+          <DialogTitle className="sr-only">Workspace settings</DialogTitle>
 
-          <div className="flex gap-1 px-4 pt-3 border-b bg-surface overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {tabs.filter((t) => t.show).map((t) => (
-              <button key={t.id} onClick={() => setTab(t.id)}
-                className={cn("px-3 py-2 text-sm font-semibold whitespace-nowrap border-b-2 -mb-px transition",
-                  tab === t.id ? "border-[#ff5018] text-ink" : "border-transparent text-ink/65 hover:text-ink")}>
-                {t.label}
-              </button>
-            ))}
-          </div>
+          <nav aria-label="Settings sections" className="flex shrink-0 gap-1 overflow-x-auto border-b border-plum/10 bg-surface p-2 pr-12 [scrollbar-width:none] md:w-60 md:flex-col md:overflow-visible md:border-b-0 md:border-r md:p-4 [&::-webkit-scrollbar]:hidden">
+            <div className="hidden items-center gap-3 px-2 pb-4 pt-1 md:flex">
+              <Avatar className="size-10 rounded-xl">
+                <AvatarImage className="rounded-xl" src={workspace?.imageUrl ?? undefined} />
+                <AvatarFallback className="rounded-xl bg-[#381d2a] text-base font-semibold text-white">{(workspace?.name ?? name).charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-ink">{workspace?.name ?? name}</p>
+                <p className="text-xs text-ink/55">Settings</p>
+              </div>
+            </div>
+            {tabs.filter((t) => t.show).map((t) => {
+              const Icon = t.icon
+              const active = tab === t.id
+              return (
+                <button key={t.id} onClick={() => setTab(t.id)} aria-current={active ? "page" : undefined}
+                  className={cn("flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-xl px-3 py-2.5 text-left text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#ff5018]",
+                    active ? "bg-[#381d2a] text-white" : "text-ink/70 hover:bg-cream hover:text-ink")}>
+                  <Icon className={cn("size-4 shrink-0", active ? "text-[#ff5018]" : "")} />
+                  {t.label}
+                </button>
+              )
+            })}
+          </nav>
 
-          <div className="px-6 py-5 max-h-[60vh] overflow-y-auto">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <header className="shrink-0 border-b border-plum/10 bg-surface/70 px-6 py-4 md:px-8 md:py-5">
+            <h2 className="text-lg font-semibold tracking-tight text-ink">{current.label}</h2>
+            <p className="mt-0.5 text-sm text-ink/60">{current.hint}</p>
+          </header>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 md:px-8">
             {tab === "general" && (
               <div className="flex flex-col gap-5">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-plum/12 bg-surface p-5">
                   <Avatar className="size-20 rounded-2xl">
                     <AvatarImage className="rounded-2xl" src={workspace?.imageUrl ?? undefined} />
                     <AvatarFallback className="rounded-2xl bg-[#381d2a] dark:bg-[#4a2838] text-white text-3xl font-semibold">
@@ -218,7 +238,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                   ) : <p className="text-sm text-ink/65">You don&apos;t have permission to edit the workspace.</p>}
                 </div>
 
-                <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); save({ id: workspaceId, name, description }, "Workspace updated") }}>
+                <form className="flex flex-col gap-4 rounded-2xl border border-plum/12 bg-surface p-5" onSubmit={(e) => { e.preventDefault(); save({ id: workspaceId, name, description }, "Workspace updated") }}>
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="ws-name">Workspace name</Label>
                     <Input id="ws-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required minLength={3} disabled={!canEdit || saving} />
@@ -235,28 +255,28 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                 </form>
 
                 {perms.isAdmin && (
-                  <label className="flex items-start gap-3 rounded-xl border border-plum/12 bg-surface px-5 py-4 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="mt-1 size-4 accent-[#ff5018]"
-                      checked={!!workspace?.require2fa}
-                      onChange={(e) =>
-                        setRequire2fa({ workspaceId, require: e.target.checked })
-                          .then(() => toast.success(e.target.checked ? "Everyone must now use two-step verification" : "Two-step verification is optional again"))
+                  <div className="flex items-center justify-between gap-4 rounded-2xl border border-plum/12 bg-surface p-5">
+                    <div>
+                      <p className="text-sm font-semibold text-ink">Require two-step verification</p>
+                      <p className="mt-0.5 text-xs leading-relaxed text-ink/65">Everyone must set up an authenticator app before they can open this workspace. Growth plan and up.</p>
+                    </div>
+                    <button type="button" role="switch" aria-checked={!!workspace?.require2fa} aria-label="Require two-step verification"
+                      onClick={() => {
+                        const next = !workspace?.require2fa
+                        setRequire2fa({ workspaceId, require: next })
+                          .then(() => toast.success(next ? "Everyone must now use two-step verification" : "Two-step verification is optional again"))
                           .catch((err) => toast.error(errMsg(err, "Couldn't change that setting")))
-                      }
-                    />
-                    <span>
-                      <span className="block text-sm font-semibold text-ink">Require two-step verification</span>
-                      <span className="block text-xs text-ink/65">Everyone must set up an authenticator app before they can open this workspace. Business plan and up.</span>
-                    </span>
-                  </label>
+                      }}
+                      className={cn("relative h-6 w-11 shrink-0 rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]", workspace?.require2fa ? "bg-[#ff5018]" : "bg-ink/20")}>
+                      <span className={cn("absolute left-0.5 top-0.5 size-5 rounded-full bg-white shadow transition-transform", workspace?.require2fa && "translate-x-5")} />
+                    </button>
+                  </div>
                 )}
 
                 {perms.isAdmin && (
                   <button disabled={exporting}
                     onClick={() => exportWorkspace(workspaceId, workspace?.name ?? name).then(() => toast.success("Export downloaded")).catch((e) => toast.error(errMsg(e, "Export failed. Please try again.")))}
-                    className="flex items-center gap-x-2 px-5 py-4 bg-surface rounded-xl border border-plum/12 hover:bg-cream-soft text-ink disabled:opacity-60">
+                    className="flex items-center gap-x-2 rounded-2xl border border-plum/12 bg-surface p-5 text-ink hover:bg-cream-soft disabled:opacity-60">
                     {exporting ? <Loader className="size-4 animate-spin" /> : <Download className="size-4" />}
                     <span className="text-sm font-semibold">{exporting ? progress || "Exporting…" : "Export workspace data (JSON)"}</span>
                   </button>
@@ -264,7 +284,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
 
                 {perms.isOwner && (
                   <button disabled={isRemoving} onClick={handleRemove}
-                    className="flex items-center gap-x-2 px-5 py-4 bg-surface rounded-xl border border-plum/12 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-rose-600 dark:text-rose-400">
+                    className="flex items-center gap-x-2 rounded-2xl border border-rose-500/30 bg-surface p-5 text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10">
                     <TrashIcon className="size-4" />
                     <p className="text-sm font-semibold">Delete workspace</p>
                   </button>
@@ -406,6 +426,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                 ))}
               </div>
             )}
+          </div>
           </div>
         </DialogContent>
       </Dialog>
