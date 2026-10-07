@@ -68,7 +68,7 @@ const JoinPage = () => {
     const [joinError, setJoinError] = useState<string | null>(null)
     const [typedCode, setTypedCode] = useState<string | null>(null)
 
-    const tryJoin = useCallback((code: string) => {
+    const tryJoin = useCallback((code?: string) => {
         mutate({ joinCode: code, workspaceId }, {
             onSuccess: (id) => {
                 try { window.sessionStorage.removeItem(`wfx-invite-${workspaceId}`) } catch { /* ignore */ }
@@ -92,11 +92,17 @@ const JoinPage = () => {
 
     // Auto join if the invite link carries the code. Runs once; a failure is shown instead of retried.
     useEffect(() => {
-        if (codeFromUrl && isAuthenticated && !isLoading && !isMember && !hasAutoJoined.current) {
+        if ((codeFromUrl || data?.openLink) && isAuthenticated && !isLoading && !isMember && !hasAutoJoined.current) {
             hasAutoJoined.current = true
-            tryJoin(codeFromUrl)
+            tryJoin(codeFromUrl ?? undefined)
         }
-    }, [codeFromUrl, isAuthenticated, isLoading, isMember, tryJoin])
+    }, [codeFromUrl, data?.openLink, isAuthenticated, isLoading, isMember, tryJoin])
+
+    // "Open link" workspaces need no code: send signed-out visitors straight to sign-up and come back here.
+    const openForVisitors = !isLoading && !isAuthenticated && !!data?.openLink && data.invitesOpen !== false
+    useEffect(() => {
+        if (openForVisitors) router.replace(`/auth?mode=signup&next=${encodeURIComponent(`/join/${workspaceId}`)}`)
+    }, [openForVisitors, router, workspaceId])
 
     const handleComplete = (value: string) => {
         setJoinError(null)
@@ -108,7 +114,7 @@ const JoinPage = () => {
     const panelBody = "Messaging, tasks, documents, meetings and AI summaries in one place."
 
     // Signed in, or deciding: working out who you are, or adding you to the workspace.
-    if (isLoading || isPending || (isAuthenticated && codeFromUrl && !joinError)) {
+    if (isLoading || isPending || (isAuthenticated && (codeFromUrl || data?.openLink) && !joinError) || openForVisitors) {
         return (
             <AuthShell title={panelTitle} body={panelBody}>
                 <Loader className="size-7 animate-spin text-[#ff5018]" />
@@ -140,10 +146,15 @@ const JoinPage = () => {
                                 ? "Invites are closed or the code has expired. Ask an admin for a new invite."
                                 : inviteCode
                                     ? "Create a free account, or log in, and you'll be added automatically."
-                                    : "Enter the invite code you were given, then create your account."
+                                    : "This link is missing its invite code. Enter the 6-character code from your invite, then create your account."
                     }
                 />
-                {data && !closed && !inviteCode && <div className="mt-8"><CodeInput onComplete={(v) => setTypedCode(v)} /></div>}
+                {data && !closed && !inviteCode && (
+                    <div className="mt-8">
+                        <CodeInput onComplete={(v) => setTypedCode(v)} />
+                        <p className="mt-5 text-sm text-ink/55">No code? Ask whoever invited you to copy the link again from <strong className="text-ink/75">Invite people</strong>. The full link ends in <code className="rounded bg-cream-deep px-1">?code=XXXXXX</code> and signs you up without typing anything.</p>
+                    </div>
+                )}
                 {data && !closed && !!inviteCode && (
                     <div className="mt-8 space-y-3">
                         <Button asChild size="lg" className={primary}>

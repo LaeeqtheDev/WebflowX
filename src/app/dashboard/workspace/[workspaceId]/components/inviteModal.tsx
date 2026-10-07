@@ -26,6 +26,7 @@ interface InviteModalProps {
     joinCode: string;
     joinCodeExpiresAt?: number;
     invitesDisabled?: boolean;
+    openInviteLink?: boolean;
     isAdmin?: boolean;
 }
 
@@ -43,11 +44,13 @@ export const InviteModal = ({
     joinCode,
     joinCodeExpiresAt,
     invitesDisabled,
+    openInviteLink,
     isAdmin = true,
 }: InviteModalProps) => {
     const workspaceId = useWorkspaceId();
     const { mutate, isPending } = useNewJoinCodde()
     const setInvitesDisabled = useMutation(api.workspaces.setInvitesDisabled)
+    const setOpenInviteLink = useMutation(api.workspaces.setOpenInviteLink)
     const [expiry, setExpiry] = useState("never")
     const [toggling, setToggling] = useState(false)
     const [ConfirmDialog, confirm] = useConfirm(
@@ -56,11 +59,11 @@ export const InviteModal = ({
     )
 
     const expired = !!joinCodeExpiresAt && joinCodeExpiresAt < Date.now()
-    const inviteLink = `${typeof window !== "undefined" ? window.location.origin : ""}/join/${workspaceId}?code=${joinCode}`
+    const inviteLink = `${typeof window !== "undefined" ? window.location.origin : ""}/join/${workspaceId}${openInviteLink ? "" : `?code=${joinCode}`}`
 
     const handleCopyLink = () => {
         navigator.clipboard.writeText(inviteLink)
-            .then(() => toast.success("Invite link copied. It already includes the code."))
+            .then(() => toast.success("Invite link copied. Anyone who opens it can sign up and join."))
             .catch(() => toast.error("Couldn't copy. Select the link and copy it manually."))
     }
 
@@ -89,6 +92,18 @@ export const InviteModal = ({
         try {
             await setInvitesDisabled({ workspaceId, disabled: !invitesDisabled })
             toast.success(invitesDisabled ? "Invites turned on" : "Invites turned off")
+        } catch (e) {
+            toast.error(errorMessage(e) || "Couldn't change invite settings")
+        } finally {
+            setToggling(false)
+        }
+    }
+
+    const handleToggleOpen = async () => {
+        setToggling(true)
+        try {
+            await setOpenInviteLink({ workspaceId, open: !openInviteLink })
+            toast.success(openInviteLink ? "The link now needs the code" : "Anyone with the link can join")
         } catch (e) {
             toast.error(errorMessage(e) || "Couldn't change invite settings")
         } finally {
@@ -160,6 +175,15 @@ export const InviteModal = ({
                                 className="text-xs font-medium text-left text-ink/70 hover:text-orange-ink-hover transition-colors disabled:opacity-50"
                             >
                                 {invitesDisabled ? "Turn invites back on" : "Turn off invites (revoke access for new people)"}
+                            </button>
+                            <button
+                                onClick={handleToggleOpen}
+                                disabled={toggling}
+                                className="text-xs font-medium text-left text-ink/70 hover:text-orange-ink-hover transition-colors disabled:opacity-50"
+                            >
+                                {openInviteLink
+                                    ? "Open link is ON: anyone with the link can join. Click to require the code again"
+                                    : "Let anyone with the link join without typing the code"}
                             </button>
                         </div>
                     )}

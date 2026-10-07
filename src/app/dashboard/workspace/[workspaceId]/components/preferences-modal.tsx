@@ -52,6 +52,8 @@ const ACTION_LABEL: Record<string, string> = {
   "invite.reset": "Reset the join code",
   "invite.enable": "Turned invites on",
   "invite.disable": "Paused invites",
+  "invite.open_link": "Turned on open invite link",
+  "invite.close_link": "Turned off open invite link",
   "member.role": "Changed a role",
   "member.remove": "Removed a member",
   "member.leave": "Member left",

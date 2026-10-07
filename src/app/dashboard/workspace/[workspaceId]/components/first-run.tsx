@@ -33,6 +33,7 @@ const useInviteDialog = () => {
             joinCode={workspace.joinCode}
             joinCodeExpiresAt={workspace.joinCodeExpiresAt}
             invitesDisabled={workspace.invitesDisabled}
+   openInviteLink={workspace.openInviteLink}
             isAdmin={perms.can("invite")}
         />
     ) : null

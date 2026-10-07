@@ -32,6 +32,7 @@ export const WorkspaceHeader = ({ workspace, isAdmin, canInvite, canEdit }: Work
    name={workspace.name} joinCode={workspace.joinCode}
    joinCodeExpiresAt={workspace.joinCodeExpiresAt}
    invitesDisabled={workspace.invitesDisabled}
+   openInviteLink={workspace.openInviteLink}
    isAdmin={canInvite}
    />
    <PreferencesModal open={preferencesOpen} setOpen={setPreferencesOpen}  initialValue={workspace.name}/>
