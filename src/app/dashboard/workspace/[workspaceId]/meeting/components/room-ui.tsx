@@ -12,14 +12,14 @@ import {
     useIsMuted,
     useChat,
     VideoTrack,
-    MediaDeviceMenu,
+    useMediaDeviceSelect,
     RoomAudioRenderer,
     isTrackReference,
     TrackReferenceOrPlaceholder,
 } from "@livekit/components-react"
 import {
     Mic, MicOff, Video, VideoOff, MonitorUp, MonitorOff, MessageSquare, Users, PhoneOff,
-    ChevronUp, MoreVertical, Pin, PinOff, Crown, Send, X, UserMinus, VolumeX, AlertCircle, Loader2, ChevronDown,
+    ChevronUp, Check, MoreVertical, Pin, PinOff, Crown, Send, X, UserMinus, VolumeX, AlertCircle, Loader2, ChevronDown,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useQuery } from "convex/react"
@@ -427,68 +427,81 @@ function SidePanel({
 // ---------------------------------------------------------------------------------------------
 
 function CtrlButton({
-    active = true, danger, onClick, label, children, disabled, badge, caption, className,
+    active = true, danger, onClick, label, children, disabled, badge, className,
 }: {
     active?: boolean; danger?: boolean; onClick?: () => void; label: string
-    children: React.ReactNode; disabled?: boolean; badge?: number; caption?: string; className?: string
+    children: React.ReactNode; disabled?: boolean; badge?: number; className?: string
 }) {
     return (
-        <div className="flex flex-col items-center gap-1">
-            <button
-                onClick={onClick}
-                disabled={disabled}
-                title={label}
-                aria-label={label}
-                className={cn(
-                    "relative flex size-12 items-center justify-center rounded-full text-white outline-none transition-all focus-visible:ring-2 focus-visible:ring-[#ff5018] active:scale-95 disabled:opacity-50",
-                    danger ? "bg-red-600 hover:bg-red-500"
-                        : active ? "bg-white/10 hover:bg-white/20"
-                            : "bg-red-500 hover:bg-red-400",
-                    className
-                )}
-            >
-                {children}
-                {!!badge && (
-                    <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-[#ff5018] px-1 text-[10px] font-bold">
-                        {badge > 9 ? "9+" : badge}
-                    </span>
-                )}
-            </button>
-            {caption && <span className="hidden text-[11px] font-medium text-white/60 sm:block">{caption}</span>}
-        </div>
+        <button
+            onClick={onClick}
+            disabled={disabled}
+            title={label}
+            aria-label={label}
+            className={cn(
+                "relative flex size-11 shrink-0 items-center justify-center rounded-full text-white outline-none transition-all focus-visible:ring-2 focus-visible:ring-[#ff5018] active:scale-95 disabled:opacity-50 sm:size-12",
+                danger ? "bg-red-600 hover:bg-red-500"
+                    : active ? "bg-white/10 hover:bg-white/20"
+                        : "bg-red-500 hover:bg-red-400",
+                className
+            )}
+        >
+            {children}
+            {!!badge && (
+                <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-[#ff5018] px-1 text-[10px] font-bold">
+                    {badge > 9 ? "9+" : badge}
+                </span>
+            )}
+        </button>
+    )
+}
+
+// Device picker: opens above the bar in its own layer, so nothing can clip it
+function DevicePicker({ kind }: { kind: "audioinput" | "videoinput" }) {
+    const { devices, activeDeviceId, setActiveMediaDevice } = useMediaDeviceSelect({ kind, requestPermissions: false })
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <button
+                    aria-label={kind === "audioinput" ? "Choose microphone" : "Choose camera"}
+                    className="flex h-9 w-7 items-center justify-center rounded-full text-white/80 outline-none hover:bg-white/15 hover:text-white focus-visible:ring-2 focus-visible:ring-[#ff5018]"
+                >
+                    <ChevronUp className="size-4" />
+                </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="center" sideOffset={12} className="max-h-72 w-72 overflow-y-auto rounded-xl">
+                <p className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{kind === "audioinput" ? "Microphone" : "Camera"}</p>
+                {devices.length === 0 && <p className="px-2 py-2 text-sm text-muted-foreground">No devices found</p>}
+                {devices.map((d) => (
+                    <DropdownMenuItem key={d.deviceId} className="cursor-pointer gap-2" onClick={() => { void setActiveMediaDevice(d.deviceId) }}>
+                        <Check className={cn("size-4 shrink-0", d.deviceId === activeDeviceId ? "opacity-100" : "opacity-0")} />
+                        <span className="truncate">{d.label || "Default"}</span>
+                    </DropdownMenuItem>
+                ))}
+            </DropdownMenuContent>
+        </DropdownMenu>
     )
 }
 
 // the button and its device picker share one rounded pill
 function SplitCtrl({
-    active, onClick, label, caption, disabled, kind, children,
+    active, onClick, label, disabled, kind, children,
 }: {
-    active: boolean; onClick: () => void; label: string; caption: string; disabled?: boolean
+    active: boolean; onClick: () => void; label: string; disabled?: boolean
     kind: "audioinput" | "videoinput"; children: React.ReactNode
 }) {
     return (
-        <div className="flex flex-col items-center gap-1">
-            <div className={cn("flex items-center rounded-full transition-colors", active ? "bg-white/10" : "bg-red-500")}>
-                <button
-                    onClick={onClick}
-                    disabled={disabled}
-                    title={label}
-                    aria-label={label}
-                    className="flex size-12 items-center justify-center rounded-full text-white outline-none transition-all hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-[#ff5018] active:scale-95 disabled:opacity-50"
-                >
-                    {children}
-                </button>
-                <div className="relative hidden pr-1 sm:block">
-                    <MediaDeviceMenu
-                        kind={kind}
-                        aria-label={kind === "audioinput" ? "Choose microphone" : "Choose camera"}
-                        className="!flex !h-9 !w-7 !items-center !justify-center !rounded-full !border-0 !bg-transparent !p-0 !text-white hover:!bg-white/20"
-                    >
-                        <ChevronUp className="size-4" />
-                    </MediaDeviceMenu>
-                </div>
-            </div>
-            <span className="hidden text-[11px] font-medium text-white/60 sm:block">{caption}</span>
+        <div className={cn("flex shrink-0 items-center rounded-full transition-colors", active ? "bg-white/10" : "bg-red-500")}>
+            <button
+                onClick={onClick}
+                disabled={disabled}
+                title={label}
+                aria-label={label}
+                className="flex size-11 items-center justify-center rounded-full text-white outline-none transition-all hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-[#ff5018] active:scale-95 disabled:opacity-50 sm:size-12"
+            >
+                {children}
+            </button>
+            <div className="hidden pr-1 sm:block"><DevicePicker kind={kind} /></div>
         </div>
     )
 }
@@ -507,56 +520,53 @@ function ControlBar({
     const cam = useTrackToggle({ source: Track.Source.Camera })
     const screen = useTrackToggle({ source: Track.Source.ScreenShare })
 
+    const on = "!bg-[#ff5018] hover:!bg-[#e6430f]"
+    const divider = <div className="mx-0.5 hidden h-8 w-px bg-white/15 sm:block" />
+
     return (
-        <div className="flex justify-center px-3 pb-4 pt-2">
-            <div className="flex max-w-full items-start justify-center gap-2 overflow-x-auto rounded-3xl border border-white/10 bg-[#1e1019]/95 px-3 py-2.5 shadow-2xl backdrop-blur sm:gap-3 sm:px-4">
-                <SplitCtrl label={mic.enabled ? "Mute" : "Unmute"} caption={mic.enabled ? "Mute" : "Unmute"} active={mic.enabled} onClick={() => mic.toggle()} disabled={mic.pending} kind="audioinput">
+        <div className="flex shrink-0 justify-center px-3 pb-3 pt-1">
+            <div className="flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-white/10 bg-[#1e1019]/95 px-3 py-2 shadow-2xl backdrop-blur sm:gap-3 sm:px-4">
+                <SplitCtrl label={mic.enabled ? "Mute" : "Unmute"} active={mic.enabled} onClick={() => mic.toggle()} disabled={mic.pending} kind="audioinput">
                     {mic.enabled ? <Mic className="size-5" /> : <MicOff className="size-5" />}
                 </SplitCtrl>
-                <SplitCtrl label={cam.enabled ? "Turn off camera" : "Turn on camera"} caption={cam.enabled ? "Stop video" : "Start video"} active={cam.enabled} onClick={() => cam.toggle()} disabled={cam.pending} kind="videoinput">
+                <SplitCtrl label={cam.enabled ? "Turn off camera" : "Turn on camera"} active={cam.enabled} onClick={() => cam.toggle()} disabled={cam.pending} kind="videoinput">
                     {cam.enabled ? <Video className="size-5" /> : <VideoOff className="size-5" />}
                 </SplitCtrl>
-                <CtrlButton label={screen.enabled ? "Stop sharing" : "Share screen"} caption={screen.enabled ? "Stop share" : "Share"} active={!screen.enabled} onClick={() => screen.toggle()} disabled={screen.pending} className={screen.enabled ? "!bg-[#ff5018] hover:!bg-[#e6430f]" : undefined}>
+                <CtrlButton label={screen.enabled ? "Stop sharing" : "Share screen"} active={!screen.enabled} onClick={() => screen.toggle()} disabled={screen.pending} className={screen.enabled ? on : undefined}>
                     {screen.enabled ? <MonitorOff className="size-5" /> : <MonitorUp className="size-5" />}
                 </CtrlButton>
-                <div className="mx-1 hidden h-12 w-px self-start bg-white/10 sm:block" />
-                <CtrlButton label="People" caption="People" active={panel !== "people"} onClick={() => togglePanel("people")} className={panel === "people" ? "!bg-[#ff5018] hover:!bg-[#e6430f]" : undefined}>
+                {divider}
+                <CtrlButton label="People" active={panel !== "people"} onClick={() => togglePanel("people")} className={panel === "people" ? on : undefined}>
                     <Users className="size-5" />
                 </CtrlButton>
-                <CtrlButton label="Chat" caption="Chat" active={panel !== "chat"} onClick={() => togglePanel("chat")} badge={panel === "chat" ? 0 : unread} className={panel === "chat" ? "!bg-[#ff5018] hover:!bg-[#e6430f]" : undefined}>
+                <CtrlButton label="Chat" active={panel !== "chat"} onClick={() => togglePanel("chat")} badge={panel === "chat" ? 0 : unread} className={panel === "chat" ? on : undefined}>
                     <MessageSquare className="size-5" />
                 </CtrlButton>
-                <div className="mx-1 hidden h-12 w-px self-start bg-white/10 sm:block" />
+                {divider}
 
                 {amHost ? (
-                    <div className="flex flex-col items-center gap-1">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <button className="flex h-12 items-center gap-1.5 rounded-full bg-red-600 px-5 text-sm font-semibold text-white outline-none transition-all hover:bg-red-500 focus-visible:ring-2 focus-visible:ring-white active:scale-95" aria-label="Leave">
-                                    <PhoneOff className="size-5" />
-                                    <span className="hidden sm:inline">Leave</span>
-                                    <ChevronDown className="size-4" />
-                                </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" side="top" className="w-52">
-                                <DropdownMenuItem onClick={() => room.disconnect()}>
-                                    <PhoneOff className="mr-2 size-4" /> Leave meeting
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400" onClick={onEndAll}>
-                                    <X className="mr-2 size-4" /> End for everyone
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <span className="hidden text-[11px] font-medium text-transparent select-none sm:block">.</span>
-                    </div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button className="flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-red-600 px-4 text-sm font-semibold text-white outline-none transition-all hover:bg-red-500 focus-visible:ring-2 focus-visible:ring-white active:scale-95 sm:h-12 sm:px-5" aria-label="Leave">
+                                <PhoneOff className="size-5" />
+                                <span className="hidden sm:inline">Leave</span>
+                                <ChevronDown className="size-4" />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" side="top" sideOffset={12} className="w-52">
+                            <DropdownMenuItem onClick={() => room.disconnect()}>
+                                <PhoneOff className="mr-2 size-4" /> Leave meeting
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400" onClick={onEndAll}>
+                                <X className="mr-2 size-4" /> End for everyone
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 ) : (
-                    <div className="flex flex-col items-center gap-1">
-                        <button onClick={() => room.disconnect()} aria-label="Leave" className="flex h-12 items-center gap-1.5 rounded-full bg-red-600 px-5 text-sm font-semibold text-white outline-none transition-all hover:bg-red-500 focus-visible:ring-2 focus-visible:ring-white active:scale-95">
-                            <PhoneOff className="size-5" />
-                            <span className="hidden sm:inline">Leave</span>
-                        </button>
-                        <span className="hidden text-[11px] font-medium text-transparent select-none sm:block">.</span>
-                    </div>
+                    <button onClick={() => room.disconnect()} aria-label="Leave" className="flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-red-600 px-4 text-sm font-semibold text-white outline-none transition-all hover:bg-red-500 focus-visible:ring-2 focus-visible:ring-white active:scale-95 sm:h-12 sm:px-5">
+                        <PhoneOff className="size-5" />
+                        <span className="hidden sm:inline">Leave</span>
+                    </button>
                 )}
             </div>
         </div>
