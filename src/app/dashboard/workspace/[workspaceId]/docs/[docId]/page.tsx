@@ -1,6 +1,6 @@
 "use client"
 
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useCurrentMember } from "@/features/members/api/use-current-member"
 import { useGetMembers } from "@/features/members/api/use-get-members"
 import { useGetChannels } from "@/features/channels/api/use-get-channels"
@@ -20,7 +20,9 @@ import { FileText, FileSpreadsheet, Download, Share2, ArrowLeft, Loader } from "
 import { useMutation } from "convex/react"
 import { api } from "../../../../../../../convex/_generated/api"
 import { Id } from "../../../../../../../convex/_generated/dataModel"
-import { useState } from "react"
+import { useCallback, useState } from "react"
+import { Input } from "@/components/ui/input"
+import { useRenameDoc } from "@/features/docs/use-rename-doc"
 import { useGetDocs } from "@/features/docs/use-get-docs"
 import dynamic from "next/dynamic"
 
@@ -47,6 +49,15 @@ export default function DocPage() {
     const { data: channels } = useGetChannels({ workspaceId })
     const createMessage = useMutation(api.messages.create)
 
+    const searchParams = useSearchParams()
+    const template = searchParams.get("t")
+    const { mutate: renameDoc } = useRenameDoc()
+    const [editingTitle, setEditingTitle] = useState(false)
+    const [titleDraft, setTitleDraft] = useState("")
+    const clearTemplate = useCallback(() => {
+        router.replace(`/dashboard/workspace/${workspaceId}/docs/${docId}`)
+    }, [router, workspaceId, docId])
+
     const [showShareDialog, setShowShareDialog] = useState(false)
     const [shareChannelId, setShareChannelId] = useState("")
 
@@ -61,6 +72,16 @@ export default function DocPage() {
         ) % USER_COLORS.length
     ]
 
+    const saveTitle = () => {
+        const t = titleDraft.trim()
+        setEditingTitle(false)
+        if (!doc || !t || t === doc.title) return
+        renameDoc({ id: doc._id, title: t }, { onError: (e) => toast.error(e.message || "Couldn't rename") })
+    }
+
+    const esc = (str: string) =>
+        str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+
     const handleDownloadPdf = () => {
         const content = document.querySelector(".ProseMirror")
         if (!content) return toast.error("Nothing to download")
@@ -71,7 +92,7 @@ export default function DocPage() {
         printWindow.document.write(`
             <html>
                 <head>
-                    <title>${doc?.title ?? "Document"}</title>
+                    <title>${esc(doc?.title ?? "Document")}</title>
                     <style>
                         body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; color: #111; }
                         h1 { font-size: 2.5em; font-weight: bold; margin-bottom: 0.5em; }
@@ -85,12 +106,14 @@ export default function DocPage() {
                         ul, ol { margin: 0.5em 0; padding-left: 2em; }
                         pre { background: #f4f4f4; padding: 1em; border-radius: 4px; }
                         code { background: #f4f4f4; padding: 2px 4px; border-radius: 2px; font-family: monospace; }
+                        ul[data-type="taskList"] { list-style: none; padding-left: 0; }
+                        ul[data-type="taskList"] li { display: flex; gap: 8px; }
                         blockquote { border-left: 3px solid #ddd; margin: 0; padding-left: 1em; color: #666; }
                         @media print { body { margin: 20px; } }
                     </style>
                 </head>
                 <body>
-                    <h1>${doc?.title ?? "Document"}</h1>
+                    <h1>${esc(doc?.title ?? "Document")}</h1>
                     ${content.innerHTML}
                 </body>
             </html>
@@ -177,7 +200,28 @@ export default function DocPage() {
                                 : <FileText className="size-3 sm:size-3.5 text-[#ff5018]" />
                             }
                         </div>
-                        <span className="text-sm font-semibold tracking-tight text-[#1b1017] truncate">{doc.title}</span>
+                        {editingTitle ? (
+                            <Input
+                                autoFocus
+                                value={titleDraft}
+                                maxLength={120}
+                                onChange={(e) => setTitleDraft(e.target.value)}
+                                onBlur={saveTitle}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") saveTitle()
+                                    if (e.key === "Escape") setEditingTitle(false)
+                                }}
+                                className="h-8 w-48 sm:w-72 text-sm font-semibold rounded-lg"
+                            />
+                        ) : (
+                            <button
+                                title="Rename"
+                                onClick={() => { setTitleDraft(doc.title); setEditingTitle(true) }}
+                                className="text-sm font-semibold tracking-tight text-[#1b1017] truncate rounded-md px-1.5 py-0.5 hover:bg-[#f3eeea]"
+                            >
+                                {doc.title}
+                            </button>
+                        )}
                     </div>
                 </div>
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -228,6 +272,9 @@ export default function DocPage() {
             <div className="flex-1 overflow-hidden">
                 <DocEditor
                     key={doc._id}
+                    docId={doc._id}
+                    template={template}
+                    onTemplateUsed={clearTemplate}
                     roomId={doc.liveblocksRoomId}
                     userId={currentMember._id}
                     userName={currentUserName}

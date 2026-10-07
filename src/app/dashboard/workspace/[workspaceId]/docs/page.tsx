@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -12,10 +12,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-import { format } from "date-fns"
+import { formatDistanceToNow } from "date-fns"
 import {
-    FileText, Plus, Loader, Trash2, Pencil, MoreHorizontal, FileSpreadsheet
+    FileText, Plus, Loader, Trash2, Pencil, MoreHorizontal, FileSpreadsheet, Search
 } from "lucide-react"
+import { DOC_TEMPLATES, DocTemplateId } from "./components/templates"
 import { Id } from "../../../../../../convex/_generated/dataModel"
 import { useCreateDoc } from "@/features/docs/use-create-doc"
 import { useGetDocs } from "@/features/docs/use-get-docs"
@@ -34,22 +35,31 @@ export default function DocsPage() {
     const [newTitle, setNewTitle] = useState("")
     const [renamingId, setRenamingId] = useState<Id<"docs"> | null>(null)
     const [renameTitle, setRenameTitle] = useState("")
+    const [template, setTemplate] = useState<DocTemplateId>("blank")
+    const [search, setSearch] = useState("")
+    const [deleteTarget, setDeleteTarget] = useState<{ _id: Id<"docs">; title: string } | null>(null)
+    const renameDone = useRef(false)
 
     const handleCreate = () => {
         if (!newTitle.trim()) return toast.error("Title is required")
-        createDoc({ workspaceId, title: newTitle, type: "document" }, {
+        createDoc({ workspaceId, title: newTitle.trim(), type: "document" }, {
             onSuccess: (id) => {
                 toast.success("Document created")
                 setShowCreate(false)
                 setNewTitle("")
-                if (id) router.push(`/dashboard/workspace/${workspaceId}/docs/${id}`)
+                const t = template
+                setTemplate("blank")
+                if (id) router.push(`/dashboard/workspace/${workspaceId}/docs/${id}${t !== "blank" ? `?t=${t}` : ""}`)
             },
             onError: (e) => toast.error(e.message)
         })
     }
 
     const handleRename = (id: Id<"docs">) => {
-        if (!renameTitle.trim()) return
+        // Enter and blur both fire; only save once
+        if (renameDone.current) return
+        renameDone.current = true
+        if (!renameTitle.trim()) { setRenamingId(null); return }
         renameDoc({ id, title: renameTitle }, {
             onSuccess: () => {
                 toast.success("Renamed")
@@ -62,10 +72,17 @@ export default function DocsPage() {
 
     const handleDelete = (id: Id<"docs">) => {
         removeDoc(id, {
-            onSuccess: () => toast.success("Deleted"),
-            onError: (e) => toast.error(e.message)
+            onSuccess: () => { toast.success("Deleted"); setDeleteTarget(null) },
+            onError: () => toast.error("Only the creator or an admin can delete this document")
         })
     }
+
+    const visibleDocs = useMemo(() => {
+        const q = search.trim().toLowerCase()
+        return [...(docs ?? [])]
+            .filter((d) => !q || d.title.toLowerCase().includes(q))
+            .sort((a, b) => (b.updatedAt ?? b._creationTime) - (a.updatedAt ?? a._creationTime))
+    }, [docs, search])
 
     return (
         <div className="h-full flex flex-col overflow-hidden bg-[#fbf9f7]">
@@ -82,6 +99,16 @@ export default function DocsPage() {
                         </p>
                     </div>
                 </div>
+                <div className="flex items-center gap-2">
+                    <div className="relative hidden sm:block">
+                        <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[#1b1017]/40" />
+                        <Input
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Search documents"
+                            className="h-8 w-56 rounded-lg pl-8 text-xs"
+                        />
+                    </div>
                 <Button
                     onClick={() => setShowCreate(true)}
                     className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 text-xs px-3 rounded-lg font-semibold"
@@ -89,6 +116,12 @@ export default function DocsPage() {
                     <Plus className="size-3.5 sm:size-4 sm:mr-1" /> 
                     <span className="hidden sm:inline">New Document</span>
                 </Button>
+                </div>
+            </div>
+
+            {/* Mobile search */}
+            <div className="sm:hidden px-4 pt-3">
+                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search documents" className="h-9 rounded-lg text-sm" />
             </div>
 
             {/* Doc grid */}
@@ -110,9 +143,11 @@ export default function DocsPage() {
                             <Plus className="size-4 mr-1" /> New Document
                         </Button>
                     </div>
+                ) : visibleDocs.length === 0 ? (
+                    <p className="mt-16 text-center text-sm text-[#1b1017]/60">No documents match &ldquo;{search}&rdquo;</p>
                 ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-                        {docs.map(doc => (
+                        {visibleDocs.map(doc => (
                             <div
                                 key={doc._id}
                                 className="group relative flex flex-col gap-3 p-3 sm:p-4 border border-[#381d2a]/12 rounded-xl cursor-pointer hover:shadow-sm transition-all hover:border-[#ff5018]/40 bg-white"
@@ -148,7 +183,8 @@ export default function DocsPage() {
                                 )}
 
                                 <p className="text-[11px] text-[#1b1017]/60 leading-none">
-                                    {doc.updatedAt ? format(doc.updatedAt, "MMM d, yyyy") : ""}
+                                    {`Edited ${formatDistanceToNow(doc.updatedAt ?? doc._creationTime, { addSuffix: true })}`}
+                                    {doc.creator?.user?.name ? ` · ${doc.creator.user.name}` : ""}
                                 </p>
 
                                 {/* Options menu */}
@@ -162,6 +198,7 @@ export default function DocsPage() {
                                         <DropdownMenuContent align="end" className="text-xs">
                                             <DropdownMenuItem onClick={(e) => {
                                                 e.stopPropagation()
+                                                renameDone.current = false
                                                 setRenamingId(doc._id)
                                                 setRenameTitle(doc.title)
                                             }}>
@@ -170,7 +207,7 @@ export default function DocsPage() {
                                             <DropdownMenuItem
                                                 onClick={(e) => {
                                                     e.stopPropagation()
-                                                    handleDelete(doc._id)
+                                                    setDeleteTarget({ _id: doc._id, title: doc.title })
                                                 }}
                                                 className="text-destructive"
                                             >
@@ -184,6 +221,20 @@ export default function DocsPage() {
                     </div>
                 )}
             </div>
+
+            {/* Delete confirm */}
+            <Dialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+                <DialogContent className="max-w-sm mx-4 rounded-2xl border-[#381d2a]/12">
+                    <DialogHeader>
+                        <DialogTitle className="text-[17px] font-semibold tracking-tight">Delete &ldquo;{deleteTarget?.title}&rdquo;?</DialogTitle>
+                    </DialogHeader>
+                    <p className="text-sm text-[#1b1017]/60">This removes the document for everyone in the workspace and can&apos;t be undone.</p>
+                    <div className="flex justify-end gap-2 mt-2">
+                        <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+                        <Button variant="destructive" onClick={() => deleteTarget && handleDelete(deleteTarget._id)}>Delete</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Create dialog */}
             <Dialog open={showCreate} onOpenChange={setShowCreate}>
@@ -200,14 +251,24 @@ export default function DocsPage() {
                             autoFocus
                             className="text-sm rounded-lg h-10"
                         />
-                        <div className="flex items-center gap-3 p-3 rounded-xl border border-[#ff5018] bg-[#ff5018]/5">
-                            <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center shrink-0">
-                                <FileText className="size-4 text-[#ff5018]" />
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-sm font-semibold tracking-tight text-[#1b1017]">Document</p>
-                                <p className="text-[11px] text-[#1b1017]/60">Rich text with images & tables</p>
-                            </div>
+                        <div className="grid grid-cols-1 gap-2">
+                            {DOC_TEMPLATES.map((t) => (
+                                <button
+                                    key={t.id}
+                                    type="button"
+                                    onClick={() => setTemplate(t.id)}
+                                    className={cn(
+                                        "flex items-center gap-3 rounded-xl border p-2.5 text-left transition-colors",
+                                        template === t.id ? "border-[#ff5018] bg-[#ff5018]/5" : "border-[#381d2a]/12 hover:bg-[#f3eeea]"
+                                    )}
+                                >
+                                    <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#ff5018]/10 text-base">{t.emoji}</span>
+                                    <span className="min-w-0">
+                                        <span className="block text-sm font-semibold tracking-tight text-[#1b1017]">{t.name}</span>
+                                        <span className="block text-[11px] text-[#1b1017]/60">{t.description}</span>
+                                    </span>
+                                </button>
+                            ))}
                         </div>
                         <Button
                             onClick={handleCreate}

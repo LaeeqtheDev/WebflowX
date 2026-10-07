@@ -3,6 +3,13 @@ import { mutation, query } from "./_generated/server"
 import { auth } from "./auth"
 import { checkLimit } from "./limits"
 
+const cleanTitle = (raw: string) => {
+    const t = raw.trim().replace(/\s+/g, " ")
+    if (!t) throw new ConvexError("Title is required")
+    if (t.length > 120) throw new ConvexError("Title is too long (max 120 characters)")
+    return t
+}
+
 export const get = query({
     args: { workspaceId: v.id("workspaces") },
     handler: async (ctx, args) => {
@@ -62,10 +69,11 @@ export const create = mutation({
             throw new ConvexError(`LIMIT_REACHED:docs:${limit}:${plan}`)
         }
 
-        const liveblocksRoomId = `${args.workspaceId}-doc-${Date.now()}`
+        const title = cleanTitle(args.title)
+        const liveblocksRoomId = `${args.workspaceId}-doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
         return await ctx.db.insert("docs", {
-            title: args.title,
+            title,
             workspaceId: args.workspaceId,
             createdBy: member._id,
             type: args.type,
@@ -95,10 +103,31 @@ export const rename = mutation({
         if (!member) throw new Error("Unauthorized")
 
         await ctx.db.patch(args.id, {
-            title: args.title,
+            title: cleanTitle(args.title),
             updatedAt: Date.now(),
         })
 
+        return args.id
+    }
+})
+
+// Called (debounced) by the editor so "last edited" reflects real content changes.
+export const touch = mutation({
+    args: { id: v.id("docs") },
+    handler: async (ctx, args) => {
+        const userId = await auth.getUserId(ctx)
+        if (!userId) return null
+        const doc = await ctx.db.get(args.id)
+        if (!doc) return null
+        const member = await ctx.db
+            .query("members")
+            .withIndex("byWorkspaceId_user_id", (q) =>
+                q.eq("workspaceId", doc.workspaceId).eq("userId", userId)
+            ).unique()
+        if (!member) return null
+        // skip if touched in the last few seconds to avoid write churn
+        if (doc.updatedAt && Date.now() - doc.updatedAt < 5000) return null
+        await ctx.db.patch(args.id, { updatedAt: Date.now(), updatedBy: member._id })
         return args.id
     }
 })

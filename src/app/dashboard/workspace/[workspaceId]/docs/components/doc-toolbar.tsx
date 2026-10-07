@@ -2,8 +2,8 @@
 
 import { Editor } from "@tiptap/react"
 import { cn } from "@/lib/utils"
-import { useRef, useState, useEffect } from "react"
-import { useMutation, useQuery } from "convex/react"
+import { useRef, useState } from "react"
+import { useMutation, useConvex } from "convex/react"
 
 import { toast } from "sonner"
 import {
@@ -11,7 +11,7 @@ import {
     AlignRight, List, ListOrdered, ImageIcon, Table, Undo, Redo,
     Code, Plus, Trash2,
     ArrowLeftFromLine, ArrowRightFromLine, ArrowUpFromLine, ArrowDownFromLine,
-    Merge, Split
+    Merge, Split, Quote, SquareCode, Minus, ListChecks, Link2, Unlink, Sparkles, Loader2, RemoveFormatting
 } from "lucide-react"
 import {
     DropdownMenu,
@@ -21,6 +21,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuLabel
 } from "@/components/ui/dropdown-menu"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { api } from "../../../../../../../convex/_generated/api"
 import type { Id } from "../../../../../../../convex/_generated/dataModel"
 
@@ -56,43 +57,65 @@ const Divider = () => <div className="w-px h-5 bg-[#381d2a]/12 mx-1.5" />
 export const DocToolbar = ({ editor }: DocToolbarProps) => {
     const imageInputRef = useRef<HTMLInputElement>(null)
     const generateUploadUrl = useMutation(api.upload.generateUploadUrl)
-    const [pendingStorageId, setPendingStorageId] = useState<string | null>(null)
-
-    const storageUrl = useQuery(
-        api.upload.getStorageUrl,
-        pendingStorageId ? { storageId: pendingStorageId as Id<"_storage"> } : "skip"
-    )
-
-    useEffect(() => {
-        if (storageUrl && pendingStorageId) {
-            editor.chain().focus().setImage({ src: storageUrl }).run()
-            // eslint-disable-next-line react-hooks/set-state-in-effect -- reset pending upload after the async storage URL query resolves
-            setPendingStorageId(null)
-            toast.dismiss()
-            toast.success("Image uploaded!")
-        }
-    }, [storageUrl, pendingStorageId, editor])
+    const convex = useConvex()
+    const [linkOpen, setLinkOpen] = useState(false)
+    const [linkUrl, setLinkUrl] = useState("")
+    const [aiBusy, setAiBusy] = useState(false)
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
-        if (!file) return
-
-        try {
-            toast.loading("Uploading image...")
-            const reader = new FileReader()
-            reader.onload = (event) => {
-                const base64 = event.target?.result as string
-                editor.chain().focus().setImage({ src: base64 }).run()
-                toast.dismiss()
-                toast.success("Image uploaded!")
-            }
-            reader.readAsDataURL(file)
-        } catch (e) {
-            toast.dismiss()
-            toast.error("Failed to upload image")
-        }
-
         if (imageInputRef.current) imageInputRef.current.value = ""
+        if (!file) return
+        if (!file.type.startsWith("image/")) return toast.error("Please choose an image file")
+        if (file.size > 8 * 1024 * 1024) return toast.error("Image is too large (max 8 MB)")
+
+        const toastId = toast.loading("Uploading image...")
+        try {
+            // stored in Convex file storage, so the shared document only holds a small URL
+            const uploadUrl = await generateUploadUrl()
+            const res = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": file.type }, body: file })
+            if (!res.ok) throw new Error("upload failed")
+            const { storageId } = await res.json()
+            const src = await convex.query(api.upload.getStorageUrl, { storageId: storageId as Id<"_storage"> })
+            if (!src) throw new Error("no url")
+            editor.chain().focus().setImage({ src }).run()
+            toast.success("Image added", { id: toastId })
+        } catch {
+            toast.error("Failed to upload image", { id: toastId })
+        }
+    }
+
+    const applyLink = () => {
+        const url = linkUrl.trim()
+        if (!url) {
+            editor.chain().focus().extendMarkRange("link").unsetLink().run()
+        } else {
+            const href = /^(https?:\/\/|mailto:)/i.test(url) ? url : `https://${url}`
+            editor.chain().focus().extendMarkRange("link").setLink({ href }).run()
+        }
+        setLinkOpen(false)
+    }
+
+    const runAi = async (command: string) => {
+        const { from, to, empty } = editor.state.selection
+        if (empty) return toast.info("Select some text first, then pick an AI action")
+        const text = editor.state.doc.textBetween(from, to, "\n")
+        if (text.length > 12000) return toast.error("Selection is too long for AI (max ~12,000 characters)")
+        setAiBusy(true)
+        try {
+            const res = await fetch("/api/ai-editor", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text, command }),
+            })
+            const data = await res.json()
+            if (!res.ok || !data.result) throw new Error(data.error || "AI request failed")
+            editor.chain().focus().insertContentAt({ from, to }, data.result).run()
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : "AI request failed")
+        } finally {
+            setAiBusy(false)
+        }
     }
 
     const addTable = () => {
@@ -100,7 +123,7 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
     }
 
     return (
-        <div className="flex items-center gap-0.5 px-4 py-2 bg-white flex-wrap sticky top-0 z-10">
+        <div className="flex items-center gap-0.5 px-3 sm:px-4 py-2 bg-white overflow-x-auto sticky top-0 z-10 [&>*]:shrink-0">
             {/* Hidden image input */}
             <input
                 ref={imageInputRef}
@@ -225,6 +248,84 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                 <ListOrdered className="size-4" />
             </ToolbarButton>
 
+            <ToolbarButton
+                onClick={() => editor.chain().focus().toggleTaskList().run()}
+                active={editor.isActive("taskList")}
+                title="Checklist"
+            >
+                <ListChecks className="size-4" />
+            </ToolbarButton>
+
+            <Divider />
+
+            {/* Blocks */}
+            <ToolbarButton
+                onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                active={editor.isActive("blockquote")}
+                title="Quote"
+            >
+                <Quote className="size-4" />
+            </ToolbarButton>
+            <ToolbarButton
+                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                active={editor.isActive("codeBlock")}
+                title="Code block"
+            >
+                <SquareCode className="size-4" />
+            </ToolbarButton>
+            <ToolbarButton
+                onClick={() => editor.chain().focus().setHorizontalRule().run()}
+                title="Divider line"
+            >
+                <Minus className="size-4" />
+            </ToolbarButton>
+
+            {/* Link */}
+            <Popover
+                open={linkOpen}
+                onOpenChange={(o) => {
+                    setLinkOpen(o)
+                    if (o) setLinkUrl((editor.getAttributes("link").href as string | undefined) ?? "")
+                }}
+            >
+                <PopoverTrigger asChild>
+                    <button
+                        title="Link"
+                        className={cn(
+                            "p-1.5 rounded-lg text-sm text-[#1b1017]/70 transition-colors hover:bg-[#f3eeea] hover:text-[#1b1017] min-w-8 h-8 flex items-center justify-center",
+                            editor.isActive("link") && "bg-[#ff5018]/10 text-[#ff5018]"
+                        )}
+                    >
+                        <Link2 className="size-4" />
+                    </button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-72 p-3 rounded-xl">
+                    <form onSubmit={(e) => { e.preventDefault(); applyLink() }} className="flex flex-col gap-2">
+                        <input
+                            autoFocus
+                            value={linkUrl}
+                            onChange={(e) => setLinkUrl(e.target.value)}
+                            placeholder="Paste a link…"
+                            className="h-9 rounded-lg border border-[#381d2a]/15 px-3 text-sm focus:border-[#ff5018] focus:outline-none"
+                        />
+                        <div className="flex gap-2">
+                            <button type="submit" className="h-8 flex-1 rounded-lg bg-[#ff5018] text-xs font-semibold text-white hover:bg-[#e6430f]">
+                                {editor.isActive("link") ? "Update" : "Add link"}
+                            </button>
+                            {editor.isActive("link") && (
+                                <button
+                                    type="button"
+                                    onClick={() => { editor.chain().focus().extendMarkRange("link").unsetLink().run(); setLinkOpen(false) }}
+                                    className="flex h-8 items-center gap-1 rounded-lg border border-[#381d2a]/15 px-3 text-xs hover:bg-[#f3eeea]"
+                                >
+                                    <Unlink className="size-3.5" /> Remove
+                                </button>
+                            )}
+                        </div>
+                    </form>
+                </PopoverContent>
+            </Popover>
+
             <Divider />
 
             {/* Image upload */}
@@ -333,6 +434,44 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                     >
                         <Trash2 className="size-3.5 mr-2" /> Delete table
                     </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Divider />
+
+            <ToolbarButton
+                onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}
+                title="Clear formatting"
+            >
+                <RemoveFormatting className="size-4" />
+            </ToolbarButton>
+
+            <Divider />
+
+            {/* AI writing helper */}
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <button
+                        title="AI writing help (select text first)"
+                        disabled={aiBusy}
+                        className="h-8 flex items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-[#ff5018] bg-[#ff5018]/10 hover:bg-[#ff5018]/15 disabled:opacity-60"
+                    >
+                        {aiBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />} AI
+                    </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="text-xs w-48 rounded-xl">
+                    <DropdownMenuLabel className="text-[11px] font-medium text-[#1b1017]/50">On selected text</DropdownMenuLabel>
+                    {([
+                        ["improve", "Improve writing"],
+                        ["grammar", "Fix grammar"],
+                        ["shorter", "Make shorter"],
+                        ["longer", "Make longer"],
+                        ["formal", "Make formal"],
+                        ["casual", "Make casual"],
+                        ["summarize", "Summarize"],
+                    ] as const).map(([cmd, label]) => (
+                        <DropdownMenuItem key={cmd} onClick={() => runAi(cmd)}>{label}</DropdownMenuItem>
+                    ))}
                 </DropdownMenuContent>
             </DropdownMenu>
 

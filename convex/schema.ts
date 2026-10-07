@@ -190,6 +190,7 @@ const schema = defineSchema({
         type: v.union(v.literal("document"), v.literal("spreadsheet")),
         liveblocksRoomId: v.string(),
         updatedAt: v.optional(v.number()),
+        updatedBy: v.optional(v.id("members")),
     })
         .index("by_workspace_id", ["workspaceId"])
         .index("by_room_id", ["liveblocksRoomId"]),

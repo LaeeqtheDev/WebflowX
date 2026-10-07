@@ -293,6 +293,12 @@ body,
 .ProseMirror .selectedCell { background: rgba(255, 80, 24, 0.12); }
 .ProseMirror img { max-width: 100%; border-radius: 10px; margin: 0.5rem 0; }
 .ProseMirror img.ProseMirror-selectednode { outline: 2px solid #ff5018; outline-offset: 2px; }
+.ProseMirror ul[data-type="taskList"] { list-style: none; padding-left: 0.25rem; }
+.ProseMirror ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.6rem; }
+.ProseMirror ul[data-type="taskList"] li > label { margin-top: 0.35rem; user-select: none; }
+.ProseMirror ul[data-type="taskList"] li > label input { accent-color: #ff5018; width: 1rem; height: 1rem; cursor: pointer; }
+.ProseMirror ul[data-type="taskList"] li > div { flex: 1; }
+.ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div { text-decoration: line-through; color: rgba(27, 16, 23, 0.45); }
 .ProseMirror p.is-editor-empty:first-child::before { color: rgba(56, 29, 42, 0.4); content: attr(data-placeholder); float: left; height: 0; pointer-events: none; }
 
 /* Landing page */

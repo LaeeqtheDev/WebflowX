@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Collaboration from "@tiptap/extension-collaboration"
@@ -10,10 +10,15 @@ import TableRow from "@tiptap/extension-table-row"
 import TableCell from "@tiptap/extension-table-cell"
 import TableHeader from "@tiptap/extension-table-header"
 import TextAlign from "@tiptap/extension-text-align"
-import Underline from "@tiptap/extension-underline"
+import { TaskList, TaskItem } from "@tiptap/extension-list"
+import Placeholder from "@tiptap/extension-placeholder"
 import { TextStyle } from "@tiptap/extension-text-style"
 import { Color } from "@tiptap/extension-color"
-import { Loader } from "lucide-react"
+import { Loader, AlertCircle, Cloud, CloudOff } from "lucide-react"
+import { useMutation } from "convex/react"
+import { api } from "../../../../../../../convex/_generated/api"
+import type { Id } from "../../../../../../../convex/_generated/dataModel"
+import { templateHtml } from "./templates"
 import { DocToolbar } from "./doc-toolbar"
 import type { LiveblocksYjsProvider } from "@liveblocks/yjs"
 import type * as Y from "yjs"
@@ -24,7 +29,12 @@ interface DocOther {
     avatar: string
 }
 
+type ConnStatus = "initial" | "connecting" | "connected" | "reconnecting" | "disconnected"
+
 interface DocEditorProps {
+    docId: Id<"docs">
+    template?: string | null
+    onTemplateUsed?: () => void
     roomId: string
     userId: string
     userName: string
@@ -35,17 +45,29 @@ interface DocEditorProps {
 
 const EditorInner = ({
     ydoc,
-    userName,
-    userColor,
+    docId,
+    template,
+    onTemplateUsed,
+    status,
 }: {
     ydoc: Y.Doc
-    userName: string
-    userColor: string
+    docId: Id<"docs">
+    template?: string | null
+    onTemplateUsed?: () => void
+    status: ConnStatus
 }) => {
+    const touch = useMutation(api.docs.touch)
+    const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const [words, setWords] = useState(0)
+    const templateApplied = useRef(false)
+
     const editor = useEditor({
         immediatelyRender: false,
         extensions: [
             StarterKit.configure({
+                // history is handled by Yjs
+                undoRedo: false,
+                link: { openOnClick: false, autolink: true, HTMLAttributes: { rel: "noopener noreferrer nofollow", target: "_blank" } },
                 heading: { levels: [1, 2, 3] },
                 bulletList: {
                     keepMarks: true,
@@ -63,16 +85,37 @@ const EditorInner = ({
             TableCell,
             TableHeader,
             TextAlign.configure({ types: ["heading", "paragraph"] }),
-            Underline,
+            TaskList,
+            TaskItem.configure({ nested: true }),
+            Placeholder.configure({ placeholder: "Start writing, or type / for ideas…" }),
             TextStyle,
             Color,
         ],
+        onUpdate: ({ editor: ed }) => {
+            setWords(ed.getText().trim().split(/\s+/).filter(Boolean).length)
+            if (touchTimer.current) clearTimeout(touchTimer.current)
+            touchTimer.current = setTimeout(() => { touch({ id: docId }).catch(() => undefined) }, 4000)
+        },
+        onCreate: ({ editor: ed }) => {
+            setWords(ed.getText().trim().split(/\s+/).filter(Boolean).length)
+        },
         editorProps: {
             attributes: {
                 class: "outline-none min-h-[calc(100vh-200px)] px-14 py-12 max-w-none focus:outline-none"
             }
         }
     })
+
+    useEffect(() => () => { if (touchTimer.current) clearTimeout(touchTimer.current) }, [])
+
+    // New doc from a template: fill it once, only if nobody has written anything yet
+    useEffect(() => {
+        if (!editor || !template || templateApplied.current) return
+        templateApplied.current = true
+        const html = templateHtml(template)
+        if (html && editor.isEmpty) editor.commands.setContent(html)
+        onTemplateUsed?.()
+    }, [editor, template, onTemplateUsed])
 
     return (
         <div className="flex flex-col h-full">
@@ -86,16 +129,31 @@ const EditorInner = ({
                     <EditorContent editor={editor} />
                 </div>
             </div>
+            <div className="flex items-center justify-between gap-3 border-t border-[#381d2a]/12 bg-white px-4 py-1.5 text-[11px] text-[#1b1017]/60 shrink-0">
+                <span>{words} word{words === 1 ? "" : "s"} · {Math.max(1, Math.ceil(words / 200))} min read</span>
+                <span className="flex items-center gap-1.5">
+                    {status === "connected" ? (
+                        <><Cloud className="size-3.5 text-emerald-600" /> Saved</>
+                    ) : status === "disconnected" ? (
+                        <><CloudOff className="size-3.5 text-red-500" /> Offline, changes will sync when you reconnect</>
+                    ) : (
+                        <><Loader className="size-3 animate-spin text-[#ff5018]" /> {status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</>
+                    )}
+                </span>
+            </div>
         </div>
     )
 }
 
 export const DocEditor = ({
-    roomId, userId, userName, userColor, userAvatar, onOthersChange
+    docId, template, onTemplateUsed, roomId, userId, userName, userColor, userAvatar, onOthersChange
 }: DocEditorProps) => {
     const [provider, setProvider] = useState<LiveblocksYjsProvider | null>(null)
     const [ydoc, setYdoc] = useState<Y.Doc | null>(null)
     const [others, setOthers] = useState<DocOther[]>([])
+    const [status, setStatus] = useState<ConnStatus>("connecting")
+    const [failed, setFailed] = useState(false)
+    const [attempt, setAttempt] = useState(0)
 
     useEffect(() => {
         let leaveRoom: (() => void) | null = null
@@ -110,25 +168,20 @@ export const DocEditor = ({
 
                 const client = createClient({
                     authEndpoint: async (room) => {
+                        // identity comes from the signed-in session on the server
                         const res = await fetch("/api/liveblocks-auth", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                room,
-                                userId,
-                                userInfo: {
-                                    name: userName,
-                                    color: userColor,
-                                    avatar: userAvatar ?? ""
-                                }
-                            })
+                            body: JSON.stringify({ room })
                         })
+                        if (!res.ok) throw new Error("Not allowed to open this document")
                         return await res.json()
                     }
                 })
 
                 const { room, leave } = client.enterRoom(roomId)
                 leaveRoom = leave
+                room.subscribe("status", (st) => { if (mounted) setStatus(st as ConnStatus) })
 
                 room.subscribe("others", (roomOthers) => {
                     const activeOthers: DocOther[] = roomOthers.map((o) => ({
@@ -150,11 +203,13 @@ export const DocEditor = ({
                 })
 
                 if (mounted) {
+                    setFailed(false)
                     setYdoc(doc)
                     setProvider(createdProvider)
                 }
             } catch (e) {
                 console.error("DocEditor init error:", e)
+                if (mounted) setFailed(true)
             }
         }
 
@@ -167,7 +222,26 @@ export const DocEditor = ({
             try { yProvider?.destroy() } catch {}
             try { leaveRoom?.() } catch {}
         }
-    }, [roomId, userId, userName, userColor, userAvatar])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [roomId, attempt])
+
+    if (failed) {
+        return (
+            <div className="flex h-full items-center justify-center bg-[#fbf9f7]">
+                <div className="flex flex-col items-center gap-3 text-center px-4">
+                    <AlertCircle className="size-6 text-red-500" />
+                    <p className="text-sm font-semibold text-[#1b1017]">Couldn&apos;t open this document</p>
+                    <p className="text-xs text-[#1b1017]/60">Check your connection and try again.</p>
+                    <button
+                        onClick={() => { setFailed(false); setAttempt((a) => a + 1) }}
+                        className="rounded-lg bg-[#ff5018] px-4 py-2 text-xs font-semibold text-white hover:bg-[#e6430f]"
+                    >
+                        Retry
+                    </button>
+                </div>
+            </div>
+        )
+    }
 
     if (!ydoc || !provider) {
         return (
@@ -202,8 +276,10 @@ export const DocEditor = ({
             )}
             <EditorInner
                 ydoc={ydoc}
-                userName={userName}
-                userColor={userColor}
+                docId={docId}
+                template={template}
+                onTemplateUsed={onTemplateUsed}
+                status={status}
             />
         </div>
     )
