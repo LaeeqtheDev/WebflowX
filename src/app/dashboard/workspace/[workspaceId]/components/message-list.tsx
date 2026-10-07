@@ -2,7 +2,7 @@ import { GetMessagesReturnType } from "@/features/messages/api/use-get-messages"
 import { format, isToday, isYesterday, differenceInMinutes } from "date-fns";
 import { Message } from "./message";
 import { ChannelHero } from "./channel-hero";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Id } from "../../../../../../convex/_generated/dataModel";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useCurrentMember } from "@/features/members/api/use-current-member";
@@ -58,18 +58,40 @@ export const MessageList = ({
         prevDataLengthRef.current = currentLength;
     }, [data?.length]);
 
-    const groupedMessages = data?.reduce(
-        (groups, message) => {
-            const date = new Date(message._creationTime);
-            const dateKey = format(date, "yyyy-MM-dd");
-            if (!groups[dateKey]) {
-                groups[dateKey] = [];
-            }
-            groups[dateKey].unshift(message);
-            return groups;
-        },
-        {} as Record<string, typeof data>
+    const groupedMessages = useMemo(
+        () =>
+            data?.reduce(
+                (groups, message) => {
+                    const dateKey = format(new Date(message._creationTime), "yyyy-MM-dd");
+                    if (!groups[dateKey]) {
+                        groups[dateKey] = [];
+                    }
+                    groups[dateKey].unshift(message);
+                    return groups;
+                },
+                {} as Record<string, NonNullable<typeof data>>
+            ),
+        [data]
     );
+
+    // One stable IntersectionObserver instead of a new one on every render.
+    const loadMoreRef = useRef<HTMLDivElement>(null);
+    const loadMoreFn = useRef(loadMore);
+    const canLoadRef = useRef(canLoadMore);
+    loadMoreFn.current = loadMore;
+    canLoadRef.current = canLoadMore;
+    useEffect(() => {
+        const el = loadMoreRef.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting && canLoadRef.current) loadMoreFn.current();
+            },
+            { threshold: 1.0 }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
 
     return (
         <div className="flex-1 flex flex-col-reverse pb-4 overflow-y-auto messages-scrollbar">
@@ -126,23 +148,7 @@ export const MessageList = ({
                 </div>
             ))}
 
-            <div
-                className="h-1"
-                ref={(el) => {
-                    if (el) {
-                        const observer = new IntersectionObserver(
-                            ([entry]) => {
-                                if (entry.isIntersecting && canLoadMore) {
-                                    loadMore();
-                                }
-                            },
-                            { threshold: 1.0 }
-                        );
-                        observer.observe(el);
-                        return () => observer.disconnect();
-                    }
-                }}
-            />
+            <div className="h-1" ref={loadMoreRef} />
             {isLoadingMore && (
                 <div className="text-center my-2 relative">
                     <hr className="absolute top-1/2 left-0 right-0 border-t border-[#381d2a]/12" />

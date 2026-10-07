@@ -12,8 +12,10 @@ import { WorkSpaceSidebar } from "./components/WorkspaceSidebar"
 import { usePanel } from "@/hooks/use-panel"
 import { Loader } from "lucide-react"
 import { Id } from "../../../../../convex/_generated/dataModel"
-import { Thread } from "./components/threads"
-import { Profile } from "@/features/members/components/profile"
+import dynamic from "next/dynamic"
+
+const Thread = dynamic(() => import("./components/threads").then((m) => m.Thread), { ssr: false })
+const Profile = dynamic(() => import("@/features/members/components/profile").then((m) => m.Profile), { ssr: false })
 
 interface WorkspaceIdLayoutProps {
   children: React.ReactNode

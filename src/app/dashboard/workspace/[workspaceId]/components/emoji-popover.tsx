@@ -1,7 +1,6 @@
 "use client"
 
-import data from "@emoji-mart/data"
-import Picker from "@emoji-mart/react"
+import dynamic from "next/dynamic"
 
 import {
     Popover,
@@ -17,6 +16,11 @@ import {
     TooltipTrigger
 } from "@/components/ui/tooltip"
 import { useState } from "react";
+
+const EmojiPickerLazy = dynamic(() => import("./emoji-picker-lazy"), {
+    ssr: false,
+    loading: () => <div className="h-[435px] w-[352px] animate-pulse bg-[#f7f2ee]" />,
+})
 
 interface EmojiPopoverProps {
     children: React.ReactNode;
@@ -57,7 +61,7 @@ export const EmojiPopover = ({
            
             </Tooltip>
             <PopoverContent className="p-0 w-full border border-[#381d2a]/12 rounded-xl overflow-hidden shadow-md">
-                <Picker data={data} onEmojiSelect={onEmojiSelect}/>
+                <EmojiPickerLazy onEmojiSelect={onEmojiSelect}/>
             </PopoverContent>
             </Popover>
         </TooltipProvider>

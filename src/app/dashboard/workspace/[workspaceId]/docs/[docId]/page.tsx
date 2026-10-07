@@ -22,7 +22,13 @@ import { api } from "../../../../../../../convex/_generated/api"
 import { Id } from "../../../../../../../convex/_generated/dataModel"
 import { useState } from "react"
 import { useGetDocs } from "@/features/docs/use-get-docs"
-import { DocEditor } from "../components/doc-editor"
+import dynamic from "next/dynamic"
+
+// TipTap + Liveblocks are heavy; load them only on the editor screen.
+const DocEditor = dynamic(() => import("../components/doc-editor").then((m) => m.DocEditor), {
+    ssr: false,
+    loading: () => <div className="flex h-full items-center justify-center"><Loader className="size-6 animate-spin text-[#ff5018]" /></div>,
+})
 
 const USER_COLORS = [
     "#ff5018", "#3b82f6", "#10b981", "#f59e0b",

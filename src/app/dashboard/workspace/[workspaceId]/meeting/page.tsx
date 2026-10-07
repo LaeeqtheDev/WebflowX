@@ -21,8 +21,14 @@ import { Id } from "../../../../../../convex/_generated/dataModel"
 import { useRouter } from "next/navigation"
 import { useCreateMeeting } from "@/features/meetings/use-create-meetings"
 import { useGetMeetings } from "@/features/meetings/use-get-meetings"
-import { MeetingRoom } from "./components/meeting-room"
-import { MeetingSummary } from "./components/meeting-summary"
+import dynamic from "next/dynamic"
+
+// LiveKit and the summary view are only needed once a meeting is open.
+const MeetingRoom = dynamic(() => import("./components/meeting-room").then((m) => m.MeetingRoom), {
+    ssr: false,
+    loading: () => <div className="flex h-full items-center justify-center"><Loader className="size-6 animate-spin text-[#ff5018]" /></div>,
+})
+const MeetingSummary = dynamic(() => import("./components/meeting-summary").then((m) => m.MeetingSummary), { ssr: false })
 
 export default function MeetingPage() {
     const workspaceId = useWorkspaceId()

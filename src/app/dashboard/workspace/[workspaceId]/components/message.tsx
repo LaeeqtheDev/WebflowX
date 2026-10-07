@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { format, isToday, isYesterday } from "date-fns";
 import { Doc, Id } from "../../../../../../convex/_generated/dataModel";
 import dynamic from "next/dynamic";
@@ -63,7 +64,7 @@ const formatFullTime = (date: Date) => {
     } at ${format(date, "h:mm:ss a")}`;
 };
 
-export const Message = ({
+const MessageImpl = ({
     id,
     image,
     file,
@@ -314,3 +315,5 @@ export const Message = ({
         </>
     );
 };
+
+export const Message = memo(MessageImpl);

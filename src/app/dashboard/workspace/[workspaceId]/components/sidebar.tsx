@@ -16,8 +16,10 @@ import { usePathname, useRouter } from "next/navigation"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { useGetUnreadCount } from "@/features/notifications/use-get-unread-count"
 import { useGetConversations } from "@/features/conversations/api/use-get-conversations"
-import { useState } from "react"
-import { MoreModal } from "./more-modal"
+import { useEffect, useState } from "react"
+import dynamic from "next/dynamic"
+
+const MoreModal = dynamic(() => import("./more-modal").then((m) => m.MoreModal), { ssr: false })
 
 const Divider = () => <div aria-hidden className="my-0.5 h-px w-8 bg-white/[0.08]" />
 
@@ -29,6 +31,16 @@ export const Sidebar = () => {
     const { data: conversations } = useGetConversations({ workspaceId })
     const totalDmUnread = conversations?.reduce((acc, c) => acc + (c.unreadCount ?? 0), 0) ?? 0
     const [showMore, setShowMore] = useState(false)
+
+    // Warm up every section once the shell is idle so navigation feels instant.
+    useEffect(() => {
+        const base = `/dashboard/workspace/${workspaceId}`
+        const routes = ["", "/dms", "/activity", "/tasks", "/notes", "/docs", "/meeting"]
+        const run = () => routes.forEach((r) => router.prefetch(`${base}${r}`))
+        const w = window as Window & { requestIdleCallback?: (cb: () => void) => number }
+        if (w.requestIdleCallback) w.requestIdleCallback(run)
+        else setTimeout(run, 400)
+    }, [router, workspaceId])
 
     return (
         <aside className="w-[72px] h-full shrink-0 bg-[#381d2a] border-r border-white/[0.06] flex flex-col gap-y-1.5 items-center pt-3 pb-4">
@@ -106,7 +118,7 @@ export const Sidebar = () => {
             <div className="mt-auto flex w-full flex-col items-center justify-center gap-y-3 border-t border-white/[0.08] pt-4">
                 <UserButton />
             </div>
-            <MoreModal open={showMore} onClose={() => setShowMore(false)} />
+            {showMore && <MoreModal open={showMore} onClose={() => setShowMore(false)} />}
         </aside>
     )
 }

@@ -57,18 +57,14 @@ export const Toolbar = () => {
     <nav className="relative z-10 flex h-14 items-center border-b border-white/[0.07] bg-[#2a1420] px-4">
       {/* LEFT: Logo */}
       <div className="flex flex-1 items-center">
-        <div className="flex items-center gap-2.5">
-          <Image
-            src="/logo.png"
-            alt=""
-            width={30}
-            height={30}
-            className="h-[30px] w-[30px] object-contain"
-          />
-          <span className="hidden text-[17px] font-semibold tracking-tight text-white lg:block">
-            Webflow<span className="text-[#ff5018]">X</span>
-          </span>
-        </div>
+        <Image
+          src="/logo.png"
+          alt="WebflowX"
+          width={34}
+          height={34}
+          priority
+          className="h-[34px] w-[34px] object-contain"
+        />
       </div>
 
       {/* CENTER: Search */}
