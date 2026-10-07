@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
 import { useJoin } from "@/features/workspaces/api/use-join";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
-import { Loader } from "lucide-react";
-import Image from "next/image";
+import { ArrowLeft, Loader, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -13,7 +12,33 @@ import { errorMessage } from "@/lib/error-message"
 import { parseLimitError } from "@/lib/plans";
 import VerificationInput from 'react-verification-input'
 import { toast } from "sonner";
+import { AuthShell } from "@/features/auth/components/auth-screen";
 import { useConvexAuth } from "convex/react";
+
+// Same split layout as the sign-in screen: plum brand panel on the left, cream form panel on the right.
+const primary =
+    "h-12 w-full cursor-pointer rounded-xl bg-[#ff5018] text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_rgba(255,80,24,0.8)] hover:bg-[#e6430f]"
+
+const Heading = ({ title, text }: { title: string; text: string }) => (
+    <>
+        <h1 className="text-[2rem] font-semibold leading-tight tracking-[-0.03em] text-ink">{title}</h1>
+        <p className="mt-2 text-[15px] text-ink/65">{text}</p>
+    </>
+)
+
+const CodeInput = ({ onComplete }: { onComplete: (v: string) => void }) => (
+    <VerificationInput
+        length={6}
+        classNames={{
+            container: "flex gap-x-2",
+            character: "size-11 sm:size-12 rounded-xl border !border-plum/20 flex items-center justify-center text-lg font-semibold !text-orange-ink !bg-surface",
+            characterSelected: "!border-[#ff5018]",
+        }}
+        autoFocus
+        inputProps={{ "aria-label": "Workspace join code" }}
+        onComplete={onComplete}
+    />
+)
 
 const JoinPage = () => {
     const router = useRouter()
@@ -41,6 +66,7 @@ const JoinPage = () => {
     }, [isMember, router, workspaceId])
 
     const [joinError, setJoinError] = useState<string | null>(null)
+    const [typedCode, setTypedCode] = useState<string | null>(null)
 
     const tryJoin = useCallback((code: string) => {
         mutate({ joinCode: code, workspaceId }, {
@@ -77,85 +103,79 @@ const JoinPage = () => {
         tryJoin(value)
     }
 
-    if (isLoading || isPending) {
+    const wsName = data?.name
+    const panelTitle = wsName ? `Join ${wsName} on WebflowX.` : "Join your team on WebflowX."
+    const panelBody = "Messaging, tasks, documents, meetings and AI summaries in one place."
+
+    // Signed in, or deciding: working out who you are, or adding you to the workspace.
+    if (isLoading || isPending || (isAuthenticated && codeFromUrl && !joinError)) {
         return (
-            <div className="h-full flex items-center justify-center">
-                <Loader className="size-6 animate-spin text-[#ff5018]" />
-            </div>
+            <AuthShell title={panelTitle} body={panelBody}>
+                <Loader className="size-7 animate-spin text-[#ff5018]" />
+                <h1 className="mt-5 text-[2rem] font-semibold leading-tight tracking-[-0.03em] text-ink">
+                    {isLoading ? "One moment…" : "Adding you to the workspace…"}
+                </h1>
+                <p className="mt-2 text-[15px] text-ink/65">You&apos;ll land in {wsName ?? "your workspace"} in a second.</p>
+            </AuthShell>
         )
     }
 
-    // Not signed in yet: show the invite, and send them to sign up / log in, then straight back here to join.
+    // Not signed in and no usable link: ask for the code once, then sign up.
     if (!isAuthenticated) {
-        if (urlCode) { try { window.sessionStorage.setItem(storageKey, urlCode) } catch { /* private mode */ } }
-        const back = encodeURIComponent(`${window.location.pathname}${window.location.search}`)
+        const inviteCode = urlCode ?? typedCode ?? codeFromUrl
+        if (inviteCode) { try { window.sessionStorage.setItem(storageKey, inviteCode) } catch { /* private mode */ } }
+        const back = encodeURIComponent(`${window.location.pathname}${inviteCode ? `?code=${encodeURIComponent(inviteCode)}` : ""}`)
+        const closed = data?.invitesOpen === false
         return (
-            <div className="h-full flex flex-col gap-y-8 items-center justify-center p-8">
-                <Image src={"/logo.png"} width={60} height={60} alt="WebflowX" />
-                <div className="flex max-w-md flex-col items-center gap-y-2 text-center">
-                    <h1 className="text-2xl font-bold">
-                        {data ? `You're invited to join ${data.name}` : "This invite link isn't valid"}
-                    </h1>
-                    <p className="text-md text-muted-foreground">
-                        {data
-                            ? data.invitesOpen === false
+            <AuthShell title={panelTitle} body={panelBody}>
+                <Link href="/" className="mb-10 inline-flex items-center gap-1.5 text-sm text-ink/55 transition-colors hover:text-ink">
+                    <ArrowLeft size={16} /> Back to home
+                </Link>
+                <Heading
+                    title={data ? `Join ${wsName}` : "This invite link isn't valid"}
+                    text={
+                        !data
+                            ? "Ask the person who invited you for a new link."
+                            : closed
                                 ? "Invites are closed or the code has expired. Ask an admin for a new invite."
-                                : "Create a free account (or log in) and you'll be added to the workspace automatically."
-                            : "Ask the person who invited you to send a new link."}
-                    </p>
-                </div>
-                {data && data.invitesOpen !== false && (
-                    <div className="flex flex-col sm:flex-row gap-3">
-                        <Button size="lg" asChild>
-                            <Link href={`/auth?mode=signup&next=${back}`}>Create account</Link>
+                                : inviteCode
+                                    ? "Create a free account, or log in, and you'll be added automatically."
+                                    : "Enter the invite code you were given, then create your account."
+                    }
+                />
+                {data && !closed && !inviteCode && <div className="mt-8"><CodeInput onComplete={(v) => setTypedCode(v)} /></div>}
+                {data && !closed && !!inviteCode && (
+                    <div className="mt-8 space-y-3">
+                        <Button asChild size="lg" className={primary}>
+                            <Link href={`/auth?mode=signup&next=${back}`}>Create account and join</Link>
                         </Button>
-                        <Button size="lg" variant="outline" asChild>
+                        <Button asChild size="lg" variant="outline" className="h-12 w-full rounded-xl border-[#e7dfd9] bg-white text-[15px] font-semibold text-ink hover:bg-cream">
                             <Link href={`/auth?next=${back}`}>I already have an account</Link>
                         </Button>
                     </div>
                 )}
-            </div>
+            </AuthShell>
         )
     }
 
+    // Signed in but the code is missing or was rejected.
     return (
-        <div className="h-full flex flex-col gap-y-8 items-center justify-center p-8">
-            <div className="absolute -top-32 -left-32 w-125 h-125 bg-linear-to-br from-orange-500 to-[#b5b399] rounded-full opacity-40 blur-3xl" />
-            <div className="absolute -bottom-40 -right-40 w-150 h-150 bg-linear-to-br from-orange-500 to-[#d8da72] rounded-full opacity-30 blur-3xl" />
-            <Image src={"/logo.png"} width={60} height={60} alt="WebflowX" />
-            <div className="flex flex-col gap-y-4 items-center justify-center max-w-md">
-                <div className="flex flex-col gap-y-2 items-center justify-center">
-                    <h1 className="text-2xl font-bold">
-                        Join {data?.name}&apos;s workspace
-                    </h1>
-                    <p className="text-md text-muted-foreground">
-                        {data?.invitesOpen === false
-                            ? "Invites are closed or the code has expired. Ask an admin for a new invite."
-                            : "Enter the workspace code to join"}
-                    </p>
-                    {joinError && (
-                        <p role="alert" className="text-sm text-red-600 text-center bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                            {joinError}
-                        </p>
-                    )}
+        <AuthShell title={panelTitle} body={panelBody}>
+            <Heading
+                title={`Join ${wsName ?? "workspace"}`}
+                text={data?.invitesOpen === false ? "Invites are closed or the code has expired. Ask an admin for a new invite." : "Enter the workspace code to join."}
+            />
+            {joinError && (
+                <div role="alert" className="mt-6 flex items-start gap-x-2 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+                    <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+                    <p className="break-words">{joinError}</p>
                 </div>
-                <VerificationInput
-                    length={6}
-                    classNames={{
-                        container: "flex gap-x-2",
-                        character: "w-12 h-12 rounded-md border !border-gray-300 flex items-center justify-center text-lg font-medium !text-[#c2370d] !bg-white",
-                    }}
-                    autoFocus
-                    inputProps={{ "aria-label": "Workspace join code" }}
-                    onComplete={handleComplete}
-                />
-            </div>
-            <div className="flex gap-x-4">
-                <Button size={"lg"} asChild>
-                    <Link href={"/"}>Back to home</Link>
-                </Button>
-            </div>
-        </div>
+            )}
+            <div className="mt-8"><CodeInput onComplete={handleComplete} /></div>
+            <Link href="/dashboard" className="mt-8 inline-flex items-center gap-1.5 text-sm text-ink/55 transition-colors hover:text-ink">
+                <ArrowLeft size={16} /> Back to dashboard
+            </Link>
+        </AuthShell>
     )
 }
 

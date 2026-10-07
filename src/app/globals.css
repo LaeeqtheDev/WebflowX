@@ -453,3 +453,8 @@ body,
 
 .dark .ql-snow .ql-picker-item:hover,
 .dark .ql-snow .ql-picker-item.ql-selected { color: #ff8a63; }
+
+/* Native controls (selects, checkboxes, radios) follow the theme and use the brand orange. */
+input[type="checkbox"], input[type="radio"] { accent-color: #ff5018; }
+select, select option { background-color: var(--wfx-surface); color: var(--wfx-ink); }
+.dark select, .dark select option { background-color: #241620; color: #f4ece7; }

@@ -14,9 +14,18 @@ const isLegal = createRouteMatcher(["/terms", "/privacy", "/join/(.*)"])
 const isApi = createRouteMatcher(["/api/(.*)"])
 
 export default convexAuthNextjsMiddleware(async (request) => {
-  if (isLegal(request)) return undefined;
+  const isInvite = request.nextUrl.pathname.startsWith("/join/");
+  if (isLegal(request) && !isInvite) return undefined;
 
   const authenticated = await isAuthenticatedNextjs();
+
+  // Invite link with a code and not signed in: skip the invite page and go straight to sign-up.
+  // Afterwards the visitor comes back to this link and is added to the workspace automatically.
+  if (isInvite && !authenticated && request.nextUrl.searchParams.get("code")) {
+    const next = request.nextUrl.pathname + request.nextUrl.search;
+    return NextResponse.redirect(new URL(`/auth?mode=signup&next=${encodeURIComponent(next)}`, request.url));
+  }
+  if (isInvite) return undefined;
 
   // API routes check auth themselves too, but unauthenticated callers get JSON 401, not a redirect
   if (isApi(request) && !request.nextUrl.pathname.startsWith("/api/auth")) {

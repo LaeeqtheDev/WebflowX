@@ -169,7 +169,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
             <DialogTitle className="font-semibold tracking-tight">Workspace settings</DialogTitle>
           </DialogHeader>
 
-          <div className="flex gap-1 px-4 pt-3 border-b bg-surface overflow-x-auto">
+          <div className="flex gap-1 px-4 pt-3 border-b bg-surface overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {tabs.filter((t) => t.show).map((t) => (
               <button key={t.id} onClick={() => setTab(t.id)}
                 className={cn("px-3 py-2 text-sm font-semibold whitespace-nowrap border-b-2 -mb-px transition",
@@ -335,7 +335,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                       <div className="flex flex-col gap-1.5">
                         <Label htmlFor="role-rank">Ranks as</Label>
                         <select id="role-rank" value={roleDraft.baseRole} onChange={(e) => setRoleDraft({ ...roleDraft, baseRole: e.target.value as "moderator" | "member" })}
-                          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm">
+                          className="h-9 rounded-md border border-input bg-surface px-3 text-sm text-ink">
                           <option value="member">Member</option>
                           <option value="moderator">Moderator</option>
                         </select>

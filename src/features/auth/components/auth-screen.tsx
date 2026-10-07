@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { CheckSquare, Sparkles } from "lucide-react"
 import { gsap } from "@/components/landing/gsap"
@@ -16,27 +16,19 @@ const copy = {
         title: "Pick up where your team left off.",
         body: "Your channels, tasks and documents are waiting.",
     },
+    invited: {
+        title: "You've been invited to join a workspace.",
+        body: "Create your account and you'll be added to your team's workspace straight away.",
+    },
     signUp: {
         title: "Create a workspace for your team.",
         body: "Messaging, tasks, documents, meetings and AI summaries in one place.",
     },
 }
 
-// Invite links open the sign-up form first (/auth?mode=signup&next=...).
-export const AuthScreen = ({ initialState = "signIn" }: { initialState?: SignInFlow }) => {
-    const [state, setState] = useState<SignInFlow>(initialState)
-    const [email, setEmail] = useState("")
+// Shared split layout (dark brand panel + light form) used by the auth screen and the invite page.
+export const AuthShell = ({ title, body, children }: { title: string; body: string; children: React.ReactNode }) => {
     const root = useRef<HTMLDivElement>(null)
-
-    // Once signed in (sign-up + email code, or log in) go to where the visitor was heading, e.g. an invite link.
-    // A hard navigation makes the address bar and the page agree, so the invite code in the URL is intact.
-    const { isAuthenticated } = useConvexAuth()
-    useEffect(() => {
-        if (!isAuthenticated) return
-        const next = safeNext(new URLSearchParams(window.location.search).get("next"))
-        window.location.replace(next ?? "/dashboard")
-    }, [isAuthenticated])
-
     useEffect(() => {
         const el = root.current
         if (!el) return
@@ -67,9 +59,9 @@ export const AuthScreen = ({ initialState = "signIn" }: { initialState?: SignInF
 
                 <div>
                     <h2 className="a-in max-w-lg text-[3.2rem] font-semibold leading-[1.03] tracking-[-0.035em]">
-                        {copy[state === "signUp" ? "signUp" : "signIn"].title}
+                        {title}
                     </h2>
-                    <p className="a-in mt-5 max-w-md text-lg text-white/65">{copy[state === "signUp" ? "signUp" : "signIn"].body}</p>
+                    <p className="a-in mt-5 max-w-md text-lg text-white/65">{body}</p>
 
                     <div className="relative mt-12 h-[290px] max-w-xl">
                         <div className="a-card absolute left-0 top-0 w-72 rounded-2xl bg-surface p-4 text-ink shadow-2xl">
@@ -115,12 +107,34 @@ export const AuthScreen = ({ initialState = "signIn" }: { initialState?: SignInF
                     <span className="text-lg font-semibold tracking-tight text-ink">WebflowX</span>
                 </div>
                 <div className="a-in mx-auto w-full max-w-[420px]">
-                    {state === "signIn" && <SignInCard setState={setState} onEmail={setEmail} />}
-                    {state === "signUp" && <SignUpCard setState={setState} onEmail={setEmail} />}
-                    {state === "verify" && <VerifyEmailCard email={email} setState={setState} />}
-                    {state === "resetPassword" && <ResetPasswordCard initialEmail={email} setState={setState} />}
+                    {children}
                 </div>
             </main>
         </div>
+    )
+}
+
+// Invite links open the sign-up form first (/auth?mode=signup&next=...).
+export const AuthScreen = ({ initialState = "signIn", invited = false }: { initialState?: SignInFlow; invited?: boolean }) => {
+    const [state, setState] = useState<SignInFlow>(initialState)
+    const [email, setEmail] = useState("")
+
+    // Once signed in (sign-up + email code, or log in) go to where the visitor was heading, e.g. an invite link.
+    // A hard navigation makes the address bar and the page agree, so the invite code in the URL is intact.
+    const { isAuthenticated } = useConvexAuth()
+    useEffect(() => {
+        if (!isAuthenticated) return
+        const next = safeNext(new URLSearchParams(window.location.search).get("next"))
+        window.location.replace(next ?? "/dashboard")
+    }, [isAuthenticated])
+
+    const c = copy[invited ? "invited" : state === "signUp" ? "signUp" : "signIn"]
+    return (
+        <AuthShell title={c.title} body={c.body}>
+            {state === "signIn" && <SignInCard setState={setState} onEmail={setEmail} />}
+            {state === "signUp" && <SignUpCard setState={setState} onEmail={setEmail} />}
+            {state === "verify" && <VerifyEmailCard email={email} setState={setState} />}
+            {state === "resetPassword" && <ResetPasswordCard initialEmail={email} setState={setState} />}
+        </AuthShell>
     )
 }
