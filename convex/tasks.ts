@@ -1,5 +1,6 @@
 import { v } from "convex/values"
-import { mutation, query } from "./_generated/server"
+import { mutation, query, QueryCtx } from "./_generated/server"
+import { Id } from "./_generated/dataModel"
 import { auth } from "./auth"
 
 const statusValidator = v.union(
@@ -16,6 +17,23 @@ const priorityValidator = v.union(
     v.literal("medium"),
     v.literal("low")
 )
+
+// Assignee / sprint must belong to the same workspace as the task
+const assertSameWorkspace = async (
+    ctx: QueryCtx,
+    workspaceId: Id<"workspaces">,
+    assigneeId?: Id<"members">,
+    sprintId?: Id<"sprints">
+) => {
+    if (assigneeId) {
+        const assignee = await ctx.db.get(assigneeId)
+        if (!assignee || assignee.workspaceId !== workspaceId) throw new Error("Assignee is not in this workspace")
+    }
+    if (sprintId) {
+        const sprint = await ctx.db.get(sprintId)
+        if (!sprint || sprint.workspaceId !== workspaceId) throw new Error("Sprint is not in this workspace")
+    }
+}
 
 export const get = query({
     args: {
@@ -84,6 +102,8 @@ export const create = mutation({
 
         if (!member || member.role !== "admin") throw new Error("Only admins can create tasks")
 
+        await assertSameWorkspace(ctx, args.workspaceId, args.assigneeId, args.sprintId)
+
         const taskId = await ctx.db.insert("tasks", {
             ...args,
             createdBy: member._id,
@@ -119,6 +139,8 @@ export const update = mutation({
         labels: v.optional(v.array(v.string())),
         storyPoints: v.optional(v.number()),
         sprintId: v.optional(v.id("sprints")),
+        // explicit flag, because an undefined assigneeId never reaches the server
+        unassign: v.optional(v.boolean()),
     },
     handler: async (ctx, args) => {
         const userId = await auth.getUserId(ctx)
@@ -136,7 +158,11 @@ export const update = mutation({
         if (!member) throw new Error("Unauthorized")
 
         const isAdmin = member.role === "admin"
-        const { id, ...updates } = args
+        const { id, unassign, ...updates } = args
+
+        if (!isAdmin && task.assigneeId !== member._id) {
+            throw new Error("Members can only update tasks assigned to them")
+        }
 
         if (!isAdmin) {
             const allowedKeys = ["status"]
@@ -145,6 +171,8 @@ export const update = mutation({
             )
             if (hasDisallowedKeys) throw new Error("Members can only update task status")
         }
+
+        await assertSameWorkspace(ctx, task.workspaceId, args.assigneeId, args.sprintId)
 
         // 👇 Notify new assignee if changed
         if (args.assigneeId && args.assigneeId !== task.assigneeId && args.assigneeId !== member._id) {
@@ -159,7 +187,11 @@ export const update = mutation({
             })
         }
 
-        await ctx.db.patch(args.id, { ...updates, updatedAt: Date.now() })
+        if (unassign && isAdmin) {
+            await ctx.db.patch(args.id, { ...updates, assigneeId: undefined, updatedAt: Date.now() })
+        } else {
+            await ctx.db.patch(args.id, { ...updates, updatedAt: Date.now() })
+        }
         return args.id
     }
 })
@@ -180,6 +212,12 @@ export const remove = mutation({
             ).unique()
 
         if (!member || member.role !== "admin") throw new Error("Only admins can delete tasks")
+
+        const comments = await ctx.db
+            .query("taskComments")
+            .withIndex("by_task_id", (q) => q.eq("taskId", args.id))
+            .collect()
+        for (const c of comments) await ctx.db.delete(c._id)
 
         await ctx.db.delete(args.id)
         return args.id
@@ -202,6 +240,10 @@ export const assignToMe = mutation({
             ).unique()
 
         if (!member) throw new Error("Unauthorized")
+
+        if (task.assigneeId && task.assigneeId !== member._id && member.role !== "admin") {
+            throw new Error("This task is already assigned to someone else")
+        }
 
         await ctx.db.patch(args.id, { assigneeId: member._id, updatedAt: Date.now() })
         return args.id

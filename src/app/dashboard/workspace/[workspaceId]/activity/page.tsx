@@ -140,7 +140,7 @@ export default function ActivityPage() {
                 router.push(`${base}/tasks${notification.taskId ? `?task=${notification.taskId}` : ""}`)
                 break
             case "note_added":
-                router.push(`${base}/notes`)
+                router.push(`${base}/notes${notification.noteId ? `?note=${notification.noteId}` : ""}`)
                 break
         }
     }

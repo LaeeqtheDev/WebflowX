@@ -84,7 +84,9 @@ export const MessageList = ({
     const loadAttempts = useRef(0);
     useEffect(() => {
         const timers: ReturnType<typeof setTimeout>[] = [];
-        for (const id of [targetMessageId, targetReplyId]) {
+        // Inside the thread panel only the reply matters; in channels / DMs only the main message does
+        const ids = variant === "thread" ? [targetReplyId] : [targetMessageId];
+        for (const id of ids) {
             if (!id || handledTargets.current.has(id)) continue;
             const el = listRef.current?.querySelector<HTMLElement>(`#msg-${id}`);
             if (!el) {
@@ -104,7 +106,7 @@ export const MessageList = ({
             }, 150));
         }
         return () => { /* timers intentionally left to finish the highlight */ };
-    }, [targetMessageId, targetReplyId, data, canLoadMore, loadMore]);
+    }, [targetMessageId, targetReplyId, variant, data, canLoadMore, loadMore]);
 
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const loadMoreFn = useRef(loadMore);

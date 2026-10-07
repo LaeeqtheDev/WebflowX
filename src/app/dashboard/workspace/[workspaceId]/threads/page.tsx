@@ -7,16 +7,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Loader, MessagesSquare, Hash } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
+import { messageLink } from "@/features/messages/lib/message-link"
 import { quillToText } from "@/features/messages/lib/quill-to-text"
 
 type ThreadsData = NonNullable<ReturnType<typeof useGetThreads>["data"]>
 type ThreadData = NonNullable<ThreadsData["myThreads"]>[number]
 
-const ThreadItem = ({ thread, onSelect }: { thread: ThreadData; onSelect: (channelId: string) => void }) => {
+const ThreadItem = ({ thread, onSelect }: { thread: ThreadData; onSelect: (thread: ThreadData) => void }) => {
     const preview = quillToText(thread.body)
     return (
         <div
-            onClick={() => thread.channel?._id && onSelect(thread.channel._id)}
+            onClick={() => thread.channel?._id && onSelect(thread)}
             className="flex items-start gap-3 px-4 py-3 hover:bg-[#f7f2ee] cursor-pointer border-b border-[#381d2a]/10 transition-colors"
         >
             <Avatar className="size-9 shrink-0 mt-0.5 rounded-md">
@@ -73,8 +74,13 @@ export default function ThreadsPage() {
     const router = useRouter()
     const { data, isLoading } = useGetThreads({ workspaceId })
 
-    const handleClick = (channelId: string) => {
-        router.push(`/dashboard/workspace/${workspaceId}/channel/${channelId}`)
+    const handleClick = (thread: ThreadData) => {
+        router.push(messageLink({
+            workspaceId,
+            channelId: thread.channel?._id,
+            messageId: thread._id,
+            openThread: true,
+        }))
     }
 
 

@@ -65,7 +65,8 @@ export default function TasksPage() {
     const activeSprint = safeSprints.find(s => s.status === "active") ?? null
 
     const handleUpdate = (id: Id<"tasks">, data: Partial<Task>) => {
-        updateTask({ id, ...data } as Parameters<typeof updateTask>[0], { onError: (e) => toast.error(e.message) })
+        const unassign = "assigneeId" in data && data.assigneeId === undefined
+        updateTask({ id, ...data, ...(unassign ? { unassign: true } : {}) } as Parameters<typeof updateTask>[0], { onError: (e) => toast.error(e.message) })
         if (selectedTask?._id === id) setSelectedTask(prev => prev ? { ...prev, ...data } : null)
     }
 

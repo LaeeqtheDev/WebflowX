@@ -96,6 +96,19 @@ export const create = mutation({
 export const markRead = mutation({
     args: { id: v.id("notifications") },
     handler: async (ctx, args) => {
+        const userId = await auth.getUserId(ctx)
+        if (!userId) throw new Error("Unauthorized")
+
+        const notification = await ctx.db.get(args.id)
+        if (!notification) throw new Error("Notification not found")
+
+        const member = await ctx.db
+            .query("members")
+            .withIndex("byWorkspaceId_user_id", (q) =>
+                q.eq("workspaceId", notification.workspaceId).eq("userId", userId)
+            ).unique()
+        if (!member || member._id !== notification.recipientId) throw new Error("Unauthorized")
+
         await ctx.db.patch(args.id, { read: true })
         return args.id
     }

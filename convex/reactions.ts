@@ -28,11 +28,13 @@ export const toggle = mutation({
         const member = await getMember(ctx, message.workspaceId, userId);
         if (!member) throw new Error("Unauthorized")
 
+        if (args.value.length === 0 || args.value.length > 32) throw new Error("Invalid reaction")
+
         const existingReaction = await ctx.db
             .query("reactions")
+            .withIndex("by_message_id", (q) => q.eq("messageId", args.messageId))
             .filter((q) =>
                 q.and(
-                    q.eq(q.field("messageId"), args.messageId),
                     q.eq(q.field("memberId"), member._id),
                     q.eq(q.field("value"), args.value)
                 )

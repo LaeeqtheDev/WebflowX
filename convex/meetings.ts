@@ -1,8 +1,21 @@
 import { v } from "convex/values"
-import { mutation, query, action } from "./_generated/server"
+import { mutation, query, action, MutationCtx } from "./_generated/server"
+import { Id } from "./_generated/dataModel"
+import { findMember } from "./access"
 import { auth } from "./auth"
 import { api } from "./_generated/api"
 import { checkLimit } from "./limits"
+
+
+const requireMeetingMember = async (ctx: MutationCtx, meetingId: Id<"meetings">) => {
+    const userId = await auth.getUserId(ctx)
+    if (!userId) throw new Error("Unauthorized")
+    const meeting = await ctx.db.get(meetingId)
+    if (!meeting) throw new Error("Meeting not found")
+    const member = await findMember(ctx, meeting.workspaceId, userId)
+    if (!member) throw new Error("Unauthorized")
+    return { meeting, member }
+}
 
 export const get = query({
     args: { workspaceId: v.id("workspaces") },
@@ -86,8 +99,7 @@ export const end = mutation({
         participants: v.optional(v.array(v.string())),
     },
     handler: async (ctx, args) => {
-        const userId = await auth.getUserId(ctx)
-        if (!userId) throw new Error("Unauthorized")
+        await requireMeetingMember(ctx, args.id)
 
         await ctx.db.patch(args.id, {
             endedAt: Date.now(),
@@ -105,6 +117,7 @@ export const saveSummary = mutation({
         transcript: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
+        await requireMeetingMember(ctx, args.id)
         await ctx.db.patch(args.id, {
             summary: args.summary,
             transcript: args.transcript,
@@ -119,6 +132,10 @@ export const generateSummary = action({
         transcript: v.string(),
     },
     handler: async (ctx, args) => {
+        const userId = await auth.getUserId(ctx)
+        if (!userId) throw new Error("Unauthorized")
+        if (args.transcript.length > 100_000) throw new Error("Transcript too long")
+
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: {

@@ -1,8 +1,8 @@
 import { v } from "convex/values";
-import { mutation, query, QueryCtx } from "./_generated/server";
+import { mutation, query, QueryCtx, MutationCtx } from "./_generated/server";
 import { auth } from "./auth";
 import { Id, Doc } from "./_generated/dataModel";
-import { paginationOptsValidator } from "convex/server";
+import { paginationOptsValidator, PaginationResult } from "convex/server";
 
 const populateUser = (ctx: QueryCtx, userId: Id<"users">) => {
     return ctx.db.get(userId);
@@ -61,6 +61,40 @@ export const getMember = async (
         .unique();
 };
 
+// Deletes a message together with its reactions, thread replies and stored files.
+export const deleteMessageCascade = async (
+    ctx: MutationCtx,
+    message: Doc<"messages">
+) => {
+    const replies = await ctx.db
+        .query("messages")
+        .withIndex("by_parent_message_id", (q) =>
+            q.eq("parentMessagesId", message._id)
+        )
+        .collect();
+    for (const reply of replies) {
+        await deleteMessageCascade(ctx, reply);
+    }
+
+    const reactions = await ctx.db
+        .query("reactions")
+        .withIndex("by_message_id", (q) => q.eq("messageId", message._id))
+        .collect();
+    for (const reaction of reactions) await ctx.db.delete(reaction._id);
+
+    for (const fileId of [message.image, message.file]) {
+        if (fileId) {
+            try {
+                await ctx.storage.delete(fileId);
+            } catch {
+                // file already gone
+            }
+        }
+    }
+
+    await ctx.db.delete(message._id);
+};
+
 export const get = query({
     args: {
         channelId: v.optional(v.id("channels")),
@@ -80,16 +114,41 @@ export const get = query({
             _conversationId = parentMessage.conversationId;
         }
 
-        const results = await ctx.db
-            .query("messages")
-            .withIndex("by_channel_id_parent_message_id_conversation_id", (q) =>
-                q
-                    .eq("channelId", args.channelId)
-                    .eq("parentMessagesId", args.parentMessageId)
-                    .eq("conversationId", _conversationId)
-            )
-            .order("desc")
-            .paginate(args.paginationOpts);
+        // Access control: caller must belong to the workspace that owns the channel / conversation / thread
+        let ownerWorkspaceId: Id<"workspaces"> | undefined;
+        let conversationForCheck: Doc<"conversations"> | null = null;
+        if (args.channelId) {
+            const channel = await ctx.db.get(args.channelId);
+            ownerWorkspaceId = channel?.workspaceId;
+        } else if (_conversationId) {
+            conversationForCheck = await ctx.db.get(_conversationId);
+            ownerWorkspaceId = conversationForCheck?.workspaceId;
+        } else if (args.parentMessageId) {
+            const parent = await ctx.db.get(args.parentMessageId);
+            ownerWorkspaceId = parent?.workspaceId;
+        }
+        let allowed = false;
+        if (ownerWorkspaceId) {
+            const viewer = await getMember(ctx, ownerWorkspaceId, userId);
+            allowed =
+                !!viewer &&
+                (!conversationForCheck ||
+                    conversationForCheck.memberOneId === viewer._id ||
+                    conversationForCheck.memberTwoId === viewer._id);
+        }
+
+        const results: PaginationResult<Doc<"messages">> = allowed
+            ? await ctx.db
+                  .query("messages")
+                  .withIndex("by_channel_id_parent_message_id_conversation_id", (q) =>
+                      q
+                          .eq("channelId", args.channelId)
+                          .eq("parentMessagesId", args.parentMessageId)
+                          .eq("conversationId", _conversationId)
+                  )
+                  .order("desc")
+                  .paginate(args.paginationOpts)
+            : { page: [], isDone: true, continueCursor: "" };
 
         return {
             ...results,
@@ -195,6 +254,25 @@ export const create = mutation({
             _conversationId = parentMessage.conversationId;
         }
 
+        // The target must live in this workspace, and DMs only accept their two participants
+        if (args.channelId) {
+            const channel = await ctx.db.get(args.channelId);
+            if (!channel || channel.workspaceId !== args.workspaceId)
+                throw new Error("Channel not found");
+        }
+        if (_conversationId) {
+            const conv = await ctx.db.get(_conversationId);
+            if (!conv || conv.workspaceId !== args.workspaceId)
+                throw new Error("Conversation not found");
+            if (conv.memberOneId !== member._id && conv.memberTwoId !== member._id)
+                throw new Error("Unauthorized");
+        }
+        if (args.parentMessageId) {
+            const parent = await ctx.db.get(args.parentMessageId);
+            if (!parent || parent.workspaceId !== args.workspaceId)
+                throw new Error("Parent Message not found");
+        }
+
         const messageId = await ctx.db.insert("messages", {
             memberId: member._id,
             body: args.body,
@@ -209,22 +287,10 @@ export const create = mutation({
             parentMessagesId: args.parentMessageId,
         });
 
-        console.log("=== MESSAGE CREATED ===");
-        console.log("messageId:", messageId);
-        console.log("parentMessageId:", args.parentMessageId);
-        console.log("member._id:", member._id);
-        console.log("channelId:", args.channelId);
-        console.log("conversationId:", _conversationId);
-        console.log("file:", args.fileName);
 
         // Thread reply notification
         if (args.parentMessageId) {
             const parentMessage = await ctx.db.get(args.parentMessageId);
-            console.log("=== THREAD REPLY CHECK ===");
-            console.log("parentMessage found:", !!parentMessage);
-            console.log("parentMessage.memberId:", parentMessage?.memberId);
-            console.log("sender member._id:", member._id);
-            console.log("same member?", parentMessage?.memberId === member._id);
 
             if (parentMessage && parentMessage.memberId !== member._id) {
                 const notifId = await ctx.db.insert("notifications", {
@@ -238,7 +304,6 @@ export const create = mutation({
                     body: args.body,
                     read: false,
                 });
-                console.log("Thread reply notification created:", notifId);
             } else {
                 console.log(
                     "Thread reply notification SKIPPED - same member or no parent"
@@ -249,8 +314,6 @@ export const create = mutation({
         // DM notification
         if (_conversationId && !args.parentMessageId) {
             const conversation = await ctx.db.get(_conversationId);
-            console.log("=== DM CHECK ===");
-            console.log("conversation found:", !!conversation);
 
             if (conversation) {
                 const recipientId =
@@ -258,8 +321,6 @@ export const create = mutation({
                         ? conversation.memberTwoId
                         : conversation.memberOneId;
 
-                console.log("recipientId:", recipientId);
-                console.log("same as sender?", recipientId === member._id);
 
                 if (recipientId !== member._id) {
                     const notifId = await ctx.db.insert("notifications", {
@@ -272,7 +333,6 @@ export const create = mutation({
                         body: args.body,
                         read: false,
                     });
-                    console.log("DM notification created:", notifId);
                 }
             }
         }
@@ -315,7 +375,7 @@ export const remove = mutation({
         if (!member || member._id !== message.memberId)
             throw new Error("Unauthorized");
 
-        await ctx.db.delete(args.id);
+        await deleteMessageCascade(ctx, message);
         return args.id;
     },
 });

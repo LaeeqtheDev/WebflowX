@@ -21,6 +21,7 @@ export const getById = query({
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", member.workspaceId).eq("userId", userId)
             )
+            .unique()
 
         if (!currentMember) return null
 
@@ -96,6 +97,20 @@ export const update = mutation({
 
         if (!currentMember || currentMember.role !== "admin") throw new Error("Unauthorized")
 
+        if (member.role === "admin" && args.role !== "admin") {
+            const workspace = await ctx.db.get(member.workspaceId)
+            if (workspace && workspace.userId === member.userId) {
+                throw new Error("The workspace owner cannot be demoted")
+            }
+            const admins = await ctx.db
+                .query("members")
+                .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", member.workspaceId))
+                .collect()
+            if (admins.filter(m => m.role === "admin").length <= 1) {
+                throw new Error("A workspace needs at least one admin")
+            }
+        }
+
         await ctx.db.patch(args.id, { role: args.role })
         return args.id;
     }
@@ -117,10 +132,11 @@ export const remove = mutation({
             ).unique()
 
         if (!currentMember) throw new Error("Unauthorized")
-        if (member.role === "admin") throw new Error("You cannot remove an admin")
-        if (currentMember._id === args.id && currentMember.role === "admin") {
-            throw new Error("Cannot remove yourself as an admin")
+        // Only admins can remove others; anyone can remove themselves (leave)
+        if (currentMember.role !== "admin" && currentMember._id !== args.id) {
+            throw new Error("Only admins can remove members")
         }
+        if (member.role === "admin") throw new Error("You cannot remove an admin")
 
         const [messages, reactions, conversations] = await Promise.all([
             ctx.db.query("messages")
@@ -130,6 +146,7 @@ export const remove = mutation({
                 .withIndex("by_member_id", (q) => q.eq("memberId", member._id))
                 .collect(),
             ctx.db.query("conversations")
+                .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", member.workspaceId))
                 .filter((q) => q.or(
                     q.eq(q.field("memberOneId"), member._id),
                     q.eq(q.field("memberTwoId"), member._id),
@@ -139,6 +156,18 @@ export const remove = mutation({
         for (const message of messages) await ctx.db.delete(message._id)
         for (const reaction of reactions) await ctx.db.delete(reaction._id)
         for (const conversation of conversations) await ctx.db.delete(conversation._id)
+
+        // Clean up notifications and release tasks assigned to this member
+        const [notifications, assignedTasks] = await Promise.all([
+            ctx.db.query("notifications")
+                .withIndex("by_recipient", (q) => q.eq("recipientId", member._id))
+                .collect(),
+            ctx.db.query("tasks")
+                .withIndex("by_assignee_id", (q) => q.eq("assigneeId", member._id))
+                .collect(),
+        ])
+        for (const n of notifications) await ctx.db.delete(n._id)
+        for (const t of assignedTasks) await ctx.db.patch(t._id, { assigneeId: undefined, updatedAt: Date.now() })
 
         await ctx.db.delete(args.id)
         return args.id;

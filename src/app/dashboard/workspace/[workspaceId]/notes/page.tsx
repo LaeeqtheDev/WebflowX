@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
+import { useSearchParams } from "next/navigation"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
 
 import { Id } from "../../../../../../convex/_generated/dataModel"
@@ -50,6 +51,23 @@ export default function NotesPage() {
     const { mutate: togglePin } = useTogglePin()
 
     const isAdmin = currentMember?.role === "admin"
+
+    // Deep link: /notes?note=<id> opens that note (used by notifications)
+    const searchParams = useSearchParams()
+    const targetNoteId = searchParams.get("note")
+    const openedNote = useRef<string | null>(null)
+    useEffect(() => {
+        if (!targetNoteId || !notes || openedNote.current === targetNoteId) return
+        const found = notes.find(n => n._id === targetNoteId)
+        if (found) {
+            openedNote.current = targetNoteId
+            setSelectedNote(found as Note)
+            setEditTitle(found.title)
+            setEditBody(quillToText(found.body))
+            setIsCreating(false)
+            setShowMobileEditor(true)
+        }
+    }, [targetNoteId, notes])
 
     const handleCreate = () => {
         if (!newTitle.trim()) return toast.error("Title is required")

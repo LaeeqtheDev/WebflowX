@@ -4,11 +4,10 @@ import { auth } from './auth';
 import { checkLimit } from './limits';
 
 const generateCode = () => {
-    const code = Array.from(
-        { length: 6 },
-        () => "0123456789abcdefghijklmnopqrstuvwxyz"[Math.floor(Math.random() * 36)]
-    ).join("")
-    return code;
+    const alphabet = "0123456789abcdefghijklmnopqrstuvwxyz"
+    const bytes = new Uint8Array(6)
+    crypto.getRandomValues(bytes)
+    return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("")
 }
 
 export const create = mutation({
@@ -124,10 +123,46 @@ export const remove = mutation({
             ctx.db.query("reactions").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.id)).collect(),
         ])
 
+        const [tasks, sprints, notes, docs, meetings] = await Promise.all([
+            ctx.db.query("tasks").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.id)).collect(),
+            ctx.db.query("sprints").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.id)).collect(),
+            ctx.db.query("notes").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.id)).collect(),
+            ctx.db.query("docs").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.id)).collect(),
+            ctx.db.query("meetings").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.id)).collect(),
+        ])
+
+        for (const task of tasks) {
+            const comments = await ctx.db
+                .query("taskComments")
+                .withIndex("by_task_id", (q) => q.eq("taskId", task._id))
+                .collect()
+            for (const c of comments) await ctx.db.delete(c._id)
+            await ctx.db.delete(task._id)
+        }
+        for (const sprint of sprints) await ctx.db.delete(sprint._id)
+        for (const note of notes) await ctx.db.delete(note._id)
+        for (const doc of docs) await ctx.db.delete(doc._id)
+        for (const meeting of meetings) await ctx.db.delete(meeting._id)
+
+        for (const m of members) {
+            const notifications = await ctx.db
+                .query("notifications")
+                .withIndex("by_recipient", (q) => q.eq("recipientId", m._id))
+                .collect()
+            for (const n of notifications) await ctx.db.delete(n._id)
+        }
+
         for (const member of members) await ctx.db.delete(member._id)
         for (const channel of channels) await ctx.db.delete(channel._id)
         for (const conversation of conversations) await ctx.db.delete(conversation._id)
-        for (const message of messages) await ctx.db.delete(message._id)
+        for (const message of messages) {
+            for (const fileId of [message.image, message.file]) {
+                if (fileId) {
+                    try { await ctx.storage.delete(fileId) } catch { /* already gone */ }
+                }
+            }
+            await ctx.db.delete(message._id)
+        }
         for (const reaction of reactions) await ctx.db.delete(reaction._id)
 
         await ctx.db.delete(args.id)

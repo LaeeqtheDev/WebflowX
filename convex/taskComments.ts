@@ -8,6 +8,15 @@ export const get = query({
         const userId = await auth.getUserId(ctx)
         if (!userId) return []
 
+        const task = await ctx.db.get(args.taskId)
+        if (!task) return []
+        const viewer = await ctx.db
+            .query("members")
+            .withIndex("byWorkspaceId_user_id", (q) =>
+                q.eq("workspaceId", task.workspaceId).eq("userId", userId)
+            ).unique()
+        if (!viewer) return []
+
         const comments = await ctx.db
             .query("taskComments")
             .withIndex("by_task_id", (q) => q.eq("taskId", args.taskId))
@@ -38,6 +47,10 @@ export const create = mutation({
             ).unique()
 
         if (!member) throw new Error("Unauthorized")
+
+        const taskForCheck = await ctx.db.get(args.taskId)
+        if (!taskForCheck || taskForCheck.workspaceId !== args.workspaceId)
+            throw new Error("Task not found")
 
         const commentId = await ctx.db.insert("taskComments", {
             taskId: args.taskId,

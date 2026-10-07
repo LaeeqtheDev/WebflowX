@@ -19,6 +19,8 @@ import { useGetMembers } from "@/features/members/api/use-get-members"
 import { useRouter } from "next/navigation"
 import { useSearchMessages } from "@/features/messages/api/use-search-messages"
 import { quillToText } from "@/features/messages/lib/quill-to-text"
+import { messageLink } from "@/features/messages/lib/message-link"
+import { useGetConversations } from "@/features/conversations/api/use-get-conversations"
 import { VisuallyHidden } from "radix-ui"
 import { DialogTitle } from "@/components/ui/dialog"
 
@@ -33,6 +35,7 @@ export const Toolbar = () => {
   const { data: channels } = useGetChannels({ workspaceId })
   const { data: members } = useGetMembers({ workspaceId })
   const { data: messageResults } = useSearchMessages({ workspaceId, query })
+  const { data: conversations } = useGetConversations({ workspaceId })
 
   const onChannelClick = (channelId: string) => {
     setOpen(false)
@@ -44,13 +47,28 @@ export const Toolbar = () => {
     router.push(`/dashboard/workspace/${workspaceId}/member/${memberId}`)
   }
 
-  const onMessageClick = (channelId?: string, conversationId?: string) => {
+  const onMessageClick = (message: {
+    _id: string
+    channelId?: string
+    conversationId?: string
+    parentMessagesId?: string
+  }) => {
     setOpen(false)
-    if (channelId) {
-      router.push(`/dashboard/workspace/${workspaceId}/channel/${channelId}`)
-    } else if (conversationId) {
-      router.push(`/dashboard/workspace/${workspaceId}/member/${conversationId}`)
-    }
+    // DM results carry a conversation id; the route needs the other member's id
+    const memberId = message.conversationId
+      ? conversations?.find((c) => c._id === message.conversationId)?.otherMember?._id
+      : undefined
+    if (!message.channelId && !memberId) return
+
+    router.push(
+      messageLink({
+        workspaceId,
+        channelId: message.channelId,
+        memberId,
+        messageId: message._id,
+        parentMessageId: message.parentMessagesId,
+      })
+    )
   }
 
   return (
@@ -124,7 +142,7 @@ export const Toolbar = () => {
                     <CommandItem
                       className="rounded-lg data-[selected=true]:bg-[#f7f2ee] data-[selected=true]:text-[#1b1017]"
                       key={message._id}
-                      onSelect={() => onMessageClick(message.channelId, message.conversationId)}
+                      onSelect={() => onMessageClick(message)}
                     >
                       {quillToText(message.body)}
                     </CommandItem>

@@ -2,6 +2,7 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { auth } from "./auth";
 import { checkLimit } from "./limits"
+import { deleteMessageCascade } from "./messages"
 
 export const get = query({
     args: {
@@ -129,12 +130,15 @@ export const remove = mutation({
 
         if (!member || member.role !== "admin") throw new Error("Unauthorized");
 
-        const [messages] = await Promise.all([
-            ctx.db.query("messages").withIndex("by_channel_id", (q) => q.eq("channelId", args.id)).collect()
-        ])
+        const messages = await ctx.db
+            .query("messages")
+            .withIndex("by_channel_id", (q) => q.eq("channelId", args.id))
+            .collect()
 
+        // top-level messages cascade to replies; replies already gone are skipped
         for (const message of messages) {
-            await ctx.db.delete(message._id);
+            const stillThere = await ctx.db.get(message._id)
+            if (stillThere) await deleteMessageCascade(ctx, stillThere)
         }
 
         await ctx.db.delete(args.id)

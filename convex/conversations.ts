@@ -21,7 +21,7 @@ export const CreateOrGet = mutation({
 
         const otherMember = await ctx.db.get(args.memberId)
 
-        if(!currentMember || !otherMember){
+        if(!currentMember || !otherMember || otherMember.workspaceId !== args.workspaceId){
             throw new Error("Member not found");
         }
 
@@ -38,7 +38,7 @@ export const CreateOrGet = mutation({
                 q.eq(q.field("memberTwoId"), currentMember._id),
             )
         )
-        ).unique()
+        ).first()
 
         if(existingConversation){
         return existingConversation._id

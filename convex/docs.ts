@@ -87,6 +87,13 @@ export const rename = mutation({
         const doc = await ctx.db.get(args.id)
         if (!doc) throw new Error("Doc not found")
 
+        const member = await ctx.db
+            .query("members")
+            .withIndex("byWorkspaceId_user_id", (q) =>
+                q.eq("workspaceId", doc.workspaceId).eq("userId", userId)
+            ).unique()
+        if (!member) throw new Error("Unauthorized")
+
         await ctx.db.patch(args.id, {
             title: args.title,
             updatedAt: Date.now(),

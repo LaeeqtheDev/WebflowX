@@ -8,6 +8,7 @@ import { useCurrentMember } from "@/features/members/api/use-current-member"
 import { useGetMembers } from "@/features/members/api/use-get-members"
 import { Loader, SendHorizonal, Hash, Image as ImageIcon } from "lucide-react"
 import { format } from "date-fns"
+import { messageLink } from "@/features/messages/lib/message-link"
 import { quillToText } from "@/features/messages/lib/quill-to-text"
 import { useGetSent } from "@/features/threads/api/use-get-sent"
 
@@ -20,8 +21,8 @@ export default function DraftsPage() {
 
     const currentUser = members?.find(m => m._id === currentMember?._id)
 
-    const handleClick = (channelId: string) => {
-        router.push(`/dashboard/workspace/${workspaceId}/channel/${channelId}`)
+    const handleClick = (channelId: string, messageId: string) => {
+        router.push(messageLink({ workspaceId, channelId, messageId }))
     }
 
     return (
@@ -61,7 +62,7 @@ export default function DraftsPage() {
                         return (
                             <div
                                 key={msg._id}
-                                onClick={() => msg.channel?._id && handleClick(msg.channel._id)}
+                                onClick={() => msg.channel?._id && handleClick(msg.channel._id, msg._id)}
                                 className="flex items-start gap-3 px-4 py-3 hover:bg-[#f7f2ee] cursor-pointer transition-colors"
                             >
                                 <Avatar className="size-9 shrink-0 mt-0.5 rounded-md">

@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
+import { messageLink } from "@/features/messages/lib/message-link"
 import { quillToText } from "@/features/messages/lib/quill-to-text"
 
 export default function DmsPage() {
@@ -87,9 +88,12 @@ export default function DmsPage() {
                             return (
                                 <div
                                     key={conv._id}
-                                    onClick={() => router.push(
-                                        `/dashboard/workspace/${workspaceId}/member/${conv.otherMember?._id}`
-                                    )}
+                                    onClick={() => router.push(messageLink({
+                                        workspaceId,
+                                        memberId: conv.otherMember?._id,
+                                        messageId: conv.lastMessage?._id,
+                                        parentMessageId: conv.lastMessage?.parentMessagesId,
+                                    }))}
                                     className={cn(
                                         "flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[#f7f2ee] transition-colors",
                                         hasUnread && "bg-[#ff5018]/5"
