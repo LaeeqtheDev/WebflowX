@@ -63,6 +63,8 @@ export default function MeetingPage() {
 
     const currentUserName = members?.find(m => m._id === currentMember?._id)?.user.name ?? "Someone"
 
+    const activeMeeting = meetings?.find((m) => m._id === activeMeetingId)
+
     const handleJoin = async (roomName: string, meetingId: Id<"meetings">) => {
         try {
             // register in the call first (also rejects meetings that already ended)
@@ -176,7 +178,7 @@ export default function MeetingPage() {
         }
     }, [convex, saveSummary])
 
-    const handleDisconnect = useCallback(async (_transcript: string) => {
+    const handleDisconnect = useCallback(async (_transcript: string, reason: "left" | "removed" | "ended" = "left") => {
         const meetingId = activeMeetingId
         const segments = takeLastSegments()
 
@@ -186,6 +188,8 @@ export default function MeetingPage() {
 
         if (!meetingId) return
         if (meetingId) setSelectedMeetingId(meetingId)
+        if (reason === "removed") toast.error("You were removed from the meeting by the host")
+        if (reason === "ended") toast.info("The host ended the meeting")
 
         // Save my part; the server tells us whether I was the last one in the call
         let ended = false
@@ -202,7 +206,7 @@ export default function MeetingPage() {
         }
 
         if (!ended) {
-            toast.info("You left the meeting. The summary is created when the last person leaves.")
+            if (reason === "left") toast.info("You left the meeting. The summary is created when the last person leaves.")
             return
         }
 
@@ -236,6 +240,9 @@ export default function MeetingPage() {
                 <MeetingRoom
                     token={token}
                     serverUrl={serverUrl}
+                    roomName={activeMeeting?.roomName ?? ""}
+                    title={activeMeeting?.title ?? "Meeting"}
+                    startedAt={activeMeeting?.startedAt ?? Date.now()}
                     onDisconnect={handleDisconnect}
                 />
             </div>

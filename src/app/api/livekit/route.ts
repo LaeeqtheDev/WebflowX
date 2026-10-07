@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
         const at = new AccessToken(apiKey!, apiSecret!, {
             identity: who.identity,
             name: who.name,
+            metadata: JSON.stringify({ host: who.host }),
             ttl: "2h",
         })
         at.addGrant({

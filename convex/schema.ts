@@ -159,6 +159,8 @@ const schema = defineSchema({
         participants: v.optional(v.array(v.string())),
         // members currently in the call; the meeting ends when this becomes empty
         activeMembers: v.optional(v.array(v.id("members"))),
+        // members the host removed from this call; they cannot rejoin it
+        kicked: v.optional(v.array(v.id("members"))),
     })
         .index("by_workspace_id", ["workspaceId"])
         .index("by_room_name", ["roomName"]),

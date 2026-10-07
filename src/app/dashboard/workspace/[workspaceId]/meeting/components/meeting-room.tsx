@@ -3,19 +3,21 @@
 import "@livekit/components-styles"
 import {
     LiveKitRoom,
-    VideoConference,
-    RoomAudioRenderer,
     useLocalParticipant,
     useRoomContext,
 } from "@livekit/components-react"
 import { useEffect, useRef, useState } from "react"
-import { Mic, AlertCircle } from "lucide-react"
+import { DisconnectReason } from "livekit-client"
+import { MeetingStage } from "./room-ui"
 import { TranscriptSegment, setLastSegments } from "../segments"
 
 interface MeetingRoomProps {
     token: string
     serverUrl: string
-    onDisconnect: (transcript: string) => void
+    roomName: string
+    title: string
+    startedAt: number
+    onDisconnect: (transcript: string, reason: "left" | "removed" | "ended") => void
 }
 
 // Global singleton state
@@ -58,7 +60,7 @@ const cleanupGlobals = () => {
     isInitializing = false
 }
 
-const MeetingRoomInner = ({ onDisconnect }: { onDisconnect: (transcript: string) => void }) => {
+const MeetingRoomInner = ({ onDisconnect, roomName, title, startedAt }: Pick<MeetingRoomProps, "onDisconnect" | "roomName" | "title" | "startedAt">) => {
     const room = useRoomContext()
     const { localParticipant } = useLocalParticipant()
     
@@ -206,7 +208,7 @@ const MeetingRoomInner = ({ onDisconnect }: { onDisconnect: (transcript: string)
 
     // Handle room disconnect - the ONLY place we stop recording
     useEffect(() => {
-        const handleDisconnected = () => {
+        const handleDisconnected = (disconnectReason?: DisconnectReason) => {
             console.log("📴 ROOM DISCONNECTED - STOPPING ALL RECORDING")
             
             cleanupGlobals()
@@ -222,7 +224,11 @@ const MeetingRoomInner = ({ onDisconnect }: { onDisconnect: (transcript: string)
                 const transcriptToSend = finalTranscript
                 globalTranscript = "" // Reset
                 
-                onDisconnect(transcriptToSend)
+                const reason =
+                    disconnectReason === DisconnectReason.PARTICIPANT_REMOVED ? "removed"
+                        : disconnectReason === DisconnectReason.ROOM_DELETED ? "ended"
+                            : "left"
+                onDisconnect(transcriptToSend, reason)
             }, 500)
         }
 
@@ -234,49 +240,17 @@ const MeetingRoomInner = ({ onDisconnect }: { onDisconnect: (transcript: string)
     }, [room, onDisconnect])
 
     return (
-        <div className="h-full w-full relative bg-[#2a1420]">
-            <VideoConference />
-            <RoomAudioRenderer />
-            
-            <div className="absolute top-4 left-4 z-50">
-                {status === "recording" && (
-                    <div className="flex items-center gap-2 bg-green-600/95 text-white px-3 py-1.5 rounded-lg text-xs font-medium shadow-sm">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                        </span>
-                        Recording • {audioChunksSent} chunks
-                    </div>
-                )}
-                
-                {status === "starting" && (
-                    <div className="flex items-center gap-2 bg-[#ff5018] text-white px-3 py-1.5 rounded-lg text-xs font-medium shadow-sm">
-                        <Mic className="size-3 animate-pulse" />
-                        Initializing...
-                    </div>
-                )}
-                
-                {status === "error" && (
-                    <div className="flex flex-col gap-2 bg-red-600/95 text-white p-3 rounded-xl text-xs shadow-sm max-w-sm">
-                        <div className="flex items-center gap-2">
-                            <AlertCircle className="size-4" />
-                            <span className="font-semibold">Error</span>
-                        </div>
-                        <p className="text-[11px]">{errorMessage}</p>
-                    </div>
-                )}
-            </div>
-
-            <div className="absolute bottom-4 left-4 z-50 bg-[#2a1420]/90 border border-white/10 text-white/80 text-[10px] px-3 py-2 rounded-lg font-mono">
-                <div>Status: <strong>{status}</strong></div>
-                <div>Chunks sent: <strong>{audioChunksSent}</strong></div>
-                <div>Transcript: <strong>{transcriptLength} chars</strong></div>
-            </div>
-        </div>
+        <MeetingStage
+            roomName={roomName}
+            title={title}
+            startedAt={startedAt}
+            status={status}
+            errorMessage={errorMessage}
+        />
     )
 }
 
-export const MeetingRoom = ({ token, serverUrl, onDisconnect }: MeetingRoomProps) => {
+export const MeetingRoom = ({ token, serverUrl, roomName, title, startedAt, onDisconnect }: MeetingRoomProps) => {
     return (
         <LiveKitRoom
             token={token}
@@ -284,7 +258,7 @@ export const MeetingRoom = ({ token, serverUrl, onDisconnect }: MeetingRoomProps
             connect={true}
             video={true}
             audio={true}
-            className="h-full w-full bg-[#2a1420]"
+            className="h-full w-full bg-[#150c11]"
             data-lk-theme="default"
             style={{
                 "--lk-bg": "#2a1420",
@@ -300,7 +274,7 @@ export const MeetingRoom = ({ token, serverUrl, onDisconnect }: MeetingRoomProps
                 "--lk-control-border-radius": "9999px",
             } as React.CSSProperties}
         >
-            <MeetingRoomInner onDisconnect={onDisconnect} />
+            <MeetingRoomInner onDisconnect={onDisconnect} roomName={roomName} title={title} startedAt={startedAt} />
         </LiveKitRoom>
     )
 }

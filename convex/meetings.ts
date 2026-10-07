@@ -56,6 +56,9 @@ export const join = mutation({
     handler: async (ctx, args) => {
         const { meeting, member } = await requireMeetingMember(ctx, args.id)
         if (meeting.endedAt) throw new ConvexError("This meeting has already ended")
+        if ((meeting.kicked ?? []).includes(member._id)) {
+            throw new ConvexError("You were removed from this meeting by the host")
+        }
 
         const user = await ctx.db.get(member.userId)
         const name = user?.name ?? "Guest"
@@ -344,10 +347,36 @@ export const authorizeRoom = query({
         if (!meeting || meeting.endedAt) return null
         const member = await findMember(ctx, meeting.workspaceId, userId)
         if (!member) return null
+        if ((meeting.kicked ?? []).includes(member._id)) return null
         const user = await ctx.db.get(userId)
         return {
+            meetingId: meeting._id,
+            host: member.role === "admin" || meeting.createdBy === member._id,
             identity: member._id as string,
             name: user?.name ?? user?.email ?? "Member",
         }
+    },
+})
+
+// Host removes someone from the call. The /api/livekit/moderate route then drops them from the room.
+export const kickMember = mutation({
+    args: { id: v.id("meetings"), memberId: v.id("members") },
+    handler: async (ctx, args) => {
+        const { meeting, member } = await requireMeetingMember(ctx, args.id)
+        if (member.role !== "admin" && meeting.createdBy !== member._id) {
+            throw new ConvexError("Only an admin or the meeting host can remove people")
+        }
+        if (args.memberId === member._id) throw new ConvexError("You can't remove yourself")
+        if (args.memberId === meeting.createdBy) throw new ConvexError("You can't remove the person who started the meeting")
+        const target = await ctx.db.get(args.memberId)
+        if (!target || target.workspaceId !== meeting.workspaceId) throw new ConvexError("Member not found")
+
+        const kicked = new Set(meeting.kicked ?? [])
+        kicked.add(args.memberId)
+        await ctx.db.patch(args.id, {
+            kicked: Array.from(kicked),
+            activeMembers: (meeting.activeMembers ?? []).filter((m) => m !== args.memberId),
+        })
+        return args.id
     },
 })
