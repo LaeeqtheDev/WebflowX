@@ -1,7 +1,27 @@
 import { v } from "convex/values"
-import { mutation, query, internalMutation } from "./_generated/server"
+import { mutation, query, internalMutation, MutationCtx } from "./_generated/server"
+import { Doc, Id } from "./_generated/dataModel"
+import { internal } from "./_generated/api"
 import { auth } from "./auth"
 import { canAccessChannel } from "./permissions"
+
+// Types that are worth an email when the person hasn't looked at them yet.
+const EMAILED = new Set<Doc<"notifications">["type"]>(["mention", "dm_received", "thread_reply", "task_assigned", "task_comment"])
+// Wait a few minutes first: if they open the app and read it, no email is sent.
+const EMAIL_DELAY_MS = 4 * 60 * 1000
+
+// The one place notifications are created. Also schedules the "you have unread activity" email.
+export async function notify(
+    ctx: MutationCtx,
+    doc: Omit<Doc<"notifications">, "_id" | "_creationTime">,
+    opts: { email?: boolean } = {}
+): Promise<Id<"notifications">> {
+    const id = await ctx.db.insert("notifications", doc)
+    if (opts.email !== false && EMAILED.has(doc.type)) {
+        await ctx.scheduler.runAfter(EMAIL_DELAY_MS, internal.emails.sendNotification, { notificationId: id })
+    }
+    return id
+}
 
 const typeValidator = v.union(
     v.literal("thread_reply"),
@@ -99,10 +119,7 @@ export const create = internalMutation({
         // Never notify yourself
         if (args.recipientId === args.senderId) return null
 
-        return await ctx.db.insert("notifications", {
-            ...args,
-            read: false,
-        })
+        return await notify(ctx, { ...args, read: false })
     }
 })
 

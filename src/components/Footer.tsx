@@ -16,10 +16,10 @@ export default function Footer() {
         <div className="grid gap-12 md:grid-cols-6">
           <div className="md:col-span-2">
             <div className="flex items-center gap-3">
-              <Image src="/logo.png" alt="WebflowX" width={32} height={32} className="h-8 w-8 rounded-lg" />
+              <Image src="/logo.png" alt="" width={32} height={32} className="h-8 w-8 rounded-lg" />
               <span className="text-lg font-semibold text-white">WebflowX</span>
               <span className="text-xl text-white/40">&times;</span>
-              <Image src="/northfoundry-logo.png" alt="North Foundry" width={32} height={32} className="h-8 w-8 rounded-lg" />
+              <Image src="/northfoundry-logo.png" alt="" width={32} height={32} className="h-8 w-8 rounded-lg" />
               <span className="text-lg font-semibold text-white">North Foundry</span>
             </div>
             <p className="mt-5 max-w-sm text-sm leading-relaxed">
@@ -42,7 +42,7 @@ export default function Footer() {
             </div>
           ))}
         </div>
-        <div className="mt-14 border-t border-white/10 pt-6 text-xs text-white/40">
+        <div className="mt-14 border-t border-white/10 pt-6 text-xs text-white/55">
           &copy; {new Date().getFullYear()} WebflowX. All rights reserved.
         </div>
       </div>

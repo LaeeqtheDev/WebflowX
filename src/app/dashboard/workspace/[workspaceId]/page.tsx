@@ -1,15 +1,18 @@
-"use client"
+"use client";
 import { usePermissions } from "@/hooks/use-permissions"
 
 import { useGetChannels } from "@/features/channels/api/use-get-channels";
 import { useCreateChannelModal } from "@/features/channels/store/use-create-channel-modal";
 import { useCurrentMember } from "@/features/members/api/use-current-member";
 import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace";
-import { useChannelId } from "@/hooks/use-channel-id";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { Loader, TriangleAlert } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
+import { GetStartedCard, useGetStarted } from "./components/first-run";
+import { cleanChannelName } from "./components/channel-icon";
+import { Button } from "@/components/ui/button";
 
 // centralized container for all states
 const CenteredContainer = ({ children }: { children: React.ReactNode }) => (
@@ -25,22 +28,24 @@ const WorkspaceIdPage = () => {
   const { data: member, isLoading: memberLoading } = useCurrentMember({ workspaceId });
   const { data: workspace, isLoading: workspaceLoading } = useGetWorkspace({ id: workspaceId });
   const { data: channels, isLoading: channelsLoading } = useGetChannels({ workspaceId });
-//   const channelId = useChannelId();
   const perms = usePermissions();
   const isAdmin = perms.can("createChannels");
+  const started = useGetStarted();
   const channelId = useMemo(() => channels?.[0]?._id, [channels]);
 
   useEffect(() => {
-    if (workspaceLoading || channelsLoading || memberLoading || !member || !workspace) return;
+    if (workspaceLoading || channelsLoading || memberLoading || !member || !workspace || !started.ready) return;
+    // Admins who haven't finished (or dismissed) the checklist land on the home view instead
+    if (started.show) return;
 
     if (channelId) {
       router.replace(`/dashboard/workspace/${workspaceId}/channel/${channelId}`);
     } else if (!IsOpen && isAdmin) {
       setIsOpen(true);
     }
-  }, [channelId, workspaceLoading, channelsLoading, workspace, open, setIsOpen, router, workspaceId, member, memberLoading, isAdmin]);
+  }, [channelId, workspaceLoading, channelsLoading, workspace, setIsOpen, router, workspaceId, member, memberLoading, isAdmin, IsOpen, started.ready, started.show]);
 
-  if (workspaceLoading || channelsLoading || memberLoading) {
+  if (workspaceLoading || channelsLoading || memberLoading || !started.ready) {
     return (
       <CenteredContainer>
         <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
@@ -61,6 +66,17 @@ const WorkspaceIdPage = () => {
     );
   }
 
+  if (channelId) {
+    // redirecting to the first channel
+    return (
+      <CenteredContainer>
+        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#c2370d] flex items-center justify-center">
+          <Loader className="size-6 animate-spin" />
+        </div>
+      </CenteredContainer>
+    );
+  }
+
   if (!channels ) {
     return (
       <CenteredContainer>
@@ -72,8 +88,57 @@ const WorkspaceIdPage = () => {
     );
   }
 
+  if (started.show) {
+    const first = channels[0];
+    return (
+      <div className="h-full overflow-y-auto bg-[#fbf9f7] px-4 py-8 md:py-14">
+        <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-[#1b1017]">Welcome to {workspace.name}</h1>
+            <p className="mt-1 text-sm text-[#1b1017]/65">Three quick steps to get your workspace humming.</p>
+          </div>
+          <GetStartedCard />
+          {first && (
+            <Button
+              variant="outline"
+              className="h-11 self-start rounded-xl border-[#381d2a]/15 md:h-10"
+              onClick={() => router.push(`/dashboard/workspace/${workspaceId}/channel/${first._id}`)}
+            >
+              Open #{cleanChannelName(first.name)}
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
-  return null;
+  // No channels yet. Admins get the "create channel" modal; everyone else sees guidance.
+  return (
+    <CenteredContainer>
+      <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#c2370d] flex items-center justify-center">
+        <TriangleAlert className="size-6" />
+      </div>
+      <span className="font-semibold tracking-tight text-[#1b1017]">No channels yet</span>
+      <p className="max-w-xs text-center text-sm text-[#1b1017]/65">
+        {isAdmin
+          ? "Create your first channel to start the conversation."
+          : "Ask a workspace admin to create a channel, or start a direct message."}
+      </p>
+      {isAdmin ? (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="mt-1 rounded-xl bg-[#ff5018] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#e6430f]"
+        >
+          Create a channel
+        </button>
+      ) : (
+        <Link href="/dashboard" className="mt-1 text-sm font-semibold text-[#c2370d] hover:underline">
+          Back to dashboard
+        </Link>
+      )}
+    </CenteredContainer>
+  );
 };
 
 export default WorkspaceIdPage;

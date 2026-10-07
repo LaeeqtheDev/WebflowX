@@ -31,13 +31,15 @@ export const EditProfileModal = ({ open, setOpen, user }: Props) => {
   const [bio, setBio] = useState(user.bio ?? "")
   const [photo, setPhoto] = useState<{ storageId: string; preview: string } | null>(null)
   const [removePhoto, setRemovePhoto] = useState(false)
+  const [emailNotifs, setEmailNotifs] = useState(user.emailNotifications !== false)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!open) return
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the form each time the dialog opens
     setName(user.name ?? ""); setTitle(user.title ?? ""); setBio(user.bio ?? ""); setPhoto(null); setRemovePhoto(false)
-  }, [open, user.name, user.title, user.bio])
+    setEmailNotifs(user.emailNotifications !== false)
+  }, [open, user.name, user.title, user.bio, user.emailNotifications])
 
   const shownImage = removePhoto ? undefined : photo?.preview ?? user.image
 
@@ -58,6 +60,7 @@ export const EditProfileModal = ({ open, setOpen, user }: Props) => {
     try {
       await update({
         name, title, bio,
+        emailNotifications: emailNotifs,
         ...(photo ? { imageStorageId: photo.storageId as never } : {}),
         ...(removePhoto && !photo ? { removeImage: true } : {}),
       })
@@ -111,6 +114,21 @@ export const EditProfileModal = ({ open, setOpen, user }: Props) => {
             <Textarea id="pf-bio" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={300} rows={3} placeholder="A line or two about you" disabled={saving} />
             <p className="text-xs text-[#1b1017]/50 text-right">{bio.length}/300</p>
           </div>
+
+          <label htmlFor="pf-email-notifs" className="flex items-start gap-3 rounded-xl border border-[#1b1017]/10 bg-white px-4 py-3 cursor-pointer">
+            <input
+              id="pf-email-notifs"
+              type="checkbox"
+              checked={emailNotifs}
+              onChange={(e) => setEmailNotifs(e.target.checked)}
+              disabled={saving}
+              className="mt-1 size-4 accent-[#ff5018]"
+            />
+            <span className="flex flex-col">
+              <span className="text-sm font-medium text-[#1b1017]">Email notifications</span>
+              <span className="text-xs text-[#1b1017]/65">Get an email when you are mentioned, get a direct message or thread reply, or a task is assigned to you and you haven&apos;t seen it yet.</span>
+            </span>
+          </label>
 
           <DialogFooter>
             <Button type="button" variant="outline" disabled={saving} onClick={() => setOpen(false)}>Cancel</Button>

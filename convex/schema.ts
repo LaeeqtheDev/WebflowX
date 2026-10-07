@@ -15,6 +15,8 @@ const schema = defineSchema({
         isAnonymous: v.optional(v.boolean()),
         title: v.optional(v.string()),
         bio: v.optional(v.string()),
+        // false turns off notification emails (mentions, DMs, replies, tasks). Default is on.
+        emailNotifications: v.optional(v.boolean()),
     })
         .index("email", ["email"])
         .index("phone", ["phone"]),
@@ -108,7 +110,10 @@ const schema = defineSchema({
         workspaceId: v.id("workspaces"),
         memberOneId: v.id("members"),
         memberTwoId: v.id("members"),
-    }).index("byWorkspaceId", ["workspaceId"]),
+    })
+        .index("byWorkspaceId", ["workspaceId"])
+        .index("by_member_one", ["memberOneId"])
+        .index("by_member_two", ["memberTwoId"]),
 
     messages: defineTable({
         body: v.string(),
@@ -161,6 +166,7 @@ const schema = defineSchema({
     })
         .index("by_workspace_id", ["workspaceId"])
         .index("by_author_id", ["authorId"])
+        .index("by_author_id_type", ["authorId", "type"])
         .index("by_workspace_id_type", ["workspaceId", "type"])
         .searchIndex("search_title", {
             searchField: "title",

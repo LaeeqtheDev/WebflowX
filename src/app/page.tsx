@@ -12,9 +12,37 @@ const NewsletterSignup = dynamic(() => import('@/components/newslettersignup').t
 const PricingSection = dynamic(() => import('@/components/pricing'))
 const MergerSection = dynamic(() => import('@/components/Merger').then(m => m.MergerSection))
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://webflow-x.vercel.app'
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'SoftwareApplication',
+      name: 'WebflowX',
+      url: SITE_URL,
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Web',
+      description:
+        'Team chat, docs, tasks, meetings and AI summaries in one workspace.',
+      publisher: { '@type': 'Organization', name: 'North Foundry' },
+    },
+    {
+      '@type': 'Organization',
+      name: 'North Foundry',
+      url: 'https://northfoundry.co',
+      email: 'hello@northfoundry.co',
+    },
+  ],
+}
+
 const page = () => {
   return (
     <main className="flex w-full flex-col overflow-x-clip">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+      />
       <Navbar />
       <Hero />
       <FeaturesSection />

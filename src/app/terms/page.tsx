@@ -1,7 +1,12 @@
 import type { Metadata } from "next"
 import { LegalPage } from "@/components/legal/legal-page"
 
-export const metadata: Metadata = { title: "Terms of Service · WebflowX" }
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description: "The terms that govern your use of WebflowX, operated by North Foundry: accounts, workspaces, your content, acceptable use and billing.",
+  alternates: { canonical: "/terms" },
+  openGraph: { title: "Terms of Service | WebflowX", description: "The terms that govern your use of WebflowX, operated by North Foundry: accounts, workspaces, your content, acceptable use and billing.", url: "/terms" },
+}
 
 export default function TermsPage() {
   return (

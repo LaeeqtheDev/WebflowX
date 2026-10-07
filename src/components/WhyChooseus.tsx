@@ -24,6 +24,7 @@ const WhyChooseUs = () => (
             loop
             muted
             playsInline
+            aria-label="Short demo video of WebflowX in use"
             src="/video.mp4"
           />
         </div>

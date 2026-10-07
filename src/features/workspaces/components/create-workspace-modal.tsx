@@ -8,13 +8,14 @@ import { useCreateWorkspace } from "../api/use-create-workspace"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { errorMessage } from "@/lib/error-message"
+import { useLimitHandler } from "@/hooks/use-limit-handler"
 
 export const CreateWorkspaceModal = () => {
   const [open, setOpen] = useCreateWorkspaceModal()
   const [name, setName] = useState("");
   const {mutate, isPending} = useCreateWorkspace()
   const router =  useRouter()
+  const { handleLimitError } = useLimitHandler()
 
 
   const handleClose = () => {
@@ -31,13 +32,8 @@ export const CreateWorkspaceModal = () => {
       handleClose()
     },
     onError(error){
-      const message = errorMessage(error)
-      if (message.startsWith("LIMIT_REACHED:workspaces")) {
-        const limit = message.split(":")[2]
-        toast.error(`Your plan allows ${limit} workspace${limit === "1" ? "" : "s"}. Upgrade one of your workspaces to create more.`)
-      } else {
-        toast.error("Failed to create workspace")
-      }
+      // Opens the upgrade dialog on a plan limit, otherwise toasts the real reason
+      if (handleLimitError(error, "Couldn't create the workspace. Please try again.")) handleClose()
     }
   })
 
@@ -54,7 +50,7 @@ export const CreateWorkspaceModal = () => {
           className="space-y-5"
   
         >
-          <Input
+          <Input aria-label="Workspace name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             disabled={isPending}

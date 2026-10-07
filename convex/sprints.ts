@@ -2,6 +2,7 @@ import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { auth } from "./auth"
 import { can } from "./permissions"
+import { MAX, text } from "./validate"
 
 export const get = query({
     args: { workspaceId: v.id("workspaces") },
@@ -22,7 +23,7 @@ export const get = query({
             .withIndex("by_workspace_id", (q) =>
                 q.eq("workspaceId", args.workspaceId)
             )
-            .collect()
+            .take(200)
     }
 })
 
@@ -47,6 +48,7 @@ export const create = mutation({
 
         return await ctx.db.insert("sprints", {
             ...args,
+            name: text(args.name, MAX.sprintName, "Sprint name", { required: true, collapse: true }),
             status: "planned",
         })
     }

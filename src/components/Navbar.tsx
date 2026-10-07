@@ -79,11 +79,12 @@ const Navbar: React.FC = () => {
           </Link>
           <button
             type="button"
-            aria-label="Toggle menu"
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isOpen}
             onClick={() => setIsOpen((v) => !v)}
             className={`p-2 md:hidden ${ink}`}
           >
-            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
           </button>
         </div>
       </nav>

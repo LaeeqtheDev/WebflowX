@@ -6,6 +6,9 @@ import { paginationOptsValidator, PaginationResult } from "convex/server";
 import { ConvexError } from "convex/values";
 import { canViewChannel, can, canAccessChannel, requireActor, hasPermission } from "./permissions";
 import { claim, release } from "./files";
+import { assertDeltaBody } from "./validate";
+import { throttle } from "./rateLimit";
+import { notify } from "./notifications";
 
 // @mentions are stored in the message body as text ops with attributes.mention = memberId
 const extractMentionIds = (body: string): string[] => {
@@ -53,7 +56,7 @@ const notifyMentions = async (
                 if (target._id === opts.senderId || opts.alreadyNotified.has(target._id)) continue;
                 if (!canAccessChannel(workspace, target, channel)) continue;
                 opts.alreadyNotified.add(target._id);
-                await ctx.db.insert("notifications", {
+                await notify(ctx, {
                     workspaceId: opts.workspaceId,
                     recipientId: target._id,
                     senderId: opts.senderId,
@@ -62,7 +65,7 @@ const notifyMentions = async (
                     channelId: opts.channelId,
                     body: opts.body,
                     read: false,
-                });
+                }, { email: false }); // @everyone: in-app only, no mass email
             }
         }
     }
@@ -75,7 +78,7 @@ const notifyMentions = async (
         if (!target || target.workspaceId !== opts.workspaceId) continue;
         if (!canAccessChannel(workspace, target, channel)) continue; // can't see the channel, so no ping
         opts.alreadyNotified.add(id);
-        await ctx.db.insert("notifications", {
+        await notify(ctx, {
             workspaceId: opts.workspaceId,
             recipientId: id,
             senderId: opts.senderId,
@@ -333,17 +336,25 @@ export const create = mutation({
         const member = await getMember(ctx, args.workspaceId, userId);
         if (!member) throw new Error("Unauthorized");
 
+        assertDeltaBody(args.body);
+        await throttle(ctx, userId, "msg", 20, 10_000, "sending messages");
+
+        let channelId = args.channelId;
         let _conversationId = args.conversationId;
 
-        if (!args.conversationId && !args.channelId && args.parentMessageId) {
-            const parentMessage = await ctx.db.get(args.parentMessageId);
-            if (!parentMessage) throw new Error("Parent Message not found");
-            _conversationId = parentMessage.conversationId;
+        // A reply always lives exactly where its parent lives. Whatever channel / conversation the
+        // client sent is ignored, so a reply can't be planted in (or read from) a place the sender can't see.
+        if (args.parentMessageId) {
+            const parent = await ctx.db.get(args.parentMessageId);
+            if (!parent || parent.workspaceId !== args.workspaceId)
+                throw new Error("Parent Message not found");
+            channelId = parent.channelId;
+            _conversationId = parent.conversationId;
         }
 
         // The target must live in this workspace, and DMs only accept their two participants
-        if (args.channelId) {
-            const channel = await ctx.db.get(args.channelId);
+        if (channelId) {
+            const channel = await ctx.db.get(channelId);
             if (!channel || channel.workspaceId !== args.workspaceId)
                 throw new Error("Channel not found");
         }
@@ -354,21 +365,14 @@ export const create = mutation({
             if (conv.memberOneId !== member._id && conv.memberTwoId !== member._id)
                 throw new Error("Unauthorized");
         }
-        if (args.parentMessageId) {
-            const parent = await ctx.db.get(args.parentMessageId);
-            if (!parent || parent.workspaceId !== args.workspaceId)
-                throw new Error("Parent Message not found");
-        }
-        const accessChannel =
-            args.channelId ??
-            (args.parentMessageId ? (await ctx.db.get(args.parentMessageId))?.channelId : undefined);
-        if (accessChannel && !(await canViewChannel(ctx, accessChannel, userId))) {
+        if (!channelId && !_conversationId) throw new Error("Nothing to post to");
+        if (channelId && !(await canViewChannel(ctx, channelId, userId))) {
             throw new ConvexError("You don't have access to this channel");
         }
 
         // announcement channels: only roles allowed to post can start a message (replies in threads are open)
-        if (args.channelId && !args.parentMessageId) {
-            const ch = await ctx.db.get(args.channelId);
+        if (channelId && !args.parentMessageId) {
+            const ch = await ctx.db.get(channelId);
             const ws = await ctx.db.get(args.workspaceId);
             if (ch?.readOnly && ws && !hasPermission(ws, member, "postInReadOnly")) {
                 throw new ConvexError("This is a read-only channel. Only admins and allowed roles can post here.");
@@ -395,7 +399,7 @@ export const create = mutation({
             fileName,
             fileType,
             fileSize,
-            channelId: args.channelId,
+            channelId,
             workspaceId: args.workspaceId,
             conversationId: _conversationId,
             parentMessagesId: args.parentMessageId,
@@ -410,13 +414,13 @@ export const create = mutation({
 
             if (parentMessage && parentMessage.memberId !== member._id) {
                 alreadyNotified.add(parentMessage.memberId);
-                const notifId = await ctx.db.insert("notifications", {
+                const notifId = await notify(ctx, {
                     workspaceId: args.workspaceId,
                     recipientId: parentMessage.memberId,
                     senderId: member._id,
                     type: "thread_reply",
                     messageId,
-                    channelId: args.channelId,
+                    channelId,
                     conversationId: _conversationId,
                     body: args.body,
                     read: false,
@@ -440,7 +444,7 @@ export const create = mutation({
 
 
                 if (recipientId !== member._id) {
-                    const notifId = await ctx.db.insert("notifications", {
+                    const notifId = await notify(ctx, {
                         workspaceId: args.workspaceId,
                         recipientId,
                         senderId: member._id,
@@ -458,7 +462,7 @@ export const create = mutation({
             workspaceId: args.workspaceId,
             senderId: member._id,
             messageId,
-            channelId: args.channelId,
+            channelId,
             body: args.body,
             alreadyNotified,
         });
@@ -483,6 +487,8 @@ export const update = mutation({
         if (!member || member._id !== message.memberId)
             throw new Error("Unauthorized");
 
+        assertDeltaBody(args.body);
+        await throttle(ctx, userId, "msg-edit", 30, 60_000, "editing messages");
         await ctx.db.patch(args.id, { body: args.body, updatedAt: Date.now() });
 
         // people newly @mentioned by this edit get notified (not the ones already mentioned before)

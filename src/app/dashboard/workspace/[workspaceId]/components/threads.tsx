@@ -10,9 +10,8 @@ import dynamic from "next/dynamic";
 import Quill from "quill";
 import { useCreateMessage } from "@/features/messages/api/use-create-message";
 import { useUploader } from "@/lib/upload-photo";
-import { errMsg } from "@/lib/errors";
+import { useLimitHandler } from "@/hooks/use-limit-handler";
 import { useChannelId } from "@/hooks/use-channel-id";
-import { toast } from "sonner";
 import { useGetMessages } from "@/features/messages/api/use-get-messages";
 import { differenceInMinutes, format, isToday, isYesterday } from "date-fns";
 
@@ -50,6 +49,7 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
     const {data: currentMember} = useCurrentMember({workspaceId})
     const {mutate: createMessage} = useCreateMessage()
     const { upload } = useUploader()
+    const { handleLimitError } = useLimitHandler()
     const {results, status, loadMore} = useGetMessages({
         channelId,
         parentMessageId: messageId,
@@ -90,7 +90,7 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
     
         setEditorKey((prevKey) => prevKey +1)
       } catch (error){
-        toast.error(errMsg(error, error instanceof Error && !error.message.includes("CONVEX") ? error.message : "Failed to send the Message"))
+        handleLimitError(error, "Failed to send the message")
       }finally{
           setIsPending(false)
           editorRef?.current?.enable(true)
@@ -120,8 +120,9 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
             <div className="h-full flex flex-col bg-white">
             <div className="h-14 flex justify-between items-center px-4 border-b border-[#381d2a]/12 bg-white">
                 <p className="text-lg font-semibold tracking-tight text-[#1b1017]">Thread</p>
-                <Button onClick={onClose} size={"iconSm"} variant={"ghost"} className="rounded-lg hover:bg-[#f7f2ee]">
-                    <XIcon className="size-5 stroke-[1.5]"/>
+                <Button onClick={onClose} size={"iconSm"} variant={"ghost"} aria-label="Close thread" className="rounded-lg hover:bg-[#f7f2ee] max-md:h-10 max-md:w-auto max-md:gap-1 max-md:px-3">
+                    <XIcon className="size-5 stroke-[1.5]" />
+                    <span className="text-sm font-medium md:hidden">Close</span>
                 </Button>
             </div>
             <div className="flex flex-col gap-y-2 h-full items-center justify-center">
@@ -138,8 +139,9 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
             <div className="h-full flex flex-col bg-white">
             <div className="h-14 flex justify-between items-center px-4 border-b border-[#381d2a]/12 bg-white">
                 <p className="text-lg font-semibold tracking-tight text-[#1b1017]">Thread</p>
-                <Button onClick={onClose} size={"iconSm"} variant={"ghost"} className="rounded-lg hover:bg-[#f7f2ee]">
-                    <XIcon className="size-5 stroke-[1.5]"/>
+                <Button onClick={onClose} size={"iconSm"} variant={"ghost"} aria-label="Close thread" className="rounded-lg hover:bg-[#f7f2ee] max-md:h-10 max-md:w-auto max-md:gap-1 max-md:px-3">
+                    <XIcon className="size-5 stroke-[1.5]" />
+                    <span className="text-sm font-medium md:hidden">Close</span>
                 </Button>
             </div>
             <div className="flex flex-col gap-y-2 h-full items-center justify-center">
@@ -154,8 +156,9 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
         <div className="h-full flex flex-col bg-white">
             <div className="h-14 flex justify-between items-center px-4 border-b border-[#381d2a]/12 bg-white">
                 <p className="text-lg font-semibold tracking-tight text-[#1b1017]">Thread</p>
-                <Button onClick={onClose} size={"iconSm"} variant={"ghost"} className="rounded-lg hover:bg-[#f7f2ee]">
-                    <XIcon className="size-5 stroke-[1.5]"/>
+                <Button onClick={onClose} size={"iconSm"} variant={"ghost"} aria-label="Close thread" className="rounded-lg hover:bg-[#f7f2ee] max-md:h-10 max-md:w-auto max-md:gap-1 max-md:px-3">
+                    <XIcon className="size-5 stroke-[1.5]" />
+                    <span className="text-sm font-medium md:hidden">Close</span>
                 </Button>
             </div>
             <div className="flex-1 flex flex-col-reverse pb-4 overflow-y-auto messages-scrollbar">
@@ -248,7 +251,7 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
                 isCompact={false}
                 />
             </div>
-            <div className="px-4 pb-4">
+            <div className="px-3 md:px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
                 <Editor
                 onSubmit={handleSubmit}
                 key={editorKey}

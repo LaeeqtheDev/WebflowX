@@ -27,7 +27,7 @@ import { useGetUnreadCount } from "@/features/notifications/use-get-unread-count
 const TYPE_CONFIG = {
     thread_reply: {
         icon: MessagesSquare,
-        color: "text-[#ff5018]",
+        color: "text-[#c2370d]",
         bg: "bg-[#ff5018]/10",
         label: "replied to your message"
     },
@@ -39,7 +39,7 @@ const TYPE_CONFIG = {
     },
     task_assigned: {
         icon: CheckSquare,
-        color: "text-[#ff5018]",
+        color: "text-[#c2370d]",
         bg: "bg-[#ff5018]/10",
         label: "assigned a task to you"
     },
@@ -57,13 +57,13 @@ const TYPE_CONFIG = {
     },
     mention: {
         icon: AtSign,
-        color: "text-[#ff5018]",
+        color: "text-[#c2370d]",
         bg: "bg-[#ff5018]/10",
         label: "mentioned you"
     },
     dm_received: {
         icon: MessageSquare,
-        color: "text-[#ff5018]",
+        color: "text-[#c2370d]",
         bg: "bg-[#ff5018]/10",
         label: "sent you a direct message"
     },
@@ -166,7 +166,7 @@ export default function ActivityPage() {
     return (
         <div className="h-full flex flex-col overflow-hidden bg-[#fbf9f7]">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 h-14 border-b bg-white shrink-0 shadow-none">
+            <div className="flex items-center justify-between px-4 md:px-6 h-14 border-b bg-white shrink-0 shadow-none">
                 <div className="flex items-center gap-3">
                     <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
                         <Bell className="size-4 text-[#ff5018]" />
@@ -249,7 +249,7 @@ export default function ActivityPage() {
                                     key={notification._id}
                                     onClick={() => handleClick(notification)}
                                     className={cn(
-                                        "flex items-start gap-4 px-6 py-4 cursor-pointer hover:bg-[#f7f2ee] transition-colors",
+                                        "flex items-start gap-4 px-4 md:px-6 py-4 cursor-pointer hover:bg-[#f7f2ee] transition-colors",
                                         !notification.read && "border-l-2 border-l-[#ff5018] bg-[#ff5018]/5"
                                     )}
                                 >

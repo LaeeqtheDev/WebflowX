@@ -7,6 +7,8 @@ import { Header } from "./header";
 import { ChatInput } from "./Chat-Input";
 import { MessageList } from "../../components/message-list";
 import { usePanel } from "@/hooks/use-panel";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { NotFoundState } from "@/components/states/not-found-state";
 
 interface ConversationProps {
     id: Id<"conversations">
@@ -14,6 +16,7 @@ interface ConversationProps {
 
 export const Conversation = ({id}: ConversationProps) => {
     const memberId = useMemberId()
+    const workspaceId = useWorkspaceId()
 
     const {onOpenProfile} = usePanel()
 
@@ -29,10 +32,21 @@ export const Conversation = ({id}: ConversationProps) => {
               </div>
         )
       }
+
+    if(!member){
+        return(
+            <NotFoundState
+                title="Member not found"
+                description="This person may have left the workspace, or you may not have access to this conversation."
+                href={`/dashboard/workspace/${workspaceId}`}
+                linkLabel="Back to workspace"
+            />
+        )
+    }
   
  
     return(
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full min-h-0">
             <Header
             memberName={member?.user.name}
             memberImage={member?.user.image}

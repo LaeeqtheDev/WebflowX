@@ -28,10 +28,10 @@ export const ThreadBar = ({count, image, timestamp, onClick,name="Member"}: Thre
                         {avatarFallBack}
                     </AvatarFallback>
                 </Avatar>
-                <span className="text-xs text-[#ff5018] hover:underline font-semibold truncate">
+                <span className="text-xs text-[#c2370d] hover:underline font-semibold truncate">
                     {count} {count > 1 ? "replies" : "reply"}
                 </span>
-                <span className="text-xs text-[#1b1017]/50 truncate group-hover/thread-bar:hidden block">
+                <span className="text-xs text-[#1b1017]/65 truncate group-hover/thread-bar:hidden block">
                        Last reply {formatDistanceToNow(timestamp, {addSuffix: true})}
                     </span>
 

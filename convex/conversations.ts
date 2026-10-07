@@ -25,20 +25,15 @@ export const CreateOrGet = mutation({
             throw new Error("Member not found");
         }
 
-        const existingConversation = await ctx.db.query("conversations")
-        .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
-        .filter((q) => 
-        q.or(
-            q.and(
-                q.eq(q.field("memberOneId"), currentMember._id),
-                q.eq(q.field("memberTwoId"), otherMember._id),
-            ),
-            q.and(
-                q.eq(q.field("memberOneId"), otherMember._id),
-                q.eq(q.field("memberTwoId"), currentMember._id),
-            )
-        )
-        ).first()
+        const existingConversation =
+            (await ctx.db.query("conversations")
+                .withIndex("by_member_one", (q) => q.eq("memberOneId", currentMember._id))
+                .filter((q) => q.eq(q.field("memberTwoId"), otherMember._id))
+                .first()) ??
+            (await ctx.db.query("conversations")
+                .withIndex("by_member_one", (q) => q.eq("memberOneId", otherMember._id))
+                .filter((q) => q.eq(q.field("memberTwoId"), currentMember._id))
+                .first())
 
         if(existingConversation){
         return existingConversation._id
@@ -78,15 +73,29 @@ export const getAll = query({
 
         if (!member) return []
 
-        const conversations = await ctx.db
-            .query("conversations")
-            .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId))
-            .collect()
+        // only this member's conversations, found through their own indexes (not by scanning the workspace)
+        const [asOne, asTwo] = await Promise.all([
+            ctx.db.query("conversations").withIndex("by_member_one", (q) => q.eq("memberOneId", member._id)).take(200),
+            ctx.db.query("conversations").withIndex("by_member_two", (q) => q.eq("memberTwoId", member._id)).take(200),
+        ])
+        const seen = new Set<string>()
+        const myConversations = [...asOne, ...asTwo].filter((c) => {
+            if (c.workspaceId !== args.workspaceId || seen.has(c._id)) return false
+            seen.add(c._id)
+            return true
+        })
 
-        // Only return conversations this member is part of
-        const myConversations = conversations.filter(c =>
-            c.memberOneId === member._id || c.memberTwoId === member._id
-        )
+        // unread DM counts in one query, grouped here (instead of one query per conversation)
+        const unreadDms = await ctx.db
+            .query("notifications")
+            .withIndex("by_recipient_read", (q) => q.eq("recipientId", member._id).eq("read", false))
+            .take(1000)
+        const unreadByConversation = new Map<string, number>()
+        for (const n of unreadDms) {
+            if (n.type === "dm_received" && n.conversationId) {
+                unreadByConversation.set(n.conversationId, (unreadByConversation.get(n.conversationId) ?? 0) + 1)
+            }
+        }
 
         return await Promise.all(myConversations.map(async (conv) => {
             // Get the other member
@@ -106,25 +115,11 @@ export const getAll = query({
 
             const lastMessage = messages[0] ?? null
 
-            // Get unread count from notifications
-            const unreadNotifs = await ctx.db
-                .query("notifications")
-                .withIndex("by_recipient_read", (q) =>
-                    q.eq("recipientId", member._id).eq("read", false)
-                )
-                .filter((q) =>
-                    q.and(
-                        q.eq(q.field("type"), "dm_received"),
-                        q.eq(q.field("conversationId"), conv._id)
-                    )
-                )
-                .collect()
-
             return {
                 ...conv,
                 otherMember: otherMember ? { ...otherMember, user: otherUser } : null,
                 lastMessage,
-                unreadCount: unreadNotifs.length,
+                unreadCount: unreadByConversation.get(conv._id) ?? 0,
             }
         }))
     }

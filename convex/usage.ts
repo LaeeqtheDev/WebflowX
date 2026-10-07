@@ -1,4 +1,4 @@
-import { v } from "convex/values"
+import { v, ConvexError } from "convex/values"
 import { query, mutation } from "./_generated/server"
 import { auth } from "./auth"
 import { PLANS, getPlan } from "./limits"
@@ -27,41 +27,38 @@ export const get = query({
         const now = new Date()
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime()
 
-        const [
-            members,
-            channels,
-            allNotes,
-            docs,
-            meetings,
-            aiSummaries,
-            ownedWorkspaces,
-        ] = await Promise.all([
-            ctx.db.query("members")
-                .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId))
-                .collect(),
-            ctx.db.query("channels")
-                .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId))
-                .collect(),
-            ctx.db.query("notes")
-                .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
-                .collect(),
-            ctx.db.query("docs")
-                .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
-                .collect(),
-            // Only count meetings from this month
-            ctx.db.query("meetings")
-                .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
-                .filter((q) => q.gte(q.field("startedAt"), startOfMonth))
-                .collect(),
-            ctx.db.query("aiSummaryLog")
-                .withIndex("by_workspace_id", (q) =>
-                    q.eq("workspaceId", args.workspaceId).gte("_creationTime", startOfMonth)
-                )
-                .collect(),
-            ctx.db.query("workspaces")
-                .withIndex("by_user_id", (q) => q.eq("userId", userId))
-                .collect(),
-        ])
+        // Each count reads at most (plan limit + 1) rows, so this stays cheap on huge workspaces.
+        // Unlimited plans show up to 1,000 and stop counting there.
+        const capFor = (limit: number) => (limit === -1 ? 1000 : limit + 1)
+        const members = await ctx.db.query("members")
+            .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId))
+            .take(capFor(limits.members))
+        const channels = await ctx.db.query("channels")
+            .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId))
+            .take(capFor(limits.channels))
+        const personalNotes = await ctx.db.query("notes")
+            .withIndex("by_author_id_type", (q) => q.eq("authorId", member._id).eq("type", "personal"))
+            .take(capFor(limits.personalNotes))
+        const workspaceNotes = await ctx.db.query("notes")
+            .withIndex("by_workspace_id_type", (q) => q.eq("workspaceId", args.workspaceId).eq("type", "workspace"))
+            .take(capFor(limits.workspaceNotes))
+        const docs = await ctx.db.query("docs")
+            .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
+            .take(capFor(limits.docs))
+        // newest first, so stopping at the cap still counts this month's meetings correctly
+        const recentMeetings = await ctx.db.query("meetings")
+            .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
+            .order("desc")
+            .take(capFor(limits.meetings))
+        const meetings = recentMeetings.filter((m) => m.startedAt >= startOfMonth)
+        const aiSummaries = await ctx.db.query("aiSummaryLog")
+            .withIndex("by_workspace_id", (q) =>
+                q.eq("workspaceId", args.workspaceId).gte("_creationTime", startOfMonth)
+            )
+            .take(capFor(limits.aiSummaries))
+        const ownedWorkspaces = await ctx.db.query("workspaces")
+            .withIndex("by_user_id", (q) => q.eq("userId", userId))
+            .take(100)
 
         // Workspace allowance follows the best plan among the workspaces this user owns
         const bestWorkspaceLimit = ownedWorkspaces.reduce((best, w) => {
@@ -69,11 +66,6 @@ export const get = query({
             if (best === -1 || limit === -1) return -1
             return Math.max(best, limit)
         }, 0)
-
-        const personalNotes = allNotes.filter(
-            n => n.type === "personal" && n.authorId === member._id
-        )
-        const workspaceNotes = allNotes.filter(n => n.type === "workspace")
 
         return {
             plan,
@@ -115,13 +107,10 @@ export const upgradePlan = mutation({
         const userId = await auth.getUserId(ctx)
         if (!userId) throw new Error("Unauthorized")
 
-        const member = await ctx.db
-            .query("members")
-            .withIndex("byWorkspaceId_user_id", (q) =>
-                q.eq("workspaceId", args.workspaceId).eq("userId", userId)
-            ).unique()
-
-        if (!member || member.role !== "admin") throw new Error("Only admins can upgrade plan")  // Stripe-gated later
+        // Only the workspace owner may change the plan. (Billing is not wired up yet: when Stripe is added,
+        // replace this with an internal mutation called from the Stripe webhook.)
+        const workspace = await ctx.db.get(args.workspaceId)
+        if (!workspace || workspace.userId !== userId) throw new ConvexError("Only the workspace owner can change the plan")
 
         await ctx.db.patch(args.workspaceId, { plan: args.plan })
         return args.workspaceId

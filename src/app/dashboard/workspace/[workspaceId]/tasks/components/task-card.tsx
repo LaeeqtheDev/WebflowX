@@ -39,9 +39,9 @@ export const TaskCard = ({
             <div className="flex items-start justify-between gap-2">
                 <p className="text-sm font-semibold tracking-tight leading-snug text-[#1b1017]">{task.title}</p>
                 {isAdmin && (
-                    <button
+                    <button aria-label="Delete task" type="button"
                         onClick={(e) => { e.stopPropagation(); onDelete(task._id) }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-[#1b1017]/50 hover:text-destructive shrink-0"
+                        className="opacity-0 max-md:opacity-100 group-hover:opacity-100 transition-opacity text-[#1b1017]/50 hover:text-destructive shrink-0"
                     >
                         <Trash2 className="size-3.5" />
                     </button>
@@ -88,12 +88,12 @@ export const TaskCard = ({
                         <span className="text-[11px] text-[#1b1017]/60">{task.assignee.user?.name}</span>
                     </div>
                 ) : (
-                    <span className="text-[11px] text-[#1b1017]/50">Unassigned</span>
+                    <span className="text-[11px] text-[#1b1017]/65">Unassigned</span>
                 )}
                 {!isAssignedToMe && !isAdmin && (
                     <button
                         onClick={(e) => { e.stopPropagation(); onAssignToMe(task._id) }}
-                        className="text-[11px] font-medium text-[#ff5018] hover:text-[#e6430f] flex items-center gap-0.5"
+                        className="text-[11px] font-medium text-[#c2370d] hover:text-[#a82d0a] flex items-center gap-0.5"
                     >
                         <UserPlus className="size-3" /> Assign to me
                     </button>

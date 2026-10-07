@@ -1,9 +1,12 @@
 import { v } from "convex/values"
+import { notify } from "./notifications"
 import { mutation, query, QueryCtx } from "./_generated/server"
 import { Id } from "./_generated/dataModel"
 import { auth } from "./auth"
 import { can } from "./permissions"
 import { ConvexError } from "convex/values"
+import { MAX, text, cleanLabels } from "./validate"
+import { throttle } from "./rateLimit"
 
 const statusValidator = v.union(
     v.literal("backlog"),
@@ -55,12 +58,14 @@ export const get = query({
 
         if (!member) return []
 
+        // newest 1,000 tasks (a board that big should be archived or split by sprint anyway)
         let tasks = await ctx.db
             .query("tasks")
             .withIndex("by_workspace_id", (q) =>
                 q.eq("workspaceId", args.workspaceId)
             )
-            .collect()
+            .order("desc")
+            .take(1000)
 
         if (args.status) tasks = tasks.filter(t => t.status === args.status)
         if (args.assigneeId) tasks = tasks.filter(t => t.assigneeId === args.assigneeId)
@@ -104,6 +109,11 @@ export const create = mutation({
 
         if (!member) throw new ConvexError("Unauthorized")
 
+        await throttle(ctx, userId, "task-create", 60, 60_000, "creating tasks")
+        const title = text(args.title, MAX.taskTitle, "Task title", { required: true, collapse: true })
+        const description = args.description === undefined ? undefined : text(args.description, MAX.taskDescription, "Description")
+        const labels = cleanLabels(args.labels)
+
         // Any member can create tasks; non-admins can only leave them unassigned or assign them to themselves
         if (args.assigneeId && args.assigneeId !== member._id && !(await can(ctx, member, "manageContent"))) {
             throw new ConvexError("Only admins can assign tasks to other people")
@@ -113,19 +123,22 @@ export const create = mutation({
 
         const taskId = await ctx.db.insert("tasks", {
             ...args,
+            title,
+            description,
+            labels,
             createdBy: member._id,
             updatedAt: Date.now(),
         })
 
         // 👇 Notify assignee
         if (args.assigneeId && args.assigneeId !== member._id) {
-            await ctx.db.insert("notifications", {
+            await notify(ctx, {
                 workspaceId: args.workspaceId,
                 recipientId: args.assigneeId,
                 senderId: member._id,
                 type: "task_assigned",
                 taskId,
-                body: args.title,
+                body: title,
                 read: false,
             })
         }
@@ -181,9 +194,14 @@ export const update = mutation({
 
         await assertSameWorkspace(ctx, task.workspaceId, args.assigneeId, args.sprintId)
 
+        await throttle(ctx, userId, "task-update", 120, 60_000, "updating tasks")
+        if (updates.title !== undefined) updates.title = text(updates.title, MAX.taskTitle, "Task title", { required: true, collapse: true })
+        if (updates.description !== undefined) updates.description = text(updates.description, MAX.taskDescription, "Description")
+        if (updates.labels !== undefined) updates.labels = cleanLabels(updates.labels)
+
         // 👇 Notify new assignee if changed
         if (args.assigneeId && args.assigneeId !== task.assigneeId && args.assigneeId !== member._id) {
-            await ctx.db.insert("notifications", {
+            await notify(ctx, {
                 workspaceId: task.workspaceId,
                 recipientId: args.assigneeId,
                 senderId: member._id,

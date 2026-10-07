@@ -41,12 +41,13 @@ export async function GET() {
                     if (k?.key) return NextResponse.json({ key: k.key })
                 }
             }
-            console.warn("[deepgram] could not mint a temporary key (key lacks Member role?). Falling back to the main key for signed-in users.")
+            // Never hand the browser the main key: if a temporary key can't be minted, transcription is unavailable.
+            console.error("[deepgram] could not mint a temporary key. The DEEPGRAM_API_KEY needs the Member role (or set DEEPGRAM_PROJECT_ID).")
         } catch (e) {
-            console.warn("[deepgram] temp key error, falling back:", e)
+            console.error("[deepgram] temp key error:", e)
         }
 
-        return NextResponse.json({ key: apiKey })
+        return NextResponse.json({ error: "Live captions are unavailable right now" }, { status: 503 })
     } catch (e) {
         console.error("Deepgram token error:", e)
         return NextResponse.json({ error: "Failed to get Deepgram key" }, { status: 500 })

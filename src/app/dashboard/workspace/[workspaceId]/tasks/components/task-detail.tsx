@@ -66,20 +66,20 @@ export const TaskDetail = ({
                 <VisuallyHidden><DialogTitle>Task Detail</DialogTitle></VisuallyHidden>
 
                 {/* Header */}
-                <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-[#381d2a]/10">
+                <div className="flex items-start justify-between px-4 md:px-6 pt-6 pb-4 border-b border-[#381d2a]/10">
                     <div className="flex flex-col gap-2 flex-1">
                         <div className="flex items-center gap-2 text-xs text-[#1b1017]/60">
                             <span className={cn("px-2 py-0.5 rounded-md text-[11px] font-medium", STATUS_PILL[task.status])}>
                                 {STATUS_LABELS[task.status]}
                             </span>
                             {activeSprint && (
-                                <span className="flex items-center gap-1 text-[11px] font-medium text-[#ff5018]">
+                                <span className="flex items-center gap-1 text-[11px] font-medium text-[#c2370d]">
                                     <Zap className="size-3" /> {activeSprint.name}
                                 </span>
                             )}
                         </div>
                         {isAdmin ? (
-                            <input
+                            <input aria-label="Task title"
                                 defaultValue={task.title}
                                 onBlur={(e) => onUpdate(task._id, { title: e.target.value })}
                                 className="text-xl font-semibold tracking-tight text-[#1b1017] outline-none border-b border-transparent focus:border-[#ff5018] transition-colors bg-transparent"
@@ -89,7 +89,7 @@ export const TaskDetail = ({
                         )}
                     </div>
                     {isAdmin && (
-                        <Button variant="ghost" size="iconSm"
+                        <Button aria-label="Delete task" variant="ghost" size="iconSm"
                             onClick={() => { onDelete(task._id); onClose() }}
                             className="text-[#1b1017]/50 hover:text-destructive hover:bg-red-50 rounded-lg ml-4 shrink-0">
                             <Trash2 className="size-4" />
@@ -97,13 +97,13 @@ export const TaskDetail = ({
                     )}
                 </div>
 
-                <div className="flex gap-0 p-6">
+                <div className="flex gap-0 p-4 md:p-6 max-md:flex-col max-md:gap-5">
                     {/* Left */}
-                    <div className="flex-1 flex flex-col gap-5 min-w-0 pr-6">
+                    <div className="flex-1 flex flex-col gap-5 min-w-0 md:pr-6">
                         <div>
                             <p className="text-[13px] font-semibold tracking-tight text-[#1b1017] mb-1.5">Description</p>
                             {isAdmin ? (
-                                <textarea
+                                <textarea aria-label="Task description"
                                     defaultValue={task.description ?? ""}
                                     onBlur={(e) => onUpdate(task._id, { description: e.target.value })}
                                     placeholder="Add a description..."
@@ -135,7 +135,7 @@ export const TaskDetail = ({
                             </p>
                             <div className="flex flex-col gap-3 mb-3">
                                 {comments?.length === 0 && (
-                                    <p className="text-xs text-[#1b1017]/50">No comments yet.</p>
+                                    <p className="text-xs text-[#1b1017]/65">No comments yet.</p>
                                 )}
                                 {comments?.map(comment => (
                                     <div key={comment._id} className="flex items-start gap-2 group">
@@ -150,7 +150,7 @@ export const TaskDetail = ({
                                             <p className="text-xs text-[#1b1017]/70 mt-0.5 leading-relaxed">{comment.body}</p>
                                         </div>
                                         {(comment.memberId === currentMemberId || isAdmin) && (
-                                            <button
+                                            <button aria-label="Delete comment" type="button"
                                                 onClick={() => removeComment(comment._id, { onError: (e) => toast.error(e.message) })}
                                                 className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
                                             >
@@ -161,14 +161,14 @@ export const TaskDetail = ({
                                 ))}
                             </div>
                             <div className="flex items-center gap-2">
-                                <Input
+                                <Input aria-label="Add a comment"
                                     placeholder="Add a comment..."
                                     value={commentBody}
                                     onChange={e => setCommentBody(e.target.value)}
                                     onKeyDown={e => e.key === "Enter" && handleComment()}
                                     className="text-xs h-9 rounded-lg"
                                 />
-                                <Button size="iconSm" onClick={handleComment}
+                                <Button aria-label="Post comment" size="iconSm" onClick={handleComment}
                                     disabled={isCommenting || !commentBody.trim()}
                                     className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg shrink-0">
                                     <Send className="size-3.5" />
@@ -178,12 +178,12 @@ export const TaskDetail = ({
                     </div>
 
                     {/* Right */}
-                    <div className="w-52 shrink-0 flex flex-col gap-4 border-l border-[#381d2a]/10 pl-6">
+                    <div className="w-52 max-md:w-full shrink-0 flex flex-col gap-4 md:border-l max-md:border-t border-[#381d2a]/10 md:pl-6 max-md:pt-4">
                         <div>
-                            <p className="text-[11px] font-medium text-[#1b1017]/50 mb-1.5">Status</p>
+                            <p className="text-[11px] font-medium text-[#1b1017]/65 mb-1.5">Status</p>
                             <Select value={task.status} onValueChange={v => onUpdate(task._id, { status: v as Task["status"] })}
                                 disabled={!isAdmin && task.assigneeId !== currentMemberId && task.createdBy !== currentMemberId}>
-                                <SelectTrigger className={cn("h-8 text-xs rounded-lg border-transparent font-medium", STATUS_PILL[task.status])}>
+                                <SelectTrigger aria-label="Status" className={cn("h-8 text-xs rounded-lg border-transparent font-medium", STATUS_PILL[task.status])}>
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -193,9 +193,9 @@ export const TaskDetail = ({
                         </div>
 
                         <div>
-                            <p className="text-[11px] font-medium text-[#1b1017]/50 mb-1.5">Priority</p>
+                            <p className="text-[11px] font-medium text-[#1b1017]/65 mb-1.5">Priority</p>
                             <Select value={task.priority} onValueChange={v => isAdmin && onUpdate(task._id, { priority: v as Task["priority"] })} disabled={!isAdmin}>
-                                <SelectTrigger className="h-8 text-xs rounded-lg"><SelectValue /></SelectTrigger>
+                                <SelectTrigger aria-label="Priority" className="h-8 text-xs rounded-lg"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     {PRIORITIES.map(p => <SelectItem key={p} value={p} className="text-xs">{PRIORITY_TEXT[p]}</SelectItem>)}
                                 </SelectContent>
@@ -203,11 +203,11 @@ export const TaskDetail = ({
                         </div>
 
                         <div>
-                            <p className="text-[11px] font-medium text-[#1b1017]/50 mb-1.5">Assignee</p>
+                            <p className="text-[11px] font-medium text-[#1b1017]/65 mb-1.5">Assignee</p>
                             {isAdmin ? (
                                 <Select value={task.assigneeId ?? "unassigned"}
                                     onValueChange={v => onUpdate(task._id, { assigneeId: v === "unassigned" ? undefined : v as Id<"members"> })}>
-                                    <SelectTrigger className="h-8 text-xs rounded-lg"><SelectValue placeholder="Unassigned" /></SelectTrigger>
+                                    <SelectTrigger aria-label="Assignee" className="h-8 text-xs rounded-lg"><SelectValue placeholder="Unassigned" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="unassigned" className="text-xs">Unassigned</SelectItem>
                                         {members.map(m => <SelectItem key={m._id} value={m._id} className="text-xs">{m.user.name ?? "Unknown"}</SelectItem>)}
@@ -228,7 +228,7 @@ export const TaskDetail = ({
                                     )}
                                     {!isAssignedToMe && (
                                         <button onClick={() => onAssignToMe(task._id)}
-                                            className="text-[11px] font-medium text-[#ff5018] hover:text-[#e6430f] flex items-center gap-0.5 mt-1">
+                                            className="text-[11px] font-medium text-[#c2370d] hover:text-[#a82d0a] flex items-center gap-0.5 mt-1">
                                             <UserPlus className="size-3" /> Assign to me
                                         </button>
                                     )}
@@ -237,11 +237,11 @@ export const TaskDetail = ({
                         </div>
 
                         <div>
-                            <p className="text-[11px] font-medium text-[#1b1017]/50 mb-1.5">Sprint</p>
+                            <p className="text-[11px] font-medium text-[#1b1017]/65 mb-1.5">Sprint</p>
                             {isAdmin ? (
                                 <Select value={task.sprintId ?? "none"}
                                     onValueChange={v => onUpdate(task._id, { sprintId: v === "none" ? undefined : v as Id<"sprints"> })}>
-                                    <SelectTrigger className="h-8 text-xs rounded-lg"><SelectValue placeholder="No sprint" /></SelectTrigger>
+                                    <SelectTrigger aria-label="Sprint" className="h-8 text-xs rounded-lg"><SelectValue placeholder="No sprint" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="none" className="text-xs">No Sprint</SelectItem>
                                         {sprints.map(s => <SelectItem key={s._id} value={s._id} className="text-xs">{s.name}</SelectItem>)}
@@ -253,9 +253,9 @@ export const TaskDetail = ({
                         </div>
 
                         <div>
-                            <p className="text-[11px] font-medium text-[#1b1017]/50 mb-1.5">Due date</p>
+                            <p className="text-[11px] font-medium text-[#1b1017]/65 mb-1.5">Due date</p>
                             {isAdmin ? (
-                                <Input type="date"
+                                <Input aria-label="Due date" type="date"
                                     defaultValue={task.dueDate ? format(task.dueDate, "yyyy-MM-dd") : ""}
                                     onChange={e => onUpdate(task._id, { dueDate: e.target.value ? new Date(e.target.value).getTime() : undefined })}
                                     className="h-8 text-xs rounded-lg" />
@@ -267,9 +267,9 @@ export const TaskDetail = ({
                         </div>
 
                         <div>
-                            <p className="text-[11px] font-medium text-[#1b1017]/50 mb-1.5">Story points</p>
+                            <p className="text-[11px] font-medium text-[#1b1017]/65 mb-1.5">Story points</p>
                             {isAdmin ? (
-                                <Input type="number" defaultValue={task.storyPoints ?? ""}
+                                <Input aria-label="Story points" type="number" defaultValue={task.storyPoints ?? ""}
                                     onBlur={e => onUpdate(task._id, { storyPoints: e.target.value ? parseInt(e.target.value) : undefined })}
                                     className="h-8 text-xs rounded-lg" />
                             ) : (
@@ -280,7 +280,7 @@ export const TaskDetail = ({
                         </div>
 
                         <div>
-                            <p className="text-[11px] font-medium text-[#1b1017]/50 mb-1.5">Created by</p>
+                            <p className="text-[11px] font-medium text-[#1b1017]/65 mb-1.5">Created by</p>
                             <div className="flex items-center gap-1.5">
                                 <Avatar className="size-5 rounded-md">
                                     <AvatarImage src={task.creator?.user?.image} />

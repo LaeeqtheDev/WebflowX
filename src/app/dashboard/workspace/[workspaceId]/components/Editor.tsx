@@ -554,11 +554,12 @@ const Editor = ({
                 {/* @mention picker */}
                 {mention && mentionMatches.length > 0 && (
                     <div className="absolute bottom-full left-0 z-9999 mb-2 w-64 overflow-hidden rounded-xl border border-[#381d2a]/12 bg-white shadow-lg">
-                        <p className="border-b bg-[#f7f2ee] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#1b1017]/50">
+                        <p className="border-b bg-[#f7f2ee] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#1b1017]/65">
                             People
                         </p>
                         {mentionMatches.map((m, i) => (
                             <button
+                                type="button"
                                 key={`${m._id}-${i}`}
                                 onMouseDown={(e) => {
                                     e.preventDefault();
@@ -578,7 +579,7 @@ const Editor = ({
                                     )}
                                 </span>
                                 <span className="truncate text-sm font-medium">{m.user?.name}</span>
-                                {m.special && <span className="truncate text-xs text-[#1b1017]/45">{m.special}</span>}
+                                {m.special && <span className="truncate text-xs text-[#1b1017]/65">{m.special}</span>}
                             </button>
                         ))}
                     </div>
@@ -598,7 +599,7 @@ const Editor = ({
                                 className={cn(
                                     "flex-1 py-2 text-xs font-semibold transition-colors",
                                     activeTab === "format"
-                                        ? "text-[#ff5018] border-b-2 border-[#ff5018] bg-[#ff5018]/5"
+                                        ? "text-[#c2370d] border-b-2 border-[#ff5018] bg-[#ff5018]/5"
                                         : "text-[#1b1017]/60 hover:text-[#1b1017]"
                                 )}
                             >
@@ -613,7 +614,7 @@ const Editor = ({
                                 className={cn(
                                     "flex-1 py-2 text-xs font-semibold transition-colors flex items-center justify-center gap-1",
                                     activeTab === "ai"
-                                        ? "text-[#ff5018] border-b-2 border-[#ff5018] bg-[#ff5018]/5"
+                                        ? "text-[#c2370d] border-b-2 border-[#ff5018] bg-[#ff5018]/5"
                                         : "text-[#1b1017]/60 hover:text-[#1b1017]"
                                 )}
                             >
@@ -724,14 +725,16 @@ const Editor = ({
                                             setImage(null);
                                             imageElementRef.current!.value = "";
                                         }}
-                                        className="hidden group-hover/image:flex rounded-full bg-[#1b1017]/80 hover:bg-[#1b1017] absolute -top-2.5 -right-2.5 text-white size-6 z-4 border-2 border-white items-center justify-center"
+                                        type="button"
+                                        aria-label="Remove image"
+                                        className="flex opacity-0 group-hover/image:opacity-100 focus-visible:opacity-100 rounded-full bg-[#1b1017]/80 hover:bg-[#1b1017] absolute -top-2.5 -right-2.5 text-white size-6 z-4 border-2 border-white items-center justify-center"
                                     >
-                                        <XIcon className="size-3.5" />
+                                        <XIcon className="size-3.5" aria-hidden="true" />
                                     </button>
                                 </Hint>
                                 <Image
                                     src={URL.createObjectURL(image)}
-                                    alt="uploaded"
+                                    alt="Selected image to upload"
                                     fill
                                     className="rounded-xl overflow-hidden border border-[#381d2a]/12 object-cover"
                                 />
@@ -749,9 +752,11 @@ const Editor = ({
                                             setFile(null);
                                             fileElementRef.current!.value = "";
                                         }}
-                                        className="hidden group-hover/file:flex rounded-full bg-[#1b1017]/80 hover:bg-[#1b1017] absolute -top-2 -right-2 text-white size-5 z-4 border-2 border-white items-center justify-center"
+                                        type="button"
+                                        aria-label="Remove file"
+                                        className="flex opacity-0 group-hover/file:opacity-100 focus-visible:opacity-100 rounded-full bg-[#1b1017]/80 hover:bg-[#1b1017] absolute -top-2 -right-2 text-white size-5 z-4 border-2 border-white items-center justify-center"
                                     >
-                                        <XIcon className="size-3" />
+                                        <XIcon className="size-3" aria-hidden="true" />
                                     </button>
                                 </Hint>
                                 <div className="size-10 rounded-lg bg-[#ff5018]/10 flex items-center justify-center shrink-0">
@@ -779,6 +784,7 @@ const Editor = ({
                                 disabled={disabled}
                                 size={"iconSm"}
                                 variant={"ghost"}
+                                aria-label={isToolbarVisible ? "Hide formatting" : "Show formatting"}
                                 onClick={toggleToolbar}
                             >
                                 <PiTextAa className="size-4" />
@@ -790,6 +796,7 @@ const Editor = ({
                                 disabled={disabled}
                                 size="iconSm"
                                 variant="ghost"
+                                aria-label="Mention someone"
                                 onMouseDown={(e) => e.preventDefault()}
                                 onClick={() => {
                                     const quill = quilRef.current;
@@ -808,7 +815,7 @@ const Editor = ({
                         </Hint>
 
                         <EmojiPopover onEmojiSelect={onEmojiSelect}>
-                            <Button disabled={disabled} size="iconSm" variant="ghost">
+                            <Button disabled={disabled} size="iconSm" variant="ghost" aria-label="Add emoji">
                                 <Smile className="size-4" />
                             </Button>
                         </EmojiPopover>
@@ -819,6 +826,7 @@ const Editor = ({
                                     disabled={disabled}
                                     size={"iconSm"}
                                     variant={"ghost"}
+                                    aria-label="Attach image"
                                     onClick={() => imageElementRef.current?.click()}
                                 >
                                     <ImageIcon className="size-4" />
@@ -832,6 +840,7 @@ const Editor = ({
                                     disabled={disabled}
                                     size={"iconSm"}
                                     variant={"ghost"}
+                                    aria-label="Attach file"
                                     onClick={() => fileElementRef.current?.click()}
                                 >
                                     <FileText className="size-4" />
@@ -845,6 +854,7 @@ const Editor = ({
                                     disabled={disabled}
                                     size={"iconSm"}
                                     variant={"ghost"}
+                                    aria-label="Open AI commands"
                                     onClick={() => {
                                         const quill = quilRef.current;
                                         if (!quill) return;
@@ -904,6 +914,7 @@ const Editor = ({
                                 }
                                 disabled={disabled || isEmpty}
                                 size={"iconSm"}
+                                aria-label="Send message"
                                 className={cn(
                                     "ml-auto rounded-lg",
                                     isEmpty
@@ -911,7 +922,7 @@ const Editor = ({
                                         : "bg-[#ff5018] hover:bg-[#e6430f] text-white cursor-pointer"
                                 )}
                             >
-                                <MdSend className="size-4" />
+                                <MdSend className="size-4" aria-hidden="true" />
                             </Button>
                         )}
                     </div>

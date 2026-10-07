@@ -150,10 +150,10 @@ const steps = [
   {
     when: "Mid 2025 to Jun 2026",
     title: "Scale and security",
-    body: "With the product stable, the focus moved to growth. The backend was deployed on AWS to handle more teams reliably, and security was strengthened across the platform.",
-    points: ["Onboarded 100+ teams", "Deployed the backend on AWS for scalability", "Enhanced security across the platform"],
+    body: "With the product stable, the focus moved to growth. The backend was deployed on AWS to handle growth reliably, and security was strengthened across the platform.",
+    points: ["Deployed the backend on AWS for scalability", "Enhanced security across the platform"],
     focus: "Scalability and security",
-    outcome: "100+ teams onboarded on infrastructure built to scale.",
+    outcome: "Backend deployed on AWS and security strengthened across the platform.",
     visual: <Scale />,
   },
   {
@@ -257,7 +257,7 @@ export function WebflowXTimeline() {
             <div key={s.when} className="tl-step relative grid grid-cols-[minmax(0,1fr)] gap-8 pb-20 pl-12 last:pb-0 md:grid-cols-[220px_minmax(0,1fr)] md:gap-12 md:pb-32 lg:grid-cols-[260px_minmax(0,1fr)]">
               <span className="tl-node absolute left-0 top-2 h-6 w-6 rounded-full border-2 border-[#381d2a]/25 bg-[#efe8e3]" />
               <div>
-                <p className="lp-label mb-2 text-[#381d2a]/50">0{idx + 1} / 0{steps.length}</p>
+                <p className="lp-label mb-2 text-[#381d2a]/65">0{idx + 1} / 0{steps.length}</p>
                 <p className="tl-year lp-h sticky top-28 text-3xl text-[#381d2a]/35 md:text-4xl lg:text-5xl">{s.when}</p>
               </div>
               <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -274,11 +274,11 @@ export function WebflowXTimeline() {
                   </ul>
                   <dl className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-[#381d2a]/15 bg-[#381d2a]/15 text-sm">
                     <div className="bg-[#f7f2ee] p-4">
-                      <dt className="lp-label text-[#ff5018]">Focus</dt>
+                      <dt className="lp-label text-[#c2370d]">Focus</dt>
                       <dd className="mt-2 leading-snug text-[#1b1017]">{s.focus}</dd>
                     </div>
                     <div className="bg-[#f7f2ee] p-4">
-                      <dt className="lp-label text-[#ff5018]">Outcome</dt>
+                      <dt className="lp-label text-[#c2370d]">Outcome</dt>
                       <dd className="mt-2 leading-snug text-[#1b1017]">{s.outcome}</dd>
                     </div>
                   </dl>

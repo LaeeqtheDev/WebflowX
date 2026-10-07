@@ -24,7 +24,7 @@ export const get = query({
             .query("messages")
             .withIndex("by_member_id", (q) => q.eq("memberId", member._id))
             .order("desc")
-            .collect()
+            .take(300)
 
         const channelMessages = messages.filter(m =>
             m.channelId !== undefined &&
@@ -32,7 +32,7 @@ export const get = query({
             m.parentMessagesId === undefined
         )
 
-        const rows = await Promise.all(channelMessages.map(async (msg) => {
+        const rows = await Promise.all(channelMessages.slice(0, 100).map(async (msg) => {
             const channel = msg.channelId ? await ctx.db.get(msg.channelId) : null
             if (channel && !canAccessChannel(workspace, member, channel)) return null
             const image = msg.image ? await ctx.storage.getUrl(msg.image) : undefined

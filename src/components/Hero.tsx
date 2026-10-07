@@ -189,7 +189,7 @@ const Hero = () => {
               See plans
             </a>
           </div>
-          <p className="h-fade mt-5 text-sm text-white/45">Onboarded 100+ teams. Free plan available.</p>
+          <p className="h-fade mt-5 text-sm text-white/45">Free plan available. Built by North Foundry.</p>
         </div>
 
         <div className="h-stage relative mt-10 w-full max-w-[1120px] lg:mt-12" style={{ perspective: 1800 }}>

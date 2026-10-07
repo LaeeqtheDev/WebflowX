@@ -13,7 +13,7 @@ import Link from "next/link";
 
 
 const userItemVariants = cva(
-    "flex items-center gap-1.5 justify-start font-normal h-7 px-[18px] text-sm overflow-hidden rounded-md transition-colors",
+    "flex items-center gap-1.5 justify-start font-normal h-7 max-md:h-10 px-[18px] text-sm overflow-hidden rounded-md transition-colors",
     {
         variants: {
             variant: {

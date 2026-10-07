@@ -1,12 +1,11 @@
 import { useCreateMessage } from "@/features/messages/api/use-create-message";
 import { useUploader } from "@/lib/upload-photo";
-import { errMsg } from "@/lib/errors";
+import { useLimitHandler } from "@/hooks/use-limit-handler";
 import { useChannelId } from "@/hooks/use-channel-id";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import dynamic from "next/dynamic"
 import Quill from "quill"
 import { useRef, useState } from "react"
-import { toast } from "sonner";
 import { Id } from "../../../../../../../convex/_generated/dataModel";
 
 
@@ -37,6 +36,7 @@ export const ChatInput = ({placeholder, conversationId}: ChatInputProps) => {
   const {mutate: createMessage} = useCreateMessage()
   const [isPending, setIsPending] = useState(false)
   const { upload } = useUploader()
+  const { handleLimitError } = useLimitHandler()
 
 
   const handleSubmit = async({
@@ -64,7 +64,7 @@ export const ChatInput = ({placeholder, conversationId}: ChatInputProps) => {
 
     setEditorKey((prevKey) => prevKey +1)
   } catch (error){
-    toast.error(errMsg(error, error instanceof Error && !error.message.includes("CONVEX") ? error.message : "Failed to send the Message"))
+    handleLimitError(error, "Failed to send the message")
   }finally{
       setIsPending(false)
       editorRef?.current?.enable(true)
@@ -72,7 +72,7 @@ export const ChatInput = ({placeholder, conversationId}: ChatInputProps) => {
   }
 
   return (
-    <div className="px-5 w-full">
+    <div data-chat-input className="px-3 md:px-5 w-full pb-[env(safe-area-inset-bottom)]">
       <Editor 
       key={editorKey}
       placeholder={placeholder}

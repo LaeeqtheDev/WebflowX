@@ -1,8 +1,10 @@
 import { v } from "convex/values"
+import { notify } from "./notifications"
 import { Id } from "./_generated/dataModel"
 import { mutation, QueryCtx } from "./_generated/server"
 import { auth } from "./auth"
 import { canViewChannel } from "./permissions"
+import { throttle } from "./rateLimit"
 
 export const getMember = async (
     ctx: QueryCtx,
@@ -30,6 +32,7 @@ export const toggle = mutation({
         if (!member) throw new Error("Unauthorized")
 
         if (args.value.length === 0 || args.value.length > 32) throw new Error("Invalid reaction")
+        await throttle(ctx, userId, "react", 120, 60_000, "reacting")
         if (message.channelId && !(await canViewChannel(ctx, message.channelId, userId))) throw new Error("Unauthorized")
         if (message.conversationId) {
             const conv = await ctx.db.get(message.conversationId)
@@ -60,7 +63,7 @@ export const toggle = mutation({
 
             // 👇 Notify message author
             if (message.memberId !== member._id) {
-                await ctx.db.insert("notifications", {
+                await notify(ctx, {
                     workspaceId: message.workspaceId,
                     recipientId: message.memberId,
                     senderId: member._id,

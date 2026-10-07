@@ -121,8 +121,9 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
             <div className="h-full flex flex-col bg-white">
                 <div className="h-14 flex justify-between items-center px-4 border-b border-[#381d2a]/12 bg-white">
                     <p className="text-lg font-semibold tracking-tight text-[#1b1017]">Profile</p>
-                    <Button onClick={onClose} size={"iconSm"} variant={"ghost"} className="rounded-lg hover:bg-[#f7f2ee]">
+                    <Button onClick={onClose} size={"iconSm"} variant={"ghost"} aria-label="Close profile" className="rounded-lg hover:bg-[#f7f2ee] max-md:h-10 max-md:w-auto max-md:gap-1 max-md:px-3">
                         <XIcon className="size-5 stroke-[1.5]" />
+                        <span className="text-sm font-medium md:hidden">Close</span>
                     </Button>
                 </div>
                 <div className="flex flex-col gap-y-2 h-full items-center justify-center">
@@ -137,8 +138,9 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
             <div className="h-full flex flex-col bg-white">
                 <div className="h-14 flex justify-between items-center px-4 border-b border-[#381d2a]/12 bg-white">
                     <p className="text-lg font-semibold tracking-tight text-[#1b1017]">Profile</p>
-                    <Button onClick={onClose} size={"iconSm"} variant={"ghost"} className="rounded-lg hover:bg-[#f7f2ee]">
+                    <Button onClick={onClose} size={"iconSm"} variant={"ghost"} aria-label="Close profile" className="rounded-lg hover:bg-[#f7f2ee] max-md:h-10 max-md:w-auto max-md:gap-1 max-md:px-3">
                         <XIcon className="size-5 stroke-[1.5]" />
+                        <span className="text-sm font-medium md:hidden">Close</span>
                     </Button>
                 </div>
                 <div className="flex flex-col gap-y-2 h-full items-center justify-center">
@@ -168,8 +170,9 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
             <div className="h-full flex flex-col overflow-y-auto bg-white">
                 <div className="h-14 flex justify-between items-center px-4 border-b border-[#381d2a]/12 bg-white">
                     <p className="text-lg font-semibold tracking-tight text-[#1b1017]">Profile</p>
-                    <Button onClick={onClose} size={"iconSm"} variant={"ghost"} className="rounded-lg hover:bg-[#f7f2ee]">
+                    <Button onClick={onClose} size={"iconSm"} variant={"ghost"} aria-label="Close profile" className="rounded-lg hover:bg-[#f7f2ee] max-md:h-10 max-md:w-auto max-md:gap-1 max-md:px-3">
                         <XIcon className="size-5 stroke-[1.5]" />
+                        <span className="text-sm font-medium md:hidden">Close</span>
                     </Button>
                 </div>
 
@@ -192,7 +195,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                     {member.user.bio && <p className="text-sm text-[#1b1017]/75 mt-3 whitespace-pre-wrap">{member.user.bio}</p>}
 
                     {isSelf && (
-                        <p className="text-xs text-[#1b1017]/50 mt-3">Edit your photo, title and bio from your avatar menu.</p>
+                        <p className="text-xs text-[#1b1017]/65 mt-3">Edit your photo, title and bio from your avatar menu.</p>
                     )}
 
                     {/* Someone with rights over this member → role + remove */}
@@ -278,7 +281,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                             </p>
                             <Link
                                 href={`mailto:${member.user.email}`}
-                                className="text-sm text-[#ff5018] hover:underline"
+                                className="text-sm text-[#c2370d] hover:underline"
                             >
                                 {member.user.email}
                             </Link>

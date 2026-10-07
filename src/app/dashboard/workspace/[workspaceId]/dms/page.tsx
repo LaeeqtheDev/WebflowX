@@ -27,7 +27,7 @@ export default function DmsPage() {
     return (
         <div className="h-full flex flex-col overflow-hidden bg-[#fbf9f7]">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 h-14 border-b bg-white shrink-0 shadow-none">
+            <div className="flex items-center justify-between px-4 md:px-6 h-14 border-b bg-white shrink-0 shadow-none">
                 <div className="flex items-center gap-3">
                     <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
                         <MessageSquare className="size-4 text-[#ff5018]" />
@@ -37,7 +37,7 @@ export default function DmsPage() {
                         <p className="text-[11px] text-[#1b1017]/60 mt-1">
                             {conversations?.length ?? 0} conversation{conversations?.length !== 1 ? "s" : ""}
                             {totalUnread > 0 && (
-                                <span className="ml-1.5 text-[#ff5018] font-semibold">
+                                <span className="ml-1.5 text-[#c2370d] font-semibold">
                                     · {totalUnread} unread
                                 </span>
                             )}
@@ -50,7 +50,7 @@ export default function DmsPage() {
             <div className="px-4 py-3 bg-white border-b border-[#381d2a]/10">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                    <Input
+                    <Input aria-label="Search conversations"
                         placeholder="Search conversations..."
                         value={search}
                         onChange={e => setSearch(e.target.value)}
@@ -123,7 +123,7 @@ export default function DmsPage() {
                                             {conv.lastMessage && (
                                                 <span className={cn(
                                                     "text-[11px] shrink-0",
-                                                    hasUnread ? "text-[#ff5018] font-semibold" : "text-[#1b1017]/60"
+                                                    hasUnread ? "text-[#c2370d] font-semibold" : "text-[#1b1017]/60"
                                                 )}>
                                                     {format(conv.lastMessage._creationTime, "MMM d, h:mm a")}
                                                 </span>

@@ -9,6 +9,7 @@ import { Header } from "../../components/header";
 import { ChatInput } from "../../components/Chat-Input";
 import { useGetMessages } from "@/features/messages/api/use-get-messages";
 import { MessageList } from "../../components/message-list";
+import { ChannelWelcome } from "../../components/first-run";
 
 const ChannelIdPage = () => {
     const channelId = useChannelId();
@@ -46,7 +47,7 @@ const ChannelIdPage = () => {
 
     return(
         
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full min-h-0">
             <Header title={channel.name}/>
             <MessageList
             channelName={channel.name}
@@ -55,9 +56,10 @@ const ChannelIdPage = () => {
             loadMore={loadMore}
             isLoadingMore={status === "LoadingMore"}
             canLoadMore={status === "CanLoadMore"}
+            emptyState={<ChannelWelcome channelName={channel.name} canPost={!channel.readOnly || perms.can("postInReadOnly")} />}
             />
             {channel.readOnly && !perms.can("postInReadOnly") ? (
-                <div className="mx-5 mb-5 flex items-center gap-2.5 rounded-xl border border-[#381d2a]/12 bg-white px-4 py-3 text-sm text-[#1b1017]/65">
+                <div className="mx-3 md:mx-5 mb-5 flex items-center gap-2.5 rounded-xl border border-[#381d2a]/12 bg-white px-4 py-3 text-sm text-[#1b1017]/65">
                     <Megaphone className="size-4 shrink-0 text-[#ff5018]" />
                     This is an announcement channel. Only admins and allowed roles can post. You can still reply in threads and react.
                 </div>

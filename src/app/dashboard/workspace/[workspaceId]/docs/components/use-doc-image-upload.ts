@@ -3,6 +3,7 @@
 import { useCallback } from "react"
 import { useConvex } from "convex/react"
 import { toast } from "sonner"
+import { useLimitHandler } from "@/hooks/use-limit-handler"
 import { useUploader } from "@/lib/upload-photo"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { api } from "../../../../../../../convex/_generated/api"
@@ -13,6 +14,7 @@ export const useDocImageUpload = () => {
     const { upload } = useUploader()
     const workspaceId = useWorkspaceId()
     const convex = useConvex()
+    const { handleLimitError } = useLimitHandler()
 
     return useCallback(async (file: File): Promise<string | null> => {
         if (!file.type.startsWith("image/")) {
@@ -31,8 +33,9 @@ export const useDocImageUpload = () => {
             toast.success("Image added", { id: toastId })
             return src
         } catch (e) {
-            toast.error(e instanceof Error ? e.message : "Failed to upload image", { id: toastId })
+            toast.dismiss(toastId)
+            handleLimitError(e, "Failed to upload image")
             return null
         }
-    }, [upload, workspaceId, convex])
+    }, [upload, workspaceId, convex, handleLimitError])
 }

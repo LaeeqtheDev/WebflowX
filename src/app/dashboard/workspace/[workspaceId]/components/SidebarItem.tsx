@@ -7,7 +7,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const sidebarItemVariants = cva(
-    "flex items-center gap-2 justify-start font-normal h-8 px-3 text-sm overflow-hidden rounded-lg transition-colors",
+    "flex items-center gap-2 justify-start font-normal h-8 max-md:h-10 px-3 text-sm overflow-hidden rounded-lg transition-colors",
     {
         variants: {
             variant: {

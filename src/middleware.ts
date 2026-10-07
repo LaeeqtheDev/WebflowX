@@ -4,6 +4,7 @@ import {
   createRouteMatcher,
   isAuthenticatedNextjs,
 } from "@convex-dev/auth/nextjs/server";
+import { safeNext } from "@/lib/safe-next";
 
 const isPublicPage = createRouteMatcher(["/", "/auth", "/join"])
 
@@ -34,7 +35,7 @@ export default convexAuthNextjsMiddleware(async (request) => {
   if (isPublicPage(request) && authenticated) {
     const next = request.nextUrl.searchParams.get("next");
     // only follow same-site relative paths
-    const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+    const target = safeNext(next) ?? "/dashboard";
     return NextResponse.redirect(new URL(target, request.url));
   }
 

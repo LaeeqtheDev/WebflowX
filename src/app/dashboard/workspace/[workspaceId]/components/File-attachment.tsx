@@ -68,7 +68,7 @@ export const FileAttachment = ({
                 <p className="text-sm font-medium text-[#1b1017] truncate">
                     {fileName || "Untitled File"}
                 </p>
-                <div className="flex items-center gap-2 text-xs text-[#1b1017]/50">
+                <div className="flex items-center gap-2 text-xs text-[#1b1017]/65">
                     {extension && (
                         <span className="uppercase font-medium">{extension}</span>
                     )}
@@ -81,6 +81,7 @@ export const FileAttachment = ({
             <Button
                 variant="ghost"
                 size="sm"
+                aria-label="Download file"
                 onClick={handleDownload}
                 className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 rounded-lg"
             >

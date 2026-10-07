@@ -2,7 +2,8 @@ import { v, ConvexError } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { auth } from "./auth"
 import { can } from "./permissions"
-import { checkLimit } from "./limits"
+import { checkLimitLazy } from "./limits"
+import { throttle } from "./rateLimit"
 import { internal } from "./_generated/api"
 
 const cleanTitle = (raw: string) => {
@@ -30,7 +31,7 @@ export const get = query({
             .query("docs")
             .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
             .order("desc")
-            .collect()
+            .take(500)
 
         return await Promise.all(docs.map(async (doc) => {
             const creator = await ctx.db.get(doc.createdBy)
@@ -59,13 +60,9 @@ export const create = mutation({
         if (!member) throw new Error("Unauthorized")
         if (!(await can(ctx, member, "createDocs"))) throw new ConvexError("You don't have permission to create documents")
 
-        const existingDocs = await ctx.db
-            .query("docs")
-            .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
-            .collect()
-
-        const { allowed, limit, plan } = await checkLimit(
-            ctx, args.workspaceId, "docs", existingDocs.length
+        await throttle(ctx, userId, "doc-create", 20, 60 * 60_000, "creating documents")
+        const { allowed, limit, plan } = await checkLimitLazy(ctx, args.workspaceId, "docs", async (cap) =>
+            (await ctx.db.query("docs").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId)).take(cap)).length
         )
 
         if (!allowed) {

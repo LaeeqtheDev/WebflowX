@@ -173,7 +173,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
             {tabs.filter((t) => t.show).map((t) => (
               <button key={t.id} onClick={() => setTab(t.id)}
                 className={cn("px-3 py-2 text-sm font-semibold whitespace-nowrap border-b-2 -mb-px transition",
-                  tab === t.id ? "border-[#ff5018] text-[#1b1017]" : "border-transparent text-[#1b1017]/55 hover:text-[#1b1017]")}>
+                  tab === t.id ? "border-[#ff5018] text-[#1b1017]" : "border-transparent text-[#1b1017]/65 hover:text-[#1b1017]")}>
                 {t.label}
               </button>
             ))}
@@ -203,7 +203,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                         </Button>
                       )}
                     </div>
-                  ) : <p className="text-sm text-[#1b1017]/55">You don&apos;t have permission to edit the workspace.</p>}
+                  ) : <p className="text-sm text-[#1b1017]/65">You don&apos;t have permission to edit the workspace.</p>}
                 </div>
 
                 <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); save({ id: workspaceId, name, description }, "Workspace updated") }}>
@@ -243,7 +243,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
 
             {tab === "members" && (
               <div className="flex flex-col gap-3">
-                <Input placeholder="Search members" value={filter} onChange={(e) => setFilter(e.target.value)} className="bg-white" />
+                <Input aria-label="Search members" placeholder="Search members" value={filter} onChange={(e) => setFilter(e.target.value)} className="bg-white" />
                 <div className="flex flex-col gap-1.5">
                   {!members && <Loader className="size-5 animate-spin text-[#ff5018] mx-auto my-6" />}
                   {[...shownMembers].sort((a, b) => order(a) - order(b)).map((m) => (
@@ -255,7 +255,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-[#1b1017] truncate">{m.user.name}</p>
-                        <p className="text-xs text-[#1b1017]/55 truncate">{m.user.title || m.user.email}</p>
+                        <p className="text-xs text-[#1b1017]/65 truncate">{m.user.title || m.user.email}</p>
                       </div>
                       <span className="flex items-center gap-1 text-xs font-semibold capitalize text-[#1b1017]/70">
                         <RoleIcon role={m.role} isOwner={m.isOwner} />
@@ -263,7 +263,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                       </span>
                     </button>
                   ))}
-                  {members && shownMembers.length === 0 && <p className="text-sm text-[#1b1017]/55 text-center py-6">No one matches that search.</p>}
+                  {members && shownMembers.length === 0 && <p className="text-sm text-[#1b1017]/65 text-center py-6">No one matches that search.</p>}
                 </div>
               </div>
             )}
@@ -272,14 +272,14 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
               <div className="flex flex-col gap-4">
                 <p className="text-sm text-[#1b1017]/65">Owner and admins can do everything. Choose what moderators and members are allowed to do. Changes apply immediately.</p>
                 <div className="bg-white rounded-xl border border-[#381d2a]/10 overflow-hidden">
-                  <div className="grid grid-cols-[1fr_88px_88px] px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-[#1b1017]/55 border-b">
+                  <div className="grid grid-cols-[1fr_88px_88px] px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-[#1b1017]/65 border-b">
                     <span>Permission</span><span className="text-center">Moderator</span><span className="text-center">Member</span>
                   </div>
                   {PERMISSION_INFO.map((p) => (
                     <div key={p.key} className="grid grid-cols-[1fr_88px_88px] items-center px-4 py-3 border-b last:border-b-0">
                       <div className="pr-3">
                         <p className="text-sm font-semibold text-[#1b1017]">{p.label}</p>
-                        <p className="text-xs text-[#1b1017]/55">{p.hint}</p>
+                        <p className="text-xs text-[#1b1017]/65">{p.hint}</p>
                       </div>
                       {(["moderator", "member"] as const).map((role) => (
                         <div key={role} className="flex justify-center">
@@ -295,7 +295,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                 <div className="flex items-center justify-between pt-2">
                   <div>
                     <p className="text-sm font-semibold text-[#1b1017]">Custom roles</p>
-                    <p className="text-xs text-[#1b1017]/55">Name a role, pick a rank and exactly what it can do. Assign it from a member&apos;s profile.</p>
+                    <p className="text-xs text-[#1b1017]/65">Name a role, pick a rank and exactly what it can do. Assign it from a member&apos;s profile.</p>
                   </div>
                   <Button size="sm" variant="outline" className="rounded-lg" disabled={(rolePerms?.customRoles.length ?? 0) >= 10}
                     onClick={() => setRoleDraft({ name: "", baseRole: "member", permissions: [] })}>
@@ -303,17 +303,17 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                   </Button>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  {rolePerms?.customRoles.length === 0 && <p className="text-sm text-[#1b1017]/50">No custom roles yet.</p>}
+                  {rolePerms?.customRoles.length === 0 && <p className="text-sm text-[#1b1017]/65">No custom roles yet.</p>}
                   {rolePerms?.customRoles.map((r) => (
                     <div key={r.id} className="flex items-center gap-3 bg-white rounded-xl border border-[#381d2a]/10 px-4 py-2.5">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold truncate">{r.name}</p>
-                        <p className="text-xs text-[#1b1017]/55">Ranks as {r.baseRole} · {r.permissions.length} permissions · {(members ?? []).filter((m) => m.customRoleId === r.id).length} people</p>
+                        <p className="text-xs text-[#1b1017]/65">Ranks as {r.baseRole} · {r.permissions.length} permissions · {(members ?? []).filter((m) => m.customRoleId === r.id).length} people</p>
                       </div>
-                      <Button size="icon" variant="ghost" aria-label="Edit role" onClick={() => setRoleDraft({ id: r.id, name: r.name, baseRole: r.baseRole, permissions: r.permissions })}><Pencil className="size-4" /></Button>
+                      <Button size="icon" variant="ghost" aria-label="Edit role" onClick={() => setRoleDraft({ id: r.id, name: r.name, baseRole: r.baseRole, permissions: r.permissions })}><Pencil className="size-4" aria-hidden="true" /></Button>
                       <Button size="icon" variant="ghost" aria-label="Delete role" className="text-rose-600"
                         onClick={() => deleteCustomRole({ workspaceId, id: r.id }).then(() => toast.success("Role deleted")).catch((e) => toast.error(errMsg(e, "Couldn't delete role")))}>
-                        <Trash2 className="size-4" />
+                        <Trash2 className="size-4" aria-hidden="true" />
                       </Button>
                     </div>
                   ))}
@@ -362,11 +362,11 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
             {tab === "audit" && (
               <div className="flex flex-col gap-1.5">
                 {audit === undefined && <Loader className="size-5 animate-spin text-[#ff5018] mx-auto my-6" />}
-                {audit?.length === 0 && <p className="text-sm text-[#1b1017]/55 text-center py-6">Nothing recorded yet.</p>}
+                {audit?.length === 0 && <p className="text-sm text-[#1b1017]/65 text-center py-6">Nothing recorded yet.</p>}
                 {audit?.map((a) => (
                   <div key={a._id} className="bg-white rounded-xl border border-[#381d2a]/10 px-4 py-2.5">
                     <p className="text-sm text-[#1b1017]"><span className="font-semibold">{a.actorName}</span> · {ACTION_LABEL[a.action] ?? a.action}</p>
-                    <p className="text-xs text-[#1b1017]/55">
+                    <p className="text-xs text-[#1b1017]/65">
                       {a.detail ? `${a.detail} · ` : ""}{new Date(a._creationTime).toLocaleString()}
                     </p>
                   </div>

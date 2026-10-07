@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
+import { useLimitHandler } from "@/hooks/use-limit-handler"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { Loader, Video, Plus, Sparkles, Clock, Users, AlertTriangle, ArrowLeft } from "lucide-react"
@@ -42,6 +43,7 @@ export default function MeetingPage() {
     const { data: meetings, isLoading } = useGetMeetings({ workspaceId })
     const { data: channels } = useGetChannels({ workspaceId })
     const { mutate: createMeeting, isPending: isCreating } = useCreateMeeting()
+    const { handleLimitError } = useLimitHandler()
     const joinMeeting = useMutation(api.meetings.join)
     const leaveMeeting = useMutation(api.meetings.leave)
     const endForEveryone = useMutation(api.meetings.endForEveryone)
@@ -118,7 +120,9 @@ export default function MeetingPage() {
                 setSelectedChannelId("")
                 await handleJoin(roomName, id)
             },
-            onError: (e) => toast.error(e.message)
+            onError: (e) => {
+                if (handleLimitError(e, "Couldn't start the meeting")) setShowCreate(false)
+            }
         })
     }
 
@@ -165,7 +169,7 @@ export default function MeetingPage() {
                     summary: "Your plan's monthly AI summary limit was reached, so no summary was generated. The transcript was saved.",
                     transcript,
                 }).catch(console.error)
-                toast.error("AI summary limit reached for this month. Upgrade your plan for more.")
+                handleLimitError(e)
             } else {
                 setGenerationError(message || "Failed to generate summary")
                 toast.error("Failed to generate summary. You can regenerate it from the meeting details.")
@@ -178,7 +182,7 @@ export default function MeetingPage() {
         } finally {
             setIsGenerating(false)
         }
-    }, [convex, saveSummary])
+    }, [convex, saveSummary, handleLimitError])
 
     const handleDisconnect = useCallback(async (_transcript: string, reason: "left" | "removed" | "ended" | "lost" = "left") => {
         const meetingId = activeMeetingId
@@ -275,6 +279,7 @@ export default function MeetingPage() {
                             variant="ghost"
                             size="sm"
                             className="md:hidden -ml-2 h-7 px-2"
+                            aria-label="Back to meetings list"
                             onClick={handleBackToList}
                         >
                             <ArrowLeft className="size-4" />
@@ -304,10 +309,12 @@ export default function MeetingPage() {
                         <p className="text-[10px] sm:text-xs text-amber-600 mt-1">You can add a transcript manually from the meeting details.</p>
                     </div>
                     <button 
+                        type="button"
+                        aria-label="Dismiss"
                         onClick={() => setGenerationError(null)}
                         className="text-amber-600 hover:text-amber-800 text-lg shrink-0"
                     >
-                        ×
+                        <span aria-hidden="true">×</span>
                     </button>
                 </div>
             )}
@@ -453,7 +460,7 @@ export default function MeetingPage() {
                         <DialogTitle className="text-[17px] font-semibold tracking-tight">Start a Meeting</DialogTitle>
                     </DialogHeader>
                     <div className="flex flex-col gap-3 mt-2">
-                        <Input
+                        <Input aria-label="Meeting title"
                             placeholder="Meeting title..."
                             value={title}
                             onChange={e => setTitle(e.target.value)}
@@ -465,7 +472,7 @@ export default function MeetingPage() {
                                 Post to channel (optional)
                             </label>
                             <Select value={selectedChannelId} onValueChange={setSelectedChannelId}>
-                                <SelectTrigger className="h-9 text-xs rounded-lg">
+                                <SelectTrigger aria-label="Channel" className="h-9 text-xs rounded-lg">
                                     <SelectValue placeholder="Select a channel..." />
                                 </SelectTrigger>
                                 <SelectContent>

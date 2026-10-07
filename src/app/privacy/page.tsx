@@ -1,7 +1,12 @@
 import type { Metadata } from "next"
 import { LegalPage } from "@/components/legal/legal-page"
 
-export const metadata: Metadata = { title: "Privacy Policy · WebflowX" }
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: "What WebflowX, operated by North Foundry, collects, why, and the choices you have over your data.",
+  alternates: { canonical: "/privacy" },
+  openGraph: { title: "Privacy Policy | WebflowX", description: "What WebflowX, operated by North Foundry, collects, why, and the choices you have over your data.", url: "/privacy" },
+}
 
 export default function PrivacyPage() {
   return (

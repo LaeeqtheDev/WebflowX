@@ -7,6 +7,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import { TriangleAlert, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { safeNext } from "@/lib/safe-next";
 import { SignInFlow } from "../../types/types";
 import { useAuthActions } from "@convex-dev/auth/react";
 
@@ -42,7 +43,7 @@ export const SignInCard = ({ setState, onEmail }: SignInCardProps) => {
   const handleProviderSignIn = (value: "github" | "google") => {
     setPending(true);
     const next = new URLSearchParams(window.location.search).get("next");
-    const redirectTo = next && next.startsWith("/") && !next.startsWith("//") ? next : undefined;
+    const redirectTo = safeNext(next);
     signIn(value, redirectTo ? { redirectTo } : undefined).finally(() => setPending(false));
   };
 

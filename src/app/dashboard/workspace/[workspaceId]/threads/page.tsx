@@ -48,7 +48,7 @@ const ThreadItem = ({ thread, onSelect }: { thread: ThreadData; onSelect: (threa
                 </p>
                 <div className="flex items-center gap-1 mt-1.5">
                     <div className="size-1.5 rounded-full bg-[#ff5018]" />
-                    <span className="text-[11px] text-[#ff5018] font-medium">
+                    <span className="text-[11px] text-[#c2370d] font-medium">
                         {thread.replyCount} {thread.replyCount === 1 ? "reply" : "replies"}
                     </span>
                     <span className="text-[11px] text-muted-foreground">
@@ -113,7 +113,7 @@ export default function ThreadsPage() {
                                 <p className="text-[11px] font-semibold text-[#1b1017]/60 uppercase tracking-wider">
                                     My Threads
                                     {(data?.myThreads?.length ?? 0) > 0 && (
-                                        <span className="ml-1.5 text-[#ff5018]">
+                                        <span className="ml-1.5 text-[#c2370d]">
                                             {data?.myThreads?.length}
                                         </span>
                                     )}
@@ -131,7 +131,7 @@ export default function ThreadsPage() {
                                 <p className="text-[11px] font-semibold text-[#1b1017]/60 uppercase tracking-wider">
                                     Participated In
                                     {(data?.participatedThreads?.length ?? 0) > 0 && (
-                                        <span className="ml-1.5 text-[#ff5018]">
+                                        <span className="ml-1.5 text-[#c2370d]">
                                             {data?.participatedThreads?.length}
                                         </span>
                                     )}

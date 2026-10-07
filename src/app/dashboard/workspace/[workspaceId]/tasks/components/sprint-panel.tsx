@@ -53,16 +53,16 @@ export const SprintPanel = ({
         <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between mb-1">
                 <p className="text-[13px] font-semibold tracking-tight text-[#1b1017]">Sprints</p>
-                <button onClick={() => setShowForm(v => !v)} className="size-6 rounded-md flex items-center justify-center text-[#ff5018] hover:bg-[#ff5018]/10 transition-colors">
+                <button aria-label="Add sprint" type="button" onClick={() => setShowForm(v => !v)} className="size-6 rounded-md flex items-center justify-center text-[#ff5018] hover:bg-[#ff5018]/10 transition-colors">
                     <Plus className="size-3.5" />
                 </button>
             </div>
 
             {showForm && (
                 <div className="flex flex-col gap-1.5 p-2.5 border border-[#381d2a]/12 rounded-xl bg-[#f7f2ee]">
-                    <Input placeholder="Sprint name" value={name} onChange={e => setName(e.target.value)} className="h-8 text-xs rounded-lg bg-white" />
-                    <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="h-8 text-xs rounded-lg bg-white" />
-                    <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="h-8 text-xs rounded-lg bg-white" />
+                    <Input aria-label="Sprint name" placeholder="Sprint name" value={name} onChange={e => setName(e.target.value)} className="h-8 text-xs rounded-lg bg-white" />
+                    <Input aria-label="Sprint start date" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="h-8 text-xs rounded-lg bg-white" />
+                    <Input aria-label="Sprint end date" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="h-8 text-xs rounded-lg bg-white" />
                     <Button onClick={handleCreate} disabled={isPending} size="sm" className="h-8 text-xs rounded-lg font-semibold bg-[#ff5018] hover:bg-[#e6430f] text-white">
                         Create
                     </Button>
@@ -71,13 +71,13 @@ export const SprintPanel = ({
 
             <button
                 onClick={() => onSprintFilter("all")}
-                className={cn("text-[13px] text-left px-2.5 py-1.5 rounded-lg transition-colors", sprintFilter === "all" ? "bg-[#ff5018]/10 text-[#ff5018] font-semibold" : "text-[#1b1017]/70 hover:bg-[#f3eeea]")}
+                className={cn("text-[13px] text-left px-2.5 py-1.5 rounded-lg transition-colors", sprintFilter === "all" ? "bg-[#ff5018]/10 text-[#c2370d] font-semibold" : "text-[#1b1017]/70 hover:bg-[#f3eeea]")}
             >
                 All Tasks
             </button>
             <button
                 onClick={() => onSprintFilter("none")}
-                className={cn("text-[13px] text-left px-2.5 py-1.5 rounded-lg transition-colors", sprintFilter === "none" ? "bg-[#ff5018]/10 text-[#ff5018] font-semibold" : "text-[#1b1017]/70 hover:bg-[#f3eeea]")}
+                className={cn("text-[13px] text-left px-2.5 py-1.5 rounded-lg transition-colors", sprintFilter === "none" ? "bg-[#ff5018]/10 text-[#c2370d] font-semibold" : "text-[#1b1017]/70 hover:bg-[#f3eeea]")}
             >
                 No Sprint
             </button>
@@ -94,13 +94,13 @@ export const SprintPanel = ({
                             className={cn(
                                 "w-full text-xs text-left px-2.5 py-2 rounded-lg border-l-2 transition-colors flex flex-col gap-1.5",
                                 sprint.status === "active" ? "border-l-[#ff5018]" : "border-l-transparent",
-                                sprintFilter === sprint._id ? "bg-[#ff5018]/10 text-[#ff5018]" : "text-[#1b1017] hover:bg-[#f3eeea]"
+                                sprintFilter === sprint._id ? "bg-[#ff5018]/10 text-[#c2370d]" : "text-[#1b1017] hover:bg-[#f3eeea]"
                             )}
                         >
                             <div className="flex items-center justify-between">
                                 <span className="font-semibold tracking-tight truncate">{sprint.name}</span>
                                 <span className={cn("rounded-md px-1.5 py-0.5 text-[10px] font-medium ml-1 shrink-0", {
-                                    "bg-[#ff5018]/10 text-[#e6430f]": sprint.status === "active",
+                                    "bg-[#ff5018]/10 text-[#c2370d]": sprint.status === "active",
                                     "bg-green-50 text-green-700": sprint.status === "completed",
                                     "bg-slate-100 text-slate-600": sprint.status === "planned",
                                 })}>
@@ -117,7 +117,7 @@ export const SprintPanel = ({
                         <div className="flex gap-2 px-2.5 mt-0.5">
                             {sprint.status === "planned" && (
                                 <button onClick={() => updateStatus({ id: sprint._id, status: "active" })}
-                                    className="text-[11px] font-medium text-[#ff5018] hover:text-[#e6430f]">Start</button>
+                                    className="text-[11px] font-medium text-[#c2370d] hover:text-[#a82d0a]">Start</button>
                             )}
                             {sprint.status === "active" && (
                                 <button onClick={() => updateStatus({ id: sprint._id, status: "completed" })}

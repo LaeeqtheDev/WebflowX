@@ -1,5 +1,6 @@
 import { GetMessagesReturnType } from "@/features/messages/api/use-get-messages";
-import { format, isToday, isYesterday, differenceInMinutes } from "date-fns";
+import { differenceInMinutes } from "date-fns";
+import { dayKey, formatDayLabel } from "@/lib/date-label";
 import { Message } from "./message";
 import { ChannelHero } from "./channel-hero";
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -23,14 +24,9 @@ interface MessageListProps {
     loadMore: () => void;
     isLoadingMore: boolean;
     canLoadMore: boolean;
+    /** Shown just under the channel intro when there are no messages yet. */
+    emptyState?: React.ReactNode;
 }
-
-const formatDateLabel = (dateStr: string) => {
-    const date = new Date(dateStr);
-    if (isToday(date)) return "Today";
-    if (isYesterday(date)) return "Yesterday";
-    return format(date, "EEEE, MMMM d");
-};
 
 export const MessageList = ({
     memberName,
@@ -42,6 +38,7 @@ export const MessageList = ({
     loadMore,
     isLoadingMore,
     canLoadMore,
+    emptyState,
 }: MessageListProps) => {
     const workspaceId = useWorkspaceId();
     const { data: currentMember } = useCurrentMember({ workspaceId });
@@ -65,7 +62,7 @@ export const MessageList = ({
         () =>
             data?.reduce(
                 (groups, message) => {
-                    const dateKey = format(new Date(message._creationTime), "yyyy-MM-dd");
+                    const dateKey = dayKey(message._creationTime);
                     if (!groups[dateKey]) {
                         groups[dateKey] = [];
                     }
@@ -140,7 +137,7 @@ export const MessageList = ({
                     <div className="text-center my-3 relative">
                         <hr className="absolute top-1/2 left-0 right-0 border-t border-[#381d2a]/12" />
                         <span className="relative inline-block bg-white px-4 py-1 rounded-full text-xs font-medium text-[#1b1017]/60 border border-[#381d2a]/12 shadow-none">
-                            {formatDateLabel(dateKey)}
+                            {formatDayLabel(dateKey)}
                         </span>
                     </div>
                     {messages.map((message, index) => {
@@ -195,6 +192,7 @@ export const MessageList = ({
                     </span>
                 </div>
             )}
+            {data && data.length === 0 && emptyState}
             {variant === "channel" && channelName && channelCreationTime && (
                 <ChannelHero name={channelName} creationTime={channelCreationTime} />
             )}

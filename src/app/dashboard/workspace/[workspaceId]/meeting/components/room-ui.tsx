@@ -144,7 +144,7 @@ function Tile({
 
             {/* hover actions */}
             <div className="absolute right-2 top-2 flex gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100">
-                <button
+                <button type="button" aria-label={pinned ? "Unpin participant" : "Pin participant"}
                     onClick={onPin}
                     title={pinned ? "Unpin" : "Pin"}
                     className="flex size-8 items-center justify-center rounded-lg bg-black/55 text-white backdrop-blur hover:bg-black/75"
@@ -154,7 +154,7 @@ function Tile({
                 {showMenu && (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <button className="flex size-8 items-center justify-center rounded-lg bg-black/55 text-white backdrop-blur hover:bg-black/75">
+                            <button type="button" aria-label="Participant options" className="flex size-8 items-center justify-center rounded-lg bg-black/55 text-white backdrop-blur hover:bg-black/75">
                                 <MoreVertical className="size-4" />
                             </button>
                         </DropdownMenuTrigger>
@@ -275,7 +275,7 @@ function PersonRow({
             {amHost && !p.isLocal && (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <button className="flex size-8 items-center justify-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white">
+                        <button type="button" aria-label="Participant options" className="flex size-8 items-center justify-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white">
                             <MoreVertical className="size-4" />
                         </button>
                     </DropdownMenuTrigger>
@@ -344,7 +344,7 @@ function SidePanel({
                         {t === "people" ? `People (${participants.length})` : "Chat"}
                     </button>
                 ))}
-                <button onClick={onClose} className="flex size-9 items-center justify-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white">
+                <button type="button" onClick={onClose} aria-label="Close panel" className="flex size-9 items-center justify-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white">
                     <X className="size-4" />
                 </button>
             </div>
@@ -401,7 +401,7 @@ function SidePanel({
                         onSubmit={(e) => { e.preventDefault(); void submit() }}
                         className="flex items-center gap-2 border-t border-white/10 p-3"
                     >
-                        <input
+                        <input aria-label="Message everyone"
                             value={draft}
                             onChange={(e) => setDraft(e.target.value)}
                             maxLength={1000}
@@ -410,6 +410,7 @@ function SidePanel({
                         />
                         <button
                             type="submit"
+                            aria-label="Send message"
                             disabled={isSending || !draft.trim()}
                             className="flex size-10 items-center justify-center rounded-xl bg-[#ff5018] text-white transition-opacity disabled:opacity-40"
                         >
@@ -476,7 +477,7 @@ function ControlBar({
                     {mic.enabled ? <Mic className="size-5" /> : <MicOff className="size-5" />}
                 </CtrlButton>
                 <div className={cn("hidden sm:block", menuBtn)}>
-                    <MediaDeviceMenu kind="audioinput"><ChevronUp className="size-4" /></MediaDeviceMenu>
+                    <MediaDeviceMenu kind="audioinput" aria-label="Choose microphone"><ChevronUp className="size-4" /></MediaDeviceMenu>
                 </div>
             </div>
             <div className="flex items-center gap-1">
@@ -484,7 +485,7 @@ function ControlBar({
                     {cam.enabled ? <Video className="size-5" /> : <VideoOff className="size-5" />}
                 </CtrlButton>
                 <div className={cn("hidden sm:block", menuBtn)}>
-                    <MediaDeviceMenu kind="videoinput"><ChevronUp className="size-4" /></MediaDeviceMenu>
+                    <MediaDeviceMenu kind="videoinput" aria-label="Choose camera"><ChevronUp className="size-4" /></MediaDeviceMenu>
                 </div>
             </div>
             <CtrlButton label={screen.enabled ? "Stop sharing" : "Share screen"} active={true} onClick={() => screen.toggle()} disabled={screen.pending}>
@@ -639,7 +640,9 @@ export function MeetingStage({ roomName, title, startedAt, status, errorMessage 
                         </span>
                     )}
                     <button
+                        type="button"
                         onClick={() => togglePanel("people")}
+                        aria-label={`Show people, ${participants.length} in meeting`}
                         className="flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-white/80 hover:bg-white/20"
                     >
                         <Users className="size-3.5" /> {participants.length}

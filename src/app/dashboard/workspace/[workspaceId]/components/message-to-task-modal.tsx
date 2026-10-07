@@ -85,7 +85,7 @@ export const MessageToTaskModal = ({ open, onClose, messageId, body, authorName 
                 </DialogHeader>
 
                 <div className="flex flex-col gap-3">
-                    <Input
+                    <Input aria-label="Task title"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="Task title"
@@ -95,7 +95,7 @@ export const MessageToTaskModal = ({ open, onClose, messageId, body, authorName 
                         <span className="font-semibold text-[#1b1017]">{authorName}: </span>
                         {text || "Attachment"}
                     </div>
-                    <Textarea
+                    <Textarea aria-label="Task notes"
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         placeholder="Add notes (optional)"
@@ -105,7 +105,7 @@ export const MessageToTaskModal = ({ open, onClose, messageId, body, authorName 
                         <div>
                             <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Priority</label>
                             <Select value={priority} onValueChange={(v) => setPriority(v as Priority)}>
-                                <SelectTrigger className="h-9 text-xs rounded-lg"><SelectValue /></SelectTrigger>
+                                <SelectTrigger aria-label="Priority" className="h-9 text-xs rounded-lg"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     {PRIORITIES.map((p) => (
                                         <SelectItem key={p} value={p} className="text-xs capitalize">{p}</SelectItem>
@@ -116,7 +116,7 @@ export const MessageToTaskModal = ({ open, onClose, messageId, body, authorName 
                         <div>
                             <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Assignee</label>
                             <Select value={assigneeId} onValueChange={setAssigneeId}>
-                                <SelectTrigger className="h-9 text-xs rounded-lg"><SelectValue /></SelectTrigger>
+                                <SelectTrigger aria-label="Assignee" className="h-9 text-xs rounded-lg"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="unassigned" className="text-xs">Unassigned</SelectItem>
                                     {(members ?? [])

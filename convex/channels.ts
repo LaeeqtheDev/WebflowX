@@ -1,4 +1,5 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v, ConvexError } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { auth } from "./auth";
@@ -6,6 +7,8 @@ import { checkLimit } from "./limits"
 import { deleteMessageCascade } from "./messages"
 import { canAccessChannel, requireActor, requirePermission, hasPermission } from "./permissions"
 import { logAudit } from "./audit"
+import { MAX, text } from "./validate"
+import { throttle } from "./rateLimit"
 
 const cleanName = (raw: string) => {
     const name = raw.trim().replace(/\s+/g, "-").toLowerCase().replace(/[^a-z0-9\-_À-￿]/g, "")
@@ -51,7 +54,8 @@ export const create = mutation({
         readOnly: v.optional(v.boolean()),
     },
     handler: async (ctx, args) => {
-        const { member } = await requirePermission(ctx, args.workspaceId, "createChannels", "You don't have permission to create channels")
+        const { member, userId } = await requirePermission(ctx, args.workspaceId, "createChannels", "You don't have permission to create channels")
+        await throttle(ctx, userId, "channel-create", 20, 60 * 60_000, "creating channels")
 
         const parseName = cleanName(args.name)
 
@@ -75,7 +79,7 @@ export const create = mutation({
         let memberIds: Id<"members">[] | undefined
         if (args.isPrivate) {
             const ids = new Set<Id<"members">>([member._id])
-            for (const id of args.memberIds ?? []) {
+            for (const id of (args.memberIds ?? []).slice(0, 500)) {
                 const m = await ctx.db.get(id)
                 if (m && m.workspaceId === args.workspaceId) ids.add(id)
             }
@@ -138,7 +142,7 @@ export const update = mutation({
             if (clash) throw new ConvexError("A channel with that name already exists")
             patch.name = name
         }
-        if (args.description !== undefined) patch.description = args.description.trim().slice(0, 250)
+        if (args.description !== undefined) patch.description = text(args.description, MAX.channelDescription, "Description")
 
         await ctx.db.patch(args.id, patch)
         await logAudit(ctx, channel.workspaceId, member._id, "channel.update", `#${patch.name ?? channel.name}`)
@@ -160,7 +164,7 @@ export const setAccess = mutation({
 
         let memberIds: Id<"members">[] | undefined
         if (args.isPrivate) {
-            const ids = new Set<Id<"members">>(args.memberIds ?? channel.memberIds ?? [])
+            const ids = new Set<Id<"members">>((args.memberIds ?? channel.memberIds ?? []).slice(0, 500))
             ids.add(member._id)
             const valid: Id<"members">[] = []
             for (const id of ids) {
@@ -206,6 +210,8 @@ export const getMembers = query({
     }
 })
 
+// Deleting a channel with a lot of history can't fit in one transaction. The channel disappears right away
+// (nobody can open it any more) and its messages are cleaned up in small batches in the background.
 export const remove = mutation({
     args: {
         id: v.id("channels"),
@@ -216,19 +222,28 @@ export const remove = mutation({
         const { member, workspace } = await requireActor(ctx, channel.workspaceId)
         if (!hasPermission(workspace, member, "manageChannels")) throw new ConvexError("You don't have permission to delete channels")
 
+        await ctx.db.delete(args.id)
+        await ctx.scheduler.runAfter(0, internal.channels.purgeMessages, { channelId: args.id })
+        await logAudit(ctx, channel.workspaceId, member._id, "channel.delete", `#${channel.name}`)
+        return args.id
+    }
+})
+
+export const purgeMessages = internalMutation({
+    args: { channelId: v.id("channels") },
+    handler: async (ctx, args) => {
+        const BATCH = 50
         const messages = await ctx.db
             .query("messages")
-            .withIndex("by_channel_id", (q) => q.eq("channelId", args.id))
-            .collect()
-
-        // top-level messages cascade to replies; replies already gone are skipped
+            .withIndex("by_channel_id", (q) => q.eq("channelId", args.channelId))
+            .take(BATCH)
+        // top-level messages cascade to their replies; replies already removed by an earlier cascade are skipped
         for (const message of messages) {
             const stillThere = await ctx.db.get(message._id)
             if (stillThere) await deleteMessageCascade(ctx, stillThere)
         }
-
-        await ctx.db.delete(args.id)
-        await logAudit(ctx, channel.workspaceId, member._id, "channel.delete", `#${channel.name}`)
-        return args.id
-    }
+        if (messages.length === BATCH) {
+            await ctx.scheduler.runAfter(0, internal.channels.purgeMessages, { channelId: args.channelId })
+        }
+    },
 })

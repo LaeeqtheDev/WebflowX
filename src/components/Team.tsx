@@ -4,7 +4,6 @@ import { Heading, Label, Reveal } from "./landing/ui";
 import { wrap } from "./landing/tokens";
 
 const team = [
-  { name: "Daniel Brooks", role: "CEO & Founder", src: "/av3.jpg", pos: "object-[50%_0%]" },
   { name: "Shanzay", role: "Co-Founder & CTO", src: "/shanzay.jpg", pos: "object-[50%_30%]" },
   { name: "Arooj", role: "Co-Founder & CPO", src: "/arooj2.jpg", pos: "object-[50%_30%]" },
 ];
@@ -17,7 +16,7 @@ export function AppleCardsCarouselDemo() {
           <Label dark>The team</Label>
           <Heading dark className="mt-5 max-w-3xl">The people behind WebflowX.</Heading>
         </Reveal>
-        <div className="mt-14 grid gap-6 md:grid-cols-3">
+        <div className="mt-14 grid gap-6 md:grid-cols-2 md:max-w-3xl">
           {team.map((m, i) => (
             <Reveal key={m.name} delay={i * 80}>
               <figure>

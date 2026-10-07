@@ -9,7 +9,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { errorMessage } from "@/lib/error-message";
+import { errorMessage } from "@/lib/error-message"
+import { parseLimitError } from "@/lib/plans";
 import VerificationInput from 'react-verification-input'
 import { toast } from "sonner";
 
@@ -41,9 +42,11 @@ const JoinPage = () => {
             },
             onError: (e) => {
                 const message = errorMessage(e)
+                // The joiner can't upgrade someone else's workspace, so explain inline (no upgrade dialog)
+                const limit = parseLimitError(message)
                 setJoinError(
-                    message.startsWith("LIMIT_REACHED:members")
-                        ? "This workspace has reached its member limit. Ask an admin to upgrade the plan."
+                    limit
+                        ? `This workspace has used all ${limit.limit} member seats on its plan. Ask an admin to upgrade it, then try again.`
                         : message.length > 0 && !/server error/i.test(message)
                             ? message
                             : "We couldn't add you to this workspace. Check the code and try again."
@@ -77,7 +80,7 @@ const JoinPage = () => {
         <div className="h-full flex flex-col gap-y-8 items-center justify-center p-8">
             <div className="absolute -top-32 -left-32 w-125 h-125 bg-linear-to-br from-orange-500 to-[#b5b399] rounded-full opacity-40 blur-3xl" />
             <div className="absolute -bottom-40 -right-40 w-150 h-150 bg-linear-to-br from-orange-500 to-[#d8da72] rounded-full opacity-30 blur-3xl" />
-            <Image src={"/logo.png"} width={60} height={60} alt="logo" />
+            <Image src={"/logo.png"} width={60} height={60} alt="WebflowX" />
             <div className="flex flex-col gap-y-4 items-center justify-center max-w-md">
                 <div className="flex flex-col gap-y-2 items-center justify-center">
                     <h1 className="text-2xl font-bold">
@@ -98,9 +101,10 @@ const JoinPage = () => {
                     length={6}
                     classNames={{
                         container: "flex gap-x-2",
-                        character: "w-12 h-12 rounded-md border !border-gray-300 flex items-center justify-center text-lg font-medium !text-[#ff5018] !bg-white",
+                        character: "w-12 h-12 rounded-md border !border-gray-300 flex items-center justify-center text-lg font-medium !text-[#c2370d] !bg-white",
                     }}
                     autoFocus
+                    inputProps={{ "aria-label": "Workspace join code" }}
                     onComplete={handleComplete}
                 />
             </div>

@@ -24,8 +24,13 @@ const Renderer = ({value}: RendererProps) => {
 
         quill.enable(false);
 
-        const contents = JSON.parse(value)
-        quill.setContents(contents)
+        // a malformed body must never take the whole message list down
+        try {
+            const parsed = JSON.parse(value)
+            quill.setContents(Array.isArray(parsed) ? parsed : parsed?.ops ?? [])
+        } catch {
+            quill.setText(typeof value === "string" ? value.slice(0, 5000) : "")
+        }
 
         const isEmpty = quill.getText().replace(/<(.|\n)*?>/g,"").trim().length === 0;
         // eslint-disable-next-line react-hooks/set-state-in-effect -- derived from Quill DOM parsing that can only run in an effect

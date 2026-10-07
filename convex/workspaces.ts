@@ -4,10 +4,12 @@ import { internal } from './_generated/api';
 import { consume } from './rateLimit';
 import { requireActor, requirePermission, hasPermission, isOwner } from './permissions';
 import { logAudit } from './audit';
-import { Id } from './_generated/dataModel';
+import { Doc, Id } from './_generated/dataModel';
 import { auth } from './auth';
 import { assertPhoto, release } from './files';
 import { checkLimit, getPlan, PLANS } from './limits';
+import { MAX, text } from './validate';
+import { throttle } from './rateLimit';
 
 const generateCode = () => {
     const alphabet = "0123456789abcdefghijklmnopqrstuvwxyz"
@@ -23,6 +25,9 @@ export const create = mutation({
     handler: async (ctx, args) => {
         const userId = await auth.getUserId(ctx);
         if (!userId) throw new Error("Unauthorized");
+
+        const name = text(args.name, MAX.workspaceName, "Workspace name", { required: true, collapse: true })
+        await throttle(ctx, userId, "ws-create", 5, 60 * 60_000, "creating workspaces")
 
         // Workspace limit: counted per owner, using the best plan among the workspaces they own
         const owned = await ctx.db
@@ -46,7 +51,7 @@ export const create = mutation({
         const joinCode = generateCode()
 
         const workSpaceId = await ctx.db.insert("workspaces", {
-            name: args.name,
+            name,
             userId,
             joinCode
         })
@@ -73,21 +78,25 @@ export const get = query({
         if (!userId) return [];
 
         const members = await ctx.db.query("members")
-            .withIndex("byUserId", q => q.eq("userId", userId)).collect();
+            .withIndex("byUserId", q => q.eq("userId", userId)).take(200);
 
-        const workSpaceIds = members.map((member) => member.workspaceId)
         const workspaces = []
-
-        for (const workspaceId of workSpaceIds) {
-            const workspace = await ctx.db.get(workspaceId)
+        for (const member of members) {
+            const workspace = await ctx.db.get(member.workspaceId)
             if (workspace) {
                 const imageUrl = workspace.image ? await ctx.storage.getUrl(workspace.image) : null
-                workspaces.push({ ...workspace, imageUrl })
+                workspaces.push({ ...hideInviteCode(workspace, member), imageUrl })
             }
         }
         return workspaces;
     }
 })
+
+// The invite code is only shown to people allowed to invite; everyone else gets an empty string.
+const hideInviteCode = (workspace: Doc<"workspaces">, member: Doc<"members">): Doc<"workspaces"> =>
+    hasPermission(workspace, member, "invite")
+        ? workspace
+        : { ...workspace, joinCode: "", joinCodeExpiresAt: undefined }
 
 export const getById = query({
     args: { id: v.id("workspaces") },
@@ -106,7 +115,7 @@ export const getById = query({
         const workspace = await ctx.db.get(args.id)
         if (!workspace) return null
         const imageUrl = workspace.image ? await ctx.storage.getUrl(workspace.image) : null
-        return { ...workspace, imageUrl }
+        return { ...hideInviteCode(workspace, member), imageUrl }
     }
 })
 
@@ -120,18 +129,15 @@ export const update = mutation({
         removeImage: v.optional(v.boolean()),
     },
     handler: async (ctx, args) => {
-        const { member, workspace } = await requirePermission(ctx, args.id, "editWorkspace", "You don't have permission to edit this workspace")
+        const { member, workspace, userId } = await requirePermission(ctx, args.id, "editWorkspace", "You don't have permission to edit this workspace")
 
         const patch: { name?: string; description?: string; image?: Id<"_storage"> } = {}
         if (args.name !== undefined) {
-            const name = args.name.trim()
-            if (!name) throw new ConvexError("Workspace name is required")
-            if (name.length > 60) throw new ConvexError("Workspace name can be at most 60 characters")
-            patch.name = name
+            patch.name = text(args.name, MAX.workspaceName, "Workspace name", { required: true, collapse: true })
         }
         if (args.description !== undefined) patch.description = args.description.trim().slice(0, 300)
         if (args.image) {
-            await assertPhoto(ctx, args.image)
+            await assertPhoto(ctx, args.image, userId)
             patch.image = args.image
         }
 

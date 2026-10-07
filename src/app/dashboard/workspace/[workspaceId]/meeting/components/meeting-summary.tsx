@@ -21,6 +21,7 @@ import {
 import { useMemo, useState } from "react"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { errorMessage } from "@/lib/error-message"
+import { useLimitHandler } from "@/hooks/use-limit-handler"
 import { useMutation } from "convex/react"
 import { toast } from "sonner"
 import { api } from "../../../../../../../convex/_generated/api"
@@ -79,6 +80,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
     const [showTranscriptDialog, setShowTranscriptDialog] = useState(false)
     const [manualTranscript, setManualTranscript] = useState("")
     
+    const { handleLimitError } = useLimitHandler()
     const saveSummary = useMutation(api.meetings.saveSummary)
     const claimSummary = useMutation(api.meetings.claimSummary)
     const createTask = useMutation(api.tasks.create)
@@ -184,12 +186,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
             setManualTranscript("")
         } catch (e: unknown) {
             console.error("Summary generation error:", e)
-            const message = errorMessage(e)
-            toast.error(
-                message.startsWith("LIMIT_REACHED:aiSummaries")
-                    ? "AI summary limit reached for this month. Upgrade your plan for more."
-                    : message || "Failed to generate summary"
-            )
+            handleLimitError(e, "Failed to generate summary")
         } finally {
             setIsGenerating(false)
         }
@@ -262,7 +259,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                     <div className="bg-[#f7f2ee] border border-[#381d2a]/10 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-1.5">
-                                <span className="inline-flex items-center gap-1 bg-[#ff5018]/10 text-[#ff5018] rounded-md px-2 py-0.5 text-[11px] font-medium">
+                                <span className="inline-flex items-center gap-1 bg-[#ff5018]/10 text-[#c2370d] rounded-md px-2 py-0.5 text-[11px] font-medium">
                                     <Sparkles className="size-3" />
                                     AI
                                 </span>
@@ -275,7 +272,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                                             <>
                                                 <button
                                                     onClick={openTasksDialog}
-                                                    className="text-[11px] font-medium text-[#ff5018] hover:text-[#e6430f] flex items-center gap-1 transition-colors"
+                                                    className="text-[11px] font-medium text-[#c2370d] hover:text-[#a82d0a] flex items-center gap-1 transition-colors"
                                                 >
                                                     <ListChecks className="size-3" /> Create tasks ({actionItems.length})
                                                 </button>
@@ -285,7 +282,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                                         <button
                                             onClick={handleRegenerateSummary}
                                             disabled={isGenerating}
-                                            className="text-[11px] font-medium text-[#1b1017]/60 hover:text-[#ff5018] flex items-center gap-1 transition-colors disabled:opacity-50"
+                                            className="text-[11px] font-medium text-[#1b1017]/60 hover:text-[#a82d0a] flex items-center gap-1 transition-colors disabled:opacity-50"
                                         >
                                             {isGenerating ? (
                                                 <Loader2 className="size-3 animate-spin" />
@@ -297,7 +294,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                                         <span className="text-[#1b1017]/40">·</span>
                                         <button
                                             onClick={() => setIsEditing(true)}
-                                            className="text-[11px] font-medium text-[#1b1017]/60 hover:text-[#ff5018] flex items-center gap-1 transition-colors"
+                                            className="text-[11px] font-medium text-[#1b1017]/60 hover:text-[#a82d0a] flex items-center gap-1 transition-colors"
                                         >
                                             <Pencil className="size-3" /> Edit
                                         </button>
@@ -323,7 +320,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                             </div>
                         </div>
                         {isEditing ? (
-                            <textarea
+                            <textarea aria-label="Edit summary"
                                 value={editedSummary}
                                 onChange={e => setEditedSummary(e.target.value)}
                                 className="w-full text-sm text-[#1b1017]/80 bg-white border border-[#381d2a]/15 rounded-lg p-3 resize-none h-48 outline-none focus:border-[#ff5018] focus:ring-2 focus:ring-[#ff5018]/20 transition-colors leading-relaxed"
@@ -367,7 +364,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                     <div className="border-t border-[#381d2a]/10 pt-4">
                         <button
                             onClick={() => setShowTranscript(v => !v)}
-                            className="text-xs font-medium text-[#1b1017]/60 flex items-center gap-1 hover:text-[#ff5018] transition-colors"
+                            className="text-xs font-medium text-[#1b1017]/60 flex items-center gap-1 hover:text-[#a82d0a] transition-colors"
                         >
                             {showTranscript
                                 ? <ChevronUp className="size-3" />
@@ -401,7 +398,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                                 key={i}
                                 className="flex items-start gap-2.5 p-2.5 rounded-lg border border-[#381d2a]/10 hover:bg-[#f7f2ee] cursor-pointer text-sm"
                             >
-                                <input
+                                <input aria-label="Select action item"
                                     type="checkbox"
                                     checked={selectedItems.has(i)}
                                     onChange={() => toggleItem(i)}
@@ -440,7 +437,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                         </DialogDescription>
                     </DialogHeader>
                     <div className="flex flex-col gap-4 mt-2">
-                        <Textarea
+                        <Textarea aria-label="Meeting transcript"
                             placeholder="Paste your meeting transcript here...
 
 Example:

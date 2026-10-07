@@ -42,7 +42,7 @@ const ToolbarButton = ({
         title={title}
         className={cn(
             "p-1.5 rounded-lg text-sm text-[#1b1017]/70 transition-colors hover:bg-[#f3eeea] hover:text-[#1b1017] min-w-8 h-8 flex items-center justify-center",
-            active && "bg-[#ff5018]/10 text-[#ff5018] hover:bg-[#ff5018]/15 hover:text-[#ff5018]",
+            active && "bg-[#ff5018]/10 text-[#c2370d] hover:bg-[#ff5018]/15 hover:text-[#a82d0a]",
             disabled && "opacity-40 cursor-not-allowed"
         )}
     >
@@ -275,7 +275,7 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                         title="Link"
                         className={cn(
                             "p-1.5 rounded-lg text-sm text-[#1b1017]/70 transition-colors hover:bg-[#f3eeea] hover:text-[#1b1017] min-w-8 h-8 flex items-center justify-center",
-                            editor.isActive("link") && "bg-[#ff5018]/10 text-[#ff5018]"
+                            editor.isActive("link") && "bg-[#ff5018]/10 text-[#c2370d]"
                         )}
                     >
                         <Link2 className="size-4" />
@@ -324,7 +324,7 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                     <button
                         className={cn(
                             "p-1.5 rounded-lg text-sm text-[#1b1017]/70 transition-colors hover:bg-[#f3eeea] hover:text-[#1b1017] min-w-8 h-8 flex items-center justify-center gap-1",
-                            editor.isActive("table") && "bg-[#ff5018]/10 text-[#ff5018] hover:bg-[#ff5018]/15 hover:text-[#ff5018]"
+                            editor.isActive("table") && "bg-[#ff5018]/10 text-[#c2370d] hover:bg-[#ff5018]/15 hover:text-[#a82d0a]"
                         )}
                         title="Table options"
                     >
@@ -332,13 +332,13 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                     </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="text-xs w-48 rounded-xl border-[#381d2a]/12">
-                    <DropdownMenuLabel className="text-[11px] font-medium text-[#1b1017]/50">Insert</DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-[11px] font-medium text-[#1b1017]/65">Insert</DropdownMenuLabel>
                     <DropdownMenuItem onClick={addTable}>
                         <Plus className="size-3.5 mr-2" /> Insert Table
                     </DropdownMenuItem>
 
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-[11px] font-medium text-[#1b1017]/50">Columns</DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-[11px] font-medium text-[#1b1017]/65">Columns</DropdownMenuLabel>
                     <DropdownMenuItem
                         onClick={() => editor.chain().focus().addColumnBefore().run()}
                         disabled={!editor.can().addColumnBefore()}
@@ -360,7 +360,7 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                     </DropdownMenuItem>
 
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-[11px] font-medium text-[#1b1017]/50">Rows</DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-[11px] font-medium text-[#1b1017]/65">Rows</DropdownMenuLabel>
                     <DropdownMenuItem
                         onClick={() => editor.chain().focus().addRowBefore().run()}
                         disabled={!editor.can().addRowBefore()}
@@ -382,7 +382,7 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                     </DropdownMenuItem>
 
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-[11px] font-medium text-[#1b1017]/50">Cells</DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-[11px] font-medium text-[#1b1017]/65">Cells</DropdownMenuLabel>
                     <DropdownMenuItem
                         onClick={() => editor.chain().focus().mergeCells().run()}
                         disabled={!editor.can().mergeCells()}
@@ -436,13 +436,13 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                     <button
                         title="AI writing help (select text first)"
                         disabled={aiBusy}
-                        className="h-8 flex items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-[#ff5018] bg-[#ff5018]/10 hover:bg-[#ff5018]/15 disabled:opacity-60"
+                        className="h-8 flex items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-[#c2370d] bg-[#ff5018]/10 hover:bg-[#ff5018]/15 disabled:opacity-60"
                     >
                         {aiBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />} AI
                     </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="text-xs w-48 rounded-xl">
-                    <DropdownMenuLabel className="text-[11px] font-medium text-[#1b1017]/50">On selected text</DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-[11px] font-medium text-[#1b1017]/65">On selected text</DropdownMenuLabel>
                     {([
                         ["improve", "Improve writing"],
                         ["grammar", "Fix grammar"],

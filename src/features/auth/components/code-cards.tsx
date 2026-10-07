@@ -64,6 +64,7 @@ export const ResetPasswordCard = ({ initialEmail, setState }: { initialEmail: st
   const [newPassword, setNewPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState(false);
 
   const request = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,13 +72,17 @@ export const ResetPasswordCard = ({ initialEmail, setState }: { initialEmail: st
     setError("");
     signIn("password", { email, flow: "reset" })
       .then(() => setStep("code"))
-      .catch((e: unknown) =>
-        setError(
-          String((e as Error)?.message ?? "").includes("not enabled")
-            ? "Password reset by email isn't switched on for this app yet. Please contact support@northfoundry.co."
-            : "We couldn't send a reset email. Check the address, or contact support@northfoundry.co if this keeps happening."
-        )
-      )
+      .catch((e: unknown) => {
+        const msg = String((e as Error)?.message ?? "");
+        if (msg.includes("not enabled")) {
+          setError("Password reset by email isn't switched on for this app yet. Please contact support@northfoundry.co.");
+          return;
+        }
+        // Emails with no password account (never signed up, or signed up with Google/GitHub) land here.
+        // We don't reveal which, so move on and explain what to check.
+        setNotice(true);
+        setStep("code");
+      })
       .finally(() => setPending(false));
   };
 
@@ -102,6 +107,12 @@ export const ResetPasswordCard = ({ initialEmail, setState }: { initialEmail: st
         {step === "request" ? "Enter your email and we'll send you a code." : `Enter the code we sent to ${email} and choose a new password.`}
       </p>
       <ErrorBox text={error} />
+      {step === "code" && notice && (
+        <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          If <strong>{email}</strong> has a password account, a code is on its way (check spam too). If you normally log in with Google or GitHub, that account has no password, so go back and use that button.{" "}
+          <button type="button" onClick={() => { setStep("request"); setNotice(false); }} className="cursor-pointer font-semibold underline underline-offset-2">Use a different email</button>
+        </div>
+      )}
       {step === "request" ? (
         <form onSubmit={request} className="mt-8 space-y-4">
           <AuthField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" disabled={pending} required />

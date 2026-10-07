@@ -96,7 +96,7 @@ export const Header = ({ title }: HeaderProps) => {
             <ConfirmDialog />
             <Dialog>
                 <DialogTrigger asChild>
-                    <Button variant={"ghost"} className="text-lg font-semibold tracking-tight px-2 overflow-hidden w-auto rounded-lg hover:bg-[#f7f2ee]" size={"sm"}>
+                    <Button variant={"ghost"} className="text-lg font-semibold tracking-tight px-2 overflow-hidden w-auto rounded-lg hover:bg-[#f7f2ee] max-md:h-10" size={"sm"}>
                         <span className="flex items-center gap-2 truncate font-semibold tracking-tight">
                             {channel?.isPrivate ? <Lock className="size-5 shrink-0 text-[#ff5018]" /> : <ChannelIcon name={title} className="size-5 shrink-0 text-[#ff5018]" />}{cleanChannelName(title)}
                         </span>

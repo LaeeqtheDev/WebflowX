@@ -18,10 +18,11 @@ import { Lock } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
-import { errMsg } from "@/lib/errors";
+import { useLimitHandler } from "@/hooks/use-limit-handler";
 
 export const CreateChannelModal = () => {
     const router = useRouter()
+    const { handleLimitError } = useLimitHandler()
     const [isOpen, setIsOpen] = useCreateChannelModal();
     const [name, setName] = useState("")
     const workspaceId = useWorkspaceId()
@@ -44,7 +45,8 @@ export const CreateChannelModal = () => {
                     handleClose()
                 },
                 onError: (err) => {
-                    toast.error(errMsg(err, "Failed to create channel. Please try again."))
+                    // plan limit -> upgrade dialog; anything else -> toast with the real reason
+                    if (handleLimitError(err, "Failed to create channel. Please try again.")) handleClose()
                 }
             }
         )
@@ -70,7 +72,7 @@ export const CreateChannelModal = () => {
                     <DialogTitle className="text-xl font-semibold tracking-tight">Add a channel</DialogTitle>
                 </DialogHeader>
                 <form className="space-y-5" onSubmit={handleSubmit}>
-                    <Input
+                    <Input aria-label="Channel name"
                         value={name}
                         disabled={isPending}
                         onChange={handleChange}
@@ -84,14 +86,14 @@ export const CreateChannelModal = () => {
                         <input type="checkbox" className="mt-1 size-4 accent-[#ff5018]" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} disabled={isPending} />
                         <span>
                             <span className="flex items-center gap-1.5 text-sm font-semibold"><Lock className="size-3.5 text-[#ff5018]" /> Make this channel locked</span>
-                            <span className="block text-xs text-[#1b1017]/55">Only people you choose (and roles allowed to see locked channels) can open it.</span>
+                            <span className="block text-xs text-[#1b1017]/65">Only people you choose (and roles allowed to see locked channels) can open it.</span>
                         </span>
                     </label>
                     <label className="flex items-start gap-3 rounded-xl border border-[#381d2a]/12 bg-[#fbf9f7] px-4 py-3 cursor-pointer">
                         <input type="checkbox" className="mt-1 size-4 accent-[#ff5018]" checked={readOnly} onChange={(e) => setReadOnly(e.target.checked)} disabled={isPending} />
                         <span>
                             <span className="block text-sm font-semibold">Announcement channel (read-only)</span>
-                            <span className="block text-xs text-[#1b1017]/55">Everyone can read; only admins and allowed roles can post.</span>
+                            <span className="block text-xs text-[#1b1017]/65">Everyone can read; only admins and allowed roles can post.</span>
                         </span>
                     </label>
                     {isPrivate && (
@@ -103,7 +105,7 @@ export const CreateChannelModal = () => {
                                     <span className="truncate">{m.user.name}</span>
                                 </label>
                             ))}
-                            {members && members.length <= 1 && <p className="px-3 py-2 text-xs text-[#1b1017]/55">No one else is in this workspace yet.</p>}
+                            {members && members.length <= 1 && <p className="px-3 py-2 text-xs text-[#1b1017]/65">No one else is in this workspace yet.</p>}
                         </div>
                     )}
                     <div className="flex justify-end">

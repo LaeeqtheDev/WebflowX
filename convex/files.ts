@@ -43,25 +43,28 @@ type Ctx = QueryCtx | MutationCtx
 // Reads what Convex actually stored (not what the browser claimed).
 const stored = async (ctx: Ctx, storageId: Id<"_storage">) => {
     const meta = await ctx.db.system.get("_storage", storageId)
-    return meta ? { size: meta.size, contentType: baseType(meta.contentType ?? "") } : null
+    return meta ? { size: meta.size, contentType: baseType(meta.contentType ?? ""), createdAt: meta._creationTime } : null
 }
+
+// Only files uploaded moments ago can be registered. Storage ids show up in file URLs, so without this
+// someone could "register" (and later delete) a file that was uploaded long ago by somebody else.
+const FRESH_MS = 30 * 60 * 1000
 
 const discard = async (ctx: MutationCtx, storageId: Id<"_storage">) => {
     try { await ctx.storage.delete(storageId) } catch { /* already gone */ }
 }
 
-// Profile / workspace photos: must be a small real image. Throws (and deletes the upload) otherwise.
-export const assertPhoto = async (ctx: MutationCtx, storageId: Id<"_storage">) => {
+// Profile / workspace photos: must be a small real image that THIS user uploaded as an avatar.
+// Throws otherwise (register already rejected bad files; this is the second line of defence).
+export const assertPhoto = async (ctx: MutationCtx, storageId: Id<"_storage">, userId: Id<"users">) => {
+    const row = await ctx.db.query("files").withIndex("by_storage_id", (q) => q.eq("storageId", storageId)).unique()
+    if (!row || row.kind !== "avatar" || row.uploadedBy !== userId) {
+        throw new ConvexError("That photo isn't valid. Please upload it again.")
+    }
     const meta = await stored(ctx, storageId)
     if (!meta) throw new ConvexError("We couldn't read that upload. Please try again.")
-    if (!IMAGE_TYPES.includes(meta.contentType)) {
-        await discard(ctx, storageId)
-        throw new ConvexError("Photos must be PNG, JPG, GIF, WebP or AVIF")
-    }
-    if (meta.size > MAX_AVATAR_BYTES) {
-        await discard(ctx, storageId)
-        throw new ConvexError("Photos must be under 5 MB")
-    }
+    if (!IMAGE_TYPES.includes(meta.contentType)) throw new ConvexError("Photos must be PNG, JPG, GIF, WebP or AVIF")
+    if (meta.size > MAX_AVATAR_BYTES) throw new ConvexError("Photos must be under 5 MB")
 }
 
 // Step 1: before the browser uploads, check the member may upload and the workspace has room.
@@ -86,7 +89,9 @@ export const generateUploadUrl = mutation({
     },
 })
 
-// Step 2: after uploading, register the file. This is where size, type and the storage cap are enforced.
+// Step 2: after uploading, register the file. This is where size, type, ownership and the storage cap are enforced.
+// A mutation that throws is rolled back (including a storage delete), so refusals are RETURNED after the
+// bad upload is deleted; the browser turns `{ ok: false }` into an error message.
 export const register = mutation({
     args: {
         storageId: v.id("_storage"),
@@ -95,34 +100,47 @@ export const register = mutation({
     },
     handler: async (ctx, args) => {
         const userId = await auth.getUserId(ctx)
-        if (!userId) {
+        if (!userId) throw new ConvexError("Please sign in")
+
+        const reject = async (error: string) => {
             await discard(ctx, args.storageId)
-            throw new ConvexError("Please sign in")
+            return { ok: false as const, error }
         }
+
+        // Registering twice must never count the bytes twice, and nobody can take over someone else's file.
+        const existing = await ctx.db.query("files").withIndex("by_storage_id", (q) => q.eq("storageId", args.storageId)).unique()
+        if (existing) {
+            if (existing.uploadedBy !== userId) throw new ConvexError("That upload isn't yours")
+            return { ok: true as const, storageId: existing.storageId, size: existing.size, contentType: existing.contentType }
+        }
+
         const meta = await stored(ctx, args.storageId)
         if (!meta) throw new ConvexError("We couldn't read that upload. Please try again.")
+        // too old to be a fresh upload: could be somebody else's file, so it is NOT deleted
+        if (Date.now() - meta.createdAt > FRESH_MS) throw new ConvexError("That upload is too old to attach. Please upload it again.")
+
+        // every non-photo file is stored against a workspace so it counts toward that workspace's plan cap
+        if (args.kind === "avatar" ? !!args.workspaceId : !args.workspaceId) return await reject("That upload isn't valid. Please try again.")
+        if (args.kind === "avatar" && !(await consume(ctx, `avatar:${userId}`, 10, 60 * 60_000))) {
+            return await reject("You've changed photos a lot just now. Please try again later.")
+        }
 
         const wantsImage = args.kind !== "file"
         const allowed = wantsImage ? IMAGE_TYPES : FILE_TYPES
         const max = args.kind === "avatar" ? MAX_AVATAR_BYTES : wantsImage ? MAX_IMAGE_BYTES : MAX_FILE_BYTES
         if (!allowed.includes(meta.contentType)) {
-            await discard(ctx, args.storageId)
-            throw new ConvexError(wantsImage ? "Images must be PNG, JPG, GIF, WebP or AVIF" : "That file type isn't allowed")
+            return await reject(wantsImage ? "Images must be PNG, JPG, GIF, WebP or AVIF" : "That file type isn't allowed")
         }
-        if (meta.size > max) {
-            await discard(ctx, args.storageId)
-            throw new ConvexError(`That file is too large (max ${Math.round(max / MB)} MB)`)
-        }
+        if (meta.size > max) return await reject(`That file is too large (max ${Math.round(max / MB)} MB)`)
 
         if (args.workspaceId) {
-            const { workspace } = await requireActor(ctx, args.workspaceId).catch(async (e) => {
-                await discard(ctx, args.storageId)
-                throw e
-            })
+            const actor = await requireActor(ctx, args.workspaceId).catch(() => null)
+            if (!actor) return await reject("You are not a member of this workspace")
+            const { workspace, member } = actor
+            if (!hasPermission(workspace, member, "uploadFiles")) return await reject("You don't have permission to upload files here")
             const used = workspace.storageBytes ?? 0
             if (used + meta.size > storageCapBytes(workspace.plan)) {
-                await discard(ctx, args.storageId)
-                throw new ConvexError("This workspace is out of storage. An admin can free space or upgrade the plan.")
+                return await reject("This workspace is out of storage. An admin can free space or upgrade the plan.")
             }
             await ctx.db.patch(args.workspaceId, { storageBytes: used + meta.size })
         }
@@ -136,7 +154,7 @@ export const register = mutation({
             contentType: meta.contentType,
             attached: args.kind === "doc" || args.kind === "avatar" ? true : undefined,
         })
-        return { storageId: args.storageId, size: meta.size, contentType: meta.contentType }
+        return { ok: true as const, storageId: args.storageId, size: meta.size, contentType: meta.contentType }
     },
 })
 
@@ -172,5 +190,29 @@ export const cleanupUnattached = internalMutation({
         for (const row of rows) {
             if (row._creationTime < cutoff) await release(ctx, row.storageId)
         }
+    },
+})
+
+
+// Uploads that were never registered at all (someone POSTed to an upload URL and walked away) are deleted
+// after an hour. Only uploads made after the registered-upload pipeline existed are touched, so older
+// attachments that predate the `files` table are never swept.
+const SWEEP_AFTER = Date.UTC(2026, 9, 8)
+
+export const sweepOrphans = internalMutation({
+    args: {},
+    handler: async (ctx) => {
+        const cutoff = Date.now() - 60 * 60 * 1000
+        const recent = await ctx.db.system.query("_storage").order("desc").take(300)
+        let removed = 0
+        for (const f of recent) {
+            if (f._creationTime > cutoff || f._creationTime < SWEEP_AFTER) continue
+            const row = await ctx.db.query("files").withIndex("by_storage_id", (q) => q.eq("storageId", f._id)).unique()
+            if (!row) {
+                await discard(ctx, f._id)
+                removed++
+            }
+        }
+        return removed
     },
 })

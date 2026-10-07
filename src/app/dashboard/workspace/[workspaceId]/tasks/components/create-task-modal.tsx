@@ -76,8 +76,8 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
                     <DialogTitle className="text-[17px] font-semibold tracking-tight">Create New Task</DialogTitle>
                 </DialogHeader>
                 <div className="flex flex-col gap-3 mt-2">
-                    <Input placeholder="Task title *" value={title} onChange={e => setTitle(e.target.value)} className="rounded-lg h-10 font-medium" />
-                    <textarea
+                    <Input aria-label="Task title" placeholder="Task title *" value={title} onChange={e => setTitle(e.target.value)} className="rounded-lg h-10 font-medium" />
+                    <textarea aria-label="Task description"
                         placeholder="Description..."
                         value={description}
                         onChange={e => setDescription(e.target.value)}
@@ -87,7 +87,7 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
                         <div>
                             <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Status</label>
                             <Select value={status} onValueChange={v => setStatus(v as Status)}>
-                                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                                <SelectTrigger aria-label="Status" className="h-8 text-xs"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     {STATUSES.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
                                 </SelectContent>
@@ -96,7 +96,7 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
                         <div>
                             <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Priority</label>
                             <Select value={priority} onValueChange={v => setPriority(v as Priority)}>
-                                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                                <SelectTrigger aria-label="Priority" className="h-8 text-xs"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     {PRIORITIES.map(p => <SelectItem key={p} value={p}>{PRIORITY_TEXT[p]}</SelectItem>)}
                                 </SelectContent>
@@ -105,7 +105,7 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
                         <div>
                             <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Assignee</label>
                             <Select value={assigneeId} onValueChange={setAssigneeId}>
-                                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Unassigned" /></SelectTrigger>
+                                <SelectTrigger aria-label="Assignee" className="h-8 text-xs"><SelectValue placeholder="Unassigned" /></SelectTrigger>
                                 <SelectContent>
                                     {members.map(m => <SelectItem key={m._id} value={m._id}>{m.user.name ?? "Unknown"}</SelectItem>)}
                                 </SelectContent>
@@ -114,7 +114,7 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
                         <div>
                             <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Sprint</label>
                             <Select value={sprintId} onValueChange={setSprintId}>
-                                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="No sprint" /></SelectTrigger>
+                                <SelectTrigger aria-label="Sprint" className="h-8 text-xs"><SelectValue placeholder="No sprint" /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="none">No Sprint</SelectItem>
                                     {sprints.map(s => <SelectItem key={s._id} value={s._id}>{s.name}</SelectItem>)}
@@ -123,15 +123,15 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
                         </div>
                         <div>
                             <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Due Date</label>
-                            <Input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="h-8 text-xs" />
+                            <Input aria-label="Due date" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div>
                             <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Story Points</label>
-                            <Input type="number" placeholder="0" value={storyPoints} onChange={e => setStoryPoints(e.target.value)} className="h-8 text-xs" />
+                            <Input aria-label="Story points" type="number" placeholder="0" value={storyPoints} onChange={e => setStoryPoints(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div className="col-span-2">
                             <label className="text-xs font-medium text-[#1b1017]/60 mb-1 block">Labels (press Enter)</label>
-                            <Input placeholder="Add label..." value={labelInput} onChange={e => setLabelInput(e.target.value)} onKeyDown={handleAddLabel} className="h-8 text-xs" />
+                            <Input aria-label="Add label" placeholder="Add label..." value={labelInput} onChange={e => setLabelInput(e.target.value)} onKeyDown={handleAddLabel} className="h-8 text-xs" />
                         </div>
                     </div>
                     {labels.length > 0 && (

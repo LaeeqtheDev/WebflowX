@@ -1,11 +1,12 @@
 import { v } from "convex/values"
-import { mutation, query, action, internalMutation, MutationCtx } from "./_generated/server"
+import { mutation, query, internalMutation, MutationCtx } from "./_generated/server"
 import { Id } from "./_generated/dataModel"
 import { findMember } from "./access"
 import { auth } from "./auth"
 import { can } from "./permissions"
-import { api } from "./_generated/api"
 import { checkLimit } from "./limits"
+import { MAX, text } from "./validate"
+import { throttle } from "./rateLimit"
 import { ConvexError } from "convex/values"
 
 
@@ -39,7 +40,7 @@ export const get = query({
                 q.eq("workspaceId", args.workspaceId)
             )
             .order("desc")
-            .collect()
+            .take(200)
 
         return await Promise.all(meetings.map(async (meeting) => {
             const creator = await ctx.db.get(meeting.createdBy)
@@ -215,6 +216,9 @@ export const create = mutation({
 
         if (!member) throw new Error("Unauthorized")
         if (!(await can(ctx, member, "startMeetings"))) throw new ConvexError("You don't have permission to start meetings")
+        await throttle(ctx, userId, "meeting-create", 10, 60 * 60_000, "starting meetings")
+        const title = text(args.title, MAX.meetingTitle, "Meeting title", { required: true, collapse: true })
+        const roomName = text(args.roomName, MAX.roomName, "Room name", { required: true })
 
         // Only count meetings from this month for limit check
         const now = new Date()
@@ -236,8 +240,8 @@ export const create = mutation({
 
         return await ctx.db.insert("meetings", {
             workspaceId: args.workspaceId,
-            title: args.title,
-            roomName: args.roomName,
+            title,
+            roomName,
             createdBy: member._id,
             startedAt: Date.now(),
             activeMembers: [],
@@ -251,11 +255,15 @@ export const end = mutation({
         participants: v.optional(v.array(v.string())),
     },
     handler: async (ctx, args) => {
-        await requireMeetingMember(ctx, args.id)
+        const { meeting, member } = await requireMeetingMember(ctx, args.id)
+        if (meeting.createdBy !== member._id && !(await can(ctx, member, "moderateMeetings"))) {
+            throw new ConvexError("Only the meeting host or a moderator can end it")
+        }
+        if (meeting.endedAt) return args.id
 
         await ctx.db.patch(args.id, {
             endedAt: Date.now(),
-            participants: args.participants,
+            participants: args.participants?.slice(0, 200).map((n) => n.slice(0, 80)),
         })
 
         return args.id
@@ -269,69 +277,24 @@ export const saveSummary = mutation({
         transcript: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        await requireMeetingMember(ctx, args.id)
+        const { meeting, member } = await requireMeetingMember(ctx, args.id)
+        // the host, moderators, and whoever claimed an AI summary credit for this meeting may write the summary
+        let allowed = meeting.createdBy === member._id || (await can(ctx, member, "moderateMeetings"))
+        if (!allowed) {
+            const claims = await ctx.db
+                .query("aiSummaryLog")
+                .withIndex("by_meeting_id", (q) => q.eq("meetingId", args.id))
+                .take(50)
+            allowed = claims.some((c) => c.memberId === member._id)
+        }
+        if (!allowed) throw new ConvexError("Only the meeting host or the person who generated the summary can save it")
+        if (args.summary.length > MAX.summary) throw new ConvexError("That summary is too long")
+        if (args.transcript && args.transcript.length > MAX.transcript) throw new ConvexError("That transcript is too long")
         await ctx.db.patch(args.id, {
             summary: args.summary,
             transcript: args.transcript,
         })
         return args.id
-    }
-})
-
-export const generateSummary = action({
-    args: {
-        meetingId: v.id("meetings"),
-        transcript: v.string(),
-    },
-    handler: async (ctx, args) => {
-        const userId = await auth.getUserId(ctx)
-        if (!userId) throw new Error("Unauthorized")
-        if (args.transcript.length > 100_000) throw new Error("Transcript too long")
-
-        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
-            },
-            body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
-                max_tokens: 1024,
-                messages: [{
-                    role: "user",
-                    content: `You are a meeting summarizer. Analyze this meeting transcript and provide a structured summary.
-
-Transcript:
-${args.transcript}
-
-Provide the summary in this exact format:
-**Meeting Summary**
-
-**Key Points:**
-- List the main topics discussed
-
-**Decisions Made:**
-- List any decisions that were made
-
-**Action Items:**
-- List any tasks or next steps mentioned
-
-**Overall:**
-A 2-3 sentence overview of the meeting.`
-                }]
-            })
-        })
-
-        const data = await response.json()
-        const summary = data.choices?.[0]?.message?.content ?? "Unable to generate summary."
-
-        await ctx.runMutation(api.meetings.saveSummary, {
-            id: args.meetingId,
-            summary,
-            transcript: args.transcript,
-        })
-
-        return summary
     }
 })
 

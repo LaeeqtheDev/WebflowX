@@ -1,8 +1,11 @@
 import { v, ConvexError } from "convex/values"
+import { notify } from "./notifications"
 import { mutation, query } from "./_generated/server"
 import { auth } from "./auth"
 import { can } from "./permissions"
-import { checkLimit } from "./limits"
+import { checkLimitLazy } from "./limits"
+import { MAX, text } from "./validate"
+import { throttle } from "./rateLimit"
 
 export const get = query({
     args: {
@@ -59,29 +62,25 @@ export const create = mutation({
 
         if (!member) throw new Error("Member not found")
 
-        // Check limit
+        await throttle(ctx, userId, "note-write", 30, 60_000, "saving notes")
+        const title = text(args.title, MAX.noteTitle, "Title", { required: true, collapse: true })
+        if (args.body.length > MAX.noteBody) throw new ConvexError(`That note is too long (max ${MAX.noteBody.toLocaleString()} characters)`)
+
+        // Check limit (reads at most as many notes as the plan allows)
         const feature = args.type === "personal" ? "personalNotes" : "workspaceNotes"
-        const existingNotes = await ctx.db
-            .query("notes")
-            .withIndex("by_workspace_id_type", (q) =>
-                q.eq("workspaceId", args.workspaceId).eq("type", args.type)
-            )
-            .collect()
-
-        const notesCount = args.type === "personal"
-            ? existingNotes.filter(n => n.authorId === member._id).length
-            : existingNotes.length
-
-        const { allowed, limit, plan } = await checkLimit(
-            ctx, args.workspaceId, feature, notesCount
-        )
+        const { allowed, limit, plan } = await checkLimitLazy(ctx, args.workspaceId, feature, async (cap) => {
+            const rows = args.type === "personal"
+                ? await ctx.db.query("notes").withIndex("by_author_id_type", (q) => q.eq("authorId", member._id).eq("type", "personal")).take(cap)
+                : await ctx.db.query("notes").withIndex("by_workspace_id_type", (q) => q.eq("workspaceId", args.workspaceId).eq("type", "workspace")).take(cap)
+            return rows.length
+        })
 
         if (!allowed) {
             throw new ConvexError(`LIMIT_REACHED:${feature}:${limit}:${plan}`)
         }
 
         const noteId = await ctx.db.insert("notes", {
-            title: args.title,
+            title,
             body: args.body,
             workspaceId: args.workspaceId,
             authorId: member._id,
@@ -95,18 +94,18 @@ export const create = mutation({
             const allMembers = await ctx.db
                 .query("members")
                 .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId))
-                .collect()
+                .take(200)
 
             await Promise.all(
                 allMembers
                     .filter(m => m._id !== member._id)
-                    .map(m => ctx.db.insert("notifications", {
+                    .map(m => notify(ctx, {
                         workspaceId: args.workspaceId,
                         recipientId: m._id,
                         senderId: member._id,
                         type: "note_added",
                         noteId,
-                        body: args.title,
+                        body: title,
                         read: false,
                     }))
             )
@@ -142,8 +141,11 @@ export const update = mutation({
 
         if (!isAuthor && !isAdmin) throw new Error("Unauthorized")
 
+        await throttle(ctx, userId, "note-write", 30, 60_000, "saving notes")
+        const title = text(args.title, MAX.noteTitle, "Title", { required: true, collapse: true })
+        if (args.body.length > MAX.noteBody) throw new ConvexError(`That note is too long (max ${MAX.noteBody.toLocaleString()} characters)`)
         await ctx.db.patch(args.id, {
-            title: args.title,
+            title,
             body: args.body,
             updatedAt: Date.now()
         })

@@ -19,6 +19,7 @@ import { useCreateNote } from "@/features/notes/api/use-create-note"
 import { useRemoveNote } from "@/features/notes/api/use-remove-note"
 import { useUpdateNote } from "@/features/notes/api/use-update-note"
 import { useTogglePin } from "@/features/notes/api/use-toggle-pin"
+import { friendlyError, useLimitHandler } from "@/hooks/use-limit-handler"
 
 type NoteTab = "personal" | "workspace"
 
@@ -36,6 +37,7 @@ export default function NotesPage() {
     const workspaceId = useWorkspaceId()
     const { data: currentMember } = useCurrentMember({ workspaceId })
     const perms = usePermissions()
+    const { handleLimitError } = useLimitHandler()
 
     const [tab, setTab] = useState<NoteTab>("workspace")
     const [selectedNote, setSelectedNote] = useState<Note | null>(null)
@@ -84,7 +86,7 @@ export default function NotesPage() {
                 setShowMobileEditor(false)
                 toast.success("Note created")
             },
-            onError: () => toast.error("Failed to create note")
+            onError: (e) => { handleLimitError(e, "Failed to create note") }
         })
     }
 
@@ -100,7 +102,7 @@ export default function NotesPage() {
         if (!selectedNote) return
         updateNote({ id: selectedNote._id, title: editTitle, body: editBody }, {
             onSuccess: () => toast.success("Note updated"),
-            onError: () => toast.error("Failed to update note")
+            onError: (e) => toast.error(friendlyError(e, "Failed to update note"))
         })
     }
 
@@ -113,13 +115,13 @@ export default function NotesPage() {
                 }
                 toast.success("Note deleted")
             },
-            onError: (e) => toast.error(e.message)
+            onError: (e) => toast.error(friendlyError(e, "Failed to delete note"))
         })
     }
 
     const handleTogglePin = (id: Id<"notes">) => {
         togglePin(id, {
-            onError: (e) => toast.error(e.message)
+            onError: (e) => toast.error(friendlyError(e, "Couldn't pin the note"))
         })
     }
 
@@ -166,7 +168,7 @@ export default function NotesPage() {
                         className={cn(
                             "flex-1 flex items-center justify-center gap-1.5 h-14 text-sm font-semibold tracking-tight border-b-2 transition-colors",
                             tab === "personal"
-                                ? "border-[#ff5018] text-[#ff5018]"
+                                ? "border-[#ff5018] text-[#c2370d]"
                                 : "border-transparent text-[#1b1017]/60 hover:text-[#1b1017]"
                         )}
                     >
@@ -178,7 +180,7 @@ export default function NotesPage() {
                         className={cn(
                             "flex-1 flex items-center justify-center gap-1.5 h-14 text-sm font-semibold tracking-tight border-b-2 transition-colors",
                             tab === "workspace"
-                                ? "border-[#ff5018] text-[#ff5018]"
+                                ? "border-[#ff5018] text-[#c2370d]"
                                 : "border-transparent text-[#1b1017]/60 hover:text-[#1b1017]"
                         )}
                     >
@@ -226,11 +228,11 @@ export default function NotesPage() {
                                         {note.isPinned && <Pin className="size-3 text-[#ff5018] shrink-0" />}
                                         <p className="text-sm font-semibold tracking-tight text-[#1b1017] truncate">{note.title}</p>
                                     </div>
-                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                    <div className="flex items-center gap-1 opacity-0 max-md:opacity-100 group-hover:opacity-100 transition-opacity shrink-0">
                                         {isAdmin && tab === "workspace" && (
-                                            <button
+                                            <button aria-label="Pin or unpin note" type="button"
                                                 onClick={(e) => { e.stopPropagation(); handleTogglePin(note._id) }}
-                                                className="p-1 rounded-md text-[#1b1017]/50 hover:text-[#ff5018] hover:bg-[#ff5018]/10 transition-colors"
+                                                className="p-1 rounded-md text-[#1b1017]/50 hover:text-[#a82d0a] hover:bg-[#ff5018]/10 transition-colors"
                                             >
                                                 {note.isPinned
                                                     ? <PinOff className="size-3.5" />
@@ -238,7 +240,7 @@ export default function NotesPage() {
                                             </button>
                                         )}
                                         {canDelete(note as Note) && (
-                                            <button
+                                            <button aria-label="Delete note" type="button"
                                                 onClick={(e) => { e.stopPropagation(); handleDelete(note._id) }}
                                                 className="p-1 rounded-md text-[#1b1017]/50 hover:text-destructive hover:bg-red-50 transition-colors"
                                             >
@@ -251,7 +253,7 @@ export default function NotesPage() {
                                     {quillToText(note.body) || "No content"}
                                 </p>
                                 {note.updatedAt && (
-                                    <p className="text-[11px] text-[#1b1017]/50 mt-1.5">
+                                    <p className="text-[11px] text-[#1b1017]/65 mt-1.5">
                                         {format(note.updatedAt, "MMM d, yyyy")}
                                     </p>
                                 )}
@@ -267,13 +269,14 @@ export default function NotesPage() {
                 !showMobileEditor && !isCreating && "hidden md:flex"
             )}>
                 {isCreating ? (
-                    <div className="flex flex-col h-full px-6 py-5 gap-4 bg-white">
+                    <div className="flex flex-col h-full px-4 md:px-6 py-5 gap-4 bg-white">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <Button 
                                     variant="ghost" 
                                     size="sm" 
                                     className="md:hidden -ml-2"
+                                    aria-label="Back to notes list"
                                     onClick={handleBackToList}
                                 >
                                     <ArrowLeft className="size-4" />
@@ -294,13 +297,13 @@ export default function NotesPage() {
                                 Cancel
                             </Button>
                         </div>
-                        <Input
+                        <Input aria-label="Note title"
                             placeholder="Note title..."
                             value={newTitle}
                             onChange={(e) => setNewTitle(e.target.value)}
                             className="text-lg sm:text-2xl font-semibold tracking-tight text-[#1b1017] border-none shadow-none focus-visible:ring-0 px-0 h-auto"
                         />
-                        <textarea
+                        <textarea aria-label="Note body"
                             placeholder="Start writing..."
                             value={newBody}
                             onChange={(e) => setNewBody(e.target.value)}
@@ -317,13 +320,14 @@ export default function NotesPage() {
                         </div>
                     </div>
                 ) : selectedNote ? (
-                    <div className="flex flex-col h-full px-6 py-5 gap-4 bg-white">
+                    <div className="flex flex-col h-full px-4 md:px-6 py-5 gap-4 bg-white">
                         <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2 min-w-0 flex-1">
                                 <Button 
                                     variant="ghost" 
                                     size="sm" 
                                     className="md:hidden -ml-2 shrink-0"
+                                    aria-label="Back to notes list"
                                     onClick={handleBackToList}
                                 >
                                     <ArrowLeft className="size-4" />
@@ -348,13 +352,13 @@ export default function NotesPage() {
                                 </Button>
                             )}
                         </div>
-                        <Input
+                        <Input aria-label="Note title"
                             value={editTitle}
                             onChange={(e) => setEditTitle(e.target.value)}
                             disabled={!canEdit(selectedNote)}
                             className="text-lg sm:text-2xl font-semibold tracking-tight text-[#1b1017] border-none shadow-none focus-visible:ring-0 px-0 h-auto"
                         />
-                        <textarea
+                        <textarea aria-label="Note body"
                             value={editBody}
                             onChange={(e) => setEditBody(e.target.value)}
                             disabled={!canEdit(selectedNote)}

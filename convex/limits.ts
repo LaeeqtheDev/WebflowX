@@ -81,3 +81,19 @@ export const checkLimit = async (
         plan
     }
 }
+
+// Like checkLimit, but only reads as many rows as the plan could possibly allow (never the whole table).
+// `count(cap)` must return how many rows exist, reading at most `cap` of them.
+export const checkLimitLazy = async (
+    ctx: QueryCtx,
+    workspaceId: Id<"workspaces">,
+    feature: keyof typeof PLANS["free"],
+    count: (cap: number) => Promise<number>
+): Promise<{ allowed: boolean; limit: number; plan: Plan }> => {
+    const workspace = await ctx.db.get(workspaceId)
+    const plan = getPlan(workspace?.plan)
+    const limit = PLANS[plan][feature] as number
+    if (limit === -1) return { allowed: true, limit: -1, plan }
+    const n = await count(limit)
+    return { allowed: n < limit, limit, plan }
+}

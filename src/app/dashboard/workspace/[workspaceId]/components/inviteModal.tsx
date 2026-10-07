@@ -112,7 +112,7 @@ export const InviteModal = ({
                     <DialogHeader>
                         <DialogTitle className="font-semibold tracking-tight">
                             Invite people to{" "}
-                            <span className="font-semibold text-[#ff5018]">
+                            <span className="font-semibold text-[#c2370d]">
                                 {name}
                             </span>
                         </DialogTitle>
@@ -140,7 +140,7 @@ export const InviteModal = ({
                         <div className="flex flex-col gap-3">
                             <div className="flex items-center gap-2">
                                 <Select value={expiry} onValueChange={setExpiry}>
-                                    <SelectTrigger className="h-9 text-xs rounded-lg flex-1">
+                                    <SelectTrigger aria-label="Invite expiry" className="h-9 text-xs rounded-lg flex-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -157,7 +157,7 @@ export const InviteModal = ({
                             <button
                                 onClick={handleToggleInvites}
                                 disabled={toggling}
-                                className="text-xs font-medium text-left text-[#1b1017]/70 hover:text-[#ff5018] transition-colors disabled:opacity-50"
+                                className="text-xs font-medium text-left text-[#1b1017]/70 hover:text-[#a82d0a] transition-colors disabled:opacity-50"
                             >
                                 {invitesDisabled ? "Turn invites back on" : "Turn off invites (revoke access for new people)"}
                             </button>

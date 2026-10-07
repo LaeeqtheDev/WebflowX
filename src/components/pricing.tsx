@@ -41,7 +41,7 @@ const PricingSection = () => (
                 <p className={`lp-label ${dark ? "text-white/60" : "text-[#381d2a]/60"}`}>{p.name}</p>
                 <p className="mt-4 flex items-baseline gap-1.5">
                   <span className="lp-h text-5xl">{p.price}</span>
-                  <span className={`text-sm ${dark ? "text-white/60" : "text-[#1b1017]/55"}`}>/ month</span>
+                  <span className={`text-sm ${dark ? "text-white/60" : "text-[#1b1017]/65"}`}>/ month</span>
                 </p>
                 <dl className="mt-7 flex-1 text-sm">
                   {rows.map((r, i) => (

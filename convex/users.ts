@@ -24,12 +24,14 @@ export const updateProfile = mutation({
         // photo uploaded to storage first, or removeImage to go back to initials
         imageStorageId: v.optional(v.id("_storage")),
         removeImage: v.optional(v.boolean()),
+        emailNotifications: v.optional(v.boolean()),
     },
     handler: async (ctx, args) => {
         const userId = await auth.getUserId(ctx)
         if (!userId) throw new ConvexError("Please sign in")
 
-        const patch: { name?: string; title?: string; bio?: string; image?: string } = {}
+        const patch: { name?: string; title?: string; bio?: string; image?: string; emailNotifications?: boolean } = {}
+        if (args.emailNotifications !== undefined) patch.emailNotifications = args.emailNotifications
         if (args.name !== undefined) {
             const name = args.name.trim().replace(/\s+/g, " ")
             if (!name) throw new ConvexError("Name can't be empty")
@@ -39,7 +41,7 @@ export const updateProfile = mutation({
         if (args.title !== undefined) patch.title = args.title.trim().slice(0, 80)
         if (args.bio !== undefined) patch.bio = args.bio.trim().slice(0, 300)
         if (args.imageStorageId) {
-            await assertPhoto(ctx, args.imageStorageId)
+            await assertPhoto(ctx, args.imageStorageId, userId)
             const url = await ctx.storage.getUrl(args.imageStorageId)
             if (!url) throw new ConvexError("Couldn't read the uploaded photo")
             patch.image = url

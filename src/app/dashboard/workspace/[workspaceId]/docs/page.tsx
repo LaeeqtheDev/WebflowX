@@ -11,6 +11,7 @@ import {
     DropdownMenuItem, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
+import { friendlyError, useLimitHandler } from "@/hooks/use-limit-handler"
 import { cn } from "@/lib/utils"
 import { formatDistanceToNow } from "date-fns"
 import {
@@ -26,6 +27,7 @@ import { useRenameDoc } from "@/features/docs/use-rename-doc"
 export default function DocsPage() {
     const workspaceId = useWorkspaceId()
     const router = useRouter()
+    const { handleLimitError } = useLimitHandler()
     const { data: docs, isLoading } = useGetDocs({ workspaceId })
     const { mutate: createDoc, isPending: isCreating } = useCreateDoc()
     const { mutate: removeDoc } = useRemoveDoc()
@@ -51,7 +53,9 @@ export default function DocsPage() {
                 setTemplate("blank")
                 if (id) router.push(`/dashboard/workspace/${workspaceId}/docs/${id}${t !== "blank" ? `?t=${t}` : ""}`)
             },
-            onError: (e) => toast.error(e.message)
+            onError: (e) => {
+                if (handleLimitError(e, "Couldn't create the document")) setShowCreate(false)
+            }
         })
     }
 
@@ -66,7 +70,7 @@ export default function DocsPage() {
                 setRenamingId(null)
                 setRenameTitle("")
             },
-            onError: (e) => toast.error(e.message)
+            onError: (e) => toast.error(friendlyError(e, "Couldn't rename the document"))
         })
     }
 
@@ -121,7 +125,7 @@ export default function DocsPage() {
 
             {/* Mobile search */}
             <div className="sm:hidden px-4 pt-3">
-                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search documents" className="h-9 rounded-lg text-sm" />
+                <Input aria-label="Search documents" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search documents" className="h-9 rounded-lg text-sm" />
             </div>
 
             {/* Doc grid */}
@@ -166,7 +170,7 @@ export default function DocsPage() {
 
                                 {/* Title */}
                                 {renamingId === doc._id ? (
-                                    <Input
+                                    <Input aria-label="Document title"
                                         value={renameTitle}
                                         onChange={e => setRenameTitle(e.target.value)}
                                         onKeyDown={e => {
@@ -191,7 +195,7 @@ export default function DocsPage() {
                                 <div className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                                            <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-[#1b1017]/60 hover:text-[#ff5018] rounded-md bg-white/80 hover:bg-white">
+                                            <button type="button" aria-label="Document options" className="opacity-0 max-md:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-1 max-md:p-2.5 text-[#1b1017]/60 hover:text-[#c2370d] rounded-md bg-white/80 hover:bg-white">
                                                 <MoreHorizontal className="size-3 sm:size-3.5" />
                                             </button>
                                         </DropdownMenuTrigger>
@@ -243,7 +247,7 @@ export default function DocsPage() {
                         <DialogTitle className="text-[17px] font-semibold tracking-tight">Create Document</DialogTitle>
                     </DialogHeader>
                     <div className="flex flex-col gap-3 mt-2">
-                        <Input
+                        <Input aria-label="Document title"
                             placeholder="Document title..."
                             value={newTitle}
                             onChange={e => setNewTitle(e.target.value)}

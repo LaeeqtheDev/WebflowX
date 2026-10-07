@@ -11,6 +11,11 @@ const CreateChannelModal = dynamic(
   { ssr: false },
 );
 
+const LimitModalHost = dynamic(
+  () => import("@/components/limit-modal-host").then((m) => m.LimitModalHost),
+  { ssr: false },
+);
+
 export const Modals = () => { 
   const mounted = useSyncExternalStore(
     () => () => {},
@@ -23,6 +28,7 @@ export const Modals = () => {
     <>
     <CreateChannelModal/>
     <CreateWorkspaceModal/>
+    <LimitModalHost/>
     </>
   )
 }

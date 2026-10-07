@@ -20,19 +20,22 @@ export const Thumbnail = ({url}: ThumbnailProps) => {
 
     return(
         <Dialog>
-            <DialogTrigger>
+            <DialogTrigger aria-label="Open image full size">
             <div className="relative overflow-hidden max-w-90 border border-[#381d2a]/12 rounded-xl my-2 cursor-zoom-in">
             <img
             src={url}
-            alt="Message Image"
+            alt="Image attached to message"
             className="rounded-xl object-cover size-full"
             />
         </div>
             </DialogTrigger>
             <DialogContent className="max-w-200 border-none bg-transparent p-0 shadow-none">
+            <DialogHeader className="sr-only">
+                <DialogTitle>Image preview</DialogTitle>
+            </DialogHeader>
             <img
             src={url}
-            alt="Message Image"
+            alt="Image attached to message"
             className="rounded-md object-cover size-full"
             />
             </DialogContent>

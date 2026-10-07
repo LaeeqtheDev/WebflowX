@@ -23,11 +23,15 @@ import {
     ShieldCheckmark20Regular,
 } from "@fluentui/react-icons"
 import { useUpgradePlan } from "@/features/workspaces/api/use-upgrade-plan"
+import { Id } from "../../../../../../convex/_generated/dataModel"
 import { useGetUsage } from "@/features/workspaces/api/use-get-usage"
 
 interface MoreModalProps {
     open: boolean
     onClose: () => void
+    /** Defaults to the workspace in the URL. */
+    workspaceId?: Id<"workspaces">
+    initialTab?: "usage" | "plans"
 }
 
 type IconLike = ComponentType<{ className?: string }>
@@ -116,11 +120,12 @@ const UsageCard = ({ label, icon: Icon, current, limit }: {
     )
 }
 
-export const MoreModal = ({ open, onClose }: MoreModalProps) => {
-    const workspaceId = useWorkspaceId()
+export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initialTab = "usage" }: MoreModalProps) => {
+    const urlWorkspaceId = useWorkspaceId()
+    const workspaceId = workspaceIdProp ?? urlWorkspaceId
     const { data: usage, isLoading } = useGetUsage({ workspaceId })
     const { mutate: upgradePlan, isPending } = useUpgradePlan()
-    const [activeTab, setActiveTab] = useState<"usage" | "plans">("usage")
+    const [activeTab, setActiveTab] = useState<"usage" | "plans">(initialTab)
     const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null)
 
     const currentPlan = (usage?.plan ?? "free") as PlanKey

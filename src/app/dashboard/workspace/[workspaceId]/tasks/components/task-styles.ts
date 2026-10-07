@@ -18,7 +18,7 @@ export const PRIORITY_PILL: Record<Priority, string> = {
 export const STATUS_PILL: Record<Status, string> = {
     backlog: "bg-slate-100 text-slate-600",
     todo: "bg-[#efe8e3] text-[#381d2a]",
-    in_progress: "bg-[#ff5018]/10 text-[#e6430f]",
+    in_progress: "bg-[#ff5018]/10 text-[#c2370d]",
     in_review: "bg-amber-50 text-amber-700",
     done: "bg-green-50 text-green-700",
 }

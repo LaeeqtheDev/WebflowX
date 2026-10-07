@@ -32,7 +32,9 @@ export const useUploader = () => {
         const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type || "application/octet-stream" }, body: file })
         if (!res.ok) throw new Error("Upload failed. Check your connection and try again.")
         const { storageId } = (await res.json()) as { storageId: Id<"_storage"> }
-        try { await register({ storageId, workspaceId, kind }) } catch (e) { throw new Error(errMsg(e, "That file couldn't be accepted")) }
+        let result: Awaited<ReturnType<typeof register>>
+        try { result = await register({ storageId, workspaceId, kind }) } catch (e) { throw new Error(errMsg(e, "That file couldn't be accepted")) }
+        if (!result.ok) throw new Error(result.error)
         return storageId
       } finally {
         setUploading(false)

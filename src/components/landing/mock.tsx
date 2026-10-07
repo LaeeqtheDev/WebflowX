@@ -44,6 +44,7 @@ export function ScaledFrame({
   return (
     <div
       ref={ref}
+      aria-hidden="true"
       className={`relative w-full overflow-hidden ${className}`}
       style={{ height: h * scale }}
     >
@@ -188,7 +189,7 @@ function Msg({
       <div>
         <p className="text-[13px]">
           <span className="font-bold text-[#1b1017]">{name}</span>{" "}
-          <span className="text-xs text-neutral-400">{time}</span>
+          <span className="text-xs text-neutral-600">{time}</span>
         </p>
         <div className="mt-0.5 text-[13px] leading-snug text-neutral-800">{children}</div>
       </div>
@@ -203,7 +204,7 @@ export function ChatPane({ channel = "general" }: { channel?: string }) {
         # {channel}
       </div>
       <div className="flex flex-1 flex-col justify-end gap-4 overflow-hidden px-5 pb-4">
-        <div className="flex items-center gap-3 text-[11px] text-neutral-400">
+        <div className="flex items-center gap-3 text-[11px] text-neutral-600">
           <span className="h-px flex-1 bg-neutral-200" />
           Today
           <span className="h-px flex-1 bg-neutral-200" />
@@ -218,7 +219,7 @@ export function ChatPane({ channel = "general" }: { channel?: string }) {
           The checkout bug on mobile Safari is fixed and merged. Deploying after lunch.
         </Msg>
         <Msg name="Sofia Alvarez" color="#c0561f" time="10:05 AM">
-          Shared a document: <span className="text-[#ff5018]">Q4 campaign brief</span>. Feedback welcome before Friday.
+          Shared a document: <span className="text-[#c2370d]">Q4 campaign brief</span>. Feedback welcome before Friday.
         </Msg>
         <Msg name="Liam Reed" color="#3b5a9a" time="10:22 AM">
           Top request in this week&apos;s customer feedback is a simpler onboarding. Summary is in Docs.
@@ -226,7 +227,7 @@ export function ChatPane({ channel = "general" }: { channel?: string }) {
         <Msg name="Noah Kim" color="#5a4350" time="10:31 AM" late>
           Great, I&apos;ll add it to the roadmap and link the tasks.
         </Msg>
-        <p className="m-typing flex items-center gap-1 text-[11px] text-neutral-400">
+        <p className="m-typing flex items-center gap-1 text-[11px] text-neutral-600">
           Noah is typing
           {[0, 1, 2].map((d) => (
             <span
@@ -238,12 +239,12 @@ export function ChatPane({ channel = "general" }: { channel?: string }) {
         </p>
       </div>
       <div className="mx-5 mb-4 rounded-lg border border-neutral-200 bg-[#f8f8f8]">
-        <div className="flex gap-4 border-b border-neutral-200 px-3 py-2 text-xs font-bold text-neutral-500">
+        <div className="flex gap-4 border-b border-neutral-200 px-3 py-2 text-xs font-bold text-neutral-600">
           <span>B</span>
           <span className="italic">I</span>
           <span className="line-through">S</span>
         </div>
-        <div className="flex items-center justify-between px-3 py-3 text-[13px] text-neutral-400">
+        <div className="flex items-center justify-between px-3 py-3 text-[13px] text-neutral-600">
           Message # {channel}
           <Send className="h-4 w-4" />
         </div>
@@ -290,7 +291,7 @@ export function TasksPane() {
       <div className="grid flex-1 grid-cols-3 gap-4 bg-[#f8f6f7] p-5">
         {cols.map((c) => (
           <div key={c.name}>
-            <p className="mb-3 flex items-center justify-between text-xs font-semibold text-neutral-500">
+            <p className="mb-3 flex items-center justify-between text-xs font-semibold text-neutral-600">
               {c.name}
               <span className="font-normal">{c.items.length}</span>
             </p>
@@ -301,7 +302,7 @@ export function TasksPane() {
                   className="m-card rounded-lg border border-neutral-200 bg-white p-3.5"
                 >
                   <p className="text-[13px] font-medium text-[#1b1017]">{x.t}</p>
-                  <div className="mt-3 flex items-center gap-2 text-[11px] text-neutral-500">
+                  <div className="mt-3 flex items-center gap-2 text-[11px] text-neutral-600">
                     <Avatar name={x.who} color={x.c} size={18} />
                     {x.who}
                   </div>
@@ -321,7 +322,7 @@ export function DocPane() {
       <div className="flex h-12 items-center border-b border-neutral-200 px-5 text-[15px] font-bold text-[#1b1017]">
         Q4 campaign brief
       </div>
-      <div className="flex gap-4 border-b border-neutral-200 px-5 py-2 text-xs font-bold text-neutral-500">
+      <div className="flex gap-4 border-b border-neutral-200 px-5 py-2 text-xs font-bold text-neutral-600">
         <span>B</span>
         <span className="italic">I</span>
         <span className="underline">U</span>
@@ -380,7 +381,7 @@ export function MeetingPane() {
           ))}
         </div>
         <div className="m-card col-span-2 rounded-lg border border-neutral-200 bg-[#f8f6f7] p-4">
-          <p className="text-xs font-semibold text-[#ff5018]">AI summary</p>
+          <p className="text-xs font-semibold text-[#c2370d]">AI summary</p>
           <p className="mt-2 text-[13px] font-semibold text-[#1b1017]">Key points</p>
           <ul className="mt-1.5 space-y-1.5 text-[12px] leading-snug text-neutral-700">
             <li>Checkout fix ships today.</li>

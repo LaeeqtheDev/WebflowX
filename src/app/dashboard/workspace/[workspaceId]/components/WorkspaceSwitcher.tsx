@@ -28,7 +28,7 @@ export const WorkspaceSwitcher = () => {
     return(
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button className="size-10 relative overflow-hidden rounded-xl bg-[#ff5018] text-white hover:bg-[#e6430f] font-semibold text-lg tracking-tight shadow-[0_8px_18px_-8px_rgba(255,80,24,0.9)] ring-1 ring-white/15 transition-all hover:scale-[1.04] active:scale-95">
+                <Button aria-label={`Switch workspace. Current: ${workspace?.name ?? "loading"}`} className="size-10 relative overflow-hidden rounded-xl bg-[#ff5018] text-white hover:bg-[#e6430f] font-semibold text-lg tracking-tight shadow-[0_8px_18px_-8px_rgba(255,80,24,0.9)] ring-1 ring-white/15 transition-all hover:scale-[1.04] active:scale-95">
                     {workspaceLoading ? (
                         <Loader className="size-5 animate-spin shrink-0"/>
                     ):(

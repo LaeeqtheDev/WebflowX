@@ -16,6 +16,8 @@ import type * as channels from "../channels.js";
 import type * as conversations from "../conversations.js";
 import type * as crons from "../crons.js";
 import type * as docs from "../docs.js";
+import type * as emailLayout from "../emailLayout.js";
+import type * as emails from "../emails.js";
 import type * as exports from "../exports.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
@@ -37,6 +39,7 @@ import type * as threads from "../threads.js";
 import type * as upload from "../upload.js";
 import type * as usage from "../usage.js";
 import type * as users from "../users.js";
+import type * as validate from "../validate.js";
 import type * as workspaces from "../workspaces.js";
 
 import type {
@@ -54,6 +57,8 @@ declare const fullApi: ApiFromModules<{
   conversations: typeof conversations;
   crons: typeof crons;
   docs: typeof docs;
+  emailLayout: typeof emailLayout;
+  emails: typeof emails;
   exports: typeof exports;
   files: typeof files;
   http: typeof http;
@@ -75,6 +80,7 @@ declare const fullApi: ApiFromModules<{
   upload: typeof upload;
   usage: typeof usage;
   users: typeof users;
+  validate: typeof validate;
   workspaces: typeof workspaces;
 }>;
 

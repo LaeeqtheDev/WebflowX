@@ -51,7 +51,7 @@ export const EmojiPopover = ({
             <Popover open={popoverOpen} onOpenChange={setPopOverOpen}>
             <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen} delayDuration={50}>
             <PopoverTrigger asChild>
-            <TooltipTrigger asChild>
+            <TooltipTrigger asChild aria-label={hint}>
             {children}
             </TooltipTrigger>
             </PopoverTrigger>

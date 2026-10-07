@@ -186,6 +186,7 @@ export default function DocPage() {
                     <Button
                         variant="ghost"
                         size="sm"
+                        aria-label="Back to docs"
                         className="h-8 text-xs gap-1 rounded-lg text-[#1b1017]/60 hover:text-[#1b1017] hover:bg-[#f3eeea] px-2 shrink-0"
                         onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}
                     >
@@ -201,7 +202,7 @@ export default function DocPage() {
                             }
                         </div>
                         {editingTitle ? (
-                            <Input
+                            <Input aria-label="Document title"
                                 autoFocus
                                 value={titleDraft}
                                 maxLength={120}
@@ -216,6 +217,7 @@ export default function DocPage() {
                         ) : (
                             <button
                                 title="Rename"
+                                aria-label={`Rename document: ${doc.title}`}
                                 onClick={() => { setTitleDraft(doc.title); setEditingTitle(true) }}
                                 className="text-sm font-semibold tracking-tight text-[#1b1017] truncate rounded-md px-1.5 py-0.5 hover:bg-[#f3eeea]"
                             >
@@ -235,7 +237,7 @@ export default function DocPage() {
                         <DropdownMenuContent align="end" className="w-52 sm:w-56 p-3 rounded-xl border-[#381d2a]/12">
                             <p className="text-xs font-semibold tracking-tight text-[#1b1017] mb-2">Share to channel</p>
                             <Select value={shareChannelId} onValueChange={setShareChannelId}>
-                                <SelectTrigger className="h-8 text-xs mb-2 rounded-lg">
+                                <SelectTrigger aria-label="Channel to share to" className="h-8 text-xs mb-2 rounded-lg">
                                     <SelectValue placeholder="Select channel..." />
                                 </SelectTrigger>
                                 <SelectContent>
