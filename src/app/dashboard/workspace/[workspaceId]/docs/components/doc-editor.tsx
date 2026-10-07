@@ -118,7 +118,7 @@ const EditorInner = ({
     }, [editor, template, onTemplateUsed])
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col flex-1 min-h-0">
             {editor && (
                 <div className="bg-white border-b border-[#381d2a]/12 sticky top-0 z-10">
                     <DocToolbar editor={editor} />
@@ -255,7 +255,7 @@ export const DocEditor = ({
     }
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full min-h-0">
             {/* Also editing bar */}
             {others.length > 0 && (
                 <div className="flex items-center gap-2 px-4 py-1.5 bg-white border-b border-[#381d2a]/12 text-xs shrink-0">
