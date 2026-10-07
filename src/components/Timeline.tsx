@@ -159,7 +159,7 @@ const steps = [
   {
     when: "Today",
     title: "Four plans, and joining North Foundry",
-    body: "WebflowX now runs on four plans with clear limits, from a free plan for small teams to unlimited usage for large ones. Next, the product joins North Foundry to grow with a studio behind it.",
+    body: "WebflowX now runs on four plans with clear limits, from a free plan for small teams to generous limits for large ones. Next, the product joins North Foundry to grow with a studio behind it.",
     points: ["Free, Startup, Growth and Enterprise plans", "Workspaces, channels, tasks, notes, documents, spreadsheets, meetings", "AI summaries and an AI assistant built in"],
     focus: "Growing the product",
     outcome: "One team behind the workspace and the studio around it.",

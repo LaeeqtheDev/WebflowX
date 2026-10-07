@@ -15,4 +15,7 @@ crons.interval("sweep orphan uploads", { hours: 1 }, internal.files.sweepOrphans
 // Expired rate-limit windows are cleared out daily.
 crons.interval("prune rate limits", { hours: 6 }, internal.rateLimit.prune)
 
+// Unconfirmed newsletter sign-ups are dropped after 7 days.
+crons.interval("prune pending newsletter signups", { hours: 24 }, internal.newsletter.prunePending)
+
 export default crons

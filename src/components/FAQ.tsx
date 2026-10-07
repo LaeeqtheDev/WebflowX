@@ -13,7 +13,7 @@ const faqData = [
   {
     id: "pricing",
     question: "What is WebflowX's pricing model?",
-    answer: "There are four plans: Free ($0), Startup ($19), Growth ($49) and Enterprise ($149) per month, with limits applied per workspace. Higher plans raise limits on workspaces, members, channels, notes, documents, meetings per month, AI summaries per month and file storage (250 MB, 5 GB, 50 GB and 1 TB under fair use). Enterprise is unlimited apart from storage.",
+    answer: "There are four plans: Free ($0), Startup ($29), Growth ($79) and Enterprise ($249) per month, with limits applied per workspace. Higher plans raise limits on workspaces, members, channels, notes, documents, meetings per month, AI summaries per month and file storage (250 MB, 5 GB, 50 GB and 1 TB under fair use). Enterprise has no limit on workspaces, members, channels or documents, and generous monthly allowances for meetings (200) and AI summaries (150).",
   },
   {
     id: "file-sharing",

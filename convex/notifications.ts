@@ -95,7 +95,7 @@ export const getUnreadCount = query({
             .withIndex("by_recipient_read", (q) =>
                 q.eq("recipientId", member._id).eq("read", false)
             )
-            .collect()
+            .take(100)
 
         return unread.length
     }
@@ -163,7 +163,7 @@ export const markAllRead = mutation({
             .withIndex("by_recipient_read", (q) =>
                 q.eq("recipientId", member._id).eq("read", false)
             )
-            .collect()
+            .take(500)
 
         await Promise.all(unread.map(n => ctx.db.patch(n._id, { read: true })))
         return unread.length
@@ -189,7 +189,7 @@ export const clearAll = mutation({
             .withIndex("by_workspace_recipient", (q) =>
                 q.eq("workspaceId", args.workspaceId).eq("recipientId", member._id)
             )
-            .collect()
+            .take(500)
 
         await Promise.all(all.map(n => ctx.db.delete(n._id)))
         return all.length

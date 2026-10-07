@@ -20,12 +20,14 @@ export default function PrivacyPage() {
           <li><strong>Account data:</strong> name, email, profile photo, title and bio; your sign-in method (password, Google or GitHub). Passwords are stored hashed, never in plain text.</li>
           <li><strong>Workspace content:</strong> messages, files, tasks, notes, documents, meeting records and transcripts, reactions, and workspace settings you or your teammates create.</li>
           <li><strong>Activity data:</strong> membership and role changes, audit log entries, notifications, and usage counts used to apply plan limits.</li>
+          <li><strong>Newsletter:</strong> if you subscribe on our website, your email address, where you signed up, whether you confirmed, and the sign-up and unsubscribe times.</li>
           <li><strong>Technical data:</strong> basic logs such as IP address, device and browser type, used for security, rate limiting and troubleshooting.</li>
         </ul>
       </section>
       <section>
         <h2>2. How we use it</h2>
         <ul>
+          <li>to send product updates and tips to people who subscribed and confirmed by email. Every email links to unsubscribe;</li>
           <li>to provide and secure the Service, including real-time collaboration, search and notifications;</li>
           <li>to send account emails such as verification codes and password resets;</li>
           <li>to provide AI summaries and meeting transcripts you request;</li>
@@ -46,7 +48,7 @@ export default function PrivacyPage() {
           <li>Deepgram &mdash; live meeting transcription;</li>
           <li>Groq &mdash; AI summaries and writing assistance;</li>
           <li>Liveblocks &mdash; real-time document collaboration;</li>
-          <li>Resend &mdash; transactional email;</li>
+          <li>Resend &mdash; transactional and newsletter email;</li>
           <li>Google and GitHub &mdash; if you choose to sign in with them.</li>
         </ul>
         <p>Data may be processed in countries other than yours, with appropriate safeguards.</p>

@@ -25,9 +25,9 @@ export const PLAN_ORDER: PlanKey[] = ["free", "startup", "growth", "enterprise"]
 // -1 means unlimited
 export const PLAN_LIMITS: Record<PlanKey, PlanLimits> = {
     free: { name: "Free", price: 0, workspaces: 1, members: 10, channels: 5, personalNotes: 10, workspaceNotes: 20, docs: 10, meetings: 5, aiSummaries: 2, storageMb: 250 },
-    startup: { name: "Startup", price: 19, workspaces: 3, members: 25, channels: 20, personalNotes: 50, workspaceNotes: 100, docs: 50, meetings: 20, aiSummaries: 10, storageMb: 5_000 },
-    growth: { name: "Growth", price: 49, workspaces: 10, members: 100, channels: 50, personalNotes: -1, workspaceNotes: -1, docs: 200, meetings: 50, aiSummaries: 30, storageMb: 50_000 },
-    enterprise: { name: "Enterprise", price: 149, workspaces: -1, members: -1, channels: -1, personalNotes: -1, workspaceNotes: -1, docs: -1, meetings: -1, aiSummaries: -1, storageMb: 1_000_000 },
+    startup: { name: "Startup", price: 29, workspaces: 3, members: 25, channels: 20, personalNotes: 50, workspaceNotes: 100, docs: 50, meetings: 20, aiSummaries: 10, storageMb: 5_000 },
+    growth: { name: "Growth", price: 79, workspaces: 10, members: 100, channels: 50, personalNotes: -1, workspaceNotes: -1, docs: 200, meetings: 50, aiSummaries: 30, storageMb: 50_000 },
+    enterprise: { name: "Enterprise", price: 249, workspaces: -1, members: -1, channels: -1, personalNotes: -1, workspaceNotes: -1, docs: -1, meetings: 200, aiSummaries: 150, storageMb: 1_000_000 },
 }
 
 export type LimitInfo = {

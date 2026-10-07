@@ -44,7 +44,7 @@ export default function TermsPage() {
       </section>
       <section>
         <h2>6. Plans, limits and payment</h2>
-        <p>The Service has Free, Startup, Growth and Enterprise plans with limits on workspaces, members, channels, notes, documents, meetings, AI summaries and storage, as shown on our pricing page. Paid plans are billed per workspace and are charged in advance. Prices and limits may change with notice. Where paid billing is enabled, fees are non-refundable except where the law requires otherwise or we state otherwise.</p>
+        <p>The Service has Free, Startup, Growth and Enterprise plans with limits on workspaces, members, channels, notes, documents, meetings, AI summaries and storage, as shown on our pricing page. Paid plans are billed per workspace and are charged in advance. Prices and limits may change with notice. Online payment is not switched on yet; until it is, plan changes are made by workspace owners in workspace settings and no charge is taken. Where paid billing is enabled, fees are non-refundable except where the law requires otherwise or we state otherwise.</p>
       </section>
       <section>
         <h2>7. Your data, export and deletion</h2>

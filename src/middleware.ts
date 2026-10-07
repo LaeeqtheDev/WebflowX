@@ -8,8 +8,8 @@ import { safeNext } from "@/lib/safe-next";
 
 const isPublicPage = createRouteMatcher(["/", "/auth", "/join"])
 
-// legal pages and invite links are public for everyone, signed in or not
-const isLegal = createRouteMatcher(["/terms", "/privacy", "/join/(.*)"])
+// legal pages, newsletter confirm/unsubscribe links and invite links are public for everyone, signed in or not
+const isLegal = createRouteMatcher(["/terms", "/privacy", "/join/(.*)", "/newsletter/(.*)"])
 
 const isApi = createRouteMatcher(["/api/(.*)"])
 

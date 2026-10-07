@@ -31,7 +31,7 @@ const CodeInput = ({ onComplete }: { onComplete: (v: string) => void }) => (
         length={6}
         classNames={{
             container: "flex gap-x-2",
-            character: "size-11 sm:size-12 rounded-xl border !border-plum/20 flex items-center justify-center text-lg font-semibold !text-orange-ink !bg-surface",
+            character: "size-10 sm:size-12 rounded-xl border !border-plum/20 flex items-center justify-center text-lg font-semibold !text-orange-ink !bg-surface",
             characterSelected: "!border-[#ff5018]",
         }}
         autoFocus
@@ -61,7 +61,7 @@ const JoinPage = () => {
     // Redirect if already a member
     useEffect(() => {
         if (isMember) {
-            router.push(`/dashboard/workspace/${workspaceId}`)
+            router.replace(`/dashboard/workspace/${workspaceId}`)
         }
     }, [isMember, router, workspaceId])
 
@@ -160,7 +160,7 @@ const JoinPage = () => {
                         <Button asChild size="lg" className={primary}>
                             <Link href={`/auth?mode=signup&next=${back}`}>Create account and join</Link>
                         </Button>
-                        <Button asChild size="lg" variant="outline" className="h-12 w-full rounded-xl border-[#e7dfd9] bg-white text-[15px] font-semibold text-ink hover:bg-cream">
+                        <Button asChild size="lg" variant="outline" className="h-12 w-full rounded-xl border-plum/15 bg-surface text-[15px] font-semibold text-ink hover:bg-cream">
                             <Link href={`/auth?next=${back}`}>I already have an account</Link>
                         </Button>
                     </div>

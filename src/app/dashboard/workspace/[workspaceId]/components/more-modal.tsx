@@ -57,7 +57,7 @@ const PLANS: {
     {
         key: "startup",
         label: "Startup",
-        price: 19,
+        price: 29,
         tagline: "For small teams that ship every week.",
         icon: Rocket20Regular,
         features: ["3 workspaces", "25 members", "20 channels", "50 documents", "20 meetings / month", "10 AI summaries", "50 personal notes", "100 workspace notes"],
@@ -65,7 +65,7 @@ const PLANS: {
     {
         key: "growth",
         label: "Growth",
-        price: 49,
+        price: 79,
         tagline: "For growing teams that run on process.",
         icon: Crown20Regular,
         popular: true,
@@ -74,10 +74,10 @@ const PLANS: {
     {
         key: "enterprise",
         label: "Enterprise",
-        price: 149,
+        price: 249,
         tagline: "For organisations with no ceiling.",
         icon: Building20Regular,
-        features: ["Unlimited workspaces", "Unlimited members", "Unlimited channels", "Unlimited documents", "Unlimited meetings", "Unlimited AI summaries", "Unlimited notes", "Priority support"],
+        features: ["Unlimited workspaces", "Unlimited members", "Unlimited channels", "Unlimited documents", "200 meetings / month", "150 AI summaries / month", "Unlimited notes", "Email support"],
     },
 ]
 
@@ -203,7 +203,7 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                     <div>
                                         <p className="text-sm font-semibold">Ready to scale?</p>
                                         <p className="mt-1 text-xs text-white/65">
-                                            Startup is $19/month: more members, channels and documents.
+                                            Startup is $29/month: more members, channels and documents.
                                         </p>
                                     </div>
                                     <button

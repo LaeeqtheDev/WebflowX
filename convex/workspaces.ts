@@ -364,6 +364,9 @@ export const join = mutation({
         if (!(await consume(ctx, `join:${userId}`, 10, 10 * 60_000))) {
             throw new ConvexError("Too many attempts. Please wait a few minutes and try again.");
         }
+        if (!(await consume(ctx, `join:ws:${args.workspaceId}`, 120, 10 * 60_000))) {
+            throw new ConvexError("This workspace is getting a lot of join attempts. Please try again in a few minutes.");
+        }
         const typed = (args.joinCode ?? "").trim().toLowerCase()
         if (typed) {
             if (workspace.joinCode !== typed) {
@@ -372,7 +375,8 @@ export const join = mutation({
         } else if (!workspace.openInviteLink) {
             return { error: "This invite link needs its code. Ask an admin to send the link again." };
         }
-        if (workspace.joinCodeExpiresAt && workspace.joinCodeExpiresAt < Date.now()) {
+        // The expiry belongs to the code. A link that carries no code (open link) is not affected by it.
+        if (typed && workspace.joinCodeExpiresAt && workspace.joinCodeExpiresAt < Date.now()) {
             return { error: "This invite code has expired. Ask an admin for a new one." };
         }
 
@@ -425,7 +429,7 @@ export const getInfoById = query({
             openLink: !!workspace.openInviteLink,
             invitesOpen:
                 !workspace.invitesDisabled &&
-                !(workspace.joinCodeExpiresAt && workspace.joinCodeExpiresAt < Date.now()),
+                (!!workspace.openInviteLink || !(workspace.joinCodeExpiresAt && workspace.joinCodeExpiresAt < Date.now())),
         }
     }
 })

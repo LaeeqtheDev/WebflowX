@@ -271,6 +271,17 @@ const schema = defineSchema({
         count: v.number(),
     }).index("by_key", ["key"]),
 
+    newsletterSubscribers: defineTable({
+        email: v.string(), // lowercased
+        status: v.union(v.literal("pending"), v.literal("subscribed"), v.literal("unsubscribed")),
+        token: v.string(),
+        source: v.optional(v.string()),
+        subscribedAt: v.optional(v.number()),
+        unsubscribedAt: v.optional(v.number()),
+    })
+        .index("by_email", ["email"])
+        .index("by_token", ["token"]),
+
     docs: defineTable({
         title: v.string(),
         workspaceId: v.id("workspaces"),

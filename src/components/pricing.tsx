@@ -17,9 +17,9 @@ const rows = [
 
 const plans = [
   { name: "Free", price: "$0", v: ["1", "10", "5", "10", "20", "10", "5", "2", "250 MB"] },
-  { name: "Startup", price: "$19", v: ["3", "25", "20", "50", "100", "50", "20", "10", "5 GB"] },
-  { name: "Growth", price: "$49", v: ["10", "100", "50", "Unlimited", "Unlimited", "200", "50", "30", "50 GB"] },
-  { name: "Enterprise", price: "$149", v: [...(Array(8).fill("Unlimited") as string[]), "1 TB"] },
+  { name: "Startup", price: "$29", v: ["3", "25", "20", "50", "100", "50", "20", "10", "5 GB"] },
+  { name: "Growth", price: "$79", v: ["10", "100", "50", "Unlimited", "Unlimited", "200", "50", "30", "50 GB"] },
+  { name: "Enterprise", price: "$249", v: ["Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "200", "150", "1 TB"] },
 ];
 
 const PricingSection = () => (

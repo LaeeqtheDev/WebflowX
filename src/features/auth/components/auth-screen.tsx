@@ -43,7 +43,7 @@ export const AuthShell = ({ title, body, children }: { title: string; body: stri
     }, [])
 
     return (
-        <div ref={root} className="grid min-h-screen lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+        <div ref={root} className="grid min-h-dvh lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
             {/* Brand panel */}
             <aside
                 className="relative hidden flex-col justify-between overflow-hidden p-12 text-white lg:flex"
@@ -68,17 +68,17 @@ export const AuthShell = ({ title, body, children }: { title: string; body: stri
                             <div className="flex gap-3">
                                 <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#7b3f61] text-sm font-semibold text-white">M</span>
                                 <div>
-                                    <p className="text-[13px] font-semibold">Maya Chen <span className="font-normal text-neutral-400">9:12 AM</span></p>
-                                    <p className="mt-0.5 text-[13px] leading-snug text-neutral-700">Reminder: all-hands moved to 3 PM today.</p>
+                                    <p className="text-[13px] font-semibold">Maya Chen <span className="font-normal text-ink/45">9:12 AM</span></p>
+                                    <p className="mt-0.5 text-[13px] leading-snug text-ink/75">Reminder: all-hands moved to 3 PM today.</p>
                                 </div>
                             </div>
                         </div>
                         <div className="a-card absolute left-40 top-24 w-64 rounded-2xl bg-surface p-4 text-ink shadow-2xl">
-                            <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+                            <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-ink/45">
                                 <CheckSquare className="size-3.5 text-[#ff5018]" /> In progress
                             </p>
                             <p className="mt-2 text-sm font-semibold">Deploy checkout fix</p>
-                            <p className="mt-2 flex items-center gap-2 text-xs text-neutral-500">
+                            <p className="mt-2 flex items-center gap-2 text-xs text-ink/60">
                                 <span className="flex size-5 items-center justify-center rounded bg-[#2f7d6b] text-[10px] font-semibold text-white">D</span>
                                 Dev Patel
                             </p>
@@ -101,7 +101,7 @@ export const AuthShell = ({ title, body, children }: { title: string; body: stri
             </aside>
 
             {/* Form */}
-            <main className="flex min-h-screen flex-col justify-center bg-cream-soft px-6 py-10 sm:px-12">
+            <main className="flex min-h-dvh flex-col justify-center bg-cream-soft px-6 py-10 sm:px-12">
                 <div className="mx-auto mb-10 flex items-center gap-2.5 lg:hidden">
                     <Image src="/logo.png" alt="" width={28} height={28} className="h-7 w-7" />
                     <span className="text-lg font-semibold tracking-tight text-ink">WebflowX</span>

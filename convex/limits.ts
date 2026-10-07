@@ -19,7 +19,7 @@ export const PLANS = {
     },
     startup: {
         name: "Startup",
-        price: 19,
+        price: 29,
         workspaces: 3,
         members: 25,
         channels: 20,
@@ -32,7 +32,7 @@ export const PLANS = {
     },
     growth: {
         name: "Growth",
-        price: 49,
+        price: 79,
         workspaces: 10,
         members: 100,
         channels: 50,
@@ -45,15 +45,15 @@ export const PLANS = {
     },
     enterprise: {
         name: "Enterprise",
-        price: 149,
+        price: 249,
         workspaces: -1,
         members: -1,
         channels: -1,
         personalNotes: -1,
         workspaceNotes: -1,
         docs: -1,
-        meetings: -1,
-        aiSummaries: -1,
+        meetings: 200,   // meetings and AI summaries cost real money per use, so even Enterprise has a (generous) cap
+        aiSummaries: 150,
         storageMb: 1_000_000, // 1 TB fair use
     },
 }
