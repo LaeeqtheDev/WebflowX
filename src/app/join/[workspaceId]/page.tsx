@@ -19,7 +19,12 @@ const JoinPage = () => {
     const router = useRouter()
     const workspaceId = useWorkspaceId()
     const searchParams = useSearchParams()
-    const codeFromUrl = searchParams.get("code")
+    // The code is remembered while the visitor signs up, so it survives the trip through /auth.
+    const storageKey = `wfx-invite-${workspaceId}`
+    const urlCode = searchParams.get("code")
+    const codeFromUrl = urlCode ?? (() => {
+        try { return window.sessionStorage.getItem(storageKey) } catch { return null }
+    })()
     const { isAuthenticated, isLoading: authLoading } = useConvexAuth()
     const { data, isLoading: infoLoading } = useGetWorkspaceInfo({ id: workspaceId })
     const isLoading = infoLoading || authLoading
@@ -40,6 +45,7 @@ const JoinPage = () => {
     const tryJoin = useCallback((code: string) => {
         mutate({ joinCode: code, workspaceId }, {
             onSuccess: (id) => {
+                try { window.sessionStorage.removeItem(`wfx-invite-${workspaceId}`) } catch { /* ignore */ }
                 router.replace(`/dashboard/workspace/${id}`)
                 toast.success("Successfully joined workspace")
             },
@@ -81,6 +87,7 @@ const JoinPage = () => {
 
     // Not signed in yet: show the invite, and send them to sign up / log in, then straight back here to join.
     if (!isAuthenticated) {
+        if (urlCode) { try { window.sessionStorage.setItem(storageKey, urlCode) } catch { /* private mode */ } }
         const back = encodeURIComponent(`${window.location.pathname}${window.location.search}`)
         return (
             <div className="h-full flex flex-col gap-y-8 items-center justify-center p-8">

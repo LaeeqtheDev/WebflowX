@@ -7,6 +7,8 @@ import { gsap } from "@/components/landing/gsap"
 import { SignInFlow } from "../../types/types"
 import { SignInCard } from "./SignInCard"
 import { SignUpCard } from "./SignUpCard"
+import { useConvexAuth } from "convex/react"
+import { safeNext } from "@/lib/safe-next"
 import { ResetPasswordCard, VerifyEmailCard } from "./code-cards"
 
 const copy = {
@@ -25,6 +27,15 @@ export const AuthScreen = ({ initialState = "signIn" }: { initialState?: SignInF
     const [state, setState] = useState<SignInFlow>(initialState)
     const [email, setEmail] = useState("")
     const root = useRef<HTMLDivElement>(null)
+
+    // Once signed in (sign-up + email code, or log in) go to where the visitor was heading, e.g. an invite link.
+    // A hard navigation makes the address bar and the page agree, so the invite code in the URL is intact.
+    const { isAuthenticated } = useConvexAuth()
+    useEffect(() => {
+        if (!isAuthenticated) return
+        const next = safeNext(new URLSearchParams(window.location.search).get("next"))
+        window.location.replace(next ?? "/dashboard")
+    }, [isAuthenticated])
 
     useEffect(() => {
         const el = root.current
