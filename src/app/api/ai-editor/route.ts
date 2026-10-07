@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { fetchQuery } from "convex/nextjs"
 import { api } from "../../../../convex/_generated/api"
-import { getAuthToken, unauthorized, rateLimit, tooMany } from "@/lib/api-guard"
+import { getAuthToken, unauthorized, limited, tooMany } from "@/lib/api-guard"
 
 const MAX_TEXT = 12_000
 
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
         if (!authToken) return unauthorized()
         const me = await fetchQuery(api.users.current, {}, { token: authToken })
         if (!me) return unauthorized()
-        if (!rateLimit(`ai-editor:${me._id}`, 20, 60_000)) return tooMany()
+        if (!(await limited(authToken, "ai-editor", me._id))) return tooMany()
 
         const body = await req.json().catch(() => null)
         const text = typeof body?.text === "string" ? body.text.slice(0, MAX_TEXT) : ""

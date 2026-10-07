@@ -44,6 +44,9 @@ export const useJoin = () => {
 
             
             const repsonse = await mutation(values);
+            if (typeof repsonse === "object" && repsonse !== null && "error" in repsonse) {
+                throw new Error(repsonse.error)
+            }
             options?.onSuccess?.(repsonse);
             return repsonse;
 

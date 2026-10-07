@@ -163,7 +163,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
             const res = await fetch("/api/ai-summary", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ transcript })
+                body: JSON.stringify({ transcript, meetingId: meeting._id })
             })
             
             const data = await res.json()

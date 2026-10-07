@@ -1,7 +1,10 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { useEditor, EditorContent } from "@tiptap/react"
+import { useEditor, EditorContent, Extension } from "@tiptap/react"
+import { yCursorPlugin } from "@tiptap/y-tiptap"
+import type { Awareness } from "y-protocols/awareness"
+import { useDocImageUpload } from "./use-doc-image-upload"
 import StarterKit from "@tiptap/starter-kit"
 import Collaboration from "@tiptap/extension-collaboration"
 import Image from "@tiptap/extension-image"
@@ -43,14 +46,40 @@ interface DocEditorProps {
     onOthersChange?: (others: DocOther[]) => void
 }
 
+// Shows other people's carets and selections (name label in their colour)
+const cursorBuilder = (user: { name?: string; color?: string }) => {
+    const caret = document.createElement("span")
+    caret.className = "collab-caret"
+    caret.style.borderColor = user.color ?? "#ff5018"
+    const label = document.createElement("div")
+    label.className = "collab-caret__label"
+    label.style.backgroundColor = user.color ?? "#ff5018"
+    label.textContent = user.name ?? "Someone"
+    caret.append(label)
+    return caret
+}
+const makeCaretExtension = (awareness: Awareness) =>
+    Extension.create({
+        name: "collabCaret",
+        addProseMirrorPlugins() {
+            return [yCursorPlugin(awareness, { cursorBuilder })]
+        },
+    })
+
 const EditorInner = ({
     ydoc,
+    awareness,
+    userName,
+    userColor,
     docId,
     template,
     onTemplateUsed,
     status,
 }: {
     ydoc: Y.Doc
+    awareness: Awareness
+    userName: string
+    userColor: string
     docId: Id<"docs">
     template?: string | null
     onTemplateUsed?: () => void
@@ -60,6 +89,21 @@ const EditorInner = ({
     const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [words, setWords] = useState(0)
     const templateApplied = useRef(false)
+    const uploadImage = useDocImageUpload()
+    const editorRef = useRef<ReturnType<typeof useEditor>>(null)
+    const uploadRef = useRef(uploadImage)
+    useEffect(() => { uploadRef.current = uploadImage }, [uploadImage])
+
+    useEffect(() => {
+        awareness.setLocalStateField("user", { name: userName, color: userColor })
+    }, [awareness, userName, userColor])
+
+    const insertImages = (files: File[]) => {
+        files.forEach(async (file) => {
+            const src = await uploadRef.current(file)
+            if (src) editorRef.current?.chain().focus().setImage({ src }).run()
+        })
+    }
 
     const editor = useEditor({
         immediatelyRender: false,
@@ -79,6 +123,7 @@ const EditorInner = ({
                 },
             }),
             Collaboration.configure({ document: ydoc }),
+            makeCaretExtension(awareness),
             Image,
             Table.configure({ resizable: false }),
             TableRow,
@@ -100,11 +145,27 @@ const EditorInner = ({
             setWords(ed.getText().trim().split(/\s+/).filter(Boolean).length)
         },
         editorProps: {
+            handlePaste: (_view, event) => {
+                const files = Array.from(event.clipboardData?.files ?? []).filter((f) => f.type.startsWith("image/"))
+                if (files.length === 0) return false
+                event.preventDefault()
+                insertImages(files)
+                return true
+            },
+            handleDrop: (_view, event) => {
+                const files = Array.from((event as DragEvent).dataTransfer?.files ?? []).filter((f) => f.type.startsWith("image/"))
+                if (files.length === 0) return false
+                event.preventDefault()
+                insertImages(files)
+                return true
+            },
             attributes: {
                 class: "outline-none min-h-[calc(100vh-200px)] px-14 py-12 max-w-none focus:outline-none"
             }
         }
     })
+
+    useEffect(() => { editorRef.current = editor }, [editor])
 
     useEffect(() => () => { if (touchTimer.current) clearTimeout(touchTimer.current) }, [])
 
@@ -276,6 +337,9 @@ export const DocEditor = ({
             )}
             <EditorInner
                 ydoc={ydoc}
+                awareness={provider.awareness as unknown as Awareness}
+                userName={userName}
+                userColor={userColor}
                 docId={docId}
                 template={template}
                 onTemplateUsed={onTemplateUsed}

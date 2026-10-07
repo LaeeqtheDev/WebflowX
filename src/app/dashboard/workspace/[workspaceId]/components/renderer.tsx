@@ -1,4 +1,5 @@
 import Quill from "quill";
+import "@/app/dashboard/workspace/[workspaceId]/components/mention-blot";
 
 import { useEffect, useRef, useState } from "react";
 

@@ -1,5 +1,5 @@
 import { v } from "convex/values"
-import { mutation, query } from "./_generated/server"
+import { mutation, query, internalMutation } from "./_generated/server"
 import { auth } from "./auth"
 
 const typeValidator = v.union(
@@ -8,7 +8,8 @@ const typeValidator = v.union(
     v.literal("task_assigned"),
     v.literal("task_comment"),
     v.literal("note_added"),
-    v.literal("dm_received")
+    v.literal("dm_received"),
+    v.literal("mention")
 )
 
 export const get = query({
@@ -69,7 +70,8 @@ export const getUnreadCount = query({
     }
 })
 
-export const create = mutation({
+// Internal only: a public version let anyone send notifications as anybody.
+export const create = internalMutation({
     args: {
         workspaceId: v.id("workspaces"),
         recipientId: v.id("members"),

@@ -2,6 +2,7 @@ import { v, ConvexError } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { auth } from "./auth"
 import { checkLimit } from "./limits"
+import { internal } from "./_generated/api"
 
 const cleanTitle = (raw: string) => {
     const t = raw.trim().replace(/\s+/g, " ")
@@ -155,6 +156,7 @@ export const remove = mutation({
         if (!isCreator && !isAdmin) throw new Error("Unauthorized")
 
         await ctx.db.delete(args.id)
+        await ctx.scheduler.runAfter(0, internal.liveblocks.deleteRoom, { roomId: doc.liveblocksRoomId })
         return args.id
     }
 })

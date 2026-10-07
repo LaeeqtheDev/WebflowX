@@ -22,6 +22,8 @@ import {
     ChevronUp, MoreVertical, Pin, PinOff, Crown, Send, X, UserMinus, VolumeX, AlertCircle, Loader2, ChevronDown,
 } from "lucide-react"
 import { toast } from "sonner"
+import { useQuery } from "convex/react"
+import { api } from "../../../../../../../convex/_generated/api"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -536,6 +538,19 @@ export function MeetingStage({ roomName, title, startedAt, status, errorMessage 
     const [kicking, setKicking] = useState(false)
     const [endOpen, setEndOpen] = useState(false)
     const [now, setNow] = useState(() => Date.now())
+
+    // If the server says this person may no longer be in the call (removed from the workspace,
+    // kicked, or the meeting was ended by an admin), drop out even if the LiveKit token is still valid.
+    const access = useQuery(api.meetings.authorizeRoom, { roomName })
+    const hadAccess = useRef(false)
+    useEffect(() => {
+        if (access) hadAccess.current = true
+        else if (access === null && hadAccess.current) {
+            hadAccess.current = false
+            toast.error("You're no longer allowed in this meeting")
+            room.disconnect()
+        }
+    }, [access, room])
 
     useEffect(() => {
         const id = setInterval(() => setNow(Date.now()), 1000)

@@ -2,7 +2,7 @@ import { AccessToken } from "livekit-server-sdk"
 import { NextRequest, NextResponse } from "next/server"
 import { fetchQuery } from "convex/nextjs"
 import { api } from "../../../../convex/_generated/api"
-import { getAuthToken, unauthorized, rateLimit, tooMany } from "@/lib/api-guard"
+import { getAuthToken, unauthorized, limited, tooMany } from "@/lib/api-guard"
 
 export async function GET(req: NextRequest) {
     try {
@@ -40,13 +40,13 @@ export async function GET(req: NextRequest) {
             )
         }
 
-        if (!rateLimit(`livekit:${who.identity}`, 20, 60_000)) return tooMany()
+        if (!(await limited(token, "livekit", who.identity))) return tooMany()
 
         const at = new AccessToken(apiKey!, apiSecret!, {
             identity: who.identity,
             name: who.name,
             metadata: JSON.stringify({ host: who.host }),
-            ttl: "2h",
+            ttl: "1h",
         })
         at.addGrant({
             roomJoin: true,

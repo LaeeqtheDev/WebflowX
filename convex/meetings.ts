@@ -1,5 +1,5 @@
 import { v } from "convex/values"
-import { mutation, query, action, MutationCtx } from "./_generated/server"
+import { mutation, query, action, internalMutation, MutationCtx } from "./_generated/server"
 import { Id } from "./_generated/dataModel"
 import { findMember } from "./access"
 import { auth } from "./auth"
@@ -378,5 +378,62 @@ export const kickMember = mutation({
             activeMembers: (meeting.activeMembers ?? []).filter((m) => m !== args.memberId),
         })
         return args.id
+    },
+})
+
+// AI summary credits: /api/ai-summary refuses to run unless the caller has just claimed one,
+// so the monthly plan limit is enforced on the server and not only in the browser.
+const CLAIM_TTL_MS = 15 * 60 * 1000
+
+export const hasSummaryClaim = query({
+    args: { id: v.id("meetings") },
+    handler: async (ctx, args) => {
+        const userId = await auth.getUserId(ctx)
+        if (!userId) return false
+        const meeting = await ctx.db.get(args.id)
+        if (!meeting) return false
+        const member = await findMember(ctx, meeting.workspaceId, userId)
+        if (!member) return false
+        const rows = await ctx.db
+            .query("aiSummaryLog")
+            .withIndex("by_meeting_id", (q) => q.eq("meetingId", args.id))
+            .order("desc")
+            .take(10)
+        return rows.some(
+            (r) => r.memberId === member._id && !r.consumed && Date.now() - r._creationTime < CLAIM_TTL_MS
+        )
+    },
+})
+
+export const consumeSummaryClaim = mutation({
+    args: { id: v.id("meetings") },
+    handler: async (ctx, args) => {
+        const { member } = await requireMeetingMember(ctx, args.id)
+        const rows = await ctx.db
+            .query("aiSummaryLog")
+            .withIndex("by_meeting_id", (q) => q.eq("meetingId", args.id))
+            .order("desc")
+            .take(10)
+        const row = rows.find(
+            (r) => r.memberId === member._id && !r.consumed && Date.now() - r._creationTime < CLAIM_TTL_MS
+        )
+        if (row) await ctx.db.patch(row._id, { consumed: true })
+        return !!row
+    },
+})
+
+// Hourly: close calls that have been "live" for 12h+ (everyone closed the tab without leaving).
+export const endStale = internalMutation({
+    args: {},
+    handler: async (ctx) => {
+        const cutoff = Date.now() - 12 * 60 * 60 * 1000
+        const stale = await ctx.db
+            .query("meetings")
+            .withIndex("by_ended_started", (q) => q.eq("endedAt", undefined).lt("startedAt", cutoff))
+            .take(100)
+        for (const m of stale) {
+            await ctx.db.patch(m._id, { endedAt: Date.now(), activeMembers: [] })
+        }
+        return stale.length
     },
 })

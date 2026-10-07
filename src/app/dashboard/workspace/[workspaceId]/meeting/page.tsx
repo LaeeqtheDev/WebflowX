@@ -148,7 +148,7 @@ export default function MeetingPage() {
             const res = await fetch("/api/ai-summary", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ transcript })
+                body: JSON.stringify({ transcript, meetingId })
             })
             const data = await res.json()
             if (data.error) throw new Error(data.error)

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server"
+import { fetchMutation } from "convex/nextjs"
+import { api } from "../../convex/_generated/api"
 
 // Returns the signed-in user's Convex token, or null.
 export async function getAuthToken(): Promise<string | null> {
@@ -33,3 +35,17 @@ export function rateLimit(key: string, max: number, windowMs: number): boolean {
 
 export const tooMany = () =>
     NextResponse.json({ error: "Too many requests. Please wait a moment." }, { status: 429 })
+
+// Global (database-backed) limiter: counts across all server instances. Falls back to the
+// in-memory limiter if Convex can't be reached, so a hiccup never opens the floodgates.
+export async function limited(
+    token: string,
+    bucket: "ai-summary" | "ai-editor" | "deepgram" | "livekit" | "moderate",
+    fallbackKey: string
+): Promise<boolean> {
+    try {
+        return await fetchMutation(api.rateLimit.hit, { bucket }, { token })
+    } catch {
+        return rateLimit(`${bucket}:${fallbackKey}`, 20, 60_000)
+    }
+}

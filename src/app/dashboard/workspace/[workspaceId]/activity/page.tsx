@@ -13,7 +13,7 @@ import { api } from "../../../../../../convex/_generated/api"
 import {
     Bell, MessageSquare, Smile, CheckSquare,
     FileText, RefreshCw, Loader, BellOff,
-    CheckCheck, MessagesSquare
+    CheckCheck, MessagesSquare, AtSign
 } from "lucide-react"
 import { Id } from "../../../../../../convex/_generated/dataModel"
 import { useClearAll } from "@/features/notifications/use-clear-all"
@@ -55,12 +55,29 @@ const TYPE_CONFIG = {
         bg: "bg-[#efe8e3]",
         label: "added a workspace note"
     },
+    mention: {
+        icon: AtSign,
+        color: "text-[#ff5018]",
+        bg: "bg-[#ff5018]/10",
+        label: "mentioned you"
+    },
     dm_received: {
         icon: MessageSquare,
         color: "text-[#ff5018]",
         bg: "bg-[#ff5018]/10",
         label: "sent you a direct message"
     },
+}
+
+// Plain text of a Quill message body (so previews show what was written, including @mentions)
+const plainText = (body: string) => {
+    try {
+        const parsed = JSON.parse(body)
+        const ops: { insert?: unknown }[] = Array.isArray(parsed) ? parsed : (parsed?.ops ?? [])
+        return ops.map((o) => (typeof o.insert === "string" ? o.insert : "")).join("").replace(/\s+/g, " ").trim()
+    } catch {
+        return ""
+    }
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -102,6 +119,7 @@ export default function ActivityPage() {
 
         switch (notification.type) {
             case "thread_reply":
+            case "mention":
             case "reaction": {
                 // Look the message up so we know whether it lives inside a thread
                 let target: { _id: string; parentMessagesId?: string } | null = null
@@ -279,7 +297,7 @@ export default function ActivityPage() {
                                                 {notification.type === "reaction"
                                                     ? `Reacted with ${notification.body}`
                                                     : notification.body.startsWith("{")
-                                                        ? "Sent a message"
+                                                        ? (plainText(notification.body) || "Sent a message")
                                                         : notification.body
                                                 }
                                             </p>

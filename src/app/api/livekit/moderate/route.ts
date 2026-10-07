@@ -3,7 +3,7 @@ import { RoomServiceClient, TrackSource, TrackType } from "livekit-server-sdk"
 import { fetchMutation, fetchQuery } from "convex/nextjs"
 import { api } from "../../../../../convex/_generated/api"
 import { Id } from "../../../../../convex/_generated/dataModel"
-import { getAuthToken, unauthorized, rateLimit, tooMany } from "@/lib/api-guard"
+import { getAuthToken, unauthorized, limited, tooMany } from "@/lib/api-guard"
 
 type Action = "mute" | "stopVideo" | "muteAll" | "kick" | "endAll"
 const ACTIONS: Action[] = ["mute", "stopVideo", "muteAll", "kick", "endAll"]
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
         if (!who.host) {
             return NextResponse.json({ error: "Only the host or an admin can do that" }, { status: 403 })
         }
-        if (!rateLimit(`moderate:${who.identity}`, 60, 60_000)) return tooMany()
+        if (!(await limited(token, "moderate", who.identity))) return tooMany()
 
         const apiKey = process.env.LIVEKIT_API_KEY
         const apiSecret = process.env.LIVEKIT_API_SECRET

@@ -163,7 +163,8 @@ const schema = defineSchema({
         kicked: v.optional(v.array(v.id("members"))),
     })
         .index("by_workspace_id", ["workspaceId"])
-        .index("by_room_name", ["roomName"]),
+        .index("by_room_name", ["roomName"])
+        .index("by_ended_started", ["endedAt", "startedAt"]),
 
     // Each participant's own transcript, merged when the meeting ends
     meetingTranscripts: defineTable({
@@ -179,9 +180,17 @@ const schema = defineSchema({
         workspaceId: v.id("workspaces"),
         meetingId: v.id("meetings"),
         memberId: v.id("members"),
+        // set once the AI call that this credit paid for succeeded
+        consumed: v.optional(v.boolean()),
     })
         .index("by_workspace_id", ["workspaceId"])
         .index("by_meeting_id", ["meetingId"]),
+
+    rateLimits: defineTable({
+        key: v.string(),
+        windowStart: v.number(),
+        count: v.number(),
+    }).index("by_key", ["key"]),
 
     docs: defineTable({
         title: v.string(),
@@ -205,7 +214,8 @@ const schema = defineSchema({
             v.literal("task_assigned"),
             v.literal("task_comment"),
             v.literal("note_added"),
-            v.literal("dm_received")
+            v.literal("dm_received"),
+            v.literal("mention")
         ),
         read: v.boolean(),
         messageId: v.optional(v.id("messages")),

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getAuthToken, unauthorized, rateLimit, tooMany } from "@/lib/api-guard"
+import { getAuthToken, unauthorized, limited, tooMany } from "@/lib/api-guard"
 import { fetchQuery } from "convex/nextjs"
 import { api } from "../../../../convex/_generated/api"
 
@@ -11,7 +11,7 @@ export async function GET() {
 
         const me = await fetchQuery(api.users.current, {}, { token })
         if (!me) return unauthorized()
-        if (!rateLimit(`deepgram:${me._id}`, 10, 60_000)) return tooMany()
+        if (!(await limited(token, "deepgram", me._id))) return tooMany()
 
         const apiKey = process.env.DEEPGRAM_API_KEY
         if (!apiKey) {

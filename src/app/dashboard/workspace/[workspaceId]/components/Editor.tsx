@@ -9,6 +9,9 @@ import {
     useState,
 } from "react";
 import Quill, { type QuillOptions } from "quill";
+import "./mention-blot";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { useGetMembers } from "@/features/members/api/use-get-members";
 import { Button } from "@/components/ui/button";
 import { PiTextAa } from "react-icons/pi";
 import {
@@ -20,6 +23,7 @@ import {
     Loader2,
     File,
     Download,
+    AtSign,
 } from "lucide-react";
 import { MdSend } from "react-icons/md";
 import { Hint } from "./hints";
@@ -162,6 +166,8 @@ const formatFileSize = (bytes: number) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
+type MentionMember = { _id: string; user?: { name?: string | null; image?: string | null } | null };
+
 const Editor = ({
     onCancel,
     onSubmit,
@@ -180,6 +186,28 @@ const Editor = ({
     const [selectedSlashItem, setSelectedSlashItem] = useState(0);
     const [activeTab, setActiveTab] = useState<"format" | "ai">("format");
     const [isAiLoading, setIsAiLoading] = useState(false);
+
+    // @mentions
+    const workspaceId = useWorkspaceId();
+    const { data: members } = useGetMembers({ workspaceId });
+    const [mention, setMention] = useState<{ query: string; start: number } | null>(null);
+    const [mentionSel, setMentionSel] = useState(0);
+    const mentionRef = useRef<{ query: string; start: number } | null>(null);
+    const mentionSelRef = useRef(0);
+    const matchesRef = useRef<MentionMember[]>([]);
+
+    const mentionMatches: MentionMember[] = (() => {
+        if (!mention) return [];
+        const q = mention.query.toLowerCase();
+        return (members ?? [])
+            .filter((m) => (m.user?.name ?? "").toLowerCase().includes(q))
+            .sort((a, b) => {
+                const an = (a.user?.name ?? "").toLowerCase().startsWith(q) ? 0 : 1;
+                const bn = (b.user?.name ?? "").toLowerCase().startsWith(q) ? 0 : 1;
+                return an - bn;
+            })
+            .slice(0, 6) as MentionMember[];
+    })();
 
     const containerRef = useRef<HTMLDivElement>(null);
     const submitRef = useRef(onSubmit);
@@ -201,6 +229,7 @@ const Editor = ({
         placeholderRef.current = placeholder;
         defaultValueRef.current = defaultValue;
         disabledRef.current = disabled;
+        matchesRef.current = mentionMatches;
     });
 
     useEffect(() => {
@@ -215,6 +244,31 @@ const Editor = ({
     useEffect(() => {
         activeTabRef.current = activeTab;
     }, [activeTab]);
+
+    const updateMention = (m: { query: string; start: number } | null) => {
+        mentionRef.current = m;
+        setMention(m);
+        if (!m) return;
+        if (mentionSelRef.current !== 0) {
+            mentionSelRef.current = 0;
+            setMentionSel(0);
+        }
+    };
+
+    // Replaces the typed "@que" with a highlighted "@Name " that carries the member id
+    const pickMention = (member: MentionMember) => {
+        const quill = quilRef.current;
+        const m = mentionRef.current;
+        if (!quill || !m) return;
+        const cursor = quill.getSelection()?.index ?? m.start + 1 + m.query.length;
+        const label = `@${member.user?.name ?? "member"}`;
+        quill.deleteText(m.start, cursor - m.start, "user");
+        quill.insertText(m.start, label, { mention: member._id }, "user");
+        quill.insertText(m.start + label.length, " ", { mention: false }, "user");
+        quill.setSelection(m.start + label.length + 1, 0, "user");
+        updateMention(null);
+        quill.focus();
+    };
 
     const handleAiCommand = async (command: string) => {
         const quill = quilRef.current;
@@ -283,6 +337,11 @@ const Editor = ({
                         enter: {
                             key: "Enter",
                             handler: () => {
+                                if (mentionRef.current && matchesRef.current.length > 0) {
+                                    const pick = matchesRef.current[mentionSelRef.current] ?? matchesRef.current[0];
+                                    pickMention(pick);
+                                    return false;
+                                }
                                 if (showSlashMenuRef.current) {
                                     const tab = activeTabRef.current;
                                     const commands =
@@ -329,6 +388,12 @@ const Editor = ({
                         arrow_up: {
                             key: 38,
                             handler: () => {
+                                if (mentionRef.current && matchesRef.current.length > 0) {
+                                    const next = Math.max(0, mentionSelRef.current - 1);
+                                    mentionSelRef.current = next;
+                                    setMentionSel(next);
+                                    return false;
+                                }
                                 if (showSlashMenuRef.current) {
                                     setSelectedSlashItem((prev) => {
                                         const next = Math.max(0, prev - 1);
@@ -343,6 +408,12 @@ const Editor = ({
                         arrow_down: {
                             key: 40,
                             handler: () => {
+                                if (mentionRef.current && matchesRef.current.length > 0) {
+                                    const next = Math.min(matchesRef.current.length - 1, mentionSelRef.current + 1);
+                                    mentionSelRef.current = next;
+                                    setMentionSel(next);
+                                    return false;
+                                }
                                 if (showSlashMenuRef.current) {
                                     const tab = activeTabRef.current;
                                     const max =
@@ -362,6 +433,10 @@ const Editor = ({
                         escape: {
                             key: 27,
                             handler: () => {
+                                if (mentionRef.current) {
+                                    updateMention(null);
+                                    return false;
+                                }
                                 if (showSlashMenuRef.current) {
                                     setShowSlashMenu(false);
                                     showSlashMenuRef.current = false;
@@ -394,6 +469,19 @@ const Editor = ({
             const cursorIndex = selection.index;
             const textBeforeCursor = quill.getText(0, cursorIndex);
             const lastChar = textBeforeCursor[textBeforeCursor.length - 1];
+
+            // "@" followed by letters (at the start or after a space) opens the member picker
+            const mm = /(?:^|\s)@([^\s@]{0,30})$/.exec(textBeforeCursor);
+            if (mm) {
+                updateMention({ query: mm[1], start: cursorIndex - mm[1].length - 1 });
+                if (showSlashMenuRef.current) {
+                    showSlashMenuRef.current = false;
+                    setShowSlashMenu(false);
+                }
+                return;
+            } else if (mentionRef.current) {
+                updateMention(null);
+            }
 
             if (lastChar === "/") {
                 slashMenuIndexRef.current = cursorIndex;
@@ -451,6 +539,38 @@ const Editor = ({
 
             {/* 👇 outer wrapper with relative for menu positioning */}
             <div ref={wrapperRef} className="relative">
+                {/* @mention picker */}
+                {mention && mentionMatches.length > 0 && (
+                    <div className="absolute bottom-full left-0 z-9999 mb-2 w-64 overflow-hidden rounded-xl border border-[#381d2a]/12 bg-white shadow-lg">
+                        <p className="border-b bg-[#f7f2ee] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#1b1017]/50">
+                            People
+                        </p>
+                        {mentionMatches.map((m, i) => (
+                            <button
+                                key={m._id}
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    pickMention(m);
+                                }}
+                                className={cn(
+                                    "flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-[#f7f2ee]",
+                                    mentionSel === i && "bg-[#f7f2ee]"
+                                )}
+                            >
+                                <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#ff5018] text-xs font-semibold text-white">
+                                    {m.user?.image ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={m.user.image} alt="" className="size-full object-cover" />
+                                    ) : (
+                                        (m.user?.name ?? "?").charAt(0).toUpperCase()
+                                    )}
+                                </span>
+                                <span className="truncate text-sm font-medium">{m.user?.name}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+
                 {/* Slash command menu — outside the overflow-hidden div */}
                 {showSlashMenu && (
                     <div className="absolute bottom-full left-0 z-9999 bg-white border border-[#381d2a]/12 rounded-xl shadow-lg overflow-hidden w-72 mb-2">
@@ -649,6 +769,28 @@ const Editor = ({
                                 onClick={toggleToolbar}
                             >
                                 <PiTextAa className="size-4" />
+                            </Button>
+                        </Hint>
+
+                        <Hint label="Mention someone (@)">
+                            <Button
+                                disabled={disabled}
+                                size="iconSm"
+                                variant="ghost"
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => {
+                                    const quill = quilRef.current;
+                                    if (!quill) return;
+                                    quill.focus();
+                                    const index = quill.getSelection()?.index ?? quill.getLength() - 1;
+                                    const before = index > 0 ? quill.getText(index - 1, 1) : " ";
+                                    const prefix = /\s/.test(before) || index === 0 ? "" : " ";
+                                    quill.insertText(index, `${prefix}@`, "user");
+                                    quill.setSelection(index + prefix.length + 1, 0, "user");
+                                    updateMention({ query: "", start: index + prefix.length });
+                                }}
+                            >
+                                <AtSign className="size-4" />
                             </Button>
                         </Hint>
 

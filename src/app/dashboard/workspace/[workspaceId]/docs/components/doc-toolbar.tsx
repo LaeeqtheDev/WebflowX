@@ -3,7 +3,6 @@
 import { Editor } from "@tiptap/react"
 import { cn } from "@/lib/utils"
 import { useRef, useState } from "react"
-import { useMutation, useConvex } from "convex/react"
 
 import { toast } from "sonner"
 import {
@@ -22,8 +21,7 @@ import {
     DropdownMenuLabel
 } from "@/components/ui/dropdown-menu"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { api } from "../../../../../../../convex/_generated/api"
-import type { Id } from "../../../../../../../convex/_generated/dataModel"
+import { useDocImageUpload } from "./use-doc-image-upload"
 
 interface DocToolbarProps {
     editor: Editor
@@ -56,8 +54,7 @@ const Divider = () => <div className="w-px h-5 bg-[#381d2a]/12 mx-1.5" />
 
 export const DocToolbar = ({ editor }: DocToolbarProps) => {
     const imageInputRef = useRef<HTMLInputElement>(null)
-    const generateUploadUrl = useMutation(api.upload.generateUploadUrl)
-    const convex = useConvex()
+    const uploadImage = useDocImageUpload()
     const [linkOpen, setLinkOpen] = useState(false)
     const [linkUrl, setLinkUrl] = useState("")
     const [aiBusy, setAiBusy] = useState(false)
@@ -66,23 +63,8 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
         const file = e.target.files?.[0]
         if (imageInputRef.current) imageInputRef.current.value = ""
         if (!file) return
-        if (!file.type.startsWith("image/")) return toast.error("Please choose an image file")
-        if (file.size > 8 * 1024 * 1024) return toast.error("Image is too large (max 8 MB)")
-
-        const toastId = toast.loading("Uploading image...")
-        try {
-            // stored in Convex file storage, so the shared document only holds a small URL
-            const uploadUrl = await generateUploadUrl()
-            const res = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": file.type }, body: file })
-            if (!res.ok) throw new Error("upload failed")
-            const { storageId } = await res.json()
-            const src = await convex.query(api.upload.getStorageUrl, { storageId: storageId as Id<"_storage"> })
-            if (!src) throw new Error("no url")
-            editor.chain().focus().setImage({ src }).run()
-            toast.success("Image added", { id: toastId })
-        } catch {
-            toast.error("Failed to upload image", { id: toastId })
-        }
+        const src = await uploadImage(file)
+        if (src) editor.chain().focus().setImage({ src }).run()
     }
 
     const applyLink = () => {

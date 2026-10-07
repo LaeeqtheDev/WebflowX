@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { fetchQuery } from "convex/nextjs"
+import { fetchQuery, fetchMutation } from "convex/nextjs"
+import { Id } from "../../../../convex/_generated/dataModel"
 import { api } from "../../../../convex/_generated/api"
-import { getAuthToken, unauthorized, rateLimit, tooMany } from "@/lib/api-guard"
+import { getAuthToken, unauthorized, limited, tooMany } from "@/lib/api-guard"
 
 const MAX_TRANSCRIPT = 60_000
 
@@ -11,9 +12,18 @@ export async function POST(req: NextRequest) {
         if (!authToken) return unauthorized()
         const me = await fetchQuery(api.users.current, {}, { token: authToken })
         if (!me) return unauthorized()
-        if (!rateLimit(`ai-summary:${me._id}`, 10, 60_000)) return tooMany()
+        if (!(await limited(authToken, "ai-summary", me._id))) return tooMany()
 
         const body = await req.json().catch(() => null)
+        const meetingId = typeof body?.meetingId === "string" ? (body.meetingId as Id<"meetings">) : null
+        if (!meetingId) {
+            return NextResponse.json({ error: "Missing meeting" }, { status: 400 })
+        }
+        // The plan's monthly limit is enforced here too: a summary needs a credit claimed in Convex just before.
+        const hasClaim = await fetchQuery(api.meetings.hasSummaryClaim, { id: meetingId }, { token: authToken }).catch(() => false)
+        if (!hasClaim) {
+            return NextResponse.json({ error: "No AI summary credit available for this meeting" }, { status: 403 })
+        }
         const raw = body?.transcript
         if (typeof raw !== "string") {
             return NextResponse.json({ error: "Transcript is too short or empty" }, { status: 400 })
@@ -113,6 +123,8 @@ Write a 2-3 sentence overview of the meeting's purpose and outcome.`
                 { status: 500 }
             )
         }
+
+        await fetchMutation(api.meetings.consumeSummaryClaim, { id: meetingId }, { token: authToken }).catch(() => undefined)
 
         return NextResponse.json({ summary })
     } catch (e: unknown) {

@@ -1,5 +1,7 @@
 import { v, ConvexError } from "convex/values";
-import { mutation, query } from './_generated/server';
+import { mutation, query, internalMutation } from './_generated/server';
+import { internal } from './_generated/api';
+import { consume } from './rateLimit';
 import { auth } from './auth';
 import { checkLimit, getPlan, PLANS } from './limits';
 
@@ -120,11 +122,13 @@ export const update = mutation({
     }
 })
 
+// Deleting a big workspace can't happen in one transaction (Convex caps how much one mutation reads/writes).
+// remove() cuts off access straight away, then purge() deletes the data in small batches.
 export const remove = mutation({
     args: { id: v.id("workspaces") },
     handler: async (ctx, args) => {
         const userId = await auth.getUserId(ctx);
-        if (!userId) throw new Error("Unauthorized");
+        if (!userId) throw new ConvexError("Unauthorized");
 
         const member = await ctx.db
             .query("members")
@@ -132,48 +136,50 @@ export const remove = mutation({
                 q.eq("workspaceId", args.id).eq("userId", userId)
             ).unique()
 
-        if (!member || member.role !== "admin") throw new Error("Unauthorized");
+        if (!member || member.role !== "admin") throw new ConvexError("Only an admin can delete the workspace");
 
-        const [members, channels, conversations, messages, reactions] = await Promise.all([
-            ctx.db.query("members").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.id)).collect(),
-            ctx.db.query("channels").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.id)).collect(),
-            ctx.db.query("conversations").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.id)).collect(),
-            ctx.db.query("messages").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.id)).collect(),
-            ctx.db.query("reactions").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.id)).collect(),
-        ])
+        // nobody can join or open it from here on
+        await ctx.db.patch(args.id, { invitesDisabled: true })
+        const members = await ctx.db.query("members").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.id)).collect()
+        for (const m of members) await ctx.db.delete(m._id)
 
-        const [tasks, sprints, notes, docs, meetings] = await Promise.all([
-            ctx.db.query("tasks").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.id)).collect(),
-            ctx.db.query("sprints").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.id)).collect(),
-            ctx.db.query("notes").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.id)).collect(),
-            ctx.db.query("docs").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.id)).collect(),
-            ctx.db.query("meetings").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.id)).collect(),
-        ])
+        await ctx.scheduler.runAfter(0, internal.workspaces.purge, { id: args.id })
+        return args.id;
+    }
+})
 
-        for (const task of tasks) {
-            const comments = await ctx.db
-                .query("taskComments")
-                .withIndex("by_task_id", (q) => q.eq("taskId", task._id))
-                .collect()
+const BATCH = 100
+
+export const purge = internalMutation({
+    args: { id: v.id("workspaces") },
+    handler: async (ctx, args) => {
+        let more = false
+        const wid = args.id
+
+        const tasks = await ctx.db.query("tasks").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH)
+        for (const t of tasks) {
+            const comments = await ctx.db.query("taskComments").withIndex("by_task_id", (q) => q.eq("taskId", t._id)).collect()
             for (const c of comments) await ctx.db.delete(c._id)
-            await ctx.db.delete(task._id)
+            await ctx.db.delete(t._id)
         }
-        for (const sprint of sprints) await ctx.db.delete(sprint._id)
-        for (const note of notes) await ctx.db.delete(note._id)
-        for (const doc of docs) await ctx.db.delete(doc._id)
-        for (const meeting of meetings) await ctx.db.delete(meeting._id)
+        if (tasks.length === BATCH) more = true
 
-        for (const m of members) {
-            const notifications = await ctx.db
-                .query("notifications")
-                .withIndex("by_recipient", (q) => q.eq("recipientId", m._id))
-                .collect()
-            for (const n of notifications) await ctx.db.delete(n._id)
+        const meetings = await ctx.db.query("meetings").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH)
+        for (const m of meetings) {
+            const parts = await ctx.db.query("meetingTranscripts").withIndex("by_meeting_id", (q) => q.eq("meetingId", m._id)).collect()
+            for (const part of parts) await ctx.db.delete(part._id)
+            await ctx.db.delete(m._id)
         }
+        if (meetings.length === BATCH) more = true
 
-        for (const member of members) await ctx.db.delete(member._id)
-        for (const channel of channels) await ctx.db.delete(channel._id)
-        for (const conversation of conversations) await ctx.db.delete(conversation._id)
+        const docs = await ctx.db.query("docs").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH)
+        for (const d of docs) {
+            await ctx.scheduler.runAfter(0, internal.liveblocks.deleteRoom, { roomId: d.liveblocksRoomId })
+            await ctx.db.delete(d._id)
+        }
+        if (docs.length === BATCH) more = true
+
+        const messages = await ctx.db.query("messages").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", wid)).take(BATCH)
         for (const message of messages) {
             for (const fileId of [message.image, message.file]) {
                 if (fileId) {
@@ -182,11 +188,28 @@ export const remove = mutation({
             }
             await ctx.db.delete(message._id)
         }
-        for (const reaction of reactions) await ctx.db.delete(reaction._id)
+        if (messages.length === BATCH) more = true
 
-        await ctx.db.delete(args.id)
-        return args.id;
-    }
+        const simple = [
+            await ctx.db.query("sprints").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("notes").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("reactions").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("conversations").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("channels").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("aiSummaryLog").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("notifications").withIndex("by_workspace_recipient", (q) => q.eq("workspaceId", wid)).take(BATCH),
+        ]
+        for (const rows of simple) {
+            for (const row of rows) await ctx.db.delete(row._id)
+            if (rows.length === BATCH) more = true
+        }
+
+        if (more) {
+            await ctx.scheduler.runAfter(0, internal.workspaces.purge, { id: wid })
+        } else {
+            await ctx.db.delete(wid)
+        }
+    },
 })
 
 export const newJoinCode = mutation({
@@ -258,11 +281,16 @@ export const join = mutation({
         if (workspace.invitesDisabled) {
             throw new ConvexError("Invites are turned off for this workspace. Ask an admin to turn them on.");
         }
+
+        // At most 10 attempts per 10 minutes per user. Wrong codes are returned (not thrown) so the attempt still counts.
+        if (!(await consume(ctx, `join:${userId}`, 10, 10 * 60_000))) {
+            throw new ConvexError("Too many attempts. Please wait a few minutes and try again.");
+        }
         if (workspace.joinCode !== args.joinCode.trim().toLowerCase()) {
-            throw new ConvexError("That code isn't right. Check it and try again.");
+            return { error: "That code isn't right. Check it and try again." };
         }
         if (workspace.joinCodeExpiresAt && workspace.joinCodeExpiresAt < Date.now()) {
-            throw new ConvexError("This invite code has expired. Ask an admin for a new one.");
+            return { error: "This invite code has expired. Ask an admin for a new one." };
         }
 
         // Check member limit

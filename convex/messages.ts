@@ -4,6 +4,54 @@ import { auth } from "./auth";
 import { Id, Doc } from "./_generated/dataModel";
 import { paginationOptsValidator, PaginationResult } from "convex/server";
 
+// @mentions are stored in the message body as text ops with attributes.mention = memberId
+const extractMentionIds = (body: string): string[] => {
+    try {
+        const parsed = JSON.parse(body);
+        const ops: unknown[] = Array.isArray(parsed) ? parsed : (parsed?.ops ?? []);
+        const ids = new Set<string>();
+        for (const op of ops) {
+            const id = (op as { attributes?: { mention?: unknown } })?.attributes?.mention;
+            if (typeof id === "string" && id) ids.add(id);
+        }
+        return Array.from(ids).slice(0, 20);
+    } catch {
+        return [];
+    }
+};
+
+const notifyMentions = async (
+    ctx: MutationCtx,
+    opts: {
+        workspaceId: Id<"workspaces">;
+        senderId: Id<"members">;
+        messageId: Id<"messages">;
+        channelId?: Id<"channels">;
+        body: string;
+        alreadyNotified: Set<string>;
+    }
+) => {
+    // DMs already notify the other person; mentions are for channels and channel threads
+    if (!opts.channelId) return;
+    for (const raw of extractMentionIds(opts.body)) {
+        const id = ctx.db.normalizeId("members", raw);
+        if (!id || id === opts.senderId || opts.alreadyNotified.has(id)) continue;
+        const target = await ctx.db.get(id);
+        if (!target || target.workspaceId !== opts.workspaceId) continue;
+        opts.alreadyNotified.add(id);
+        await ctx.db.insert("notifications", {
+            workspaceId: opts.workspaceId,
+            recipientId: id,
+            senderId: opts.senderId,
+            type: "mention",
+            messageId: opts.messageId,
+            channelId: opts.channelId,
+            body: opts.body,
+            read: false,
+        });
+    }
+};
+
 const populateUser = (ctx: QueryCtx, userId: Id<"users">) => {
     return ctx.db.get(userId);
 };
@@ -288,11 +336,14 @@ export const create = mutation({
         });
 
 
+        const alreadyNotified = new Set<string>();
+
         // Thread reply notification
         if (args.parentMessageId) {
             const parentMessage = await ctx.db.get(args.parentMessageId);
 
             if (parentMessage && parentMessage.memberId !== member._id) {
+                alreadyNotified.add(parentMessage.memberId);
                 const notifId = await ctx.db.insert("notifications", {
                     workspaceId: args.workspaceId,
                     recipientId: parentMessage.memberId,
@@ -337,6 +388,15 @@ export const create = mutation({
             }
         }
 
+        await notifyMentions(ctx, {
+            workspaceId: args.workspaceId,
+            senderId: member._id,
+            messageId,
+            channelId: args.channelId,
+            body: args.body,
+            alreadyNotified,
+        });
+
         return messageId;
     },
 });
@@ -358,6 +418,16 @@ export const update = mutation({
             throw new Error("Unauthorized");
 
         await ctx.db.patch(args.id, { body: args.body, updatedAt: Date.now() });
+
+        // people newly @mentioned by this edit get notified (not the ones already mentioned before)
+        await notifyMentions(ctx, {
+            workspaceId: message.workspaceId,
+            senderId: member._id,
+            messageId: args.id,
+            channelId: message.channelId,
+            body: args.body,
+            alreadyNotified: new Set(extractMentionIds(message.body)),
+        });
         return args.id;
     },
 });
