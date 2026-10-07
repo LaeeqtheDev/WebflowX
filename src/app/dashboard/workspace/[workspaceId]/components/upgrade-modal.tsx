@@ -12,6 +12,7 @@ interface UpgradeModalProps {
 }
 
 const FEATURE_LABELS: Record<string, string> = {
+    workspaces: "workspaces",
     channels: "channels",
     members: "members",
     personalNotes: "personal notes",

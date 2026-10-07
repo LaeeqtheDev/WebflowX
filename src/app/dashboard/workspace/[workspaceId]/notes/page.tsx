@@ -61,11 +61,14 @@ export default function NotesPage() {
         const found = notes.find(n => n._id === targetNoteId)
         if (found) {
             openedNote.current = targetNoteId
-            setSelectedNote(found as Note)
-            setEditTitle(found.title)
-            setEditBody(quillToText(found.body))
-            setIsCreating(false)
-            setShowMobileEditor(true)
+            // opened from a link: select it once the list has loaded
+            queueMicrotask(() => {
+                setSelectedNote(found as Note)
+                setEditTitle(found.title)
+                setEditBody(quillToText(found.body))
+                setIsCreating(false)
+                setShowMobileEditor(true)
+            })
         }
     }, [targetNoteId, notes])
 

@@ -1,7 +1,7 @@
-import { v } from 'convex/values';
+import { v, ConvexError } from "convex/values";
 import { mutation, query } from './_generated/server';
 import { auth } from './auth';
-import { checkLimit } from './limits';
+import { checkLimit, getPlan, PLANS } from './limits';
 
 const generateCode = () => {
     const alphabet = "0123456789abcdefghijklmnopqrstuvwxyz"
@@ -17,6 +17,25 @@ export const create = mutation({
     handler: async (ctx, args) => {
         const userId = await auth.getUserId(ctx);
         if (!userId) throw new Error("Unauthorized");
+
+        // Workspace limit: counted per owner, using the best plan among the workspaces they own
+        const owned = await ctx.db
+            .query("workspaces")
+            .withIndex("by_user_id", (q) => q.eq("userId", userId))
+            .collect()
+        if (owned.length > 0) {
+            const bestLimit = owned.reduce((best, w) => {
+                const limit = PLANS[getPlan(w.plan)].workspaces
+                if (best === -1 || limit === -1) return -1
+                return Math.max(best, limit)
+            }, 0)
+            if (bestLimit !== -1 && owned.length >= bestLimit) {
+                const topPlan = owned
+                    .map((w) => getPlan(w.plan))
+                    .sort((a, b) => PLANS[b].price - PLANS[a].price)[0]
+                throw new ConvexError(`LIMIT_REACHED:workspaces:${bestLimit}:${topPlan}`)
+            }
+        }
 
         const joinCode = generateCode()
 
@@ -171,7 +190,11 @@ export const remove = mutation({
 })
 
 export const newJoinCode = mutation({
-    args: { workspaceId: v.id("workspaces") },
+    args: {
+        workspaceId: v.id("workspaces"),
+        // optional: code stops working after this many days (omit for no expiry)
+        expiresInDays: v.optional(v.number()),
+    },
     handler: async (ctx, args) => {
         const userId = await auth.getUserId(ctx);
         if (!userId) throw new Error("Unauthorized");
@@ -185,7 +208,30 @@ export const newJoinCode = mutation({
         if (!member || member.role !== "admin") throw new Error("Unauthorized");
 
         const joinCode = generateCode()
-        await ctx.db.patch(args.workspaceId, { joinCode })
+        const days = args.expiresInDays && args.expiresInDays > 0 ? Math.min(args.expiresInDays, 365) : undefined
+        await ctx.db.patch(args.workspaceId, {
+            joinCode,
+            joinCodeExpiresAt: days ? Date.now() + days * 24 * 60 * 60 * 1000 : undefined,
+        })
+        return args.workspaceId;
+    }
+})
+
+export const setInvitesDisabled = mutation({
+    args: { workspaceId: v.id("workspaces"), disabled: v.boolean() },
+    handler: async (ctx, args) => {
+        const userId = await auth.getUserId(ctx);
+        if (!userId) throw new ConvexError("Unauthorized");
+
+        const member = await ctx.db
+            .query("members")
+            .withIndex("byWorkspaceId_user_id", (q) =>
+                q.eq("workspaceId", args.workspaceId).eq("userId", userId)
+            ).unique()
+
+        if (!member || member.role !== "admin") throw new ConvexError("Only admins can change invite settings");
+
+        await ctx.db.patch(args.workspaceId, { invitesDisabled: args.disabled })
         return args.workspaceId;
     }
 })
@@ -197,20 +243,27 @@ export const join = mutation({
     },
     handler: async (ctx, args) => {
         const userId = await auth.getUserId(ctx);
-        if (!userId) throw new Error("Unauthorized");
+        if (!userId) throw new ConvexError("Please sign in to join this workspace");
 
         const workspace = await ctx.db.get(args.workspaceId)
-        if (!workspace) throw new Error("Workspace not found");
-
-        if (workspace.joinCode !== args.joinCode.toLowerCase()) {
-            throw new Error("Invalid join code");
-        }
+        if (!workspace) throw new ConvexError("This workspace no longer exists");
 
         const existingMember = await ctx.db.query("members")
             .withIndex("byWorkspaceId_user_id", (q) =>
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)).unique()
 
-        if (existingMember) throw new Error("Already a member of this workspace");
+        // joining a workspace you're already in just takes you there
+        if (existingMember) return workspace._id;
+
+        if (workspace.invitesDisabled) {
+            throw new ConvexError("Invites are turned off for this workspace. Ask an admin to turn them on.");
+        }
+        if (workspace.joinCode !== args.joinCode.trim().toLowerCase()) {
+            throw new ConvexError("That code isn't right. Check it and try again.");
+        }
+        if (workspace.joinCodeExpiresAt && workspace.joinCodeExpiresAt < Date.now()) {
+            throw new ConvexError("This invite code has expired. Ask an admin for a new one.");
+        }
 
         // Check member limit
         const existingMembers = await ctx.db
@@ -223,7 +276,7 @@ export const join = mutation({
         )
 
         if (!allowed) {
-            throw new Error(`LIMIT_REACHED:members:${limit}:${plan}`)
+            throw new ConvexError(`LIMIT_REACHED:members:${limit}:${plan}`)
         }
 
         await ctx.db.insert("members", {
@@ -257,6 +310,9 @@ export const getInfoById = query({
         return {
             name: workspace.name,
             isMember,
+            invitesOpen:
+                !workspace.invitesDisabled &&
+                !(workspace.joinCodeExpiresAt && workspace.joinCodeExpiresAt < Date.now()),
         }
     }
 })

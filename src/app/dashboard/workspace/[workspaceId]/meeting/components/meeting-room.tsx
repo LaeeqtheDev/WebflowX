@@ -10,6 +10,7 @@ import {
 } from "@livekit/components-react"
 import { useEffect, useRef, useState } from "react"
 import { Mic, AlertCircle } from "lucide-react"
+import { TranscriptSegment, setLastSegments } from "../segments"
 
 interface MeetingRoomProps {
     token: string
@@ -21,6 +22,7 @@ interface MeetingRoomProps {
 let globalWebSocket: WebSocket | null = null
 let globalMediaRecorder: MediaRecorder | null = null
 let globalTranscript = ""
+let globalSegments: TranscriptSegment[] = []
 let isInitializing = false  // Lock to prevent double init
 
 const cleanupGlobals = () => {
@@ -161,8 +163,9 @@ const MeetingRoomInner = ({ onDisconnect }: { onDisconnect: (transcript: string)
                                     hour: "2-digit", 
                                     minute: "2-digit" 
                                 })
-                                const speaker = localParticipant?.identity || "Speaker"
+                                const speaker = localParticipant?.name || localParticipant?.identity || "Speaker"
                                 const entry = `[${time}] ${speaker}: ${transcript}\n`
+                                globalSegments.push({ t: Date.now(), speaker, text: transcript.trim() })
                                 
                                 console.log("✅ TRANSCRIPT:", transcript)
                                 globalTranscript += entry
@@ -213,6 +216,9 @@ const MeetingRoomInner = ({ onDisconnect }: { onDisconnect: (transcript: string)
                 console.log("📄 Final transcript:", finalTranscript.length, "chars")
                 console.log("📄 Content:", finalTranscript.substring(0, 200))
                 
+                // hand the segments over through a shared slot the page reads in onDisconnect
+                setLastSegments(globalSegments)
+                globalSegments = []
                 const transcriptToSend = finalTranscript
                 globalTranscript = "" // Reset
                 

@@ -1,5 +1,5 @@
 import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { auth } from "./auth";
 import { checkLimit } from "./limits"
 import { deleteMessageCascade } from "./messages"
@@ -56,7 +56,7 @@ export const create = mutation({
         )
 
         if (!allowed) {
-            throw new Error(`LIMIT_REACHED:channels:${limit}:${plan}`)
+            throw new ConvexError(`LIMIT_REACHED:channels:${limit}:${plan}`)
         }
 
         const channelId = await ctx.db.insert("channels", {

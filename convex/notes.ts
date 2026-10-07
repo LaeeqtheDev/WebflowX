@@ -1,4 +1,4 @@
-import { v } from "convex/values"
+import { v, ConvexError } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { auth } from "./auth"
 import { checkLimit } from "./limits"
@@ -76,7 +76,7 @@ export const create = mutation({
         )
 
         if (!allowed) {
-            throw new Error(`LIMIT_REACHED:${feature}:${limit}:${plan}`)
+            throw new ConvexError(`LIMIT_REACHED:${feature}:${limit}:${plan}`)
         }
 
         const noteId = await ctx.db.insert("notes", {

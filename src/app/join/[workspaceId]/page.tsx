@@ -8,7 +8,8 @@ import { Loader } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { errorMessage } from "@/lib/error-message";
 import VerificationInput from 'react-verification-input'
 import { toast } from "sonner";
 
@@ -30,39 +31,38 @@ const JoinPage = () => {
         }
     }, [isMember, router, workspaceId])
 
-    // Auto join if code is in URL
-    useEffect(() => {
-        if (
-            codeFromUrl &&
-            !isLoading &&
-            !isMember &&
-            !hasAutoJoined.current &&
-            !isPending
-        ) {
-            hasAutoJoined.current = true
-            mutate({ joinCode: codeFromUrl, workspaceId }, {
-                onSuccess: (id) => {
-                    router.replace(`/dashboard/workspace/${id}`)
-                    toast.success("Successfully joined workspace")
-                },
-                onError: () => {
-                    toast.error("Failed to join workspace")
-                    hasAutoJoined.current = false
-                }
-            })
-        }
-    }, [codeFromUrl, isLoading, isMember, isPending])
+    const [joinError, setJoinError] = useState<string | null>(null)
 
-    const handleComplete = (value: string) => {
-        mutate({ joinCode: value, workspaceId }, {
+    const tryJoin = useCallback((code: string) => {
+        mutate({ joinCode: code, workspaceId }, {
             onSuccess: (id) => {
                 router.replace(`/dashboard/workspace/${id}`)
                 toast.success("Successfully joined workspace")
             },
-            onError: () => {
-                toast.error("Failed to join Workspace")
+            onError: (e) => {
+                const message = errorMessage(e)
+                setJoinError(
+                    message.startsWith("LIMIT_REACHED:members")
+                        ? "This workspace has reached its member limit. Ask an admin to upgrade the plan."
+                        : message.length > 0 && !/server error/i.test(message)
+                            ? message
+                            : "We couldn't add you to this workspace. Check the code and try again."
+                )
             }
         })
+    }, [mutate, workspaceId, router])
+
+    // Auto join if the invite link carries the code. Runs once; a failure is shown instead of retried.
+    useEffect(() => {
+        if (codeFromUrl && !isLoading && !isMember && !hasAutoJoined.current) {
+            hasAutoJoined.current = true
+            tryJoin(codeFromUrl)
+        }
+    }, [codeFromUrl, isLoading, isMember, tryJoin])
+
+    const handleComplete = (value: string) => {
+        setJoinError(null)
+        tryJoin(value)
     }
 
     if (isLoading || isPending) {
@@ -84,8 +84,15 @@ const JoinPage = () => {
                         Join {data?.name}&apos;s workspace
                     </h1>
                     <p className="text-md text-muted-foreground">
-                        Enter the workspace code to join
+                        {data?.invitesOpen === false
+                            ? "Invites are closed or the code has expired. Ask an admin for a new invite."
+                            : "Enter the workspace code to join"}
                     </p>
+                    {joinError && (
+                        <p role="alert" className="text-sm text-red-600 text-center bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                            {joinError}
+                        </p>
+                    )}
                 </div>
                 <VerificationInput
                     length={6}

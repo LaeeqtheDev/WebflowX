@@ -16,7 +16,10 @@ const schema = defineSchema({
                 v.literal("enterprise")
             )
         ),
-    }),
+        // invite controls
+        joinCodeExpiresAt: v.optional(v.number()),
+        invitesDisabled: v.optional(v.boolean()),
+    }).index("by_user_id", ["userId"]),
 
     members: defineTable({
         userId: v.id("users"),
@@ -154,7 +157,27 @@ const schema = defineSchema({
         transcript: v.optional(v.string()),
         summary: v.optional(v.string()),
         participants: v.optional(v.array(v.string())),
+        // members currently in the call; the meeting ends when this becomes empty
+        activeMembers: v.optional(v.array(v.id("members"))),
     }).index("by_workspace_id", ["workspaceId"]),
+
+    // Each participant's own transcript, merged when the meeting ends
+    meetingTranscripts: defineTable({
+        meetingId: v.id("meetings"),
+        workspaceId: v.id("workspaces"),
+        memberId: v.id("members"),
+        // one line per utterance: "<epoch ms>\t<speaker>\t<text>"
+        body: v.string(),
+    }).index("by_meeting_id", ["meetingId"]),
+
+    // One row per AI summary generated, used to enforce plan limits
+    aiSummaryLog: defineTable({
+        workspaceId: v.id("workspaces"),
+        meetingId: v.id("meetings"),
+        memberId: v.id("members"),
+    })
+        .index("by_workspace_id", ["workspaceId"])
+        .index("by_meeting_id", ["meetingId"]),
 
     docs: defineTable({
         title: v.string(),

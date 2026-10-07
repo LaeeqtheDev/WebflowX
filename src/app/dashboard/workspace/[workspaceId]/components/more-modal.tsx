@@ -186,6 +186,8 @@ export const MoreModal = ({ open, onClose }: MoreModalProps) => {
                                 <UsageCard label="Channels" icon={NumberSymbol20Regular} current={usage?.usage.channels.current ?? 0} limit={usage?.usage.channels.limit ?? 0} />
                                 <UsageCard label="Documents" icon={DocumentText20Regular} current={usage?.usage.docs.current ?? 0} limit={usage?.usage.docs.limit ?? 0} />
                                 <UsageCard label="Meetings this month" icon={Video20Regular} current={usage?.usage.meetings.current ?? 0} limit={usage?.usage.meetings.limit ?? 0} />
+                                <UsageCard label="AI summaries this month" icon={Video20Regular} current={usage?.usage.aiSummaries.current ?? 0} limit={usage?.usage.aiSummaries.limit ?? 0} />
+                                <UsageCard label="Workspaces you own" icon={NumberSymbol20Regular} current={usage?.usage.workspaces.current ?? 0} limit={usage?.usage.workspaces.limit ?? 0} />
                                 <UsageCard label="Personal notes" icon={Book20Regular} current={usage?.usage.personalNotes.current ?? 0} limit={usage?.usage.personalNotes.limit ?? 0} />
                                 <UsageCard label="Workspace notes" icon={Notebook20Regular} current={usage?.usage.workspaceNotes.current ?? 0} limit={usage?.usage.workspaceNotes.limit ?? 0} />
                             </div>

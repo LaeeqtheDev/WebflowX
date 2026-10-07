@@ -8,6 +8,7 @@ import { useCreateWorkspace } from "../api/use-create-workspace"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { errorMessage } from "@/lib/error-message"
 
 export const CreateWorkspaceModal = () => {
   const [open, setOpen] = useCreateWorkspaceModal()
@@ -28,6 +29,15 @@ export const CreateWorkspaceModal = () => {
       toast.success("Workspace created successfully")
       router.push(`/dashboard/workspace/${id}`)
       handleClose()
+    },
+    onError(error){
+      const message = errorMessage(error)
+      if (message.startsWith("LIMIT_REACHED:workspaces")) {
+        const limit = message.split(":")[2]
+        toast.error(`Your plan allows ${limit} workspace${limit === "1" ? "" : "s"}. Upgrade one of your workspaces to create more.`)
+      } else {
+        toast.error("Failed to create workspace")
+      }
     }
   })
 

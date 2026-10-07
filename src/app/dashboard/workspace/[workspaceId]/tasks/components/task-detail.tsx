@@ -182,7 +182,7 @@ export const TaskDetail = ({
                         <div>
                             <p className="text-[11px] font-medium text-[#1b1017]/50 mb-1.5">Status</p>
                             <Select value={task.status} onValueChange={v => onUpdate(task._id, { status: v as Task["status"] })}
-                                disabled={!isAdmin && task.assigneeId !== currentMemberId}>
+                                disabled={!isAdmin && task.assigneeId !== currentMemberId && task.createdBy !== currentMemberId}>
                                 <SelectTrigger className={cn("h-8 text-xs rounded-lg border-transparent font-medium", STATUS_PILL[task.status])}>
                                     <SelectValue />
                                 </SelectTrigger>

@@ -1,8 +1,8 @@
+import { NextResponse } from "next/server";
 import {
   convexAuthNextjsMiddleware,
   createRouteMatcher,
   isAuthenticatedNextjs,
-  nextjsMiddlewareRedirect,
 } from "@convex-dev/auth/nextjs/server";
 
 const isPublicPage = createRouteMatcher(["/", "/auth", "/join"])
@@ -20,11 +20,16 @@ export default convexAuthNextjsMiddleware(async (request) => {
   if (isPublicApi(request)) return undefined;
 
   if (!isPublicPage(request) && !authenticated) {
-    return nextjsMiddlewareRedirect(request, "/auth");
+    // remember where the visitor was going (e.g. an invite link) so we can send them back after sign-in
+    const next = request.nextUrl.pathname + request.nextUrl.search;
+    return NextResponse.redirect(new URL(`/auth?next=${encodeURIComponent(next)}`, request.url));
   }
 
   if (isPublicPage(request) && authenticated) {
-    return nextjsMiddlewareRedirect(request, "/dashboard");
+    const next = request.nextUrl.searchParams.get("next");
+    // only follow same-site relative paths
+    const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+    return NextResponse.redirect(new URL(target, request.url));
   }
 
   return undefined;

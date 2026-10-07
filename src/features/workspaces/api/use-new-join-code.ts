@@ -6,7 +6,7 @@ import { mutation } from "../../../../convex/_generated/server";
 
 
 
-type RequestType = {workspaceId: Id<"workspaces">}; 
+type RequestType = {workspaceId: Id<"workspaces">, expiresInDays?: number}; 
 
 type ResponseType = Id<"workspaces"> | null
 

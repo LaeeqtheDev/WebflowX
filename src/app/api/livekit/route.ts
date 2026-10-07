@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from "next/server"
 export async function GET(req: NextRequest) {
     const room = req.nextUrl.searchParams.get("room")
     const username = req.nextUrl.searchParams.get("username")
+    // identity must be unique per person, otherwise two people with the same name kick each other out
+    const identity = req.nextUrl.searchParams.get("identity") || username
 
     if (!room || !username) {
         return NextResponse.json({ error: "Missing room or username" }, { status: 400 })
@@ -18,7 +20,8 @@ export async function GET(req: NextRequest) {
     }
 
     const at = new AccessToken(apiKey, apiSecret, {
-        identity: username,
+        identity: identity as string,
+        name: username as string,
         ttl: "2h",
     })
 

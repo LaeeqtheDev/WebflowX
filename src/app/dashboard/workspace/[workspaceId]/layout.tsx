@@ -13,6 +13,7 @@ import { usePanel } from "@/hooks/use-panel"
 import { Loader } from "lucide-react"
 import { Id } from "../../../../../convex/_generated/dataModel"
 import dynamic from "next/dynamic"
+import { UsageWarning } from "./components/usage-warning"
 
 const Thread = dynamic(() => import("./components/threads").then((m) => m.Thread), { ssr: false })
 const Profile = dynamic(() => import("@/features/members/components/profile").then((m) => m.Profile), { ssr: false })
@@ -29,6 +30,7 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
   <div className="h-screen flex flex-col">
     {/* Topbar */}
     <Toolbar />
+    <UsageWarning />
 
     {/* Body */}
     <div className="flex flex-1 w-full overflow-hidden">

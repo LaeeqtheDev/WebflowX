@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader } from "lucide-react"
 import { toast } from "sonner"
+import { errorMessage } from "@/lib/error-message"
 import { STATUSES, STATUS_LABELS, PRIORITIES } from "@/features/tasks/constants"
 import { PRIORITY_TEXT } from "./task-styles"
 import { Member, Sprint, Status, Priority } from "@/features/tasks/types"
@@ -64,7 +65,7 @@ export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }
                 setPriority("medium"); setAssigneeId(""); setDueDate("")
                 setLabels([]); setStoryPoints(""); setSprintId("")
             },
-            onError: (e) => toast.error(e.message)
+            onError: (e) => toast.error(errorMessage(e))
         })
     }
 

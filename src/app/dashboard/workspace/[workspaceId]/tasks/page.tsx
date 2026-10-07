@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { useCurrentMember } from "@/features/members/api/use-current-member"
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from "sonner"
+import { errorMessage } from "@/lib/error-message"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { Plus, Loader, LayoutGrid, List, Trash2, Zap } from "lucide-react"
@@ -47,40 +48,38 @@ export default function TasksPage() {
     const [filterAssignee, setFilterAssignee] = useState("all")
     const [sprintFilter, setSprintFilter] = useState("all")
 
-    const searchParams = useSearchParams()
-    const targetTaskId = searchParams.get("task")
-    const openedTarget = useRef<string | null>(null)
-    useEffect(() => {
-        if (!targetTaskId || !tasks || openedTarget.current === targetTaskId) return
-        const t = (tasks as Task[]).find(x => x._id === targetTaskId)
-        if (t) {
-            openedTarget.current = targetTaskId
-            setSelectedTask(t)
-        }
-    }, [targetTaskId, tasks])
-
     const isAdmin = currentMember?.role === "admin"
     const safeMembers = (members ?? []) as Member[]
     const safeSprints = (sprints ?? []) as Sprint[]
     const activeSprint = safeSprints.find(s => s.status === "active") ?? null
 
+    // Deep link: /tasks?task=<id> opens that task (used by notifications)
+    const searchParams = useSearchParams()
+    const targetTaskId = searchParams.get("task")
+    const [closedTargetId, setClosedTargetId] = useState<string | null>(null)
+    const deepLinkedTask =
+        targetTaskId && closedTargetId !== targetTaskId
+            ? ((tasks as Task[] | undefined)?.find(x => x._id === targetTaskId) ?? null)
+            : null
+    const openTask = selectedTask ?? deepLinkedTask
+
     const handleUpdate = (id: Id<"tasks">, data: Partial<Task>) => {
         const unassign = "assigneeId" in data && data.assigneeId === undefined
-        updateTask({ id, ...data, ...(unassign ? { unassign: true } : {}) } as Parameters<typeof updateTask>[0], { onError: (e) => toast.error(e.message) })
+        updateTask({ id, ...data, ...(unassign ? { unassign: true } : {}) } as Parameters<typeof updateTask>[0], { onError: (e) => toast.error(errorMessage(e)) })
         if (selectedTask?._id === id) setSelectedTask(prev => prev ? { ...prev, ...data } : null)
     }
 
     const handleDelete = (id: Id<"tasks">) => {
         removeTask(id, {
             onSuccess: () => toast.success("Task deleted"),
-            onError: (e) => toast.error(e.message)
+            onError: (e) => toast.error(errorMessage(e))
         })
     }
 
     const handleAssignToMe = (id: Id<"tasks">) => {
         assignToMe(id, {
             onSuccess: () => toast.success("Assigned to you"),
-            onError: (e) => toast.error(e.message)
+            onError: (e) => toast.error(errorMessage(e))
         })
     }
 
@@ -158,11 +157,9 @@ export default function TasksPage() {
                                 {safeMembers.map(m => <SelectItem key={m._id} value={m._id}>{m.user.name ?? "Unknown"}</SelectItem>)}
                             </SelectContent>
                         </Select>
-                        {isAdmin && (
-                            <Button onClick={() => setShowCreate(true)} className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 text-xs rounded-lg font-semibold">
-                                <Plus className="size-4 mr-1" /> New Task
-                            </Button>
-                        )}
+                        <Button onClick={() => setShowCreate(true)} className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 text-xs rounded-lg font-semibold">
+                            <Plus className="size-4 mr-1" /> New Task
+                        </Button>
                     </div>
                 </div>
 
@@ -293,8 +290,8 @@ export default function TasksPage() {
             </div>
 
             <TaskDetail
-                task={selectedTask}
-                onClose={() => setSelectedTask(null)}
+                task={openTask}
+                onClose={() => { setSelectedTask(null); setClosedTargetId(targetTaskId) }}
                 isAdmin={isAdmin}
                 currentMemberId={currentMember?._id}
                 members={safeMembers}
@@ -305,15 +302,13 @@ export default function TasksPage() {
                 onAssignToMe={handleAssignToMe}
             />
 
-            {isAdmin && (
-                <CreateTaskModal
-                    open={showCreate}
-                    onClose={() => setShowCreate(false)}
-                    workspaceId={workspaceId}
-                    members={safeMembers}
-                    sprints={safeSprints}
-                />
-            )}
+            <CreateTaskModal
+                open={showCreate}
+                onClose={() => setShowCreate(false)}
+                workspaceId={workspaceId}
+                members={isAdmin ? safeMembers : safeMembers.filter(m => m._id === currentMember?._id)}
+                sprints={safeSprints}
+            />
         </div>
     )
 }

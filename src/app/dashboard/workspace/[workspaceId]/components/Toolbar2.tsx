@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { MessageSquareTextIcon, Pencil, Smile, TrashIcon } from "lucide-react";
+import { ListChecks, MessageSquareTextIcon, Pencil, Smile, TrashIcon } from "lucide-react";
 import { Hint } from "./hints";
 import { EmojiPopover } from "./emoji-popover";
 
@@ -10,6 +10,7 @@ interface ToolbarProps{
     handleThread: () => void;
     handleDelete: () => void;
     handleReaction: (value: string) => void;
+    handleCreateTask?: () => void;
     hideThreadButton?: boolean
 }
 
@@ -21,7 +22,8 @@ export const Toolbar2 =({
     handleEdit,
     handleReaction,
     hideThreadButton,
-    handleThread
+    handleThread,
+    handleCreateTask
 }: ToolbarProps) =>{
     return(
         <div className="absolute top-0 right-5">
@@ -41,6 +43,14 @@ export const Toolbar2 =({
                             <MessageSquareTextIcon className="size-4 text-[#ff5018]"/>
                         </Button>
                         </Hint>
+        )}
+
+        {handleCreateTask && (
+            <Hint label="Create task from message">
+                <Button variant={"ghost"} size={"iconSm"} className="rounded-md hover:bg-[#f7f2ee]" disabled={isPending} onClick={handleCreateTask}>
+                    <ListChecks className="size-4 text-[#ff5018]"/>
+                </Button>
+            </Hint>
         )}
 
             {isAuthor && (

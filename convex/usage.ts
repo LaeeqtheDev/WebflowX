@@ -33,6 +33,8 @@ export const get = query({
             allNotes,
             docs,
             meetings,
+            aiSummaries,
+            ownedWorkspaces,
         ] = await Promise.all([
             ctx.db.query("members")
                 .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId))
@@ -51,7 +53,22 @@ export const get = query({
                 .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
                 .filter((q) => q.gte(q.field("startedAt"), startOfMonth))
                 .collect(),
+            ctx.db.query("aiSummaryLog")
+                .withIndex("by_workspace_id", (q) =>
+                    q.eq("workspaceId", args.workspaceId).gte("_creationTime", startOfMonth)
+                )
+                .collect(),
+            ctx.db.query("workspaces")
+                .withIndex("by_user_id", (q) => q.eq("userId", userId))
+                .collect(),
         ])
+
+        // Workspace allowance follows the best plan among the workspaces this user owns
+        const bestWorkspaceLimit = ownedWorkspaces.reduce((best, w) => {
+            const limit = PLANS[getPlan(w.plan)].workspaces
+            if (best === -1 || limit === -1) return -1
+            return Math.max(best, limit)
+        }, 0)
 
         const personalNotes = allNotes.filter(
             n => n.type === "personal" && n.authorId === member._id
@@ -72,6 +89,11 @@ export const get = query({
                 workspaceNotes: { current: workspaceNotes.length, limit: limits.workspaceNotes },
                 docs: { current: docs.length, limit: limits.docs },
                 meetings: { current: meetings.length, limit: limits.meetings },
+                aiSummaries: { current: aiSummaries.length, limit: limits.aiSummaries },
+                workspaces: {
+                    current: ownedWorkspaces.length,
+                    limit: ownedWorkspaces.length === 0 ? limits.workspaces : bestWorkspaceLimit,
+                },
             }
         }
     }

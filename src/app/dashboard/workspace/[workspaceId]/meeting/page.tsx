@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useCallback } from "react"
+import { errorMessage } from "@/lib/error-message"
+import { segmentsToBody, takeLastSegments } from "./segments"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { useCurrentMember } from "@/features/members/api/use-current-member"
 import { useGetMembers } from "@/features/members/api/use-get-members"
@@ -15,7 +17,7 @@ import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { Loader, Video, Plus, Sparkles, Clock, Users, AlertTriangle, ArrowLeft } from "lucide-react"
-import { useMutation } from "convex/react"
+import { useMutation, useConvex } from "convex/react"
 import { api } from "../../../../../../convex/_generated/api"
 import { Id } from "../../../../../../convex/_generated/dataModel"
 import { useRouter } from "next/navigation"
@@ -38,7 +40,10 @@ export default function MeetingPage() {
     const { data: meetings, isLoading } = useGetMeetings({ workspaceId })
     const { data: channels } = useGetChannels({ workspaceId })
     const { mutate: createMeeting, isPending: isCreating } = useCreateMeeting()
-    const endMeeting = useMutation(api.meetings.end)
+    const joinMeeting = useMutation(api.meetings.join)
+    const leaveMeeting = useMutation(api.meetings.leave)
+    const endForEveryone = useMutation(api.meetings.endForEveryone)
+    const convex = useConvex()
     const saveSummary = useMutation(api.meetings.saveSummary)
     const createMessage = useMutation(api.messages.create)
 
@@ -60,8 +65,10 @@ export default function MeetingPage() {
 
     const handleJoin = async (roomName: string, meetingId: Id<"meetings">) => {
         try {
+            // register in the call first (also rejects meetings that already ended)
+            await joinMeeting({ id: meetingId })
             const res = await fetch(
-                `/api/livekit?room=${encodeURIComponent(roomName)}&username=${encodeURIComponent(currentUserName)}`
+                `/api/livekit?room=${encodeURIComponent(roomName)}&username=${encodeURIComponent(currentUserName)}&identity=${encodeURIComponent(currentMember?._id ?? currentUserName)}`
             )
             const data = await res.json()
             if (data.error) throw new Error(data.error)
@@ -69,7 +76,7 @@ export default function MeetingPage() {
             setServerUrl(data.url)
             setActiveMeetingId(meetingId)
         } catch (e) {
-            toast.error("Failed to join meeting")
+            toast.error(errorMessage(e).includes("ended") ? "This meeting has already ended" : "Failed to join meeting")
         }
     }
 
@@ -110,92 +117,106 @@ export default function MeetingPage() {
         })
     }
 
-    const handleDisconnect = useCallback(async (transcript: string) => {
-        const meetingId = activeMeetingId
-        console.log("=== MEETING DISCONNECT ===")
-        console.log("Meeting ID:", meetingId)
-        console.log("Transcript length:", transcript?.length)
-        console.log("Transcript preview:", transcript?.substring(0, 200))
+    // Builds the merged transcript of everyone in the call and turns it into one AI summary.
+    // Runs once per meeting, from whoever leaves last (or the host ending it for everyone).
+    const finalizeSummary = useCallback(async (meetingId: Id<"meetings">) => {
+        setGenerationError(null)
+        setSelectedMeetingId(meetingId)
 
-        if (meetingId) {
-            try {
-                await endMeeting({ id: meetingId })
-                console.log("Meeting ended successfully")
-            } catch (e) {
-                console.error("Failed to end meeting:", e)
-            }
+        const transcript = ((await convex.query(api.meetings.getTranscript, { id: meetingId })) ?? "").trim()
+
+        if (transcript.length <= 20) {
+            await saveSummary({
+                id: meetingId,
+                summary: "No transcript was captured for this meeting. You can add one manually to generate a summary.",
+                transcript: "",
+            }).catch(console.error)
+            toast.info("No transcript captured. You can add one manually from the meeting details.")
+            return
         }
+
+        setIsGenerating(true)
+        try {
+            // Reserve the summary against the plan limit (and skip if one was already generated)
+            const claim = await convex.mutation(api.meetings.claimSummary, { id: meetingId, auto: true })
+            if (!claim.allowed) return
+
+            toast.info("Generating AI summary...")
+            const res = await fetch("/api/ai-summary", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ transcript })
+            })
+            const data = await res.json()
+            if (data.error) throw new Error(data.error)
+
+            await saveSummary({ id: meetingId, summary: data.summary, transcript })
+            toast.success("AI summary generated!")
+        } catch (e: unknown) {
+            const message = errorMessage(e)
+            if (message.startsWith("LIMIT_REACHED:aiSummaries")) {
+                await saveSummary({
+                    id: meetingId,
+                    summary: "Your plan's monthly AI summary limit was reached, so no summary was generated. The transcript was saved.",
+                    transcript,
+                }).catch(console.error)
+                toast.error("AI summary limit reached for this month. Upgrade your plan for more.")
+            } else {
+                setGenerationError(message || "Failed to generate summary")
+                toast.error("Failed to generate summary. You can regenerate it from the meeting details.")
+                await saveSummary({
+                    id: meetingId,
+                    summary: "Summary generation failed. You can regenerate it from the meeting details.",
+                    transcript,
+                }).catch(console.error)
+            }
+        } finally {
+            setIsGenerating(false)
+        }
+    }, [convex, saveSummary])
+
+    const handleDisconnect = useCallback(async (_transcript: string) => {
+        const meetingId = activeMeetingId
+        const segments = takeLastSegments()
 
         setToken(null)
         setServerUrl(null)
-        setGenerationError(null)
+        setActiveMeetingId(null)
 
-        const hasValidTranscript = transcript && transcript.trim().length > 20
+        if (!meetingId) return
+        if (meetingId) setSelectedMeetingId(meetingId)
 
-        if (hasValidTranscript) {
-            setIsGenerating(true)
-            toast.info("Generating AI summary...")
-            
-            try {
-                console.log("Calling AI summary API...")
-                const res = await fetch("/api/ai-summary", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ transcript: transcript.trim() })
-                })
-                
-                const data = await res.json()
-                console.log("AI summary response:", data)
-                
-                if (data.error) {
-                    throw new Error(data.error)
-                }
-
-                if (meetingId && data.summary) {
-                    await saveSummary({
-                        id: meetingId,
-                        summary: data.summary,
-                        transcript: transcript.trim(),
-                    })
-                    console.log("Summary saved successfully")
-                }
-                
-                toast.success("AI summary generated!")
-            } catch (e: unknown) {
-                console.error("Summary generation failed:", e)
-                setGenerationError((e instanceof Error && e.message) || "Failed to generate summary")
-                toast.error("Failed to generate summary. You can add it manually later.")
-                
-                if (meetingId) {
-                    await saveSummary({
-                        id: meetingId,
-                        summary: "Summary generation failed. You can add a transcript and regenerate.",
-                        transcript: transcript.trim(),
-                    }).catch(console.error)
-                }
-            } finally {
-                setIsGenerating(false)
-                
-                setActiveMeetingId(null)
-                if (meetingId) setSelectedMeetingId(meetingId)
-            }
-        } else {
-            console.log("No valid transcript captured")
-            
-            if (meetingId) {
-                await saveSummary({
-                    id: meetingId,
-                    summary: "No transcript was captured for this meeting. You can add one manually to generate a summary.",
-                    transcript: "",
-                }).catch(console.error)
-            }
-            
-            toast.info("No transcript captured. You can add one manually from the meeting details.")
-            
-            setActiveMeetingId(null)
-            if (meetingId) setSelectedMeetingId(meetingId)
+        // Save my part; the server tells us whether I was the last one in the call
+        let ended = false
+        try {
+            const res = await leaveMeeting({
+                id: meetingId,
+                transcript: segments.length > 0 ? segmentsToBody(segments) : undefined,
+            })
+            ended = res.ended
+        } catch (e) {
+            console.error("Failed to leave meeting:", e)
+            toast.error("Could not save your part of the meeting")
+            return
         }
-    }, [activeMeetingId, endMeeting, saveSummary])
+
+        if (!ended) {
+            toast.info("You left the meeting. The summary is created when the last person leaves.")
+            return
+        }
+
+        await finalizeSummary(meetingId)
+    }, [activeMeetingId, leaveMeeting, finalizeSummary])
+
+    const handleEndForEveryone = async (meetingId: Id<"meetings">) => {
+        try {
+            await endForEveryone({ id: meetingId })
+            toast.success("Meeting ended")
+            await finalizeSummary(meetingId)
+        } catch (e) {
+            toast.error(errorMessage(e))
+        }
+    }
 
     const handleSelectMeeting = (meeting: NonNullable<typeof meetings>[number]) => {
         setSelectedMeeting(meeting)
@@ -320,7 +341,7 @@ export default function MeetingPage() {
                                         {!meeting.endedAt && (
                                             <Badge className="bg-red-50 text-red-700 border-transparent rounded-md px-2 py-0.5 text-[11px] font-medium shrink-0">
                                                 <span className="size-1.5 rounded-full bg-red-500 animate-pulse mr-1.5" />
-                                                Live
+                                                Live{(meeting.activeMembers?.length ?? 0) > 0 ? ` · ${meeting.activeMembers?.length} in call` : ""}
                                             </Badge>
                                         )}
                                     </div>
@@ -378,12 +399,23 @@ export default function MeetingPage() {
                                             </div>
                                         </div>
                                         {!selectedMeeting.endedAt && (
-                                            <Button
-                                                onClick={() => handleJoin(selectedMeeting.roomName, selectedMeeting._id)}
-                                                className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 rounded-lg font-semibold text-xs shrink-0 w-full sm:w-auto"
-                                            >
-                                                <Video className="size-3.5 mr-1" /> Join Meeting
-                                            </Button>
+                                            <div className="flex flex-col sm:flex-row gap-2 shrink-0 w-full sm:w-auto">
+                                                <Button
+                                                    onClick={() => handleJoin(selectedMeeting.roomName, selectedMeeting._id)}
+                                                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 rounded-lg font-semibold text-xs w-full sm:w-auto"
+                                                >
+                                                    <Video className="size-3.5 mr-1" /> Join Meeting
+                                                </Button>
+                                                {(currentMember?.role === "admin" || selectedMeeting.createdBy === currentMember?._id) && (
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() => handleEndForEveryone(selectedMeeting._id)}
+                                                        className="h-8 rounded-lg font-semibold text-xs w-full sm:w-auto"
+                                                    >
+                                                        End for everyone
+                                                    </Button>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
 

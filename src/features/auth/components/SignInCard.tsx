@@ -32,7 +32,9 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
 
   const handleProviderSignIn = (value: "github" | "google") => {
     setPending(true);
-    signIn(value).finally(() => setPending(false));
+    const next = new URLSearchParams(window.location.search).get("next");
+    const redirectTo = next && next.startsWith("/") && !next.startsWith("//") ? next : undefined;
+    signIn(value, redirectTo ? { redirectTo } : undefined).finally(() => setPending(false));
   };
 
   return (

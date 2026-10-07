@@ -6,49 +6,103 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { CopyIcon, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../../../../../../convex/_generated/api";
 import { useNewJoinCodde } from "@/features/workspaces/api/use-new-join-code";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { useConfirm } from "../../hooks/use-confirm";
+import { errorMessage } from "@/lib/error-message";
 
 interface InviteModalProps {
     open: boolean;
     setOpen: (open: boolean) => void;
     name: string;
     joinCode: string;
+    joinCodeExpiresAt?: number;
+    invitesDisabled?: boolean;
+    isAdmin?: boolean;
 }
 
-export const InviteModal = ({ open, setOpen, name, joinCode }: InviteModalProps) => {
+const EXPIRY_OPTIONS = [
+    { value: "never", label: "Never expires" },
+    { value: "1", label: "Expires in 1 day" },
+    { value: "7", label: "Expires in 7 days" },
+    { value: "30", label: "Expires in 30 days" },
+]
+
+export const InviteModal = ({
+    open,
+    setOpen,
+    name,
+    joinCode,
+    joinCodeExpiresAt,
+    invitesDisabled,
+    isAdmin = true,
+}: InviteModalProps) => {
     const workspaceId = useWorkspaceId();
     const { mutate, isPending } = useNewJoinCodde()
+    const setInvitesDisabled = useMutation(api.workspaces.setInvitesDisabled)
+    const [expiry, setExpiry] = useState("never")
+    const [toggling, setToggling] = useState(false)
     const [ConfirmDialog, confirm] = useConfirm(
-        "Are you sure?",
-        "Generating a new join code will invalidate the current one."
+        "Generate a new code?",
+        "The current code and invite link will stop working right away."
     )
 
-    const handleCopy = () => {
-        console.log("workspaceId:", workspaceId)
-        console.log("joinCode:", joinCode)
-        const inviteLink = `${window.location.origin}/join/${workspaceId}`;
+    const expired = !!joinCodeExpiresAt && joinCodeExpiresAt < Date.now()
+    const inviteLink = `${typeof window !== "undefined" ? window.location.origin : ""}/join/${workspaceId}?code=${joinCode}`
+
+    const handleCopyLink = () => {
         navigator.clipboard.writeText(inviteLink)
-            .then(() => toast.success("Invite link copied to clipboard!"))
+            .then(() => toast.success("Invite link copied. It already includes the code."))
+            .catch(() => toast.error("Couldn't copy. Select the link and copy it manually."))
+    }
+
+    const handleCopyCode = () => {
+        navigator.clipboard.writeText(joinCode)
+            .then(() => toast.success("Code copied"))
+            .catch(() => toast.error("Couldn't copy the code"))
     }
 
     const handleNewCode = async () => {
         const ok = await confirm();
         if (!ok) return;
 
-        mutate({ workspaceId }, {
+        mutate({ workspaceId, expiresInDays: expiry === "never" ? undefined : Number(expiry) }, {
             onSuccess: () => {
-                toast.success("New join code generated!")
+                toast.success("New invite code generated")
             },
-            onError: () => {
-                toast.error("Failed to generate new join code.")
+            onError: (e) => {
+                toast.error(errorMessage(e) || "Failed to generate new join code.")
             }
         })
     }
+
+    const handleToggleInvites = async () => {
+        setToggling(true)
+        try {
+            await setInvitesDisabled({ workspaceId, disabled: !invitesDisabled })
+            toast.success(invitesDisabled ? "Invites turned on" : "Invites turned off")
+        } catch (e) {
+            toast.error(errorMessage(e) || "Couldn't change invite settings")
+        } finally {
+            setToggling(false)
+        }
+    }
+
+    const statusText = invitesDisabled
+        ? "Invites are turned off. Nobody can join with the code."
+        : expired
+            ? "This code has expired. Generate a new one."
+            : joinCodeExpiresAt
+                ? `Valid until ${format(joinCodeExpiresAt, "MMM d, yyyy h:mm a")}`
+                : "This code doesn't expire."
 
     return (
         <>
@@ -57,29 +111,60 @@ export const InviteModal = ({ open, setOpen, name, joinCode }: InviteModalProps)
                 <DialogContent className="rounded-2xl p-6">
                     <DialogHeader>
                         <DialogTitle className="font-semibold tracking-tight">
-                            Invite People{" "}
+                            Invite people to{" "}
                             <span className="font-semibold text-[#ff5018]">
                                 {name}
                             </span>
                         </DialogTitle>
                         <DialogDescription>
-                            Use the code below to invite people to your Workspace
+                            Share the link, or give people the code to enter themselves.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="flex flex-col gap-y-4 items-center justify-center py-8 my-2 rounded-xl bg-[#f7f2ee] border border-[#381d2a]/10">
-                        <p className="text-4xl font-semibold tracking-widest uppercase text-[#1b1017]">
+                    <div className="flex flex-col gap-y-3 items-center justify-center py-6 my-1 rounded-xl bg-[#f7f2ee] border border-[#381d2a]/10">
+                        <p className={`text-4xl font-semibold tracking-widest uppercase ${invitesDisabled || expired ? "text-[#1b1017]/30 line-through" : "text-[#1b1017]"}`}>
                             {joinCode}
                         </p>
-                        <Button variant={"ghost"} size={"sm"} onClick={handleCopy}>
-                            Copy Link
-                            <CopyIcon className="size-4 ml-2" />
-                        </Button>
+                        <p className={`text-xs ${invitesDisabled || expired ? "text-red-600" : "text-[#1b1017]/60"}`}>{statusText}</p>
+                        <div className="flex items-center gap-1">
+                            <Button variant={"ghost"} size={"sm"} onClick={handleCopyLink}>
+                                Copy link
+                                <CopyIcon className="size-4 ml-2" />
+                            </Button>
+                            <Button variant={"ghost"} size={"sm"} onClick={handleCopyCode}>
+                                Copy code
+                            </Button>
+                        </div>
                     </div>
-                    <div className="flex items-center justify-between w-full">
-                        <Button disabled={isPending} variant={"outline"} onClick={handleNewCode}>
-                            New Code
-                            <RefreshCcw className="size-4 ml-2" />
-                        </Button>
+
+                    {isAdmin && (
+                        <div className="flex flex-col gap-3">
+                            <div className="flex items-center gap-2">
+                                <Select value={expiry} onValueChange={setExpiry}>
+                                    <SelectTrigger className="h-9 text-xs rounded-lg flex-1">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {EXPIRY_OPTIONS.map(o => (
+                                            <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button disabled={isPending} variant={"outline"} onClick={handleNewCode} className="h-9">
+                                    New code
+                                    <RefreshCcw className="size-4 ml-2" />
+                                </Button>
+                            </div>
+                            <button
+                                onClick={handleToggleInvites}
+                                disabled={toggling}
+                                className="text-xs font-medium text-left text-[#1b1017]/70 hover:text-[#ff5018] transition-colors disabled:opacity-50"
+                            >
+                                {invitesDisabled ? "Turn invites back on" : "Turn off invites (revoke access for new people)"}
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="flex justify-end w-full">
                         <DialogClose asChild>
                             <Button>Close</Button>
                         </DialogClose>

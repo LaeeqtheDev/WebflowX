@@ -3,9 +3,11 @@ import { format, isToday, isYesterday } from "date-fns";
 import { Doc, Id } from "../../../../../../convex/_generated/dataModel";
 import dynamic from "next/dynamic";
 import { Hint } from "./hints";
+const MessageToTaskModal = dynamic(() => import("./message-to-task-modal").then((m) => m.MessageToTaskModal), { ssr: false });
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Thumbnail } from "./thumbnail";
 import { Toolbar2 } from "./Toolbar2";
+import { useState } from "react";
 import { useUpdateMessage } from "@/features/messages/api/use-update-message";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -89,6 +91,7 @@ const MessageImpl = ({
     threadName,
 }: MessageProps) => {
     const { parentMessageId, onOpenMessage, onOpenProfile, onClose } = usePanel();
+    const [showTaskModal, setShowTaskModal] = useState(false);
 
     const [ConfirmDialog, confirm] = useConfirm(
         "Delete Message",
@@ -154,6 +157,15 @@ const MessageImpl = ({
         return (
             <>
                 <ConfirmDialog />
+                {showTaskModal && (
+                    <MessageToTaskModal
+                        open={showTaskModal}
+                        onClose={() => setShowTaskModal(false)}
+                        messageId={id}
+                        body={body}
+                        authorName={authorName}
+                    />
+                )}
                 <div
                     id={`msg-${id}`}
                     className={cn(
@@ -216,6 +228,7 @@ const MessageImpl = ({
                             isPending={false}
                             handleEdit={() => setEditingId(id)}
                             handleThread={() => onOpenMessage(id)}
+                            handleCreateTask={() => setShowTaskModal(true)}
                             handleDelete={handleRemove}
                             handleReaction={handleReaction}
                             hideThreadButton={hideThreadButton}
@@ -230,6 +243,15 @@ const MessageImpl = ({
     return (
         <>
             <ConfirmDialog />
+                {showTaskModal && (
+                    <MessageToTaskModal
+                        open={showTaskModal}
+                        onClose={() => setShowTaskModal(false)}
+                        messageId={id}
+                        body={body}
+                        authorName={authorName}
+                    />
+                )}
             <div
                 id={`msg-${id}`}
                 className={cn(
@@ -308,6 +330,7 @@ const MessageImpl = ({
                         isPending={isPending}
                         handleEdit={() => setEditingId(id)}
                         handleThread={() => onOpenMessage(id)}
+                            handleCreateTask={() => setShowTaskModal(true)}
                         handleDelete={handleRemove}
                         handleReaction={handleReaction}
                         hideThreadButton={hideThreadButton}

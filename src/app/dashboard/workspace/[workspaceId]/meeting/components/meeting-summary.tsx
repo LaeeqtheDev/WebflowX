@@ -15,9 +15,12 @@ import {
     X, 
     RefreshCw,
     FileText,
-    Loader2
+    Loader2,
+    ListChecks
 } from "lucide-react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import { useWorkspaceId } from "@/hooks/use-workspace-id"
+import { errorMessage } from "@/lib/error-message"
 import { useMutation } from "convex/react"
 import { toast } from "sonner"
 import { api } from "../../../../../../../convex/_generated/api"
@@ -46,6 +49,28 @@ interface MeetingSummaryProps {
     meeting: Meeting
 }
 
+// Pulls the bullet list under the "Action Items" heading out of the AI summary text.
+const extractActionItems = (summary?: string): string[] => {
+    if (!summary) return []
+    const lines = summary.split("\n")
+    const start = lines.findIndex(l => /action items/i.test(l))
+    if (start === -1) return []
+
+    const items: string[] = []
+    for (let i = start + 1; i < lines.length; i++) {
+        const line = lines[i].trim()
+        if (!line) {
+            if (items.length > 0) break
+            continue
+        }
+        // stop at the next section heading (emoji / bold heading / markdown heading)
+        if (!/^[-*•]|^\d+[.)]/.test(line)) break
+        const text = line.replace(/^[-*•]\s*|^\d+[.)]\s*/, "").replace(/\*\*/g, "").trim()
+        if (text && !/^no action items/i.test(text)) items.push(text)
+    }
+    return items
+}
+
 export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
     const [showTranscript, setShowTranscript] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
@@ -55,6 +80,51 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
     const [manualTranscript, setManualTranscript] = useState("")
     
     const saveSummary = useMutation(api.meetings.saveSummary)
+    const claimSummary = useMutation(api.meetings.claimSummary)
+    const createTask = useMutation(api.tasks.create)
+    const workspaceId = useWorkspaceId()
+
+    // Action items pulled out of the AI summary so they can become tasks in one click
+    const actionItems = useMemo(() => extractActionItems(meeting.summary), [meeting.summary])
+    const [showTasksDialog, setShowTasksDialog] = useState(false)
+    const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set())
+    const [isCreatingTasks, setIsCreatingTasks] = useState(false)
+
+    const openTasksDialog = () => {
+        setSelectedItems(new Set(actionItems.map((_, i) => i)))
+        setShowTasksDialog(true)
+    }
+
+    const toggleItem = (i: number) =>
+        setSelectedItems(prev => {
+            const next = new Set(prev)
+            if (next.has(i)) next.delete(i)
+            else next.add(i)
+            return next
+        })
+
+    const handleCreateTasks = async () => {
+        const chosen = actionItems.filter((_, i) => selectedItems.has(i))
+        if (chosen.length === 0) return
+        setIsCreatingTasks(true)
+        try {
+            for (const item of chosen) {
+                await createTask({
+                    workspaceId,
+                    title: item.slice(0, 140),
+                    description: `From meeting "${meeting.title}" (${format(meeting.startedAt, "MMM d, yyyy")})`,
+                    status: "todo",
+                    priority: "medium",
+                })
+            }
+            toast.success(`${chosen.length} task${chosen.length > 1 ? "s" : ""} created`)
+            setShowTasksDialog(false)
+        } catch (e) {
+            toast.error(errorMessage(e) || "Failed to create tasks")
+        } finally {
+            setIsCreatingTasks(false)
+        }
+    }
 
     const duration = meeting.endedAt
         ? Math.round((meeting.endedAt - meeting.startedAt) / 60000)
@@ -87,6 +157,9 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
 
         setIsGenerating(true)
         try {
+            // counts against the plan's monthly AI summary limit
+            await claimSummary({ id: meeting._id })
+
             const res = await fetch("/api/ai-summary", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -111,7 +184,12 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
             setManualTranscript("")
         } catch (e: unknown) {
             console.error("Summary generation error:", e)
-            toast.error((e instanceof Error && e.message) || "Failed to generate summary")
+            const message = errorMessage(e)
+            toast.error(
+                message.startsWith("LIMIT_REACHED:aiSummaries")
+                    ? "AI summary limit reached for this month. Upgrade your plan for more."
+                    : message || "Failed to generate summary"
+            )
         } finally {
             setIsGenerating(false)
         }
@@ -193,6 +271,17 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                             <div className="flex items-center gap-2">
                                 {!isEditing && (
                                     <>
+                                        {actionItems.length > 0 && (
+                                            <>
+                                                <button
+                                                    onClick={openTasksDialog}
+                                                    className="text-[11px] font-medium text-[#ff5018] hover:text-[#e6430f] flex items-center gap-1 transition-colors"
+                                                >
+                                                    <ListChecks className="size-3" /> Create tasks ({actionItems.length})
+                                                </button>
+                                                <span className="text-[#1b1017]/40">·</span>
+                                            </>
+                                        )}
                                         <button
                                             onClick={handleRegenerateSummary}
                                             disabled={isGenerating}
@@ -293,6 +382,50 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                     </div>
                 )}
             </div>
+
+            {/* Action items -> tasks */}
+            <Dialog open={showTasksDialog} onOpenChange={setShowTasksDialog}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-[17px] font-semibold tracking-tight">
+                            <ListChecks className="size-5 text-[#ff5018]" />
+                            Create tasks from action items
+                        </DialogTitle>
+                        <DialogDescription>
+                            Pick the action items to add to your task board. They start in To do.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-2 mt-2 max-h-72 overflow-y-auto">
+                        {actionItems.map((item, i) => (
+                            <label
+                                key={i}
+                                className="flex items-start gap-2.5 p-2.5 rounded-lg border border-[#381d2a]/10 hover:bg-[#f7f2ee] cursor-pointer text-sm"
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={selectedItems.has(i)}
+                                    onChange={() => toggleItem(i)}
+                                    className="mt-0.5 accent-[#ff5018]"
+                                />
+                                <span className="text-[#1b1017]/80">{item}</span>
+                            </label>
+                        ))}
+                    </div>
+                    <div className="flex justify-end gap-2 mt-3">
+                        <Button variant="outline" size="sm" className="rounded-lg" onClick={() => setShowTasksDialog(false)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            size="sm"
+                            disabled={isCreatingTasks || selectedItems.size === 0}
+                            onClick={handleCreateTasks}
+                            className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg"
+                        >
+                            {isCreatingTasks ? <Loader2 className="size-3.5 animate-spin" /> : `Create ${selectedItems.size} task${selectedItems.size === 1 ? "" : "s"}`}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Manual Transcript Dialog */}
             <Dialog open={showTranscriptDialog} onOpenChange={setShowTranscriptDialog}>

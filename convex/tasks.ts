@@ -2,6 +2,7 @@ import { v } from "convex/values"
 import { mutation, query, QueryCtx } from "./_generated/server"
 import { Id } from "./_generated/dataModel"
 import { auth } from "./auth"
+import { ConvexError } from "convex/values"
 
 const statusValidator = v.union(
     v.literal("backlog"),
@@ -100,7 +101,12 @@ export const create = mutation({
                 q.eq("workspaceId", args.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member || member.role !== "admin") throw new Error("Only admins can create tasks")
+        if (!member) throw new ConvexError("Unauthorized")
+
+        // Any member can create tasks; non-admins can only leave them unassigned or assign them to themselves
+        if (member.role !== "admin" && args.assigneeId && args.assigneeId !== member._id) {
+            throw new ConvexError("Only admins can assign tasks to other people")
+        }
 
         await assertSameWorkspace(ctx, args.workspaceId, args.assigneeId, args.sprintId)
 
@@ -160,8 +166,8 @@ export const update = mutation({
         const isAdmin = member.role === "admin"
         const { id, unassign, ...updates } = args
 
-        if (!isAdmin && task.assigneeId !== member._id) {
-            throw new Error("Members can only update tasks assigned to them")
+        if (!isAdmin && task.assigneeId !== member._id && task.createdBy !== member._id) {
+            throw new ConvexError("Members can only update tasks assigned to or created by them")
         }
 
         if (!isAdmin) {
@@ -169,7 +175,7 @@ export const update = mutation({
             const hasDisallowedKeys = Object.keys(updates).some(
                 k => updates[k as keyof typeof updates] !== undefined && !allowedKeys.includes(k)
             )
-            if (hasDisallowedKeys) throw new Error("Members can only update task status")
+            if (hasDisallowedKeys) throw new ConvexError("Members can only update task status")
         }
 
         await assertSameWorkspace(ctx, task.workspaceId, args.assigneeId, args.sprintId)
@@ -211,7 +217,10 @@ export const remove = mutation({
                 q.eq("workspaceId", task.workspaceId).eq("userId", userId)
             ).unique()
 
-        if (!member || member.role !== "admin") throw new Error("Only admins can delete tasks")
+        if (!member) throw new ConvexError("Unauthorized")
+        if (member.role !== "admin" && task.createdBy !== member._id) {
+            throw new ConvexError("Only admins or the task creator can delete tasks")
+        }
 
         const comments = await ctx.db
             .query("taskComments")
@@ -242,7 +251,7 @@ export const assignToMe = mutation({
         if (!member) throw new Error("Unauthorized")
 
         if (task.assigneeId && task.assigneeId !== member._id && member.role !== "admin") {
-            throw new Error("This task is already assigned to someone else")
+            throw new ConvexError("This task is already assigned to someone else")
         }
 
         await ctx.db.patch(args.id, { assigneeId: member._id, updatedAt: Date.now() })
