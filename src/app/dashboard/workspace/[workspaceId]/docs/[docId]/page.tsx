@@ -14,7 +14,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { usePageTree, ancestorsOf } from "@/features/pages/use-page-tree"
 import { PageIcon } from "@/features/pages/page-tree"
-import { EmojiPicker } from "@/features/pages/emoji-picker"
+import { IconPicker } from "@/features/pages/page-icons"
 import { NewPageDialog } from "@/features/pages/new-page-dialog"
 import { friendlyError } from "@/hooks/use-limit-handler"
 import {
@@ -235,11 +235,11 @@ export default function DocPage() {
                             </span>
                         ))}
                         {crumbs.length > 1 && <ChevronRight className="hidden size-3 shrink-0 text-ink/30 sm:block" />}
-                        <EmojiPicker value={doc.icon ?? null} onChange={(e) => void setIcon({ id: doc._id, icon: e })}>
+                        <IconPicker value={doc.icon ?? null} onChange={(e) => void setIcon({ id: doc._id, icon: e })}>
                             <button type="button" aria-label="Change icon" className="flex size-7 shrink-0 items-center justify-center rounded-md hover:bg-cream-deep">
                                 <PageIcon node={{ icon: doc.icon ?? null, type: doc.type }} className="size-4 text-base" />
                             </button>
-                        </EmojiPicker>
+                        </IconPicker>
                         {editingTitle ? (
                             <Input aria-label="Page title"
                                 autoFocus

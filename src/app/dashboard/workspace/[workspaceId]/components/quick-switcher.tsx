@@ -16,6 +16,7 @@ import { useGetChannels } from "@/features/channels/api/use-get-channels"
 import { useGetMembers } from "@/features/members/api/use-get-members"
 import { useCurrentMember } from "@/features/members/api/use-current-member"
 import { useQuickSwitcher } from "@/features/workspaces/store/use-quick-switcher"
+import { RenderIcon } from "@/features/pages/page-icons"
 import { cleanChannelName } from "./channel-icon"
 
 const SECTIONS = [
@@ -105,7 +106,7 @@ export const QuickSwitcher = () => {
                         {(pages ?? []).slice(0, 200).map((d) => (
                             <CommandItem key={d._id} value={`page ${d.title} ${d._id}`} onSelect={() => go(`/docs/${d._id}`)}>
                                 {d.icon
-                                    ? <span className="w-4 text-center text-sm leading-none" aria-hidden>{d.icon}</span>
+                                    ? <RenderIcon value={d.icon} className="size-4 text-muted-foreground" />
                                     : d.type === "database" ? <Table2 className="size-4 text-muted-foreground" aria-hidden />
                                     : d.type === "spreadsheet" ? <FileSpreadsheet className="size-4 text-muted-foreground" aria-hidden />
                                     : <DocumentText20Regular className="size-4 text-muted-foreground" aria-hidden />}

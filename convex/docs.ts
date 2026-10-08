@@ -10,6 +10,7 @@ import { MutationCtx, QueryCtx } from "./_generated/server"
 
 const cleanIcon = (raw?: string) => {
     const t = (raw ?? "").trim()
+    if (/^i:[a-z0-9-]{1,30}$/.test(t)) return t
     return t && t.length <= 8 ? t : undefined
 }
 

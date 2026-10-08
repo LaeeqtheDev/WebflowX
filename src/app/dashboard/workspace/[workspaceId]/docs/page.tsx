@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 import { NewPageDialog } from "@/features/pages/new-page-dialog"
 import { TrashDialog } from "@/features/pages/trash-dialog"
+import { RenderIcon } from "@/features/pages/page-icons"
 import { useMutation } from "convex/react"
 import { api } from "../../../../../../convex/_generated/api"
 import { Id } from "../../../../../../convex/_generated/dataModel"
@@ -105,7 +106,7 @@ export default function DocsPage() {
                 </Button>
                 <Button
                     onClick={() => setShowCreate(true)}
-                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 text-xs px-3 rounded-lg font-semibold"
+                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 text-xs px-3 rounded-lg font-semibold md:hidden"
                 >
                     <Plus className="size-3.5 sm:size-4 sm:mr-1" /> 
                     <span className="hidden sm:inline">New page</span>
@@ -153,7 +154,7 @@ export default function DocsPage() {
                                     doc.type === "spreadsheet" ? "bg-green-50 dark:bg-green-500/10" : doc.type === "database" ? "bg-sky-50 dark:bg-sky-500/10" : "bg-[#ff5018]/10"
                                 )}>
                                     {doc.icon
-                                        ? <span className="text-3xl sm:text-4xl" aria-hidden="true">{doc.icon}</span>
+                                        ? <RenderIcon value={doc.icon} className="size-8 text-3xl text-[#ff5018] sm:size-9 sm:text-4xl" />
                                         : doc.type === "spreadsheet"
                                             ? <FileSpreadsheet className="size-8 sm:size-9 text-green-600 dark:text-green-400" />
                                             : doc.type === "database"
@@ -189,7 +190,7 @@ export default function DocsPage() {
                                 <div className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                                            <button type="button" aria-label="Page options" className="opacity-0 max-md:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-1 max-md:p-2.5 text-ink/60 hover:text-orange-ink rounded-md bg-white/80 hover:bg-surface">
+                                            <button type="button" aria-label="Page options" className="opacity-0 max-md:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-1 max-md:p-2.5 hover:text-orange-ink rounded-md border border-plum/12 bg-surface text-ink/70 shadow-sm hover:bg-cream-deep">
                                                 <MoreHorizontal className="size-3 sm:size-3.5" />
                                             </button>
                                         </DropdownMenuTrigger>

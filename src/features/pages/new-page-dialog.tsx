@@ -11,6 +11,7 @@ import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { useLimitHandler, friendlyError } from "@/hooks/use-limit-handler"
 import { cn } from "@/lib/utils"
 import { DOC_TEMPLATES } from "@/app/dashboard/workspace/[workspaceId]/docs/components/templates"
+import { RenderIcon } from "./page-icons"
 import { DB_TEMPLATES } from "@/features/databases/templates"
 
 type Tab = "pages" | "databases" | "saved"
@@ -100,9 +101,9 @@ export const NewPageDialog = ({ open, onOpenChange, parentId }: { open: boolean;
           {tab === "pages" && (
             <div className="grid gap-2.5 sm:grid-cols-2">
               {DOC_TEMPLATES.map((t) => (
-                <Card key={t.id} icon={t.emoji} title={t.name} body={t.description} busy={busy === t.id}
+                <Card key={t.id} icon={<RenderIcon value={t.icon} className="size-4 text-[#ff5018]" />} title={t.name} body={t.description} busy={busy === t.id}
                   onClick={() => run(t.id, async () => {
-                    const id = await createDoc({ workspaceId, title: t.id === "blank" ? "Untitled" : t.name, type: "document", parentId, icon: t.id === "blank" ? undefined : t.emoji })
+                    const id = await createDoc({ workspaceId, title: t.id === "blank" ? "Untitled" : t.name, type: "document", parentId, icon: t.id === "blank" ? undefined : t.icon })
                     go(id, t.id !== "blank" ? `?t=${t.id}` : "")
                   }, "Couldn't create the page")} />
               ))}
@@ -118,11 +119,11 @@ export const NewPageDialog = ({ open, onOpenChange, parentId }: { open: boolean;
             <div className="grid gap-2.5 sm:grid-cols-2">
               <Card icon={<Table2 className="size-4 text-[#ff5018]" />} title="Blank database" body="Start with a table and add your own properties" busy={busy === "blank-db"}
                 onClick={() => run("blank-db", async () => {
-                  const id = await createDb({ workspaceId, parentId, title: "Untitled database", icon: "🗃️" })
+                  const id = await createDb({ workspaceId, parentId, title: "Untitled database", icon: "i:table" })
                   go(id)
                 }, "Couldn't create the database")} />
               {DB_TEMPLATES().map((t) => (
-                <Card key={t.id} icon={t.icon} title={t.name} body={t.description} busy={busy === t.id}
+                <Card key={t.id} icon={<RenderIcon value={t.icon} className="size-4 text-[#ff5018]" />} title={t.name} body={t.description} busy={busy === t.id}
                   onClick={() => run(t.id, async () => {
                     const id = await createDb({ workspaceId, parentId, title: t.name, icon: t.icon, properties: t.properties, views: t.views, rows: t.rows })
                     go(id)
@@ -141,7 +142,7 @@ export const NewPageDialog = ({ open, onOpenChange, parentId }: { open: boolean;
             ) : (
               <div className="grid gap-2.5 sm:grid-cols-2">
                 {saved.map((t) => (
-                  <Card key={t._id} icon={t.icon ?? "📄"} title={t.name} body="Saved template" busy={busy === t._id}
+                  <Card key={t._id} icon={<RenderIcon value={t.icon ?? "i:file-text"} className="size-4 text-[#ff5018]" />} title={t.name} body="Saved template" busy={busy === t._id}
                     onClick={() => run(t._id, async () => {
                       const id = await createDoc({ workspaceId, title: t.name, type: "document", parentId, icon: t.icon ?? undefined })
                       go(id, `?tpl=${t._id}`)

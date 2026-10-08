@@ -27,7 +27,7 @@ const STATUS = [opt("todo", "Not started", "gray", "todo"), opt("doing", "In pro
 
 export const DB_TEMPLATES = (): DbTemplate[] => [
   {
-    id: "tasks", name: "Task tracker", icon: "✅", description: "Status, priority, owner and due date",
+    id: "tasks", name: "Task tracker", icon: "i:square-check", description: "Status, priority, owner and due date",
     properties: [
       { id: "status", name: "Status", type: "status", options: STATUS },
       { id: "priority", name: "Priority", type: "select", options: [opt("low", "Low", "green"), opt("med", "Medium", "yellow"), opt("high", "High", "red")] },
@@ -48,7 +48,7 @@ export const DB_TEMPLATES = (): DbTemplate[] => [
     ],
   },
   {
-    id: "crm", name: "Contacts and deals", icon: "🤝", description: "A light CRM with stages and deal value",
+    id: "crm", name: "Contacts and deals", icon: "i:handshake", description: "A light CRM with stages and deal value",
     properties: [
       { id: "stage", name: "Stage", type: "select", options: [opt("lead", "Lead", "gray"), opt("contacted", "Contacted", "blue"), opt("proposal", "Proposal", "purple"), opt("won", "Won", "green"), opt("lost", "Lost", "red")] },
       { id: "company", name: "Company", type: "text" },
@@ -70,7 +70,7 @@ export const DB_TEMPLATES = (): DbTemplate[] => [
     ],
   },
   {
-    id: "content", name: "Content calendar", icon: "🗓️", description: "Plan posts by channel and publish date",
+    id: "content", name: "Content calendar", icon: "i:calendar-days", description: "Plan posts by channel and publish date",
     properties: [
       { id: "status", name: "Status", type: "status", options: [opt("idea", "Idea", "gray", "todo"), opt("draft", "Drafting", "blue", "progress"), opt("review", "In review", "yellow", "progress"), opt("live", "Published", "green", "done")] },
       { id: "channel", name: "Channel", type: "select", options: [opt("blog", "Blog", "orange"), opt("news", "Newsletter", "purple"), opt("li", "LinkedIn", "blue"), opt("x", "X", "gray"), opt("yt", "YouTube", "red")] },
@@ -90,7 +90,7 @@ export const DB_TEMPLATES = (): DbTemplate[] => [
     ],
   },
   {
-    id: "bugs", name: "Bug tracker", icon: "🐛", description: "Severity, status and where it was found",
+    id: "bugs", name: "Bug tracker", icon: "i:bug", description: "Severity, status and where it was found",
     properties: [
       { id: "status", name: "Status", type: "status", options: [opt("open", "Open", "red", "todo"), opt("inv", "Investigating", "yellow", "progress"), opt("fixed", "Fixed", "green", "done")] },
       { id: "severity", name: "Severity", type: "select", options: [opt("minor", "Minor", "gray"), opt("major", "Major", "orange"), opt("crit", "Critical", "red")] },
@@ -110,7 +110,7 @@ export const DB_TEMPLATES = (): DbTemplate[] => [
     ],
   },
   {
-    id: "reading", name: "Reading list", icon: "📚", description: "Books and articles with a rating",
+    id: "reading", name: "Reading list", icon: "i:book-open", description: "Books and articles with a rating",
     properties: [
       { id: "status", name: "Status", type: "status", options: [opt("want", "To read", "gray", "todo"), opt("reading", "Reading", "blue", "progress"), opt("read", "Finished", "green", "done")] },
       { id: "author", name: "Author", type: "text" },
@@ -126,7 +126,7 @@ export const DB_TEMPLATES = (): DbTemplate[] => [
     ],
   },
   {
-    id: "projects", name: "Projects", icon: "🚀", description: "Owners, timeline and progress at a glance",
+    id: "projects", name: "Projects", icon: "i:rocket", description: "Owners, timeline and progress at a glance",
     properties: [
       { id: "status", name: "Status", type: "status", options: [opt("plan", "Planning", "gray", "todo"), opt("active", "Active", "blue", "progress"), opt("hold", "On hold", "yellow", "progress"), opt("done", "Complete", "green", "done")] },
       { id: "owner", name: "Owner", type: "person" },

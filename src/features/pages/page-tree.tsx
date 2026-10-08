@@ -16,14 +16,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { usePageTree, descendantIds, ancestorsOf, PageNode } from "./use-page-tree"
-import { EmojiPicker } from "./emoji-picker"
+import { IconPicker, RenderIcon } from "./page-icons"
 import { NewPageDialog } from "./new-page-dialog"
 import { TrashDialog } from "./trash-dialog"
 
 type Zone = "before" | "inside" | "after"
 
 export const PageIcon = ({ node, className }: { node: Pick<PageNode, "icon" | "type">; className?: string }) => {
-  if (node.icon) return <span className={cn("shrink-0 text-[15px] leading-none", className)}>{node.icon}</span>
+  if (node.icon) return <RenderIcon value={node.icon} className={cn("text-ink/60", className)} />
   const Icon = node.type === "database" ? Table2 : node.type === "spreadsheet" ? FileSpreadsheet : FileText
   return <Icon className={cn("size-4 shrink-0 text-ink/55", className)} aria-hidden="true" />
 }
@@ -202,11 +202,11 @@ export const PageTree = ({ onNavigate }: { onNavigate?: () => void }) => {
                   <DropdownMenuItem onClick={() => { renameDone.current = false; setDraft(node.title); setRenaming(node._id) }}>
                     <Pencil className="mr-2 size-3.5" /> Rename
                   </DropdownMenuItem>
-                  <EmojiPicker value={node.icon} onChange={(e) => void setIcon({ id: node._id, icon: e })}>
+                  <IconPicker value={node.icon} onChange={(e) => void setIcon({ id: node._id, icon: e })}>
                     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                       <Smile className="mr-2 size-3.5" /> Change icon
                     </DropdownMenuItem>
-                  </EmojiPicker>
+                  </IconPicker>
                   <DropdownMenuItem onClick={() => toggleFavorite({ id: node._id }).catch((e) => toast.error(friendlyError(e, "Couldn't update favorites")))}>
                     <Star className={cn("mr-2 size-3.5", favoriteSet.has(node._id) && "fill-[#ff5018] text-[#ff5018]")} />
                     {favoriteSet.has(node._id) ? "Remove from favorites" : "Add to favorites"}
