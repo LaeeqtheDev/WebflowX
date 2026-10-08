@@ -1,7 +1,9 @@
 import { v } from "convex/values";
 import { auth } from "./auth";
 import { Id } from "./_generated/dataModel";
-import { mutation, query, QueryCtx } from "./_generated/server";
+import { mutation, query, internalMutation, QueryCtx } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { release } from "./files";
 import { ConvexError } from "convex/values";
 import { requireActor, isAdminLike, isOwner, hasPermission, roleOf } from "./permissions";
 import { logAudit } from "./audit";
@@ -173,56 +175,63 @@ export const remove = mutation({
         const theirIntegrations = await ctx.db.query("integrations").withIndex("by_workspace_id", (q) => q.eq("workspaceId", member.workspaceId)).take(500)
         for (const row of theirIntegrations) if (row.createdBy === member._id) await ctx.db.delete(row._id)
 
-        const [messages, reactions, conversations] = await Promise.all([
-            ctx.db.query("messages")
-                .withIndex("by_member_id", (q) => q.eq("memberId", member._id))
-                .collect(),
-            ctx.db.query("reactions")
-                .withIndex("by_member_id", (q) => q.eq("memberId", member._id))
-                .collect(),
-            ctx.db.query("conversations")
-                .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", member.workspaceId))
-                .filter((q) => q.or(
-                    q.eq(q.field("memberOneId"), member._id),
-                    q.eq(q.field("memberTwoId"), member._id),
-                )).collect()
-        ])
-
-        for (const message of messages) await ctx.db.delete(message._id)
-        for (const reaction of reactions) await ctx.db.delete(reaction._id)
-        for (const conversation of conversations) await ctx.db.delete(conversation._id)
-
-        // Clean up notifications and release tasks assigned to this member
-        const [notifications, assignedTasks] = await Promise.all([
-            ctx.db.query("notifications")
-                .withIndex("by_recipient", (q) => q.eq("recipientId", member._id))
-                .collect(),
-            ctx.db.query("tasks")
-                .withIndex("by_assignee_id", (q) => q.eq("assigneeId", member._id))
-                .collect(),
-        ])
-        for (const n of notifications) await ctx.db.delete(n._id)
-        const saved = await ctx.db.query("savedMessages").withIndex("by_member_id", (q) => q.eq("memberId", member._id)).collect()
-        for (const s of saved) await ctx.db.delete(s._id)
-        const attachmentRows = await ctx.db.query("attachments").withIndex("by_member_id", (q) => q.eq("memberId", member._id)).collect()
-        for (const a of attachmentRows) await ctx.db.delete(a._id)
-        for (const t of assignedTasks) await ctx.db.patch(t._id, { assigneeId: undefined, updatedAt: Date.now() })
-
-        // take them out of any locked channels they were added to
-        const lockedChannels = await ctx.db
-            .query("channels")
-            .withIndex("byWorkspaceId", (q) => q.eq("workspaceId", member.workspaceId))
-            .collect()
-        for (const ch of lockedChannels) {
-            if (ch.memberIds?.includes(args.id)) {
-                await ctx.db.patch(ch._id, { memberIds: ch.memberIds.filter((id) => id !== args.id) })
-            }
-            if (ch.guestIds?.includes(args.id)) {
-                await ctx.db.patch(ch._id, { guestIds: ch.guestIds.filter((id) => id !== args.id) })
-            }
-        }
-
+        // the member is gone straight away; their messages, reactions and the rest are cleared in batches
         await ctx.db.delete(args.id)
+        await ctx.scheduler.runAfter(0, internal.members.cleanupRemoved, { memberId: args.id, workspaceId: member.workspaceId })
         return args.id;
     }
+})
+
+const CLEAN_BATCH = 200
+
+// Clears what a removed member left behind, a batch at a time so a very active member can't hit the
+// per-mutation limits. Runs again by itself until every batch comes back short.
+export const cleanupRemoved = internalMutation({
+    args: { memberId: v.id("members"), workspaceId: v.id("workspaces") },
+    handler: async (ctx, args) => {
+        const id = args.memberId
+        let more = false
+
+        const messages = await ctx.db.query("messages").withIndex("by_member_id", (q) => q.eq("memberId", id)).take(CLEAN_BATCH)
+        for (const m of messages) {
+            for (const fileId of [m.image, m.file]) if (fileId) await release(ctx, fileId)
+            await ctx.db.delete(m._id)
+        }
+        if (messages.length === CLEAN_BATCH) more = true
+
+        const reactions = await ctx.db.query("reactions").withIndex("by_member_id", (q) => q.eq("memberId", id)).take(CLEAN_BATCH)
+        for (const r of reactions) await ctx.db.delete(r._id)
+        if (reactions.length === CLEAN_BATCH) more = true
+
+        const conversations = await ctx.db.query("conversations").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId))
+            .filter((q) => q.or(q.eq(q.field("memberOneId"), id), q.eq(q.field("memberTwoId"), id)))
+            .take(CLEAN_BATCH)
+        for (const c of conversations) await ctx.db.delete(c._id)
+        if (conversations.length === CLEAN_BATCH) more = true
+
+        const notifications = await ctx.db.query("notifications").withIndex("by_recipient", (q) => q.eq("recipientId", id)).take(CLEAN_BATCH)
+        for (const n of notifications) await ctx.db.delete(n._id)
+        if (notifications.length === CLEAN_BATCH) more = true
+
+        const saved = await ctx.db.query("savedMessages").withIndex("by_member_id", (q) => q.eq("memberId", id)).take(CLEAN_BATCH)
+        for (const x of saved) await ctx.db.delete(x._id)
+        if (saved.length === CLEAN_BATCH) more = true
+
+        const attachmentRows = await ctx.db.query("attachments").withIndex("by_member_id", (q) => q.eq("memberId", id)).take(CLEAN_BATCH)
+        for (const x of attachmentRows) await ctx.db.delete(x._id)
+        if (attachmentRows.length === CLEAN_BATCH) more = true
+
+        const assigned = await ctx.db.query("tasks").withIndex("by_assignee_id", (q) => q.eq("assigneeId", id)).take(CLEAN_BATCH)
+        for (const t of assigned) await ctx.db.patch(t._id, { assigneeId: undefined, updatedAt: Date.now() })
+        if (assigned.length === CLEAN_BATCH) more = true
+
+        // take them out of any locked channels they were added to
+        const channels = await ctx.db.query("channels").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId)).take(1000)
+        for (const ch of channels) {
+            if (ch.memberIds?.includes(id)) await ctx.db.patch(ch._id, { memberIds: ch.memberIds.filter((x) => x !== id) })
+            if (ch.guestIds?.includes(id)) await ctx.db.patch(ch._id, { guestIds: ch.guestIds.filter((x) => x !== id) })
+        }
+
+        if (more) await ctx.scheduler.runAfter(0, internal.members.cleanupRemoved, args)
+    },
 })

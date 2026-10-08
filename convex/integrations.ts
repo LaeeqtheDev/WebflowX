@@ -60,52 +60,6 @@ const checkUrl = (raw: string): string => {
     return u.toString()
 }
 
-// ---- DNS check: a public-looking name can still point at a private address (or be switched to one later) ----
-
-const privateV4 = (ip: string) => {
-    const p = ip.split(".").map(Number)
-    if (p.length !== 4 || p.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return true
-    const [a, b] = p
-    return (
-        a === 0 || a === 10 || a === 127 ||
-        (a === 100 && b >= 64 && b <= 127) ||   // carrier-grade NAT
-        (a === 169 && b === 254) ||             // link-local, cloud metadata
-        (a === 172 && b >= 16 && b <= 31) ||
-        (a === 192 && b === 168) ||
-        (a === 192 && b === 0) ||
-        (a === 198 && (b === 18 || b === 19)) ||
-        a >= 224                                // multicast and reserved
-    )
-}
-const privateV6 = (ip: string) => {
-    const x = ip.toLowerCase()
-    if (x === "::" || x === "::1") return true
-    if (x.startsWith("fc") || x.startsWith("fd") || /^fe[89ab]/.test(x) || x.startsWith("ff")) return true
-    const mapped = x.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/)
-    return mapped ? privateV4(mapped[1]) : false
-}
-
-// Looks the host up through a public DNS-over-HTTPS resolver and refuses it if any answer is a private address.
-async function hostIsPublic(host: string): Promise<boolean> {
-    try {
-        for (const type of ["A", "AAAA"]) {
-            const res = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(host)}&type=${type}`, {
-                headers: { accept: "application/dns-json" },
-                signal: AbortSignal.timeout(4000),
-            })
-            if (!res.ok) return false
-            const json = (await res.json()) as { Answer?: { type: number; data: string }[] }
-            for (const a of json.Answer ?? []) {
-                if (a.type === 1 && privateV4(a.data)) return false
-                if (a.type === 28 && privateV6(a.data)) return false
-            }
-        }
-        return true
-    } catch {
-        return false // can't verify, so don't send
-    }
-}
-
 const publicRow = (r: Doc<"integrations">) => ({
     _id: r._id,
     kind: r.kind,
@@ -233,6 +187,12 @@ export const authenticate = internalMutation({
         const workspace = await ctx.db.get(row.workspaceId)
         if (!workspace) return { status: "invalid" as const }
         if (PLANS[getPlan(workspace.plan)][FEATURE[row.kind]] === 0) return { status: "plan" as const }
+        // keys and hooks act as the person who made them, so they follow the workspace's two-step rule too
+        if (workspace.require2fa) {
+            const creator = await ctx.db.get(row.createdBy)
+            const tf = creator ? await ctx.db.query("twoFactor").withIndex("by_user_id", (q) => q.eq("userId", creator.userId)).unique() : null
+            if (!tf?.enabled) return { status: "twofactor" as const }
+        }
         if (!(await consume(ctx, `int:${row._id}`, RATE[row.kind], 60_000))) return { status: "limited" as const }
         const now = Date.now()
         if (!row.lastUsedAt || now - row.lastUsedAt > 60_000) await ctx.db.patch(row._id, { lastUsedAt: now })
@@ -442,33 +402,15 @@ export const deliver = internalAction({
         await Promise.all(args.hookIds.map(async (id) => {
             const hook = await ctx.runQuery(internal.integrations.getHook, { id })
             if (!hook) return
-            const ctl = new AbortController()
-            const timer = setTimeout(() => ctl.abort(), 8000)
             let ok = false
             let status = "error"
             try {
-                if (!(await hostIsPublic(new URL(hook.url).hostname))) {
-                    await ctx.runMutation(internal.integrations.recordDelivery, { id, ok: false, status: "blocked address" })
-                    return
-                }
-                const res = await fetch(hook.url, {
-                    method: "POST",
-                    redirect: "manual",
-                    signal: ctl.signal,
-                    headers: {
-                        "Content-Type": "application/json",
-                        "User-Agent": "WebflowX-Webhooks/1",
-                        "X-WebflowX-Event": args.event,
-                        "X-WebflowX-Signature": `sha256=${await hmacHex(hook.secret, body)}`,
-                    },
-                    body,
-                })
-                ok = res.status >= 200 && res.status < 300
-                status = String(res.status)
-            } catch (e) {
-                status = e instanceof Error && e.name === "AbortError" ? "timeout" : "unreachable"
-            } finally {
-                clearTimeout(timer)
+                const sig = `sha256=${await hmacHex(hook.secret, body)}`
+                const r = await ctx.runAction(internal.webhookSend.post, { url: hook.url, event: args.event, signature: sig, body })
+                ok = r.ok
+                status = r.status
+            } catch {
+                status = "unreachable"
             }
             await ctx.runMutation(internal.integrations.recordDelivery, { id, ok, status })
         }))

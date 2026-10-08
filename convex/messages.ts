@@ -164,7 +164,7 @@ export const deleteMessageCascade = async (
         .withIndex("by_parent_message_id", (q) =>
             q.eq("parentMessagesId", message._id)
         )
-        .collect();
+        .take(500);
     for (const reply of replies) {
         await deleteMessageCascade(ctx, reply);
     }
@@ -172,15 +172,15 @@ export const deleteMessageCascade = async (
     const reactions = await ctx.db
         .query("reactions")
         .withIndex("by_message_id", (q) => q.eq("messageId", message._id))
-        .collect();
+        .take(500);
     for (const reaction of reactions) await ctx.db.delete(reaction._id);
 
     // pins and saved copies of this message go with it
-    const pins = await ctx.db.query("pins").withIndex("by_message_id", (q) => q.eq("messageId", message._id)).collect();
+    const pins = await ctx.db.query("pins").withIndex("by_message_id", (q) => q.eq("messageId", message._id)).take(500);
     for (const pin of pins) await ctx.db.delete(pin._id);
-    const saves = await ctx.db.query("savedMessages").withIndex("by_message_id", (q) => q.eq("messageId", message._id)).collect();
+    const saves = await ctx.db.query("savedMessages").withIndex("by_message_id", (q) => q.eq("messageId", message._id)).take(500);
     for (const save of saves) await ctx.db.delete(save._id);
-    const attached = await ctx.db.query("attachments").withIndex("by_message_id", (q) => q.eq("messageId", message._id)).collect();
+    const attached = await ctx.db.query("attachments").withIndex("by_message_id", (q) => q.eq("messageId", message._id)).take(500);
     for (const a of attached) await ctx.db.delete(a._id);
 
     for (const fileId of [message.image, message.file]) {

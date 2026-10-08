@@ -187,7 +187,8 @@ export const remove = mutation({
 
         // nobody can join or open it from here on
         await ctx.db.patch(args.id, { invitesDisabled: true })
-        const members = await ctx.db.query("members").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.id)).collect()
+        // the rest of the members (if there are more than this) are removed by the purge below
+        const members = await ctx.db.query("members").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.id)).take(500)
         for (const m of members) await ctx.db.delete(m._id)
 
         await ctx.scheduler.runAfter(0, internal.workspaces.purge, { id: args.id })
@@ -205,16 +206,19 @@ export const purge = internalMutation({
 
         const tasks = await ctx.db.query("tasks").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH)
         for (const t of tasks) {
-            const comments = await ctx.db.query("taskComments").withIndex("by_task_id", (q) => q.eq("taskId", t._id)).collect()
+            const comments = await ctx.db.query("taskComments").withIndex("by_task_id", (q) => q.eq("taskId", t._id)).take(BATCH)
             for (const c of comments) await ctx.db.delete(c._id)
+            // a task with a very long comment trail is finished off on the next round
+            if (comments.length === BATCH) { more = true; continue }
             await ctx.db.delete(t._id)
         }
         if (tasks.length === BATCH) more = true
 
         const meetings = await ctx.db.query("meetings").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH)
         for (const m of meetings) {
-            const parts = await ctx.db.query("meetingTranscripts").withIndex("by_meeting_id", (q) => q.eq("meetingId", m._id)).collect()
+            const parts = await ctx.db.query("meetingTranscripts").withIndex("by_meeting_id", (q) => q.eq("meetingId", m._id)).take(BATCH)
             for (const part of parts) await ctx.db.delete(part._id)
+            if (parts.length === BATCH) { more = true; continue }
             await ctx.db.delete(m._id)
         }
         if (meetings.length === BATCH) more = true
@@ -258,6 +262,7 @@ export const purge = internalMutation({
             await ctx.db.query("savedMessages").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
             await ctx.db.query("attachments").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
             await ctx.db.query("integrations").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("members").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", wid)).take(BATCH),
         ]
         for (const rows of simple) {
             for (const row of rows) await ctx.db.delete(row._id)

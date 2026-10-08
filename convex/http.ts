@@ -64,8 +64,9 @@ http.route({
 const json = (data: unknown, status = 200, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json", ...headers } })
 
-const deny = (status: "invalid" | "plan" | "limited") =>
-  status === "limited" ? json({ error: "Too many requests. Slow down." }, 429, { "Retry-After": "60" })
+const deny = (status: "invalid" | "plan" | "limited" | "twofactor") =>
+  status === "twofactor" ? json({ error: "This workspace requires two-step verification, and the person who created this credential hasn't turned it on." }, 403)
+  : status === "limited" ? json({ error: "Too many requests. Slow down." }, 429, { "Retry-After": "60" })
   : status === "plan" ? json({ error: "This feature isn't included in the workspace's current plan." }, 403)
   : json({ error: "Invalid or revoked credentials." }, 401)
 

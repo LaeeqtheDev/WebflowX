@@ -50,6 +50,7 @@ import type * as upload from "../upload.js";
 import type * as usage from "../usage.js";
 import type * as users from "../users.js";
 import type * as validate from "../validate.js";
+import type * as webhookSend from "../webhookSend.js";
 import type * as workspaces from "../workspaces.js";
 
 import type {
@@ -101,6 +102,7 @@ declare const fullApi: ApiFromModules<{
   usage: typeof usage;
   users: typeof users;
   validate: typeof validate;
+  webhookSend: typeof webhookSend;
   workspaces: typeof workspaces;
 }>;
 
