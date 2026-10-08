@@ -72,6 +72,11 @@ const makeCaretExtension = (awareness: Awareness) =>
         },
     })
 
+// The Liveblocks client injects its "Powered by" badge into <body> and never takes it down, so it
+// would stay on every page after a doc is closed. Remove it once the last open doc is gone.
+let openDocs = 0
+const removeBadge = () => { if (openDocs === 0) document.getElementById("liveblocks-badge")?.remove() }
+
 const EditorInner = ({
     ydoc,
     awareness,
@@ -235,6 +240,7 @@ export const DocEditor = ({
         let leaveRoom: (() => void) | null = null
         let yProvider: LiveblocksYjsProvider | null = null
         let mounted = true
+        openDocs += 1
 
         const init = async () => {
             try {
@@ -297,6 +303,10 @@ export const DocEditor = ({
             setYdoc(null)
             try { yProvider?.destroy() } catch {}
             try { leaveRoom?.() } catch {}
+            openDocs -= 1
+            removeBadge()
+            // the badge can be injected a moment after connecting, so check again shortly after leaving
+            setTimeout(removeBadge, 1500)
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [roomId, attempt])
