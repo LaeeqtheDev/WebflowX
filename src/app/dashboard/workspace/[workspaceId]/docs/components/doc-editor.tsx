@@ -23,6 +23,7 @@ import { api } from "../../../../../../../convex/_generated/api"
 import type { Id } from "../../../../../../../convex/_generated/dataModel"
 import { templateHtml } from "./templates"
 import { DocToolbar } from "./doc-toolbar"
+import { SlashMenu } from "./slash-menu"
 import type { LiveblocksYjsProvider } from "@liveblocks/yjs"
 import type * as Y from "yjs"
 
@@ -199,6 +200,7 @@ const EditorInner = ({
             <div className={compact ? "flex-1 overflow-y-auto bg-cream-soft p-3" : "flex-1 overflow-y-auto bg-cream-soft py-8 px-4"}>
                 <div className={compact ? "bg-surface rounded-xl border border-plum/12" : "max-w-3xl mx-auto bg-surface rounded-xl shadow-sm border border-plum/12 min-h-[calc(100vh-200px)]"}>
                     <EditorContent editor={editor} />
+                    {editor && <SlashMenu editor={editor} onImages={insertImages} />}
                 </div>
             </div>
             <div className="flex items-center justify-between gap-3 border-t border-plum/12 bg-surface px-4 py-1.5 text-[11px] text-ink/60 shrink-0">
