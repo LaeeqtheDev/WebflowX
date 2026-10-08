@@ -24,6 +24,7 @@ import type { Id } from "../../../../../../../convex/_generated/dataModel"
 import { templateHtml } from "./templates"
 import { DocToolbar } from "./doc-toolbar"
 import { SlashMenu } from "./slash-menu"
+import { Callout } from "./callout"
 import type { LiveblocksYjsProvider } from "@liveblocks/yjs"
 import type * as Y from "yjs"
 
@@ -147,6 +148,7 @@ const EditorInner = ({
             Placeholder.configure({ placeholder: "Start writing, or type / for ideas…" }),
             TextStyle,
             Color,
+            Callout,
         ],
         onUpdate: ({ editor: ed }) => {
             setWords(ed.getText().trim().split(/\s+/).filter(Boolean).length)
@@ -172,7 +174,7 @@ const EditorInner = ({
                 return true
             },
             attributes: {
-                class: compact ? "outline-none min-h-[240px] px-6 py-5 max-w-none focus:outline-none" : "outline-none min-h-[calc(100vh-200px)] px-14 py-12 max-w-none focus:outline-none"
+                class: compact ? "wfx-doc outline-none min-h-[240px] px-6 py-5 max-w-none focus:outline-none" : "wfx-doc outline-none min-h-[calc(100vh-200px)] px-6 py-10 sm:px-16 sm:py-14 max-w-none focus:outline-none"
             }
         }
     })
@@ -197,8 +199,8 @@ const EditorInner = ({
                     <DocToolbar editor={editor} />
                 </div>
             )}
-            <div className={compact ? "flex-1 overflow-y-auto bg-cream-soft p-3" : "flex-1 overflow-y-auto bg-cream-soft py-8 px-4"}>
-                <div className={compact ? "bg-surface rounded-xl border border-plum/12" : "max-w-3xl mx-auto bg-surface rounded-xl shadow-sm border border-plum/12 min-h-[calc(100vh-200px)]"}>
+            <div className={compact ? "flex-1 overflow-y-auto bg-cream-soft p-3" : "flex-1 overflow-y-auto bg-cream-soft py-6 sm:py-10 px-3 sm:px-6"}>
+                <div className={compact ? "bg-surface rounded-xl border border-plum/12" : "max-w-[52rem] mx-auto bg-surface rounded-2xl shadow-[0_1px_2px_rgba(56,29,42,0.05),0_8px_32px_-12px_rgba(56,29,42,0.12)] border border-plum/10 min-h-[calc(100vh-200px)]"}>
                     <EditorContent editor={editor} />
                     {editor && <SlashMenu editor={editor} onImages={insertImages} />}
                 </div>

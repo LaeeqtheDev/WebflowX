@@ -25,12 +25,14 @@ import {
     File,
     Download,
     AtSign,
+    BookOpenText,
 } from "lucide-react";
 import { MdSend } from "react-icons/md";
 import { Hint } from "./hints";
 import { Delta, Op } from "quill/core";
 import { cn } from "@/lib/utils";
 import { EmojiPopover } from "./emoji-popover";
+import { SharePagePicker } from "./share-page-picker";
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -851,6 +853,24 @@ const Editor = ({
                                     <FileText className="size-4" />
                                 </Button>
                             </Hint>
+                        )}
+
+                        {variant === "create" && (
+                            <SharePagePicker
+                                onPick={(page) => {
+                                    const quill = quilRef.current;
+                                    if (!quill) return;
+                                    quill.focus();
+                                    const index = quill.getSelection()?.index ?? quill.getLength() - 1;
+                                    quill.insertText(index, page.title, { link: page.url }, "user");
+                                    quill.insertText(index + page.title.length, " ", { link: false }, "user");
+                                    quill.setSelection(index + page.title.length + 1, 0, "user");
+                                }}
+                            >
+                                <Button disabled={disabled} size="iconSm" variant="ghost" aria-label="Share a page">
+                                    <BookOpenText className="size-4" />
+                                </Button>
+                            </SharePagePicker>
                         )}
 
                         {variant === "create" && (

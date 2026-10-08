@@ -461,3 +461,60 @@ select, select option { background-color: var(--wfx-surface); color: var(--wfx-i
 
 /* The meeting stage draws its own avatar when a camera is off, so hide LiveKit's built-in placeholder icon */
 .lk-participant-placeholder { display: none !important; }
+
+/* ---- Document editor polish (page body) ---- */
+.wfx-doc.ProseMirror { font-size: 16.5px; line-height: 1.75; font-feature-settings: "ss01", "cv11"; }
+.wfx-doc.ProseMirror > * + * { margin-top: 0.15rem; }
+.wfx-doc.ProseMirror h1 { font-size: 2.6rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin: 0 0 0.9rem; }
+.wfx-doc.ProseMirror h2 { font-size: 1.55rem; font-weight: 700; line-height: 1.25; letter-spacing: -0.02em; margin: 2.2rem 0 0.6rem; padding-bottom: 0.35rem; border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent); }
+.wfx-doc.ProseMirror h3 { font-size: 1.2rem; font-weight: 650; line-height: 1.35; margin: 1.6rem 0 0.4rem; }
+.wfx-doc.ProseMirror > h1:first-child, .wfx-doc.ProseMirror > h2:first-child { margin-top: 0; }
+.wfx-doc.ProseMirror p { margin: 0.45rem 0; }
+.wfx-doc.ProseMirror ul, .wfx-doc.ProseMirror ol { padding-left: 1.6rem; margin: 0.4rem 0; }
+.wfx-doc.ProseMirror ul { list-style-type: none; }
+.wfx-doc.ProseMirror ul:not([data-type="taskList"]) > li { position: relative; }
+.wfx-doc.ProseMirror ul:not([data-type="taskList"]) > li::before { content: ""; position: absolute; left: -1.15rem; top: 0.82em; width: 6px; height: 6px; border-radius: 9999px; background: #ff5018; }
+.wfx-doc.ProseMirror ul:not([data-type="taskList"]) ul:not([data-type="taskList"]) > li::before { background: transparent; box-shadow: inset 0 0 0 1.5px #ff5018; }
+.wfx-doc.ProseMirror ol { list-style-type: decimal; }
+.wfx-doc.ProseMirror ol > li::marker { color: #ff5018; font-weight: 600; font-variant-numeric: tabular-nums; }
+.wfx-doc.ProseMirror li { margin: 0.2rem 0; }
+.wfx-doc.ProseMirror li > p { margin: 0; }
+
+/* checkboxes */
+.wfx-doc.ProseMirror ul[data-type="taskList"] { padding-left: 0; }
+.wfx-doc.ProseMirror ul[data-type="taskList"] li { gap: 0.7rem; align-items: flex-start; }
+.wfx-doc.ProseMirror ul[data-type="taskList"] li > label { margin-top: 0.42rem; display: inline-flex; }
+.wfx-doc.ProseMirror ul[data-type="taskList"] li > label input { appearance: none; -webkit-appearance: none; width: 1.1rem; height: 1.1rem; border-radius: 6px; border: 1.75px solid color-mix(in srgb, currentColor 35%, transparent); background: transparent; display: grid; place-content: center; transition: background 0.12s, border-color 0.12s; margin: 0; }
+.wfx-doc.ProseMirror ul[data-type="taskList"] li > label input:hover { border-color: #ff5018; }
+.wfx-doc.ProseMirror ul[data-type="taskList"] li > label input::after { content: ""; width: 0.28rem; height: 0.55rem; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px) scale(0); transition: transform 0.12s; }
+.wfx-doc.ProseMirror ul[data-type="taskList"] li > label input:checked { background: #ff5018; border-color: #ff5018; }
+.wfx-doc.ProseMirror ul[data-type="taskList"] li > label input:checked::after { transform: rotate(45deg) translate(-1px, -1px) scale(1); }
+.wfx-doc.ProseMirror ul[data-type="taskList"] ul[data-type="taskList"] { padding-left: 0.25rem; }
+
+/* quotes, code, rules */
+.wfx-doc.ProseMirror blockquote { border-left: 3px solid #ff5018; background: transparent; border-radius: 0; padding: 0.15rem 0 0.15rem 1.1rem; margin: 1rem 0; font-size: 1.1em; font-style: italic; opacity: 0.88; }
+.wfx-doc.ProseMirror hr { margin: 2rem auto; width: 100%; border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent); }
+.wfx-doc.ProseMirror pre { border-radius: 14px; padding: 16px 18px; font-size: 0.88em; line-height: 1.65; }
+
+/* tables */
+.wfx-doc.ProseMirror table { border-radius: 14px; margin: 1.1rem 0; border-color: color-mix(in srgb, currentColor 14%, transparent); }
+.wfx-doc.ProseMirror th, .wfx-doc.ProseMirror td { padding: 10px 14px; vertical-align: top; min-width: 90px; }
+.wfx-doc.ProseMirror th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 650; background: color-mix(in srgb, currentColor 5%, transparent); }
+.wfx-doc.ProseMirror td p, .wfx-doc.ProseMirror th p { margin: 0; }
+.wfx-doc.ProseMirror tr:last-child td { border-bottom: none; }
+.wfx-doc.ProseMirror tr > *:last-child { border-right: none; }
+
+/* callouts */
+.wfx-doc.ProseMirror div[data-type="callout"] { --tone: #ff5018; border-radius: 14px; padding: 0.85rem 1.1rem 0.85rem 1.2rem; margin: 1rem 0; border: 1px solid color-mix(in srgb, var(--tone) 28%, transparent); background: color-mix(in srgb, var(--tone) 8%, transparent); box-shadow: inset 3px 0 0 var(--tone); }
+.wfx-doc.ProseMirror div[data-type="callout"][data-tone="tip"] { --tone: #059669; }
+.wfx-doc.ProseMirror div[data-type="callout"][data-tone="warn"] { --tone: #d97706; }
+.wfx-doc.ProseMirror div[data-type="callout"] > :first-child { margin-top: 0; }
+.wfx-doc.ProseMirror div[data-type="callout"] > :last-child { margin-bottom: 0; }
+.wfx-doc.ProseMirror div[data-type="callout"] h2, .wfx-doc.ProseMirror div[data-type="callout"] h3 { border: none; padding: 0; margin: 0 0 0.3rem; font-size: 1.05rem; }
+.wfx-doc.ProseMirror p.is-editor-empty:first-child::before { font-size: 1rem; }
+
+/* Links to WebflowX pages in messages read as a small page chip */
+.ql-editor a[href*="/docs/"], .ql-renderer a[href*="/docs/"] { display: inline-flex; align-items: center; gap: 4px; background: rgba(255, 80, 24, 0.1); color: #c2370d; font-weight: 600; text-decoration: none; border-radius: 6px; padding: 0 7px; }
+.ql-editor a[href*="/docs/"]::before, .ql-renderer a[href*="/docs/"]::before { content: ""; width: 12px; height: 12px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/%3E%3Cpath d='M14 2v4a2 2 0 0 0 2 2h4'/%3E%3C/svg%3E") center/contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/%3E%3Cpath d='M14 2v4a2 2 0 0 0 2 2h4'/%3E%3C/svg%3E") center/contain no-repeat; }
+.ql-renderer a[href*="/docs/"]:hover { background: rgba(255, 80, 24, 0.2); }
+.dark .ql-editor a[href*="/docs/"], .dark .ql-renderer a[href*="/docs/"] { color: #ff8a63; background: rgba(255, 80, 24, 0.16); }

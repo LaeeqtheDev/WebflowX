@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { Editor } from "@tiptap/react"
-import { Heading1, Heading2, Heading3, ImageIcon, List, ListOrdered, ListTodo, Minus, Pilcrow, Quote, SquareCode, Table2 } from "lucide-react"
+import { Heading1, Heading2, Heading3, ImageIcon, Info, Lightbulb, TriangleAlert, List, ListOrdered, ListTodo, Minus, Pilcrow, Quote, SquareCode, Table2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type Item = { id: string; title: string; hint: string; keys: string; icon: React.ComponentType<{ className?: string }>; run: (e: Editor) => void }
@@ -16,6 +16,9 @@ const ITEMS: Item[] = [
     { id: "number", title: "Numbered list", hint: "A list with numbers", keys: "ol ordered number list", icon: ListOrdered, run: (e) => e.chain().focus().toggleOrderedList().run() },
     { id: "todo", title: "To-do list", hint: "Track tasks with checkboxes", keys: "todo task checkbox check", icon: ListTodo, run: (e) => e.chain().focus().toggleTaskList().run() },
     { id: "quote", title: "Quote", hint: "Call out a passage", keys: "blockquote quote", icon: Quote, run: (e) => e.chain().focus().toggleBlockquote().run() },
+    { id: "callout", title: "Callout", hint: "Highlight a key point", keys: "callout note info highlight", icon: Info, run: (e) => e.chain().focus().toggleCallout("note").run() },
+    { id: "tip", title: "Tip", hint: "A helpful suggestion", keys: "tip idea hint", icon: Lightbulb, run: (e) => e.chain().focus().toggleCallout("tip").run() },
+    { id: "warning", title: "Warning", hint: "Something to watch out for", keys: "warning caution alert risk", icon: TriangleAlert, run: (e) => e.chain().focus().toggleCallout("warn").run() },
     { id: "code", title: "Code block", hint: "Monospaced code", keys: "code snippet", icon: SquareCode, run: (e) => e.chain().focus().toggleCodeBlock().run() },
     { id: "divider", title: "Divider", hint: "A horizontal line", keys: "hr divider line separator", icon: Minus, run: (e) => e.chain().focus().setHorizontalRule().run() },
     { id: "image", title: "Image", hint: "Upload a picture", keys: "image picture photo upload", icon: ImageIcon, run: () => undefined },

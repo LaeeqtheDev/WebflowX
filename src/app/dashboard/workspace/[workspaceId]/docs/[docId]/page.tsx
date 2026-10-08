@@ -169,7 +169,7 @@ export default function DocPage() {
         const docUrl = `${window.location.origin}/dashboard/workspace/${workspaceId}/docs/${doc._id}`
         const body = JSON.stringify({
             ops: [
-                { insert: `📄 ${currentUserName} shared a document: ` },
+                { insert: `${currentUserName} shared a page: ` },
                 { attributes: { link: docUrl }, insert: doc.title },
                 { insert: "\n" }
             ]
