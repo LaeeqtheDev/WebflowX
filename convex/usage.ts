@@ -93,27 +93,3 @@ export const get = query({
         }
     }
 })
-
-export const upgradePlan = mutation({
-    args: {
-        workspaceId: v.id("workspaces"),
-        plan: v.union(
-            v.literal("free"),
-            v.literal("startup"),
-            v.literal("growth"),
-            v.literal("enterprise")
-        )
-    },
-    handler: async (ctx, args) => {
-        const userId = await auth.getUserId(ctx)
-        if (!userId) throw new Error("Unauthorized")
-
-        // Only the workspace owner may change the plan. (Billing is not wired up yet: when Stripe is added,
-        // replace this with an internal mutation called from the Stripe webhook.)
-        const workspace = await ctx.db.get(args.workspaceId)
-        if (!workspace || workspace.userId !== userId) throw new ConvexError("Only the workspace owner can change the plan")
-
-        await ctx.db.patch(args.workspaceId, { plan: args.plan })
-        return args.workspaceId
-    }
-})

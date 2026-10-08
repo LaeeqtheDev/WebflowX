@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import { usePathname } from "next/navigation"
 import { Sidebar } from "./components/sidebar"
 import { Toolbar } from "./components/toolbar"
@@ -20,6 +20,7 @@ import { Id } from "../../../../../convex/_generated/dataModel"
 import dynamic from "next/dynamic"
 import { UsageWarning } from "./components/usage-warning"
 import { QuickSwitcher } from "./components/quick-switcher"
+import { BillingReturn } from "./components/billing-return"
 import { PresenceProvider } from "@/features/presence/presence"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace"
@@ -148,6 +149,7 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
   const { data: workspace } = useGetWorkspace({ id: workspaceId })
   const shell = (
     <PresenceProvider workspaceId={workspaceId}>
+      <Suspense fallback={null}><BillingReturn /></Suspense>
       <WorkspaceShell>{children}</WorkspaceShell>
     </PresenceProvider>
   )

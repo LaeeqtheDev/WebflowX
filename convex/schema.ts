@@ -114,7 +114,20 @@ const schema = defineSchema({
                 member: v.array(v.string()),
             })
         ),
-    }).index("by_user_id", ["userId"]),
+        // Stripe billing (written only by the webhook and the checkout actions)
+        stripeCustomerId: v.optional(v.string()),
+        stripeSubscriptionId: v.optional(v.string()),
+        billingStatus: v.optional(v.string()),
+        billingInterval: v.optional(v.union(v.literal("month"), v.literal("year"))),
+        billingPeriodEnd: v.optional(v.number()),
+        billingTrialEnd: v.optional(v.number()),
+        cancelAtPeriodEnd: v.optional(v.boolean()),
+    })
+        .index("by_user_id", ["userId"])
+        .index("by_stripe_customer", ["stripeCustomerId"]),
+
+    // Stripe webhook events already handled (Stripe can deliver the same event more than once)
+    stripeEvents: defineTable({ eventId: v.string() }).index("by_event_id", ["eventId"]),
 
     members: defineTable({
         userId: v.id("users"),

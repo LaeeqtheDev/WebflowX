@@ -22,7 +22,9 @@ import {
     ArrowRight16Regular,
     ShieldCheckmark20Regular,
 } from "@fluentui/react-icons"
-import { useUpgradePlan } from "@/features/workspaces/api/use-upgrade-plan"
+import { useAction, useQuery } from "convex/react"
+import { api } from "../../../../../../convex/_generated/api"
+import { friendlyError } from "@/hooks/use-limit-handler"
 import { Id } from "../../../../../../convex/_generated/dataModel"
 import { useGetUsage } from "@/features/workspaces/api/use-get-usage"
 
@@ -124,27 +126,32 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
     const urlWorkspaceId = useWorkspaceId()
     const workspaceId = workspaceIdProp ?? urlWorkspaceId
     const { data: usage, isLoading } = useGetUsage({ workspaceId })
-    const { mutate: upgradePlan, isPending } = useUpgradePlan()
+    const billing = useQuery(api.billing.get, { workspaceId })
+    const startCheckout = useAction(api.stripe.createCheckout)
+    const openPortal = useAction(api.stripe.createPortal)
+    const [interval, setInterval] = useState<"month" | "year">("month")
+    const [busy, setBusy] = useState<string | null>(null)
     const [activeTab, setActiveTab] = useState<"usage" | "plans">(initialTab)
-    const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null)
 
     const currentPlan = (usage?.plan ?? "free") as PlanKey
     const current = PLANS.find((p) => p.key === currentPlan) ?? PLANS[0]
     const CurrentIcon = current.icon
 
-    const handleUpgrade = (plan: "startup" | "growth" | "enterprise") => {
-        setUpgradingPlan(plan)
-        upgradePlan({ workspaceId, plan }, {
-            onSuccess: () => {
-                toast.success(`Upgraded to ${plan} plan!`)
-                setUpgradingPlan(null)
-            },
-            onError: () => {
-                toast.error("Failed to upgrade plan")
-                setUpgradingPlan(null)
-            },
-        })
+    const hasSub = !!billing && ["active", "trialing", "past_due"].includes(billing.status ?? "")
+    const canManage = !!billing?.isOwner && billing.configured
+    const go = async (key: string, run: () => Promise<{ url: string }>) => {
+        setBusy(key)
+        try {
+            const { url } = await run()
+            window.location.assign(url)
+        } catch (e) {
+            toast.error(friendlyError(e, "Couldn't open billing. Please try again."))
+            setBusy(null)
+        }
     }
+    const handleUpgrade = (plan: "startup" | "growth" | "enterprise") => go(plan, () => startCheckout({ workspaceId, plan, interval }))
+    const handlePortal = () => go("portal", () => openPortal({ workspaceId }))
+    const dateOf = (ms: number | null | undefined) => (ms ? new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "")
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
@@ -221,13 +228,42 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                             <div className="flex flex-wrap items-end justify-between gap-2">
                                 <div>
                                     <h3 className="text-xl font-semibold tracking-tight text-ink">Choose your plan</h3>
-                                    <p className="mt-1 text-sm text-plum/60">Billed per workspace. Change or cancel any time.</p>
+                                    <p className="mt-1 text-sm text-plum/60">One flat price per workspace, not per seat. Change or cancel any time.</p>
                                 </div>
-                                <span className="flex items-center gap-1.5 text-xs text-plum/60">
-                                    <ShieldCheckmark20Regular className="size-4 text-[#ff5018]" />
-                                    No card needed while upgrades are simulated
-                                </span>
+                                <div className="flex flex-wrap items-center gap-3">
+                                    {billing?.annualAvailable && (
+                                        <div role="group" aria-label="Billing period" className="flex rounded-full border border-plum/12 bg-surface p-0.5 text-xs font-semibold">
+                                            {(["month", "year"] as const).map((i) => (
+                                                <button key={i} type="button" onClick={() => setInterval(i)}
+                                                    className={cn("rounded-full px-3 py-1 transition-colors", interval === i ? "bg-[#ff5018] text-white" : "text-plum/65 hover:text-ink")}>
+                                                    {i === "month" ? "Monthly" : "Yearly · 2 months free"}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <span className="flex items-center gap-1.5 text-xs text-plum/60">
+                                        <ShieldCheckmark20Regular className="size-4 text-[#ff5018]" />
+                                        {billing?.canTrial && billing.trialDays > 0 && !hasSub ? `${billing.trialDays}-day free trial, no card needed` : "Secure payments by Stripe"}
+                                    </span>
+                                </div>
                             </div>
+
+                            {billing && billing.status === "past_due" && (
+                                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+                                    <span>Your last payment didn&apos;t go through. Update your card to keep the {current.label} plan.</span>
+                                    {canManage && <button onClick={handlePortal} className="rounded-full bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">Update payment</button>}
+                                </div>
+                            )}
+                            {billing && billing.status === "trialing" && !billing.cancelAtPeriodEnd && (
+                                <div className="rounded-xl border border-[#ff5018]/25 bg-[#ff5018]/8 px-4 py-3 text-sm text-ink">
+                                    You&apos;re on a free trial of {current.label} until <strong>{dateOf(billing.trialEnd ?? billing.periodEnd)}</strong>. Add a card before then to keep it.
+                                </div>
+                            )}
+                            {billing && hasSub && billing.cancelAtPeriodEnd && (
+                                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+                                    Your {current.label} plan ends on <strong>{dateOf(billing.periodEnd)}</strong>, then this workspace moves to Free. Your content stays, but you won&apos;t be able to add more past the Free limits.
+                                </div>
+                            )}
 
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                                 {PLANS.map((plan) => {
@@ -260,36 +296,52 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
 
                                             <p className="mt-4 text-sm font-semibold">{plan.label}</p>
                                             <p className="mt-1 flex items-baseline gap-1">
-                                                <span className="text-3xl font-semibold tracking-tight">${plan.price}</span>
-                                                <span className={cn("text-xs", plan.popular ? "text-white/60" : "text-plum/50")}>/ month</span>
+                                                <span className="text-3xl font-semibold tracking-tight">${interval === "year" ? plan.price * 10 : plan.price}</span>
+                                                <span className={cn("text-xs", plan.popular ? "text-white/60" : "text-plum/50")}>{interval === "year" && plan.price > 0 ? "/ year" : "/ month"}</span>
                                             </p>
                                             <p className={cn("mt-2 min-h-8 text-xs leading-relaxed", plan.popular ? "text-white/65" : "text-plum/60")}>{plan.tagline}</p>
 
-                                            {isCurrent ? (
-                                                <div className={cn(
-                                                    "mt-4 rounded-full py-2 text-center text-xs font-semibold",
-                                                    plan.popular ? "bg-white/10 text-white" : "bg-plum/5 text-plum/70"
-                                                )}>
-                                                    Your current plan
-                                                </div>
-                                            ) : plan.key === "free" ? (
-                                                <div className="mt-4 rounded-full py-2 text-center text-xs font-medium text-plum/40 dark:text-plum/60">
-                                                    Included
-                                                </div>
-                                            ) : (
-                                                <button
-                                                    onClick={() => handleUpgrade(plan.key as "startup" | "growth" | "enterprise")}
-                                                    disabled={isPending}
-                                                    className={cn(
-                                                        "mt-4 flex items-center justify-center rounded-full py-2 text-xs font-semibold transition-colors disabled:opacity-60",
-                                                        plan.popular
-                                                            ? "bg-[#ff5018] text-white hover:bg-[#e6430f]"
-                                                            : "bg-[#381d2a] dark:bg-[#4a2838] text-white hover:bg-[#2a1420] dark:hover:bg-[#5a3246]"
-                                                    )}
-                                                >
-                                                    {upgradingPlan === plan.key ? <Loader className="size-4 animate-spin" /> : `Upgrade to ${plan.label}`}
-                                                </button>
-                                            )}
+                                            {(() => {
+                                                const base = "mt-4 flex items-center justify-center rounded-full py-2 text-xs font-semibold transition-colors disabled:opacity-60"
+                                                const tone = plan.popular
+                                                    ? "bg-[#ff5018] text-white hover:bg-[#e6430f]"
+                                                    : "bg-[#381d2a] dark:bg-[#4a2838] text-white hover:bg-[#2a1420] dark:hover:bg-[#5a3246]"
+                                                const spin = <Loader className="size-4 animate-spin" />
+                                                if (isCurrent && !hasSub) {
+                                                    return (
+                                                        <div className={cn("mt-4 rounded-full py-2 text-center text-xs font-semibold", plan.popular ? "bg-white/10 text-white" : "bg-plum/5 text-plum/70")}>
+                                                            Your current plan
+                                                        </div>
+                                                    )
+                                                }
+                                                if (isCurrent) {
+                                                    return (
+                                                        <button onClick={handlePortal} disabled={busy !== null || !canManage} className={cn(base, tone)}>
+                                                            {busy === "portal" ? spin : "Manage billing"}
+                                                        </button>
+                                                    )
+                                                }
+                                                if (plan.key === "free") {
+                                                    return hasSub ? (
+                                                        <button onClick={handlePortal} disabled={busy !== null || !canManage} className="mt-4 rounded-full py-2 text-center text-xs font-medium text-plum/60 underline-offset-2 hover:underline disabled:opacity-60">
+                                                            Downgrade in billing portal
+                                                        </button>
+                                                    ) : (
+                                                        <div className="mt-4 rounded-full py-2 text-center text-xs font-medium text-plum/40 dark:text-plum/60">Included</div>
+                                                    )
+                                                }
+                                                const k = plan.key as "startup" | "growth" | "enterprise"
+                                                return (
+                                                    <button
+                                                        onClick={() => (hasSub ? handlePortal() : handleUpgrade(k))}
+                                                        disabled={busy !== null || !canManage}
+                                                        title={!billing?.isOwner ? "Only the workspace owner can change the plan" : undefined}
+                                                        className={cn(base, tone)}
+                                                    >
+                                                        {busy === plan.key || (hasSub && busy === "portal") ? spin : hasSub ? `Switch to ${plan.label}` : billing?.canTrial && billing.trialDays > 0 ? `Try ${plan.label} free` : `Upgrade to ${plan.label}`}
+                                                    </button>
+                                                )
+                                            })()}
 
                                             <ul className={cn("mt-5 flex flex-col gap-2 border-t pt-5", plan.popular ? "border-white/15" : "border-plum/10")}>
                                                 {plan.features.map((f) => (
@@ -305,7 +357,11 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                             </div>
 
                             <p className="text-center text-[11px] text-plum/50">
-                                Payment integration is coming soon. Plan upgrades are simulated for demo purposes.
+                                {billing && !billing.isOwner
+                                    ? "Only the workspace owner can change the plan."
+                                    : billing && !billing.configured
+                                        ? "Online payments aren't switched on for this deployment yet."
+                                        : "Payments are handled securely by Stripe. Your card details never touch WebflowX."}
                             </p>
                         </div>
                     )}

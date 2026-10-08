@@ -237,4 +237,16 @@ http.route({
   }),
 })
 
+// Stripe tells us when a subscription starts, changes or ends. The signature is checked before anything is read.
+http.route({
+  path: "/stripe/webhook",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const signature = request.headers.get("stripe-signature") ?? ""
+    const body = await request.text()
+    const result = await ctx.runAction(internal.stripe.handleWebhook, { body, signature })
+    return new Response(result === "ok" ? "ok" : "bad signature", { status: result === "ok" ? 200 : 400 })
+  }),
+})
+
 export default http;
