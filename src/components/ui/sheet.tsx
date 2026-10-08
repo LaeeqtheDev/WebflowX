@@ -29,11 +29,13 @@ function SheetContent({
   side = "left",
   closeLabel = "Close menu",
   closeClassName,
+  closeIcon,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   side?: "left" | "right" | "bottom"
   closeLabel?: string
   closeClassName?: string
+  closeIcon?: React.ReactNode
 }) {
   return (
     <DialogPrimitive.Portal>
@@ -57,7 +59,7 @@ function SheetContent({
           aria-label={closeLabel}
           className={cn("absolute right-2 top-2 z-10 flex size-10 items-center justify-center rounded-lg text-current opacity-80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70", closeClassName)}
         >
-          <XIcon className="size-5" />
+          {closeIcon ?? <XIcon className="size-5" />}
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>

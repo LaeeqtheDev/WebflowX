@@ -14,7 +14,8 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/
 import { WorkSpaceSidebar } from "./components/WorkspaceSidebar"
 import { usePanel } from "@/hooks/use-panel"
 import { useIsMobile } from "@/hooks/use-is-mobile"
-import { Loader } from "lucide-react"
+import { ChevronLeft, Loader } from "lucide-react"
+import { useVisibleHeight } from "@/hooks/use-visible-height"
 import { Id } from "../../../../../convex/_generated/dataModel"
 import dynamic from "next/dynamic"
 import { UsageWarning } from "./components/usage-warning"
@@ -34,6 +35,7 @@ interface WorkspaceIdLayoutProps {
 const WorkspaceShell = ({ children }: WorkspaceIdLayoutProps) => {
   const {profileMemberId,parentMessageId, onClose} = usePanel()
   const isMobile = useIsMobile()
+  const visibleHeight = useVisibleHeight()
   const pathname = usePathname()
   // The drawer remembers the route it was opened on, so navigating anywhere closes it without an effect.
   const [drawerPath, setDrawerPath] = useState<string | null>(null)
@@ -59,7 +61,7 @@ const WorkspaceShell = ({ children }: WorkspaceIdLayoutProps) => {
 
   if (isMobile) {
     return (
-      <div className="h-dvh flex flex-col">
+      <div className="h-dvh flex flex-col" style={visibleHeight ? { height: visibleHeight } : undefined}>
         <QuickSwitcher />
         {/* Topbar */}
         <Toolbar onOpenMenu={() => setDrawerPath(pathname)} />
@@ -71,7 +73,7 @@ const WorkspaceShell = ({ children }: WorkspaceIdLayoutProps) => {
         </main>
 
         <Sheet open={drawerOpen} onOpenChange={(open) => setDrawerPath(open ? pathname : null)}>
-          <SheetContent side="left" closeLabel="Close navigation menu" className="bg-[#402633] dark:bg-[#2a1722] text-white" closeClassName="bottom-3 right-3 top-auto bg-white/10 hover:bg-white/20">
+          <SheetContent side="left" closeLabel="Close navigation menu" className="bg-[#402633] dark:bg-[#2a1722] text-white" closeIcon={<ChevronLeft className="size-5" />} closeClassName="-right-6 top-1/2 h-16 w-6 -translate-y-1/2 rounded-l-none rounded-r-xl bg-[#402633] dark:bg-[#2a1722] text-white/80 opacity-100 shadow-lg hover:text-white">
             <SheetTitle className="sr-only">Workspace navigation</SheetTitle>
             <SheetDescription className="sr-only">Switch sections, channels and direct messages.</SheetDescription>
             {/* Tapping a link to the page you are already on does not change the route, so close explicitly */}
@@ -89,7 +91,7 @@ const WorkspaceShell = ({ children }: WorkspaceIdLayoutProps) => {
 
         {/* Thread / profile take over the whole screen */}
         {showPanel && (
-          <div className="fixed inset-0 z-40 flex h-dvh flex-col bg-surface">
+          <div className="fixed inset-x-0 top-0 z-40 flex h-dvh flex-col bg-surface" style={visibleHeight ? { height: visibleHeight } : undefined}>
             {panelContent}
           </div>
         )}

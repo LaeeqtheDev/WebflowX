@@ -76,6 +76,8 @@ export const viewport: Viewport = {
   themeColor: "#381d2a",
   width: "device-width",
   initialScale: 1,
+  // the on-screen keyboard shrinks the page instead of covering the bottom of it
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({
