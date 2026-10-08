@@ -35,7 +35,11 @@ interface DocOther {
 type ConnStatus = "initial" | "connecting" | "connected" | "reconnecting" | "disconnected"
 
 interface DocEditorProps {
-    docId: Id<"docs">
+    docId?: Id<"docs">
+    // when the editor is the body of a database row
+    rowId?: Id<"dbRows">
+    compact?: boolean
+    customHtml?: string | null
     template?: string | null
     onTemplateUsed?: () => void
     roomId: string
@@ -72,6 +76,9 @@ const EditorInner = ({
     userName,
     userColor,
     docId,
+    rowId,
+    compact,
+    customHtml,
     template,
     onTemplateUsed,
     status,
@@ -80,12 +87,16 @@ const EditorInner = ({
     awareness: Awareness
     userName: string
     userColor: string
-    docId: Id<"docs">
+    docId?: Id<"docs">
+    rowId?: Id<"dbRows">
+    compact?: boolean
+    customHtml?: string | null
     template?: string | null
     onTemplateUsed?: () => void
     status: ConnStatus
 }) => {
     const touch = useMutation(api.docs.touch)
+    const touchRow = useMutation(api.databases.touchRow)
     const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [words, setWords] = useState(0)
     const templateApplied = useRef(false)
@@ -139,7 +150,7 @@ const EditorInner = ({
         onUpdate: ({ editor: ed }) => {
             setWords(ed.getText().trim().split(/\s+/).filter(Boolean).length)
             if (touchTimer.current) clearTimeout(touchTimer.current)
-            touchTimer.current = setTimeout(() => { touch({ id: docId }).catch(() => undefined) }, 4000)
+            touchTimer.current = setTimeout(() => { (rowId ? touchRow({ rowId }) : docId ? touch({ id: docId }) : Promise.resolve()).catch(() => undefined) }, 4000)
         },
         onCreate: ({ editor: ed }) => {
             setWords(ed.getText().trim().split(/\s+/).filter(Boolean).length)
@@ -160,7 +171,7 @@ const EditorInner = ({
                 return true
             },
             attributes: {
-                class: "outline-none min-h-[calc(100vh-200px)] px-14 py-12 max-w-none focus:outline-none"
+                class: compact ? "outline-none min-h-[240px] px-6 py-5 max-w-none focus:outline-none" : "outline-none min-h-[calc(100vh-200px)] px-14 py-12 max-w-none focus:outline-none"
             }
         }
     })
@@ -173,10 +184,10 @@ const EditorInner = ({
     useEffect(() => {
         if (!editor || !template || templateApplied.current) return
         templateApplied.current = true
-        const html = templateHtml(template)
+        const html = template === "custom" ? (customHtml ?? "") : templateHtml(template)
         if (html && editor.isEmpty) editor.commands.setContent(html)
         onTemplateUsed?.()
-    }, [editor, template, onTemplateUsed])
+    }, [editor, template, customHtml, onTemplateUsed])
 
     return (
         <div className="flex flex-col flex-1 min-h-0">
@@ -185,8 +196,8 @@ const EditorInner = ({
                     <DocToolbar editor={editor} />
                 </div>
             )}
-            <div className="flex-1 overflow-y-auto bg-cream-soft py-8 px-4">
-                <div className="max-w-3xl mx-auto bg-surface rounded-xl shadow-sm border border-plum/12 min-h-[calc(100vh-200px)]">
+            <div className={compact ? "flex-1 overflow-y-auto bg-cream-soft p-3" : "flex-1 overflow-y-auto bg-cream-soft py-8 px-4"}>
+                <div className={compact ? "bg-surface rounded-xl border border-plum/12" : "max-w-3xl mx-auto bg-surface rounded-xl shadow-sm border border-plum/12 min-h-[calc(100vh-200px)]"}>
                     <EditorContent editor={editor} />
                 </div>
             </div>
@@ -207,7 +218,7 @@ const EditorInner = ({
 }
 
 export const DocEditor = ({
-    docId, template, onTemplateUsed, roomId, userId, userName, userColor, userAvatar, onOthersChange
+    docId, rowId, compact, customHtml, template, onTemplateUsed, roomId, userId, userName, userColor, userAvatar, onOthersChange
 }: DocEditorProps) => {
     const [provider, setProvider] = useState<LiveblocksYjsProvider | null>(null)
     const [ydoc, setYdoc] = useState<Y.Doc | null>(null)
@@ -349,6 +360,9 @@ export const DocEditor = ({
                 userName={userName}
                 userColor={userColor}
                 docId={docId}
+                rowId={rowId}
+                compact={compact}
+                customHtml={customHtml}
                 template={template}
                 onTemplateUsed={onTemplateUsed}
                 status={status}

@@ -263,6 +263,11 @@ export const purge = internalMutation({
             await ctx.db.query("attachments").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
             await ctx.db.query("integrations").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
             await ctx.db.query("members").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("dbRows").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("dbConfigs").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("dbCounts").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("docFavorites").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("docTemplates").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
         ]
         for (const rows of simple) {
             for (const row of rows) await ctx.db.delete(row._id)

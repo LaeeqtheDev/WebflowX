@@ -1,11 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import {
-  AtSign, Bell, BellRing, Bookmark, CalendarDays, Command, FileSpreadsheet, FileText, Files, FolderOpen, GitBranch, KeyRound,
-  Layers, ListChecks, MessageSquare, MessagesSquare, Moon, NotebookPen, Paperclip, Pin, Search, ShieldCheck, Smartphone,
-  SmilePlus, UserRoundPlus, Users, Webhook,
-} from "lucide-react";
+import { BellRing, CalendarDays, FileText, MessagesSquare, Search, ShieldCheck, UserRoundPlus, Webhook } from "lucide-react";
 import { gsap, MOTION_OK } from "./landing/gsap";
 import { Heading, Label, Reveal } from "./landing/ui";
 import { ChatPane, DocPane, MeetingPane, PaneFrame, ScaledFrame, TasksPane } from "./landing/mock";
@@ -61,34 +57,14 @@ function AssistantVisual() {
 }
 
 const small = [
-  { icon: Layers, t: "Workspaces", b: "Separate spaces for each team or project." },
-  { icon: MessageSquare, t: "Direct messages", b: "Private one-to-one conversations, with drafts and sent kept in one place." },
-  { icon: MessagesSquare, t: "Threads and activity", b: "A Threads view, an Activity feed and notifications so nothing gets lost." },
-  { icon: SmilePlus, t: "Reactions and rich text", b: "React to messages and write with a rich-text composer." },
-  { icon: AtSign, t: "Mentions", b: "@mention people, highlighted in orange, and open their profile with a click. @everyone and @channel are permission-gated." },
-  { icon: Paperclip, t: "Files and images", b: "Attach files and images. Type and size are checked, and storage is capped per workspace by plan." },
-  { icon: Search, t: "Message search", b: "Find past messages without scrolling." },
-  { icon: Command, t: "Quick switcher", b: "Press Ctrl/Cmd+K to jump to any channel, person or page." },
-  { icon: NotebookPen, t: "Notes", b: "Personal notes and shared workspace notes." },
-  { icon: FileSpreadsheet, t: "Spreadsheets", b: "Edit spreadsheets together in real time, with a clear reconnecting status if your connection drops." },
-  { icon: ListChecks, t: "Getting-started checklist", b: "A first-run checklist walks new workspaces through setup." },
-  { icon: Bell, t: "Email notifications", b: "Mentions, DMs, thread replies and task assignments, only if still unread. Each member can switch them off." },
-  { icon: Moon, t: "Light, Dark or Auto", b: "Every member picks their own theme, saved to their account." },
-  { icon: Smartphone, t: "Works on phones", b: "A mobile layout with drawer navigation." },
-  { icon: FolderOpen, t: "Profiles", b: "Profile photo, title and bio for people. Photo and description for the workspace." },
-  { icon: FileText, t: "Documents", b: "Real-time collaborative documents with a rich-text editor." },
-  { icon: Users, t: "Presence and typing", b: "See who is online and who is typing, right in the sidebar and the channel." },
-  { icon: Pin, t: "Pinned messages", b: "Pin the messages everyone needs to find again at the top of a channel or conversation." },
-  { icon: Bookmark, t: "Saved messages", b: "Save any message for yourself and find it all in one Saved list." },
-  { icon: CalendarDays, t: "Calendar", b: "Task due dates on a calendar, plus a private feed for Google, Apple or Outlook Calendar and a reminder before a deadline." },
-  { icon: Files, t: "Files and previews", b: "Every file and image in one searchable Files page. Preview images, PDFs, video and audio without downloading." },
-  { icon: UserRoundPlus, t: "Guests", b: "Invite clients and contractors into only the channels you choose. They see nothing else." },
-  { icon: BellRing, t: "Push notifications", b: "Install WebflowX to your phone or desktop and get push alerts for mentions, messages and task reminders." },
-  { icon: ShieldCheck, t: "Two-step verification", b: "Protect accounts with an authenticator app and backup codes. Admins on higher plans can require it for everyone." },
-  { icon: KeyRound, t: "API keys and REST API", b: "Read channels and tasks, post messages and create tasks from your own scripts." },
-  { icon: Webhook, t: "Webhooks", b: "Post into channels from any tool with incoming webhooks, and send signed events out when messages and tasks change." },
-  { icon: GitBranch, t: "GitHub", b: "Pushes, pull requests, issues, releases and failed builds show up in the channel you pick." },
-  { icon: Layers, t: "Zapier and Make", b: "Connect thousands of apps through the API and webhooks, with no extra software to install." },
+  { icon: MessagesSquare, t: "Conversations", b: "Everything around a message, handled.", items: ["Workspaces and direct messages", "Threads, reactions, rich text", "Mentions, pins, saved messages"] },
+  { icon: Search, t: "Find anything", b: "Nothing gets lost in the scroll.", items: ["Message search", "Ctrl/Cmd+K quick switcher", "One Files page with previews"] },
+  { icon: FileText, t: "Docs and notes", b: "Write together, keep your own.", items: ["Real-time documents", "Shared spreadsheets", "Personal and workspace notes"] },
+  { icon: CalendarDays, t: "Calendar", b: "Deadlines where you already look.", items: ["Task due dates on a calendar", "Google, Apple, Outlook feed", "Reminders before a deadline"] },
+  { icon: BellRing, t: "Notifications", b: "Told once, only when it matters.", items: ["Email, only if still unread", "Push on phone and desktop", "Per-member switches"] },
+  { icon: UserRoundPlus, t: "Guests and access", b: "Clients see only what you share.", items: ["Guests in chosen channels", "Roles and permissions", "Storage caps by plan"] },
+  { icon: ShieldCheck, t: "Security", b: "Built in, not bolted on.", items: ["Two-step verification", "Required for everyone on higher plans", "Audit log"] },
+  { icon: Webhook, t: "Developers", b: "Connect the tools you already use.", items: ["REST API and API keys", "Incoming and signed outgoing webhooks", "GitHub, Zapier and Make"] },
 ];
 
 const NewFeatures = () => {
@@ -207,14 +183,22 @@ const NewFeatures = () => {
           The details that make a workspace pleasant to live in every day.
         </p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {small.map(({ icon: Icon, t, b }) => (
+          {small.map(({ icon: Icon, t, b, items }) => (
             <Reveal key={t}>
-              <div className="h-full rounded-3xl border border-[#381d2a]/10 bg-[#f7f2ee] p-7">
+              <div className="h-full rounded-3xl border border-[#381d2a]/10 bg-[#f7f2ee] p-6">
                 <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#381d2a] text-[#ff5018]">
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
-                <h4 className="mt-6 text-lg font-semibold tracking-tight text-[#1b1017]">{t}</h4>
-                <p className="mt-1.5 text-sm leading-relaxed text-[#1b1017]/70">{b}</p>
+                <h4 className="mt-5 text-lg font-semibold tracking-tight text-[#1b1017]">{t}</h4>
+                <p className="mt-1 text-sm text-[#1b1017]/60">{b}</p>
+                <ul className="mt-4 space-y-1.5">
+                  {items.map((i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm leading-snug text-[#1b1017]/80">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#ff5018]" aria-hidden="true" />
+                      {i}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </Reveal>
           ))}

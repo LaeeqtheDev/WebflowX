@@ -421,13 +421,77 @@ const schema = defineSchema({
         title: v.string(),
         workspaceId: v.id("workspaces"),
         createdBy: v.id("members"),
-        type: v.union(v.literal("document"), v.literal("spreadsheet")),
+        type: v.union(v.literal("document"), v.literal("spreadsheet"), v.literal("database")),
         liveblocksRoomId: v.string(),
         updatedAt: v.optional(v.number()),
         updatedBy: v.optional(v.id("members")),
+        // page tree: a page can sit inside another page
+        parentId: v.optional(v.id("docs")),
+        position: v.optional(v.number()),
+        icon: v.optional(v.string()),
+        // set when moved to the trash; everything deleted together shares one timestamp
+        deletedAt: v.optional(v.number()),
     })
         .index("by_workspace_id", ["workspaceId"])
-        .index("by_room_id", ["liveblocksRoomId"]),
+        .index("by_room_id", ["liveblocksRoomId"])
+        .index("by_parent_id", ["parentId"])
+        .index("by_deleted_at", ["deletedAt"]),
+
+    // pages a member starred
+    docFavorites: defineTable({
+        workspaceId: v.id("workspaces"),
+        memberId: v.id("members"),
+        docId: v.id("docs"),
+    })
+        .index("by_member_id", ["memberId"])
+        .index("by_doc_id", ["docId"])
+        .index("by_workspace_id", ["workspaceId"]),
+
+    // running row totals ("db:<docId>" per database, "ws:<workspaceId>" per workspace); kept apart from the
+    // documents people watch so counting never refreshes anyone's screen
+    dbCounts: defineTable({
+        key: v.string(),
+        workspaceId: v.id("workspaces"),
+        count: v.number(),
+    })
+        .index("by_key", ["key"])
+        .index("by_workspace_id", ["workspaceId"]),
+
+    // page templates a workspace saved from its own pages (content kept as HTML)
+    docTemplates: defineTable({
+        workspaceId: v.id("workspaces"),
+        createdBy: v.id("members"),
+        name: v.string(),
+        icon: v.optional(v.string()),
+        html: v.string(),
+    }).index("by_workspace_id", ["workspaceId"]),
+
+    // a database is a page of type "database"; this holds its properties and views
+    dbConfigs: defineTable({
+        docId: v.id("docs"),
+        workspaceId: v.id("workspaces"),
+        properties: v.array(v.any()),
+        views: v.array(v.any()),
+    })
+        .index("by_doc_id", ["docId"])
+        .index("by_workspace_id", ["workspaceId"]),
+
+    // one row of a database; opened as a page of its own
+    dbRows: defineTable({
+        databaseId: v.id("docs"),
+        workspaceId: v.id("workspaces"),
+        title: v.string(),
+        values: v.any(),
+        position: v.number(),
+        createdBy: v.id("members"),
+        updatedAt: v.number(),
+        updatedBy: v.optional(v.id("members")),
+        roomId: v.string(),
+        hasBody: v.optional(v.boolean()),
+    })
+        .index("by_database_id", ["databaseId"])
+        .index("by_room_id", ["roomId"])
+        .index("by_workspace_id", ["workspaceId"]),
 
     notifications: defineTable({
         workspaceId: v.id("workspaces"),

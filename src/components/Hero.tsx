@@ -171,7 +171,7 @@ const Hero = () => {
           </h1>
 
           <p className="h-fade mt-5 max-w-xl text-lg leading-relaxed text-white/65">
-            Channels and direct messages, a tasks board, real-time documents and spreadsheets, and video
+            Channels and direct messages, a tasks board, real-time documents, spreadsheets and databases, and video
             meetings with live transcripts and AI summaries, all in one workspace with roles and
             permissions you control.
           </p>

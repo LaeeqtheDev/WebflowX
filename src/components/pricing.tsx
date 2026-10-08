@@ -9,7 +9,8 @@ const rows = [
   "Channels",
   "Personal notes",
   "Workspace notes",
-  "Documents",
+  "Pages and databases",
+  "Database rows",
   "Meetings / month",
   "AI summaries / month",
   "File storage",
@@ -22,10 +23,10 @@ const rows = [
 ];
 
 const plans = [
-  { name: "Free", price: "$0", v: ["1", "10", "5", "10", "20", "10", "5", "2", "250 MB", "90 days", "None", "None", "None", "None", "None"] },
-  { name: "Startup", price: "$29", v: ["3", "25", "20", "50", "100", "50", "20", "10", "5 GB", "Unlimited", "5", "3", "5", "None", "None"] },
-  { name: "Growth", price: "$79", v: ["10", "100", "50", "Unlimited", "Unlimited", "200", "50", "30", "50 GB", "Unlimited", "25", "10", "20", "10", "5"] },
-  { name: "Enterprise", price: "$249", v: ["Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "200", "150", "1 TB", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited"] },
+  { name: "Free", price: "$0", v: ["1", "10", "5", "10", "20", "20", "500", "5", "2", "250 MB", "90 days", "None", "None", "None", "None", "None"] },
+  { name: "Startup", price: "$29", v: ["3", "25", "20", "50", "100", "100", "5,000", "20", "10", "5 GB", "Unlimited", "5", "3", "5", "None", "None"] },
+  { name: "Growth", price: "$79", v: ["10", "100", "50", "Unlimited", "Unlimited", "500", "50,000", "50", "30", "50 GB", "Unlimited", "25", "10", "20", "10", "5"] },
+  { name: "Enterprise", price: "$249", v: ["Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "200", "150", "1 TB", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited"] },
 ];
 
 const PricingSection = () => (

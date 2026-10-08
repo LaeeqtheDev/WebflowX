@@ -13,12 +13,12 @@ const faqData = [
   {
     id: "pricing",
     question: "What is WebflowX's pricing model?",
-    answer: "There are four plans: Free ($0), Startup ($29), Growth ($79) and Enterprise ($249) per month, with limits applied per workspace. Higher plans raise limits on workspaces, members, channels, notes, documents, meetings per month, AI summaries per month, file storage (250 MB, 5 GB, 50 GB and 1 TB under fair use), guests, and integrations such as API keys and webhooks. The Free plan shows the last 90 days of messages; paid plans keep full history. Enterprise has no limit on workspaces, members, channels or documents, and generous monthly allowances for meetings (200) and AI summaries (150).",
+    answer: "There are four plans: Free ($0), Startup ($29), Growth ($79) and Enterprise ($249) per month, with limits applied per workspace. Higher plans raise limits on workspaces, members, channels, notes, pages and database rows, meetings per month, AI summaries per month, file storage (250 MB, 5 GB, 50 GB and 1 TB under fair use), guests, and integrations such as API keys and webhooks. The Free plan shows the last 90 days of messages; paid plans keep full history. Enterprise has no limit on workspaces, members, channels, pages or database rows, and generous monthly allowances for meetings (200) and AI summaries (150).",
   },
   {
     id: "file-sharing",
     question: "Can I share files and documents with my team?",
-    answer: "Yes. Attach files and images to messages, and write and edit documents and spreadsheets together in real time. Uploads are checked for type and size, and each workspace has a storage cap that depends on its plan.",
+    answer: "Yes. Attach files and images to messages, and write and edit pages, spreadsheets and databases together in real time. Uploads are checked for type and size, and each workspace has a storage cap that depends on its plan.",
   },
   {
     id: "video-calls",
@@ -78,7 +78,7 @@ const faqData = [
   {
     id: "limits",
     question: "What happens when I hit a plan limit?",
-    answer: "WebflowX explains which limit you reached and shows an upgrade prompt for the next plan. Limits cover workspaces, members, guests, channels, notes, documents, meetings per month, AI summaries per month, file storage and integrations.",
+    answer: "WebflowX explains which limit you reached and shows an upgrade prompt for the next plan. Limits cover workspaces, members, guests, channels, notes, pages and database rows, meetings per month, AI summaries per month, file storage and integrations.",
   },
   {
     id: "merger",

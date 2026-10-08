@@ -217,6 +217,8 @@ export const cleanupRemoved = internalMutation({
         for (const x of saved) await ctx.db.delete(x._id)
         if (saved.length === CLEAN_BATCH) more = true
 
+        const favs = await ctx.db.query("docFavorites").withIndex("by_member_id", (q) => q.eq("memberId", id)).take(CLEAN_BATCH)
+        for (const f of favs) await ctx.db.delete(f._id)
         const attachmentRows = await ctx.db.query("attachments").withIndex("by_member_id", (q) => q.eq("memberId", id)).take(CLEAN_BATCH)
         for (const x of attachmentRows) await ctx.db.delete(x._id)
         if (attachmentRows.length === CLEAN_BATCH) more = true

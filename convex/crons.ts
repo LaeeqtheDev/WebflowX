@@ -27,4 +27,7 @@ crons.interval("prune two-step session marks", { hours: 24 }, internal.twoFactor
 // Remind people about tasks due within a day (once per deadline).
 crons.interval("task due reminders", { hours: 1 }, internal.calendar.sendDueReminders)
 
+// Pages left in the trash for 30 days are erased.
+crons.interval("empty old trash", { hours: 24 }, internal.docs.purgeExpired)
+
 export default crons

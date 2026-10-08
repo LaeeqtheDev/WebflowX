@@ -2,6 +2,7 @@ import { v, ConvexError } from "convex/values"
 import { query, mutation } from "./_generated/server"
 import { auth } from "./auth"
 import { PLANS, getPlan } from "./limits"
+import { countLiveDocs } from "./docs"
 
 export const get = query({
     args: { workspaceId: v.id("workspaces") },
@@ -42,9 +43,8 @@ export const get = query({
         const workspaceNotes = await ctx.db.query("notes")
             .withIndex("by_workspace_id_type", (q) => q.eq("workspaceId", args.workspaceId).eq("type", "workspace"))
             .take(capFor(limits.workspaceNotes))
-        const docs = await ctx.db.query("docs")
-            .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
-            .take(capFor(limits.docs))
+        const docsLive = await countLiveDocs(ctx, args.workspaceId, capFor(limits.docs))
+        const dbRowCount = (await ctx.db.query("dbCounts").withIndex("by_key", (q) => q.eq("key", `ws:${args.workspaceId}`)).unique())?.count ?? 0
         // newest first, so stopping at the cap still counts this month's meetings correctly
         const recentMeetings = await ctx.db.query("meetings")
             .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
@@ -79,7 +79,8 @@ export const get = query({
                 channels: { current: channels.length, limit: limits.channels },
                 personalNotes: { current: personalNotes.length, limit: limits.personalNotes },
                 workspaceNotes: { current: workspaceNotes.length, limit: limits.workspaceNotes },
-                docs: { current: docs.length, limit: limits.docs },
+                docs: { current: docsLive, limit: limits.docs },
+                dbRows: { current: dbRowCount, limit: limits.dbRows },
                 meetings: { current: meetings.length, limit: limits.meetings },
                 aiSummaries: { current: aiSummaries.length, limit: limits.aiSummaries },
                 // megabytes of uploaded files

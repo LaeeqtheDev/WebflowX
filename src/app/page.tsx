@@ -8,6 +8,7 @@ const TestimonialSection16 = dynamic(() => import('@/components/Testimonials'))
 import FeaturesSection from '@/components/Features'
 import Footer from '@/components/Footer'
 import SecuritySection from '@/components/landing/Security'
+import PagesDatabases from '@/components/landing/PagesDatabases'
 const FAQSection = dynamic(() => import('@/components/FAQ').then(m => m.FAQSection))
 const NewsletterSignup = dynamic(() => import('@/components/newslettersignup').then(m => m.NewsletterSignup))
 const PricingSection = dynamic(() => import('@/components/pricing'))
@@ -48,6 +49,7 @@ const page = () => {
       <Hero />
       <FeaturesSection />
       <WhyChooseUs />
+      <PagesDatabases />
       <SecuritySection />
       <MergerSection />
       <TimelineDemo />

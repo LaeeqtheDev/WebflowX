@@ -9,7 +9,8 @@ import { useGetUsage } from "@/features/workspaces/api/use-get-usage"
 const LABELS: Record<string, string> = {
     members: "members",
     channels: "channels",
-    docs: "documents",
+    docs: "pages",
+    dbRows: "database rows",
     meetings: "meetings this month",
     aiSummaries: "AI summaries this month",
     personalNotes: "personal notes",

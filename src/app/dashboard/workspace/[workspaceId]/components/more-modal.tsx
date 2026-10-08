@@ -52,7 +52,7 @@ const PLANS: {
         price: 0,
         tagline: "For trying WebflowX with a small crew.",
         icon: Flash20Regular,
-        features: ["1 workspace", "10 members", "5 channels", "10 documents", "5 meetings / month", "2 AI summaries", "10 personal notes", "20 workspace notes", "90 days of history"],
+        features: ["1 workspace", "10 members", "5 channels", "20 pages", "500 database rows", "5 meetings / month", "2 AI summaries", "10 personal notes", "20 workspace notes", "90 days of history"],
     },
     {
         key: "startup",
@@ -60,7 +60,7 @@ const PLANS: {
         price: 29,
         tagline: "For small teams that ship every week.",
         icon: Rocket20Regular,
-        features: ["3 workspaces", "25 members", "20 channels", "50 documents", "20 meetings / month", "10 AI summaries", "50 personal notes", "100 workspace notes", "5 guests", "API + 5 incoming webhooks"],
+        features: ["3 workspaces", "25 members", "20 channels", "100 pages", "5,000 database rows", "20 meetings / month", "10 AI summaries", "50 personal notes", "100 workspace notes", "5 guests", "API + 5 incoming webhooks"],
     },
     {
         key: "growth",
@@ -69,7 +69,7 @@ const PLANS: {
         tagline: "For growing teams that run on process.",
         icon: Crown20Regular,
         popular: true,
-        features: ["10 workspaces", "100 members", "50 channels", "200 documents", "50 meetings / month", "30 AI summaries", "Unlimited personal notes", "Unlimited workspace notes", "25 guests", "Outgoing webhooks + GitHub"],
+        features: ["10 workspaces", "100 members", "50 channels", "500 pages", "50,000 database rows", "50 meetings / month", "30 AI summaries", "Unlimited personal notes", "Unlimited workspace notes", "25 guests", "Outgoing webhooks + GitHub"],
     },
     {
         key: "enterprise",
@@ -77,7 +77,7 @@ const PLANS: {
         price: 249,
         tagline: "For organisations with no ceiling.",
         icon: Building20Regular,
-        features: ["Unlimited workspaces", "Unlimited members", "Unlimited channels", "Unlimited documents", "200 meetings / month", "150 AI summaries / month", "Unlimited notes", "Unlimited guests + integrations", "Email support"],
+        features: ["Unlimited workspaces", "Unlimited members", "Unlimited channels", "Unlimited pages and database rows", "200 meetings / month", "150 AI summaries / month", "Unlimited notes", "Unlimited guests + integrations", "Email support"],
     },
 ]
 
@@ -189,7 +189,8 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                 <UsageCard label="Members" icon={People20Regular} current={usage?.usage.members.current ?? 0} limit={usage?.usage.members.limit ?? 0} />
                                 <UsageCard label="Channels" icon={NumberSymbol20Regular} current={usage?.usage.channels.current ?? 0} limit={usage?.usage.channels.limit ?? 0} />
-                                <UsageCard label="Documents" icon={DocumentText20Regular} current={usage?.usage.docs.current ?? 0} limit={usage?.usage.docs.limit ?? 0} />
+                                <UsageCard label="Pages" icon={DocumentText20Regular} current={usage?.usage.docs.current ?? 0} limit={usage?.usage.docs.limit ?? 0} />
+                                <UsageCard label="Database rows" icon={DocumentText20Regular} current={usage?.usage.dbRows.current ?? 0} limit={usage?.usage.dbRows.limit ?? 0} />
                                 <UsageCard label="Meetings this month" icon={Video20Regular} current={usage?.usage.meetings.current ?? 0} limit={usage?.usage.meetings.limit ?? 0} />
                                 <UsageCard label="AI summaries this month" icon={Video20Regular} current={usage?.usage.aiSummaries.current ?? 0} limit={usage?.usage.aiSummaries.limit ?? 0} />
                                 <UsageCard label="Storage (MB)" icon={Notebook20Regular} current={usage?.usage.storage.current ?? 0} limit={usage?.usage.storage.limit ?? 0} />
@@ -203,7 +204,7 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                     <div>
                                         <p className="text-sm font-semibold">Ready to scale?</p>
                                         <p className="mt-1 text-xs text-white/65">
-                                            Startup is $29/month: more members, channels and documents.
+                                            Startup is $29/month: more members, channels and pages.
                                         </p>
                                     </div>
                                     <button
