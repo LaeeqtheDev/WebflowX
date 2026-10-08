@@ -4,7 +4,8 @@ const isDev = process.env.NODE_ENV !== "production";
 
 // Content-Security-Policy. Scripts stay on this origin (Next.js needs inline bootstrap scripts, so
 // 'unsafe-inline' remains; 'unsafe-eval' is dev only). Network calls are limited to https/wss (Convex, Liveblocks,
-// LiveKit, Deepgram). Nothing can frame the app, load plugins, or change the base URL / form targets.
+// LiveKit, Deepgram). Only North Foundry's own sites can frame the app (the WebflowX preview on northfoundry.co);
+// nothing else can, and nothing can load plugins or change the base URL / form targets.
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""}`,
@@ -19,13 +20,13 @@ const csp = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
-  "frame-ancestors 'none'",
+  "frame-ancestors 'self' https://northfoundry.co https://*.northfoundry.co",
   ...(isDev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
 const securityHeaders = [
   { key: "Content-Security-Policy", value: csp },
-  { key: "X-Frame-Options", value: "DENY" },
+  // (X-Frame-Options can't name an allowed site, so framing is controlled by CSP frame-ancestors above)
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   // camera, microphone and screen sharing are needed for meetings; everything else is off
