@@ -104,22 +104,6 @@ export const TaskDetail = ({
                         <span className={cn("rounded-md px-2 py-0.5", STATUS_PILL[task.status])}>{STATUS_LABELS[task.status]}</span>
                         {activeSprint && <span className="flex items-center gap-1 text-orange-ink"><Zap className="size-3" /> {activeSprint.name}</span>}
                         {isOverdue && <span className="flex items-center gap-1 text-red-600 dark:text-red-400"><AlertTriangle className="size-3" /> Overdue</span>}
-                        {isAdmin && (
-                            <span className="ml-auto flex items-center gap-1">
-                                {confirmDelete ? (
-                                    <>
-                                        <span className="text-ink/60">Delete this task?</span>
-                                        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setConfirmDelete(false)}>Cancel</Button>
-                                        <Button size="sm" variant="destructive" className="h-7 px-2 text-xs" onClick={() => { onDelete(task._id); onClose() }}>Delete</Button>
-                                    </>
-                                ) : (
-                                    <Button aria-label="Delete task" variant="ghost" size="iconSm" onClick={() => setConfirmDelete(true)}
-                                        className="rounded-lg text-ink/50 hover:bg-red-50 hover:text-destructive dark:hover:bg-red-500/10">
-                                        <Trash2 className="size-4" />
-                                    </Button>
-                                )}
-                            </span>
-                        )}
                     </div>
                     {isAdmin ? (
                         <input aria-label="Task title" key={`${task._id}:${task.title}`} defaultValue={task.title} maxLength={200}
@@ -308,6 +292,24 @@ export const TaskDetail = ({
                                 <p className="px-2 pt-1 text-[11px] text-ink/50">Updated {formatDistanceToNow(task.updatedAt, { addSuffix: true })}</p>
                             )}
                         </div>
+                        {isAdmin && (
+                            <div className="mt-3 border-t border-plum/10 pt-3">
+                                {confirmDelete ? (
+                                    <div className="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-500/30 dark:bg-red-500/10">
+                                        <p className="text-xs font-medium text-red-700 dark:text-red-300">Delete this task and its comments?</p>
+                                        <div className="mt-2 flex gap-2">
+                                            <Button size="sm" variant="destructive" className="h-8 flex-1 text-xs" onClick={() => { onDelete(task._id); onClose() }}>Delete</Button>
+                                            <Button size="sm" variant="outline" className="h-8 flex-1 text-xs" onClick={() => setConfirmDelete(false)}>Cancel</Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <button type="button" onClick={() => setConfirmDelete(true)}
+                                        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-ink/55 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400">
+                                        <Trash2 className="size-3.5" /> Delete task
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </aside>
                 </div>
             </DialogContent>
