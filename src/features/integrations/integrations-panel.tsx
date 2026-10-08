@@ -8,6 +8,7 @@ import { Id } from "../../../convex/_generated/dataModel"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useLimitHandler } from "@/hooks/use-limit-handler"
+import { useConfirm } from "@/app/dashboard/workspace/hooks/use-confirm"
 import { cn } from "@/lib/utils"
 import { cleanChannelName } from "@/app/dashboard/workspace/[workspaceId]/components/channel-icon"
 
@@ -61,6 +62,7 @@ const when = (ms?: number) => {
 }
 
 export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces"> }) => {
+  const [ConfirmDelete, confirmDelete] = useConfirm("Delete this?", "Anything using it will stop working. This can't be undone.")
   const data = useQuery(api.integrations.list, { workspaceId })
   const channels = useQuery(api.channels.get, { workspaceId })
   const create = useMutation(api.integrations.create)
@@ -120,6 +122,7 @@ export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces
 
   return (
     <div className="flex flex-col gap-5">
+      <ConfirmDelete />
       <p className="text-sm text-ink/70">
         Connect WebflowX to your other tools. Keys and webhook addresses are shown once when you create them, so copy them straight away.
       </p>
@@ -183,7 +186,7 @@ export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces
               <div className="flex flex-col gap-3 border-t border-plum/10 bg-cream/60 p-4 sm:p-5">
                 <label className="flex flex-col gap-1.5">
                   <span className="text-xs font-semibold text-ink/70">Name</span>
-                  <Input value={name} maxLength={60} onChange={(e) => setName(e.target.value)} autoFocus
+                  <Input aria-label="Name" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} autoFocus
                     placeholder={sec.kind === "github" ? "e.g. webflowx-app repo" : sec.kind === "apiKey" ? "e.g. Zapier" : "e.g. Deploy alerts"} />
                 </label>
                 {(sec.kind === "incoming" || sec.kind === "github") && (
@@ -253,7 +256,7 @@ export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces
                     </Button>
                     <button aria-label={`Delete ${r.name}`} title="Delete"
                       className="flex size-8 items-center justify-center rounded-lg text-ink/50 hover:bg-rose-500/10 hover:text-rose-600"
-                      onClick={() => { if (confirm(`Delete "${r.name}"? Anything using it will stop working.`)) run(() => remove({ id: r._id })) }}>
+                      onClick={async () => { if (await confirmDelete()) run(() => remove({ id: r._id })) }}>
                       <Trash2 className="size-4" />
                     </button>
                   </li>

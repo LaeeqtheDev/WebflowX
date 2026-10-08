@@ -52,7 +52,7 @@ const ConditionValue = ({ c, prop, ctx, onChange }: { c: Condition; prop: Prop; 
       <select aria-label="Day" className={cn(sel, "w-24")} value={["today", "yesterday", "tomorrow"].includes(val) ? val : "date"} onChange={(e) => onChange(e.target.value === "date" ? new Date().toISOString().slice(0, 10) : e.target.value)}>
         <option value="today">Today</option><option value="yesterday">Yesterday</option><option value="tomorrow">Tomorrow</option><option value="date">Pick…</option>
       </select>
-      {!["today", "yesterday", "tomorrow"].includes(val) && <Input type="date" className="h-8 min-w-0 flex-1" value={val.slice(0, 10)} onChange={(e) => onChange(e.target.value)} />}
+      {!["today", "yesterday", "tomorrow"].includes(val) && <Input aria-label="Date" type="date" className="h-8 min-w-0 flex-1" value={val.slice(0, 10)} onChange={(e) => onChange(e.target.value)} />}
     </div>
   )
   return <Input aria-label="Value" type={kind === "number" ? "number" : "text"} className="h-8 min-w-0 flex-1" value={val} onChange={(e) => onChange(e.target.value)} />

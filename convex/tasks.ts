@@ -170,6 +170,8 @@ export const update = mutation({
         sprintId: v.optional(v.id("sprints")),
         // explicit flag, because an undefined assigneeId never reaches the server
         unassign: v.optional(v.boolean()),
+        // fields to empty out (an undefined value never reaches the server either)
+        clear: v.optional(v.array(v.union(v.literal("sprintId"), v.literal("dueDate"), v.literal("storyPoints"), v.literal("description")))),
     },
     handler: async (ctx, args) => {
         const userId = await auth.getUserId(ctx)
@@ -188,7 +190,8 @@ export const update = mutation({
         if (!member || member.role === "guest") throw new Error("Unauthorized")
 
         const isAdmin = await can(ctx, member, "manageContent")
-        const { id, unassign, ...updates } = args
+        const { id, unassign, clear, ...updates } = args
+        if (clear?.length && !isAdmin) throw new ConvexError("Members can only update task status")
 
         if (!isAdmin && task.assigneeId !== member._id && task.createdBy !== member._id) {
             throw new ConvexError("Members can only update tasks assigned to or created by them")
@@ -226,10 +229,12 @@ export const update = mutation({
             await emit(ctx, task.workspaceId, "task.completed", { id: task._id, title: updates.title ?? task.title, priority: task.priority })
         }
 
+        const emptied: Partial<Record<"sprintId" | "dueDate" | "storyPoints" | "description", undefined>> = {}
+        for (const k of clear ?? []) emptied[k] = undefined
         if (unassign && isAdmin) {
-            await ctx.db.patch(args.id, { ...updates, assigneeId: undefined, updatedAt: Date.now() })
+            await ctx.db.patch(args.id, { ...updates, ...emptied, assigneeId: undefined, updatedAt: Date.now() })
         } else {
-            await ctx.db.patch(args.id, { ...updates, updatedAt: Date.now() })
+            await ctx.db.patch(args.id, { ...updates, ...emptied, updatedAt: Date.now() })
         }
         return args.id
     }

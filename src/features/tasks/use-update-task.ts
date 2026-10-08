@@ -13,6 +13,9 @@ type RequestType = {
     dueDate?: number
     labels?: string[]
     storyPoints?: number
+    sprintId?: Id<"sprints">
+    unassign?: boolean
+    clear?: ("sprintId" | "dueDate" | "storyPoints" | "description")[]
 }
 
 export const useUpdateTask = () => {

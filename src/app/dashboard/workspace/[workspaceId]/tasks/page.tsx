@@ -68,7 +68,9 @@ export default function TasksPage() {
 
     const handleUpdate = (id: Id<"tasks">, data: Partial<Task>) => {
         const unassign = "assigneeId" in data && data.assigneeId === undefined
-        updateTask({ id, ...data, ...(unassign ? { unassign: true } : {}) } as Parameters<typeof updateTask>[0], { onError: (e) => toast.error(errorMessage(e)) })
+        // fields set to undefined are dropped on the way to the server, so name the ones to empty out
+        const clear = (["sprintId", "dueDate", "storyPoints", "description"] as const).filter((k) => k in data && data[k] === undefined)
+        updateTask({ id, ...data, ...(unassign ? { unassign: true } : {}), ...(clear.length ? { clear } : {}) } as Parameters<typeof updateTask>[0], { onError: (e) => toast.error(errorMessage(e)) })
         if (selectedTask?._id === id) setSelectedTask(prev => prev ? { ...prev, ...data } : null)
     }
 

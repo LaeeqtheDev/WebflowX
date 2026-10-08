@@ -3,10 +3,9 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader } from "lucide-react"
+import { Loader, X } from "lucide-react"
 import { toast } from "sonner"
 import { errorMessage } from "@/lib/error-message"
 import { STATUSES, STATUS_LABELS, PRIORITIES } from "@/features/tasks/constants"
@@ -24,130 +23,151 @@ interface CreateTaskModalProps {
     sprints: Sprint[]
 }
 
+const Label = ({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) => (
+    <label htmlFor={htmlFor} className="mb-1 block text-xs font-medium text-ink/60">{children}</label>
+)
+
 export const CreateTaskModal = ({ open, onClose, workspaceId, members, sprints }: CreateTaskModalProps) => {
     const { mutate: createTask, isPending } = useCreateTask()
     const [title, setTitle] = useState("")
     const [description, setDescription] = useState("")
     const [status, setStatus] = useState<Status>("todo")
     const [priority, setPriority] = useState<Priority>("medium")
-    const [assigneeId, setAssigneeId] = useState("")
-    const [sprintId, setSprintId] = useState("")
+    const [assigneeId, setAssigneeId] = useState("unassigned")
+    const [sprintId, setSprintId] = useState("none")
     const [dueDate, setDueDate] = useState("")
     const [labelInput, setLabelInput] = useState("")
     const [labels, setLabels] = useState<string[]>([])
     const [storyPoints, setStoryPoints] = useState("")
 
-    const handleAddLabel = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter" && labelInput.trim()) {
-            setLabels(prev => [...prev, labelInput.trim()])
-            setLabelInput("")
-        }
+    const addLabel = () => {
+        const l = labelInput.trim().slice(0, 30)
+        setLabelInput("")
+        if (!l || labels.some((x) => x.toLowerCase() === l.toLowerCase())) return
+        if (labels.length >= 10) return toast.error("A task can have up to 10 labels")
+        setLabels((prev) => [...prev, l])
     }
 
     const handleSubmit = () => {
-        if (!title.trim()) return toast.error("Title is required")
+        const t = title.trim()
+        if (!t) return toast.error("Give the task a title")
+        const points = storyPoints === "" ? undefined : Math.round(Number(storyPoints))
+        if (points !== undefined && (!Number.isFinite(points) || points < 0 || points > 1000)) return toast.error("Story points must be between 0 and 1000")
         createTask({
             workspaceId,
-            title,
-            description: description || undefined,
+            title: t,
+            description: description.trim() || undefined,
             status,
             priority,
-            assigneeId: assigneeId ? assigneeId as Id<"members"> : undefined,
-            sprintId: sprintId && sprintId !== "none" ? sprintId as Id<"sprints"> : undefined,
+            assigneeId: assigneeId !== "unassigned" ? assigneeId as Id<"members"> : undefined,
+            sprintId: sprintId !== "none" ? sprintId as Id<"sprints"> : undefined,
             dueDate: dueDate ? new Date(dueDate).getTime() : undefined,
             labels: labels.length > 0 ? labels : undefined,
-            storyPoints: storyPoints ? parseInt(storyPoints) : undefined,
+            storyPoints: points,
         }, {
             onSuccess: () => {
                 toast.success("Task created")
                 onClose()
                 setTitle(""); setDescription(""); setStatus("todo")
-                setPriority("medium"); setAssigneeId(""); setDueDate("")
-                setLabels([]); setStoryPoints(""); setSprintId("")
+                setPriority("medium"); setAssigneeId("unassigned"); setDueDate("")
+                setLabels([]); setStoryPoints(""); setSprintId("none"); setLabelInput("")
             },
             onError: (e) => toast.error(errorMessage(e))
         })
     }
 
     return (
-        <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-w-lg rounded-2xl border-plum/12">
-                <DialogHeader>
-                    <DialogTitle className="text-[17px] font-semibold tracking-tight">Create New Task</DialogTitle>
+        <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
+            <DialogContent className="max-h-[92dvh] max-w-xl gap-0 overflow-y-auto rounded-2xl border-plum/12 p-0 sm:max-w-xl"
+                onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") handleSubmit() }}>
+                <DialogHeader className="border-b border-plum/10 px-6 pb-4 pt-5 pr-14 text-left">
+                    <DialogTitle className="text-[17px] font-semibold tracking-tight">New task</DialogTitle>
+                    <DialogDescription className="text-xs">Press Ctrl or ⌘ + Enter to create it quickly.</DialogDescription>
                 </DialogHeader>
-                <div className="flex flex-col gap-3 mt-2">
-                    <Input aria-label="Task title" placeholder="Task title *" value={title} onChange={e => setTitle(e.target.value)} className="rounded-lg h-10 font-medium" />
-                    <textarea aria-label="Task description"
-                        placeholder="Description..."
-                        value={description}
-                        onChange={e => setDescription(e.target.value)}
-                        className="border border-input rounded-lg px-3 py-2 text-sm resize-none h-20 outline-none focus:border-[#ff5018] focus:ring-2 focus:ring-[#ff5018]/20 transition-colors"
-                    />
-                    <div className="grid grid-cols-2 gap-3">
+
+                <div className="flex flex-col gap-4 px-6 py-5">
+                    <div>
+                        <Label htmlFor="new-task-title">Title</Label>
+                        <Input id="new-task-title" autoFocus placeholder="What needs to be done?" value={title} maxLength={200}
+                            onChange={e => setTitle(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing) { e.preventDefault(); handleSubmit() } }}
+                            className="h-11 rounded-xl text-base font-medium" />
+                    </div>
+                    <div>
+                        <Label htmlFor="new-task-desc">Description</Label>
+                        <textarea id="new-task-desc" placeholder="Add context, links or acceptance criteria (optional)" value={description} maxLength={5000}
+                            onChange={e => setDescription(e.target.value)}
+                            className="h-24 w-full resize-y rounded-xl border border-input bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-ink/40 focus:border-[#ff5018] focus:ring-2 focus:ring-[#ff5018]/20" />
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
                         <div>
-                            <label className="text-xs font-medium text-ink/60 mb-1 block">Status</label>
+                            <Label>Status</Label>
                             <Select value={status} onValueChange={v => setStatus(v as Status)}>
-                                <SelectTrigger aria-label="Status" className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    {STATUSES.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
-                                </SelectContent>
+                                <SelectTrigger aria-label="Status" className="h-9 w-full text-sm"><SelectValue /></SelectTrigger>
+                                <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>
                         <div>
-                            <label className="text-xs font-medium text-ink/60 mb-1 block">Priority</label>
+                            <Label>Priority</Label>
                             <Select value={priority} onValueChange={v => setPriority(v as Priority)}>
-                                <SelectTrigger aria-label="Priority" className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    {PRIORITIES.map(p => <SelectItem key={p} value={p}>{PRIORITY_TEXT[p]}</SelectItem>)}
-                                </SelectContent>
+                                <SelectTrigger aria-label="Priority" className="h-9 w-full text-sm"><SelectValue /></SelectTrigger>
+                                <SelectContent>{PRIORITIES.map(p => <SelectItem key={p} value={p}>{PRIORITY_TEXT[p]}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>
                         <div>
-                            <label className="text-xs font-medium text-ink/60 mb-1 block">Assignee</label>
+                            <Label>Assignee</Label>
                             <Select value={assigneeId} onValueChange={setAssigneeId}>
-                                <SelectTrigger aria-label="Assignee" className="h-8 text-xs"><SelectValue placeholder="Unassigned" /></SelectTrigger>
+                                <SelectTrigger aria-label="Assignee" className="h-9 w-full text-sm"><SelectValue placeholder="Unassigned" /></SelectTrigger>
                                 <SelectContent>
+                                    <SelectItem value="unassigned">Unassigned</SelectItem>
                                     {members.map(m => <SelectItem key={m._id} value={m._id}>{m.user.name ?? "Unknown"}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
                         <div>
-                            <label className="text-xs font-medium text-ink/60 mb-1 block">Sprint</label>
+                            <Label>Sprint</Label>
                             <Select value={sprintId} onValueChange={setSprintId}>
-                                <SelectTrigger aria-label="Sprint" className="h-8 text-xs"><SelectValue placeholder="No sprint" /></SelectTrigger>
+                                <SelectTrigger aria-label="Sprint" className="h-9 w-full text-sm"><SelectValue placeholder="No sprint" /></SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="none">No Sprint</SelectItem>
+                                    <SelectItem value="none">No sprint</SelectItem>
                                     {sprints.map(s => <SelectItem key={s._id} value={s._id}>{s.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
                         <div>
-                            <label className="text-xs font-medium text-ink/60 mb-1 block">Due Date</label>
-                            <Input aria-label="Due date" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="h-8 text-xs" />
+                            <Label htmlFor="new-task-due">Due date</Label>
+                            <Input id="new-task-due" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="h-9 text-sm" />
                         </div>
                         <div>
-                            <label className="text-xs font-medium text-ink/60 mb-1 block">Story Points</label>
-                            <Input aria-label="Story points" type="number" placeholder="0" value={storyPoints} onChange={e => setStoryPoints(e.target.value)} className="h-8 text-xs" />
-                        </div>
-                        <div className="col-span-2">
-                            <label className="text-xs font-medium text-ink/60 mb-1 block">Labels (press Enter)</label>
-                            <Input aria-label="Add label" placeholder="Add label..." value={labelInput} onChange={e => setLabelInput(e.target.value)} onKeyDown={handleAddLabel} className="h-8 text-xs" />
+                            <Label htmlFor="new-task-points">Story points</Label>
+                            <Input id="new-task-points" type="number" min={0} max={1000} placeholder="None" value={storyPoints} onChange={e => setStoryPoints(e.target.value)} className="h-9 text-sm" />
                         </div>
                     </div>
-                    {labels.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                            {labels.map((l, index) => (
-                                <Badge key={index} variant="secondary" className="cursor-pointer text-[11px] rounded-md bg-cream text-plum hover:bg-cream-deep2"
-                                    onClick={() => setLabels(prev => prev.filter((_, i) => i !== index))}>
-                                    {l} ×
-                                </Badge>
+
+                    <div>
+                        <Label htmlFor="new-task-label">Labels</Label>
+                        <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-input px-2.5 py-1.5 focus-within:border-[#ff5018] focus-within:ring-2 focus-within:ring-[#ff5018]/20">
+                            {labels.map((l) => (
+                                <span key={l} className="inline-flex items-center gap-1 rounded-md bg-cream px-2 py-0.5 text-[11px] font-medium text-plum">
+                                    {l}
+                                    <button type="button" aria-label={`Remove label ${l}`} onClick={() => setLabels((prev) => prev.filter((x) => x !== l))} className="rounded hover:text-destructive"><X className="size-3" /></button>
+                                </span>
                             ))}
+                            <input id="new-task-label" value={labelInput} maxLength={30} placeholder={labels.length ? "" : "Type a label and press Enter"}
+                                onChange={e => setLabelInput(e.target.value)} onBlur={addLabel}
+                                onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing) { e.preventDefault(); e.stopPropagation(); addLabel() } }}
+                                className="h-6 min-w-[8rem] flex-1 bg-transparent text-sm outline-none placeholder:text-ink/40" />
                         </div>
-                    )}
-                    <Button onClick={handleSubmit} disabled={isPending} className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold h-10">
-                        {isPending ? <Loader className="size-4 animate-spin" /> : "Create Task"}
-                    </Button>
+                    </div>
                 </div>
+
+                <DialogFooter className="border-t border-plum/10 bg-cream-soft/50 px-6 py-3 sm:justify-end">
+                    <Button type="button" variant="outline" onClick={onClose} className="rounded-lg">Cancel</Button>
+                    <Button onClick={handleSubmit} disabled={isPending} className="rounded-lg bg-[#ff5018] font-semibold text-white hover:bg-[#e6430f]">
+                        {isPending ? <Loader className="size-4 animate-spin" /> : "Create task"}
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     )

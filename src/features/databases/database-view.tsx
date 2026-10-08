@@ -299,7 +299,7 @@ export const DatabaseView = ({ docId }: { docId: Id<"docs"> }) => {
       <Dialog open={!!renaming} onOpenChange={(o) => { if (!o) setRenaming(null) }}>
         <DialogContent className="max-w-sm rounded-2xl border-plum/12">
           <DialogHeader><DialogTitle>Rename view</DialogTitle><DialogDescription className="sr-only">Give this view a name</DialogDescription></DialogHeader>
-          <Input autoFocus value={renameText} maxLength={40} onChange={(e) => setRenameText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && renaming && renameText.trim()) { updateView({ ...(local[renaming.id] ?? renaming), name: renameText.trim() }); setRenaming(null) } }} />
+          <Input aria-label="View name" autoFocus value={renameText} maxLength={40} onChange={(e) => setRenameText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && renaming && renameText.trim()) { updateView({ ...(local[renaming.id] ?? renaming), name: renameText.trim() }); setRenaming(null) } }} />
           <DialogFooter>
             <Button variant="outline" onClick={() => setRenaming(null)}>Cancel</Button>
             <Button className="bg-[#ff5018] text-white hover:bg-[#e6430f]" disabled={!renameText.trim()} onClick={() => { if (renaming) { updateView({ ...(local[renaming.id] ?? renaming), name: renameText.trim() }); setRenaming(null) } }}>Save</Button>
