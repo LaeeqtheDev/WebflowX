@@ -35,6 +35,7 @@ export const SlashMenu = ({ editor, onImages }: { editor: Editor; onImages: (fil
     const fileRef = useRef<HTMLInputElement>(null)
     const stateRef = useRef<Open | null>(null)
     const indexRef = useRef(0)
+    const listRef = useRef<HTMLDivElement>(null)
 
     const matches = state ? ITEMS.filter((i) => !state.query || `${i.title} ${i.keys}`.toLowerCase().includes(state.query.toLowerCase())) : []
     const matchesRef = useRef<Item[]>([])
@@ -96,17 +97,24 @@ export const SlashMenu = ({ editor, onImages }: { editor: Editor; onImages: (fil
 
     useEffect(() => {
         if (!state) return
-        const close = () => setState(null)
+        // scrolling the menu itself must not close it, only scrolling the page behind it
+        const close = (e: Event) => { if (e.target instanceof Node && listRef.current?.contains(e.target)) return; setState(null) }
         window.addEventListener("scroll", close, true)
         window.addEventListener("resize", close)
         return () => { window.removeEventListener("scroll", close, true); window.removeEventListener("resize", close) }
     }, [state])
+
+    // keep the highlighted item in view when moving with the arrow keys
+    useEffect(() => {
+        listRef.current?.querySelector<HTMLElement>('[aria-selected="true"]')?.scrollIntoView({ block: "nearest" })
+    }, [index, state?.query])
 
     return (
         <>
             <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => { const f = Array.from(e.target.files ?? []); e.target.value = ""; if (f.length) onImages(f) }} />
             {state && matches.length > 0 && (
                 <div
+                    ref={listRef}
                     role="listbox"
                     aria-label="Insert a block"
                     style={{ position: "fixed", left: Math.max(8, state.x), top: state.y, transform: state.up ? "translateY(-100%)" : undefined }}
