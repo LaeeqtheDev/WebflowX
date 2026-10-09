@@ -12,14 +12,13 @@ import {
     useIsMuted,
     useChat,
     VideoTrack,
-    useMediaDeviceSelect,
     RoomAudioRenderer,
     isTrackReference,
     TrackReferenceOrPlaceholder,
 } from "@livekit/components-react"
 import {
     Mic, MicOff, Video, VideoOff, MonitorUp, MonitorOff, MessageSquare, Users, PhoneOff,
-    ChevronUp, Check, MoreVertical, Pin, PinOff, Crown, Send, X, UserMinus, VolumeX, AlertCircle, Loader2, ChevronDown,
+    MoreVertical, Pin, PinOff, Crown, Send, X, UserMinus, VolumeX, AlertCircle, Loader2, ChevronDown,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useQuery } from "convex/react"
@@ -29,10 +28,12 @@ import { Button } from "@/components/ui/button"
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { colorFor, initials, isHostParticipant, pad, moderateRequest } from "./room-helpers"
+import { CtrlButton, SplitCtrl } from "./room-controls"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 type Status = "starting" | "recording" | "error"
-export type ModerateAction = "mute" | "stopVideo" | "muteAll" | "kick" | "endAll"
+export type { ModerateAction } from "./room-helpers"
 
 interface Props {
     roomName: string
@@ -43,36 +44,7 @@ interface Props {
     onRetry?: () => void
 }
 
-const COLORS = ["#ff5018", "#8b5cf6", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#14b8a6"]
-const colorFor = (s: string) => {
-    let h = 0
-    for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0
-    return COLORS[h % COLORS.length]
-}
-const initials = (name: string) =>
-    name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("") || "?"
-const isHostParticipant = (p: Participant) => {
-    try { return !!JSON.parse(p.metadata || "{}").host } catch { return false }
-}
-const pad = (n: number) => String(n).padStart(2, "0")
-
 // ---------------------------------------------------------------------------------------------
-
-async function moderateRequest(room: string, action: ModerateAction, identity?: string) {
-    try {
-        const res = await fetch("/api/livekit/moderate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ room, action, identity }),
-        })
-        const data = await res.json().catch(() => ({}))
-        if (!res.ok) throw new Error(data.error || "Action failed")
-        return true
-    } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Action failed")
-        return false
-    }
-}
 
 // ---------------------------------------------------------------------------------------------
 
@@ -425,86 +397,6 @@ function SidePanel({
 }
 
 // ---------------------------------------------------------------------------------------------
-
-function CtrlButton({
-    active = true, danger, onClick, label, children, disabled, badge, className,
-}: {
-    active?: boolean; danger?: boolean; onClick?: () => void; label: string
-    children: React.ReactNode; disabled?: boolean; badge?: number; className?: string
-}) {
-    return (
-        <button
-            onClick={onClick}
-            disabled={disabled}
-            title={label}
-            aria-label={label}
-            className={cn(
-                "relative flex size-11 shrink-0 items-center justify-center rounded-full text-white outline-none transition-all focus-visible:ring-2 focus-visible:ring-[#ff5018] active:scale-95 disabled:opacity-50 sm:size-12",
-                danger ? "bg-red-600 hover:bg-red-500"
-                    : active ? "bg-white/10 hover:bg-white/20"
-                        : "bg-red-500 hover:bg-red-400",
-                className
-            )}
-        >
-            {children}
-            {!!badge && (
-                <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-[#ff5018] px-1 text-[10px] font-bold">
-                    {badge > 9 ? "9+" : badge}
-                </span>
-            )}
-        </button>
-    )
-}
-
-// Device picker: opens above the bar in its own layer, so nothing can clip it
-function DevicePicker({ kind }: { kind: "audioinput" | "videoinput" }) {
-    const { devices, activeDeviceId, setActiveMediaDevice } = useMediaDeviceSelect({ kind, requestPermissions: false })
-    return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <button
-                    aria-label={kind === "audioinput" ? "Choose microphone" : "Choose camera"}
-                    className="flex h-9 w-7 items-center justify-center rounded-full text-white/80 outline-none hover:bg-white/15 hover:text-white focus-visible:ring-2 focus-visible:ring-[#ff5018]"
-                >
-                    <ChevronUp className="size-4" />
-                </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="center" sideOffset={12} className="max-h-72 w-72 overflow-y-auto rounded-xl">
-                <p className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{kind === "audioinput" ? "Microphone" : "Camera"}</p>
-                {devices.length === 0 && <p className="px-2 py-2 text-sm text-muted-foreground">No devices found</p>}
-                {devices.map((d) => (
-                    <DropdownMenuItem key={d.deviceId} className="cursor-pointer gap-2" onClick={() => { void setActiveMediaDevice(d.deviceId) }}>
-                        <Check className={cn("size-4 shrink-0", d.deviceId === activeDeviceId ? "opacity-100" : "opacity-0")} />
-                        <span className="truncate">{d.label || "Default"}</span>
-                    </DropdownMenuItem>
-                ))}
-            </DropdownMenuContent>
-        </DropdownMenu>
-    )
-}
-
-// the button and its device picker share one rounded pill
-function SplitCtrl({
-    active, onClick, label, disabled, kind, children,
-}: {
-    active: boolean; onClick: () => void; label: string; disabled?: boolean
-    kind: "audioinput" | "videoinput"; children: React.ReactNode
-}) {
-    return (
-        <div className={cn("flex shrink-0 items-center rounded-full transition-colors", active ? "bg-white/10" : "bg-red-500")}>
-            <button
-                onClick={onClick}
-                disabled={disabled}
-                title={label}
-                aria-label={label}
-                className="flex size-11 items-center justify-center rounded-full text-white outline-none transition-all hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-[#ff5018] active:scale-95 disabled:opacity-50 sm:size-12"
-            >
-                {children}
-            </button>
-            <div className="hidden pr-1 sm:block"><DevicePicker kind={kind} /></div>
-        </div>
-    )
-}
 
 function ControlBar({
     amHost, panel, togglePanel, unread, onEndAll,

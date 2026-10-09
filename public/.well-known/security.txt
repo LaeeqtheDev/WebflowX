@@ -1,0 +1,4 @@
+Contact: mailto:hello@northfoundry.co
+Expires: 2027-10-09T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://webflow-x.vercel.app/.well-known/security.txt

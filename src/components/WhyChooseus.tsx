@@ -1,6 +1,7 @@
 import React from "react";
 import { Heading, Label, Reveal } from "./landing/ui";
 import { wrap } from "./landing/tokens";
+import AdVideo from "./landing/AdVideo";
 
 const WhyChooseUs = () => (
   <section className="w-full bg-[#f7f2ee] pb-24 md:pb-32">
@@ -18,15 +19,7 @@ const WhyChooseUs = () => (
       </Reveal>
       <Reveal delay={80}>
         <div className="mt-12 overflow-hidden rounded-2xl bg-[#381d2a]">
-          <video
-            className="aspect-video w-full object-cover"
-            autoPlay
-            loop
-            muted
-            playsInline
-            aria-label="Short demo video of WebflowX in use"
-            src="/video.mp4"
-          />
+          <AdVideo />
         </div>
       </Reveal>
     </div>

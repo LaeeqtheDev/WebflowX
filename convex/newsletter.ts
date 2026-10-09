@@ -131,7 +131,7 @@ export const prunePending = internalMutation({
         const cutoff = Date.now() - PENDING_TTL_MS
         const rows = await ctx.db
             .query("newsletterSubscribers")
-            .filter((q) => q.and(q.eq(q.field("status"), "pending"), q.lt(q.field("_creationTime"), cutoff)))
+            .withIndex("by_status", (q) => q.eq("status", "pending").lt("_creationTime", cutoff))
             .take(500)
         for (const row of rows) await ctx.db.delete(row._id)
         return rows.length

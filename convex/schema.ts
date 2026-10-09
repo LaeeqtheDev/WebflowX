@@ -299,6 +299,7 @@ const schema = defineSchema({
         deletedAt: v.optional(v.number()),
     })
         .index("by_workspace_id", ["workspaceId"])
+        .index("by_workspace_started", ["workspaceId", "startedAt"])
         .index("by_room_name", ["roomName"])
         .index("by_ended_started", ["endedAt", "startedAt"]),
 
@@ -435,7 +436,8 @@ const schema = defineSchema({
         unsubscribedAt: v.optional(v.number()),
     })
         .index("by_email", ["email"])
-        .index("by_token", ["token"]),
+        .index("by_token", ["token"])
+        .index("by_status", ["status"]),
 
     docs: defineTable({
         title: v.string(),

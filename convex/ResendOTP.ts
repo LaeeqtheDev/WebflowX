@@ -1,4 +1,6 @@
 import { Email } from "@convex-dev/auth/providers/Email"
+import type { GenericActionCtx, GenericDataModel } from "convex/server"
+import { internal } from "./_generated/api"
 import { COPY, renderCodeEmail, sendResend } from "./emailLayout"
 
 // 8-digit one-time code, sent through Resend's HTTP API (no extra package needed).
@@ -16,7 +18,14 @@ const sender = (id: string, kind: "verify" | "reset") =>
         async generateVerificationToken() {
             return makeCode()
         },
-        async sendVerificationRequest({ identifier: email, token }) {
+        async sendVerificationRequest({ identifier: email, token }, ctx?: GenericActionCtx<GenericDataModel>) {
+            // Stops someone from using the sign-in form to flood a mailbox with codes, or to burn our sending quota.
+            if (ctx) {
+                const mailbox = email.trim().toLowerCase()
+                const okMailbox = await ctx.runMutation(internal.rateLimit.consumeInternal, { key: `authcode:${mailbox}`, max: 5, windowMs: 60 * 60_000 })
+                const okGlobal = await ctx.runMutation(internal.rateLimit.consumeInternal, { key: "authcode:global", max: 600, windowMs: 10 * 60_000 })
+                if (!okMailbox || !okGlobal) throw new Error("Too many code requests. Please wait a while and try again.")
+            }
             // Fails closed: with no sender configured nothing is sent and the caller gets an error
             // (the sandbox sender can only reach the account owner, so it must never be a silent fallback).
             if (!process.env.AUTH_RESEND_KEY) throw new Error("Email sending is not configured")

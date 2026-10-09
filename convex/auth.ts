@@ -3,6 +3,7 @@ import type { GenericDatabaseReader } from "convex/server";
 import type { Auth } from "convex/server";
 import Github from '@auth/core/providers/github'
 import Google from '@auth/core/providers/google'
+import MicrosoftEntraID from '@auth/core/providers/microsoft-entra-id'
 import { Password } from "@convex-dev/auth/providers/Password";
 import {DataModel} from './_generated/dataModel'
 import { ResendVerify, ResendReset } from "./ResendOTP"
@@ -25,7 +26,8 @@ const customPassword = Password<DataModel>({
 
 
 const base = convexAuth({
-  providers:[customPassword, Github, Google]
+  // Microsoft sign-in switches on only when its credentials are set (npx convex env set AUTH_MICROSOFT_ENTRA_ID_ID ... _SECRET ... _ISSUER)
+  providers:[customPassword, Github, Google, ...(process.env.AUTH_MICROSOFT_ENTRA_ID_ID ? [MicrosoftEntraID] : [])]
 });
 
 export const { signIn, signOut, store, isAuthenticated } = base

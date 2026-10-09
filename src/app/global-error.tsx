@@ -1,7 +1,12 @@
 "use client"
 
 // Last-resort fallback if the root layout itself fails. Plain HTML only: no app providers are available here.
-export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+import { useEffect } from "react"
+
+export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  useEffect(() => {
+    fetch("/api/report-error", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ message: error.message, digest: error.digest, path: window.location.pathname }) }).catch(() => {})
+  }, [error])
   return (
     <html lang="en">
       <body style={{ margin: 0, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f7f2ee", color: "#1b1017", fontFamily: "system-ui, sans-serif" }}>
