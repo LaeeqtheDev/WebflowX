@@ -1,7 +1,8 @@
 "use client"
 
 import { usePermissions } from "@/hooks/use-permissions"
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback, useEffect, useRef, useMemo } from "react"
+import { useConfirm } from "../../hooks/use-confirm"
 import { errorMessage } from "@/lib/error-message"
 import { segmentsToBody, takeLastSegments } from "./segments"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
@@ -18,7 +19,7 @@ import { toast } from "sonner"
 import { useLimitHandler } from "@/hooks/use-limit-handler"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
-import { Loader, Video, Plus, Sparkles, Clock, Users, AlertTriangle, ArrowLeft } from "lucide-react"
+import { Loader, Video, Plus, Sparkles, Clock, Users, AlertTriangle, ArrowLeft, Phone, CalendarClock, Trash2 } from "lucide-react"
 import { useMutation, useConvex } from "convex/react"
 import { api } from "../../../../../../convex/_generated/api"
 import { Id } from "../../../../../../convex/_generated/dataModel"
@@ -56,6 +57,18 @@ export default function MeetingPage() {
     const [activeMeetingId, setActiveMeetingId] = useState<Id<"meetings"> | null>(null)
     const [showCreate, setShowCreate] = useState(false)
     const [title, setTitle] = useState("")
+    const [createMode, setCreateMode] = useState<"workspace" | "oneToOne">("workspace")
+    const [inviteeId, setInviteeId] = useState("")
+    const [scheduleOn, setScheduleOn] = useState(false)
+    const [scheduleAt, setScheduleAt] = useState("")
+    const removeMeeting = useMutation(api.meetings.remove)
+    const [ConfirmDelete, confirmDelete] = useConfirm("Delete this meeting?", "Its summary and transcript are removed for everyone. This can't be undone.")
+    // re-evaluated every 20s so "Upcoming" turns into "Join" without a refresh
+    const [nowTs, setNowTs] = useState(() => Date.now())
+    useEffect(() => { const t = setInterval(() => setNowTs(Date.now()), 20_000); return () => clearInterval(t) }, [])
+    const canStartWorkspace = perms.can("startMeetings")
+    const openCreate = (mode: "workspace" | "oneToOne") => { setCreateMode(mode); setShowCreate(true) }
+    const callable = (members ?? []).filter((m) => m._id !== currentMember?._id && m.role !== "guest")
     const [selectedChannelId, setSelectedChannelId] = useState("")
     const [isGenerating, setIsGenerating] = useState(false)
     const [selectedMeetingId, setSelectedMeetingId] = useState<Id<"meetings"> | null>(null)
@@ -84,6 +97,14 @@ export default function MeetingPage() {
     const currentUserName = members?.find(m => m._id === currentMember?._id)?.user.name ?? "Someone"
 
     const activeMeeting = meetings?.find((m) => m._id === activeMeetingId)
+    const isUpcoming = (m: { scheduledFor?: number; endedAt?: number }) => !!m.scheduledFor && !m.endedAt && m.scheduledFor > nowTs
+    // upcoming meetings first (soonest on top), then the rest newest first
+    const ordered = useMemo(() => {
+        const list = meetings ?? []
+        const up = list.filter((m) => !!m.scheduledFor && !m.endedAt && m.scheduledFor > nowTs).sort((a, b) => (a.scheduledFor ?? 0) - (b.scheduledFor ?? 0))
+        const rest = list.filter((m) => !up.includes(m))
+        return [...up, ...rest]
+    }, [meetings, nowTs])
 
     const handleJoin = async (roomName: string, meetingId: Id<"meetings">) => {
         try {
@@ -104,42 +125,75 @@ export default function MeetingPage() {
     }
 
     const handleCreate = async () => {
-        if (!title.trim()) return toast.error("Title is required")
+        const oneToOne = createMode === "oneToOne"
+        let meetingTitle = title.trim()
+        if (oneToOne) {
+            if (!inviteeId) return toast.error("Choose who to call")
+            const other = members?.find((m) => m._id === inviteeId)
+            meetingTitle = `${currentUserName} & ${other?.user.name ?? "teammate"}`
+        } else if (!meetingTitle) {
+            return toast.error("Title is required")
+        }
+        let scheduledFor: number | undefined
+        if (!oneToOne && scheduleOn) {
+            const at = new Date(scheduleAt).getTime()
+            if (!scheduleAt || Number.isNaN(at) || at < Date.now() + 60_000) return toast.error("Pick a time in the future")
+            scheduledFor = at
+        }
         const roomName = `${workspaceId}-${Date.now()}`
 
-        createMeeting({ workspaceId, title, roomName }, {
+        createMeeting({ workspaceId, title: meetingTitle, roomName, kind: createMode, inviteeId: oneToOne ? (inviteeId as Id<"members">) : undefined, scheduledFor }, {
             onSuccess: async (id) => {
                 if (!id) return
                 setShowCreate(false)
 
-                if (selectedChannelId) {
+                if (selectedChannelId && !oneToOne) {
                     const meetingUrl = `${window.location.origin}/dashboard/workspace/${workspaceId}/meeting`
+                    const headline = scheduledFor
+                        ? `📅 ${currentUserName} scheduled a meeting: "${meetingTitle}" for ${format(scheduledFor, "EEE d MMM, h:mm a")}\n`
+                        : `🎥 ${currentUserName} started a meeting: "${meetingTitle}"\n`
                     const body = JSON.stringify({
                         ops: [
-                            { insert: `🎥 ${currentUserName} started a meeting: "${title}"\n` },
-                            { insert: "Click below to join:\n" },
-                            {
-                                attributes: { link: meetingUrl },
-                                insert: "🔗 Join Meeting"
-                            },
+                            { insert: headline },
+                            { insert: scheduledFor ? "Open the meetings page to join when it starts:\n" : "Click below to join:\n" },
+                            { attributes: { link: meetingUrl }, insert: scheduledFor ? "🔗 Meetings" : "🔗 Join Meeting" },
                             { insert: "\n" }
                         ]
                     })
-                    await createMessage({
-                        workspaceId,
-                        channelId: selectedChannelId as Id<"channels">,
-                        body,
-                    }).catch(console.error)
+                    await createMessage({ workspaceId, channelId: selectedChannelId as Id<"channels">, body }).catch(console.error)
                 }
 
                 setTitle("")
                 setSelectedChannelId("")
+                setInviteeId("")
+                setScheduleOn(false)
+                setScheduleAt("")
+                if (scheduledFor) {
+                    toast.success(`Scheduled for ${format(scheduledFor, "EEE d MMM, h:mm a")}`)
+                    setSelectedMeetingId(id)
+                    return
+                }
+                if (oneToOne) toast.info("Calling... they get a notification and can join from the Meetings page.")
                 await handleJoin(roomName, id)
             },
             onError: (e) => {
-                if (handleLimitError(e, "Couldn't start the meeting")) setShowCreate(false)
+                if (handleLimitError(e, "Couldn't start the meeting")) { setShowCreate(false); return }
+                toast.error(errorMessage(e) || "Couldn't start the meeting")
             }
         })
+    }
+
+    const handleDelete = async (meetingId: Id<"meetings">) => {
+        const ok = await confirmDelete()
+        if (!ok) return
+        try {
+            await removeMeeting({ id: meetingId })
+            setSelectedMeetingId(null)
+            setShowMobileDetail(false)
+            toast.success("Meeting deleted")
+        } catch (e) {
+            toast.error(errorMessage(e))
+        }
     }
 
     // Builds the merged transcript of everyone in the call and turns it into one AI summary.
@@ -266,6 +320,7 @@ export default function MeetingPage() {
                     roomName={activeMeeting?.roomName ?? ""}
                     title={activeMeeting?.title ?? "Meeting"}
                     startedAt={activeMeeting?.startedAt ?? Date.now()}
+                    endsAt={activeMeeting?.kind === "oneToOne" ? activeMeeting.startedAt + 15 * 60_000 : undefined}
                     onDisconnect={handleDisconnect}
                 />
             </div>
@@ -306,13 +361,25 @@ export default function MeetingPage() {
                     </div>
                     <h1 className="tracking-tight text-[17px] font-semibold text-ink">Meetings</h1>
                 </div>
-                <Button
-                    onClick={() => setShowCreate(true)}
-                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 rounded-lg font-semibold text-xs px-2.5 sm:px-3"
-                >
-                    <Plus className="size-3.5 sm:size-4 sm:mr-1" /> 
-                    <span className="hidden sm:inline">New Meeting</span>
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={() => openCreate("oneToOne")}
+                        className="h-8 rounded-lg font-semibold text-xs px-2.5 sm:px-3"
+                    >
+                        <Phone className="size-3.5 sm:size-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Call someone</span>
+                    </Button>
+                    {canStartWorkspace && (
+                        <Button
+                            onClick={() => openCreate("workspace")}
+                            className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 rounded-lg font-semibold text-xs px-2.5 sm:px-3"
+                        >
+                            <Plus className="size-3.5 sm:size-4 sm:mr-1" />
+                            <span className="hidden sm:inline">New Meeting</span>
+                        </Button>
+                    )}
+                </div>
             </div>
 
             {/* Error banner */}
@@ -349,10 +416,17 @@ export default function MeetingPage() {
                             <Video className="size-6 text-[#ff5018]" />
                         </div>
                         <p className="font-semibold tracking-tight text-ink text-center">No meetings yet</p>
-                        <p className="text-sm text-center">Start a meeting to talk with your team</p>
-                        <Button onClick={() => setShowCreate(true)} size="sm" className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold">
-                            <Plus className="size-4 mr-1" /> Start a Meeting
-                        </Button>
+                        <p className="text-sm text-center">{canStartWorkspace ? "Start or schedule a meeting with your team, or call one person for up to 15 minutes" : "Moderators start team meetings. You can call one person for up to 15 minutes."}</p>
+                        <div className="flex gap-2">
+                            {canStartWorkspace && (
+                                <Button onClick={() => openCreate("workspace")} size="sm" className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold">
+                                    <Plus className="size-4 mr-1" /> Start a Meeting
+                                </Button>
+                            )}
+                            <Button onClick={() => openCreate("oneToOne")} size="sm" variant="outline" className="rounded-lg font-semibold">
+                                <Phone className="size-4 mr-1" /> Call someone
+                            </Button>
+                        </div>
                     </div>
                 ) : (
                     <>
@@ -361,7 +435,7 @@ export default function MeetingPage() {
                             "w-full md:w-80 border-r bg-surface flex flex-col overflow-y-auto shrink-0 p-3 gap-2",
                             showMobileDetail && "hidden md:flex"
                         )}>
-                            {meetings?.map(meeting => (
+                            {ordered.map(meeting => (
                                 <div
                                     key={meeting._id}
                                     onClick={() => handleSelectMeeting(meeting)}
@@ -372,7 +446,12 @@ export default function MeetingPage() {
                                 >
                                     <div className="flex items-center justify-between gap-2">
                                         <p className="text-sm font-semibold tracking-tight truncate text-ink">{meeting.title}</p>
-                                        {!meeting.endedAt && (
+                                        {isUpcoming(meeting) && (
+                                            <Badge className="bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-transparent rounded-md px-2 py-0.5 text-[11px] font-medium shrink-0">
+                                                <CalendarClock className="size-3 mr-1" /> Upcoming
+                                            </Badge>
+                                        )}
+                                        {!meeting.endedAt && !isUpcoming(meeting) && (
                                             <Badge className="bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 border-transparent rounded-md px-2 py-0.5 text-[11px] font-medium shrink-0">
                                                 <span className="size-1.5 rounded-full bg-red-500 animate-pulse mr-1.5" />
                                                 Live{(meeting.activeMembers?.length ?? 0) > 0 ? ` · ${meeting.activeMembers?.length} in call` : ""}
@@ -384,6 +463,7 @@ export default function MeetingPage() {
                                             <Clock className="size-3" />
                                             {format(meeting.startedAt, "MMM d · h:mm a")}
                                         </span>
+                                        {meeting.kind === "oneToOne" && <span>· One-to-one</span>}
                                         {meeting.endedAt && (
                                             <span>· {Math.round((meeting.endedAt - meeting.startedAt) / 60000)} min</span>
                                         )}
@@ -432,29 +512,54 @@ export default function MeetingPage() {
                                                 )}
                                             </div>
                                         </div>
-                                        {!selectedMeeting.endedAt && (
-                                            <div className="flex flex-col sm:flex-row gap-2 shrink-0 w-full sm:w-auto">
-                                                <Button
-                                                    onClick={() => handleJoin(selectedMeeting.roomName, selectedMeeting._id)}
-                                                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 rounded-lg font-semibold text-xs w-full sm:w-auto"
-                                                >
-                                                    <Video className="size-3.5 mr-1" /> Join Meeting
-                                                </Button>
-                                                {(perms.can("moderateMeetings") || selectedMeeting.createdBy === currentMember?._id) && (
+                                        <div className="flex flex-col sm:flex-row gap-2 shrink-0 w-full sm:w-auto">
+                                            {!selectedMeeting.endedAt && (() => {
+                                                const early = !!selectedMeeting.scheduledFor && nowTs < selectedMeeting.scheduledFor - 10 * 60_000
+                                                return (
                                                     <Button
-                                                        variant="outline"
-                                                        onClick={() => handleEndForEveryone(selectedMeeting._id)}
-                                                        className="h-8 rounded-lg font-semibold text-xs w-full sm:w-auto"
+                                                        onClick={() => handleJoin(selectedMeeting.roomName, selectedMeeting._id)}
+                                                        disabled={early}
+                                                        title={early ? "You can join 10 minutes before it starts" : undefined}
+                                                        className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 rounded-lg font-semibold text-xs w-full sm:w-auto"
                                                     >
-                                                        End for everyone
+                                                        <Video className="size-3.5 mr-1" /> {early ? "Not open yet" : "Join Meeting"}
                                                     </Button>
-                                                )}
-                                            </div>
-                                        )}
+                                                )
+                                            })()}
+                                            {!selectedMeeting.endedAt && !isUpcoming(selectedMeeting) && (perms.can("moderateMeetings") || selectedMeeting.createdBy === currentMember?._id) && (
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => handleEndForEveryone(selectedMeeting._id)}
+                                                    className="h-8 rounded-lg font-semibold text-xs w-full sm:w-auto"
+                                                >
+                                                    End for everyone
+                                                </Button>
+                                            )}
+                                            {(selectedMeeting.endedAt || isUpcoming(selectedMeeting)) &&
+                                                (selectedMeeting.createdBy === currentMember?._id || (selectedMeeting.kind !== "oneToOne" && perms.can("moderateMeetings"))) && (
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => handleDelete(selectedMeeting._id)}
+                                                    className="h-8 rounded-lg font-semibold text-xs w-full sm:w-auto text-red-600 hover:text-red-700"
+                                                >
+                                                    <Trash2 className="size-3.5 mr-1" /> {selectedMeeting.endedAt ? "Delete" : "Cancel meeting"}
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {/* Summary component */}
-                                    <MeetingSummary meeting={selectedMeeting} />
+                                    {isUpcoming(selectedMeeting) ? (
+                                        <div className="rounded-xl border bg-surface p-4 text-sm text-ink/70 flex items-start gap-3">
+                                            <CalendarClock className="size-5 text-[#ff5018] shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="font-semibold text-ink">Scheduled for {format(selectedMeeting.scheduledFor!, "EEEE d MMMM, h:mm a")}</p>
+                                                <p className="mt-1">Everyone in the workspace can join from 10 minutes before the start. The transcript and summary appear here afterwards.</p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <MeetingSummary meeting={selectedMeeting} />
+                                    )}
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center h-full text-ink/60 gap-3 px-4">
@@ -469,41 +574,78 @@ export default function MeetingPage() {
                 )}
             </div>
 
+            <ConfirmDelete />
             {/* Create dialog */}
             <Dialog open={showCreate} onOpenChange={setShowCreate}>
                 <DialogContent className="max-w-sm mx-4">
                     <DialogHeader>
-                        <DialogTitle className="text-[17px] font-semibold tracking-tight">Start a Meeting</DialogTitle>
+                        <DialogTitle className="text-[17px] font-semibold tracking-tight">
+                            {createMode === "oneToOne" ? "Call someone" : scheduleOn ? "Schedule a Meeting" : "Start a Meeting"}
+                        </DialogTitle>
                     </DialogHeader>
                     <div className="flex flex-col gap-3 mt-2">
-                        <Input aria-label="Meeting title"
-                            placeholder="Meeting title..."
-                            value={title}
-                            onChange={e => setTitle(e.target.value)}
-                            onKeyDown={e => e.key === "Enter" && handleCreate()}
-                            className="text-sm rounded-lg focus-visible:ring-[#ff5018]/40 focus-visible:border-[#ff5018]"
-                        />
-                        <div>
-                            <label className="text-xs font-medium text-ink/60 mb-1 block">
-                                Post to channel (optional)
-                            </label>
-                            <Select value={selectedChannelId} onValueChange={setSelectedChannelId}>
-                                <SelectTrigger aria-label="Channel" className="h-9 text-xs rounded-lg">
-                                    <SelectValue placeholder="Select a channel..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {channels?.map(c => (
-                                        <SelectItem key={c._id} value={c._id} className="text-xs">
-                                            # {c.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-300">
-                            <p className="font-medium">Tip for transcripts</p>
-                            <p className="mt-1">Keep this tab in focus during the meeting for best transcript capture. You can also add transcripts manually after the meeting.</p>
-                        </div>
+                        {createMode === "oneToOne" ? (
+                            <>
+                                <div>
+                                    <label className="text-xs font-medium text-ink/60 mb-1 block">Who do you want to call?</label>
+                                    <Select value={inviteeId} onValueChange={setInviteeId}>
+                                        <SelectTrigger aria-label="Person to call" className="h-9 text-xs rounded-lg">
+                                            <SelectValue placeholder="Choose a teammate..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {callable.map((m) => (
+                                                <SelectItem key={m._id} value={m._id} className="text-xs">{m.user.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="bg-cream border rounded-lg p-3 text-xs text-ink/70">
+                                    <p className="font-medium text-ink">Private, up to 15 minutes</p>
+                                    <p className="mt-1">Only you two can see or join this call. It ends by itself at 15 minutes.</p>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <Input aria-label="Meeting title"
+                                    placeholder="Meeting title..."
+                                    value={title}
+                                    onChange={e => setTitle(e.target.value)}
+                                    onKeyDown={e => e.key === "Enter" && handleCreate()}
+                                    className="text-sm rounded-lg focus-visible:ring-[#ff5018]/40 focus-visible:border-[#ff5018]"
+                                />
+                                <label className="flex items-center gap-2 text-xs font-medium text-ink/70 cursor-pointer">
+                                    <input type="checkbox" checked={scheduleOn} onChange={(e) => setScheduleOn(e.target.checked)} className="accent-[#ff5018]" />
+                                    Schedule for later
+                                </label>
+                                {scheduleOn && (
+                                    <Input aria-label="Meeting date and time" type="datetime-local" value={scheduleAt} min={format(new Date(nowTs + 60_000), "yyyy-MM-dd'T'HH:mm")}
+                                        onChange={(e) => setScheduleAt(e.target.value)} className="text-sm rounded-lg" />
+                                )}
+                                <div>
+                                    <label className="text-xs font-medium text-ink/60 mb-1 block">
+                                        Post to channel (optional)
+                                    </label>
+                                    <Select value={selectedChannelId} onValueChange={setSelectedChannelId}>
+                                        <SelectTrigger aria-label="Channel" className="h-9 text-xs rounded-lg">
+                                            <SelectValue placeholder="Select a channel..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {channels?.map(c => (
+                                                <SelectItem key={c._id} value={c._id} className="text-xs">
+                                                    # {c.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                {!scheduleOn && (
+                                    <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-300">
+                                        <p className="font-medium">Tip for transcripts</p>
+                                        <p className="mt-1">Keep this tab in focus during the meeting for best transcript capture. You can also add transcripts manually after the meeting.</p>
+                                    </div>
+                                )}
+                            </>
+                        )}
                         <Button
                             onClick={handleCreate}
                             disabled={isCreating}
@@ -511,7 +653,11 @@ export default function MeetingPage() {
                         >
                             {isCreating
                                 ? <Loader className="size-4 animate-spin" />
-                                : <><Video className="size-4 mr-2" /> Start Meeting</>
+                                : createMode === "oneToOne"
+                                    ? <><Phone className="size-4 mr-2" /> Call now</>
+                                    : scheduleOn
+                                        ? <><CalendarClock className="size-4 mr-2" /> Schedule Meeting</>
+                                        : <><Video className="size-4 mr-2" /> Start Meeting</>
                             }
                         </Button>
                     </div>

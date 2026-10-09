@@ -55,7 +55,8 @@ export const events = query({
             .order("desc")
             .take(300)
         const meetingRows = meetings
-            .filter((m) => m.startedAt >= args.from && m.startedAt < args.to)
+            .filter((m) => m.startedAt >= args.from && m.startedAt < args.to && !m.deletedAt
+                && (m.kind !== "oneToOne" || m.createdBy === member._id || m.inviteeId === member._id))
             .map((m) => ({ _id: m._id, title: m.title, startedAt: m.startedAt, endedAt: m.endedAt }))
 
         return { tasks: taskRows, sprints: sprintRows, meetings: meetingRows, myMemberId: member._id }

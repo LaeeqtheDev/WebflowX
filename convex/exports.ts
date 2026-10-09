@@ -84,6 +84,7 @@ export const workspacePage = query({
                 const page = await ctx.db.query("meetings").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).paginate(opts)
                 const rows = []
                 for (const m of page.page) {
+                    if (m.deletedAt || m.kind === "oneToOne") continue
                     const parts = await ctx.db.query("meetingTranscripts").withIndex("by_meeting_id", (q) => q.eq("meetingId", m._id)).take(200)
                     const { _id, _creationTime, ...rest } = m
                     rows.push({ id: _id, createdAt: _creationTime, ...rest, transcript: parts.map(({ _id: _i, _creationTime: _c, meetingId: _m, ...p }) => p) })

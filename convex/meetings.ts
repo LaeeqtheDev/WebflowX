@@ -1,6 +1,8 @@
 import { v } from "convex/values"
 import { mutation, query, internalMutation, MutationCtx } from "./_generated/server"
-import { Id } from "./_generated/dataModel"
+import { Id, Doc } from "./_generated/dataModel"
+import { logAudit } from "./audit"
+import { notify } from "./notifications"
 import { findMember } from "./access"
 import { auth } from "./auth"
 import { can, assert2fa } from "./permissions"
@@ -10,6 +12,13 @@ import { throttle } from "./rateLimit"
 import { ConvexError } from "convex/values"
 
 
+export const ONE_TO_ONE_MAX_MINUTES = 15
+const EARLY_JOIN_MS = 10 * 60_000
+
+// One-to-one calls are private to the two people in them; deleted meetings are gone for everyone.
+const visibleTo = (meeting: Doc<"meetings">, member: Doc<"members">) =>
+    !meeting.deletedAt && (meeting.kind !== "oneToOne" || meeting.createdBy === member._id || meeting.inviteeId === member._id)
+
 const requireMeetingMember = async (ctx: MutationCtx, meetingId: Id<"meetings">) => {
     const userId = await auth.getUserId(ctx)
     if (!userId) throw new Error("Unauthorized")
@@ -17,6 +26,7 @@ const requireMeetingMember = async (ctx: MutationCtx, meetingId: Id<"meetings">)
     if (!meeting) throw new Error("Meeting not found")
     const member = await findMember(ctx, meeting.workspaceId, userId)
     if (!member || member.role === "guest") throw new Error("Unauthorized")
+    if (!visibleTo(meeting, member)) throw new Error("Meeting not found")
     return { meeting, member }
 }
 
@@ -43,7 +53,8 @@ export const get = query({
             .order("desc")
             .take(200)
 
-        return await Promise.all(meetings.map(async (meeting) => {
+        const visible = meetings.filter((m) => visibleTo(m, member))
+        return await Promise.all(visible.map(async (meeting) => {
             const creator = await ctx.db.get(meeting.createdBy)
             const creatorUser = creator ? await ctx.db.get(creator.userId) : null
             return { ...meeting, creator: creator ? { ...creator, user: creatorUser } : null }
@@ -59,6 +70,9 @@ export const join = mutation({
     handler: async (ctx, args) => {
         const { meeting, member } = await requireMeetingMember(ctx, args.id)
         if (meeting.endedAt) throw new ConvexError("This meeting has already ended")
+        if (meeting.scheduledFor && Date.now() < meeting.scheduledFor - EARLY_JOIN_MS) {
+            throw new ConvexError("This meeting hasn't started yet. You can join 10 minutes before it begins.")
+        }
         if ((meeting.kicked ?? []).includes(member._id)) {
             throw new ConvexError("You were removed from this meeting by the host")
         }
@@ -131,7 +145,7 @@ export const getTranscript = query({
         const meeting = await ctx.db.get(args.id)
         if (!meeting) return ""
         const member = await findMember(ctx, meeting.workspaceId, userId)
-        if (!member || member.role === "guest") return ""
+        if (!member || member.role === "guest" || !visibleTo(meeting, member)) return ""
 
         const rows = await ctx.db
             .query("meetingTranscripts")
@@ -204,6 +218,11 @@ export const create = mutation({
         workspaceId: v.id("workspaces"),
         title: v.string(),
         roomName: v.string(),
+        // "oneToOne" needs inviteeId; any member can start one. A workspace meeting needs the startMeetings permission.
+        kind: v.optional(v.union(v.literal("workspace"), v.literal("oneToOne"))),
+        inviteeId: v.optional(v.id("members")),
+        // plan the meeting for later instead of starting it now (workspace meetings only)
+        scheduledFor: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
         const userId = await auth.getUserId(ctx)
@@ -217,38 +236,82 @@ export const create = mutation({
         if (member) await assert2fa(ctx, member)
 
         if (!member || member.role === "guest") throw new Error("Unauthorized")
-        if (!(await can(ctx, member, "startMeetings"))) throw new ConvexError("You don't have permission to start meetings")
+        const kind = args.kind ?? "workspace"
+        let invitee: Doc<"members"> | null = null
+        if (kind === "oneToOne") {
+            if (!args.inviteeId) throw new ConvexError("Choose who to call")
+            invitee = await ctx.db.get(args.inviteeId)
+            if (!invitee || invitee.workspaceId !== args.workspaceId || invitee.role === "guest") throw new ConvexError("That person can't be invited to a call")
+            if (invitee._id === member._id) throw new ConvexError("You can't call yourself")
+            if (args.scheduledFor) throw new ConvexError("One-to-one calls start right away. Schedule a workspace meeting instead.")
+        } else if (!(await can(ctx, member, "startMeetings"))) {
+            throw new ConvexError("Only moderators and admins can start or schedule workspace meetings")
+        }
         await throttle(ctx, userId, "meeting-create", 10, 60 * 60_000, "starting meetings")
         const title = text(args.title, MAX.meetingTitle, "Meeting title", { required: true, collapse: true })
         const roomName = text(args.roomName, MAX.roomName, "Room name", { required: true })
 
-        // Only count meetings from this month for limit check
-        const now = new Date()
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime()
-
-        const existingMeetings = await ctx.db
-            .query("meetings")
-            .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
-            .filter((q) => q.gte(q.field("startedAt"), startOfMonth))
-            .take(2000)
-
-        const { allowed, limit, plan } = await checkLimit(
-            ctx, args.workspaceId, "meetings", existingMeetings.length
-        )
-
-        if (!allowed) {
-            throw new ConvexError(`LIMIT_REACHED:meetings:${limit}:${plan}`)
+        const now = Date.now()
+        if (args.scheduledFor !== undefined) {
+            if (args.scheduledFor < now + 60_000) throw new ConvexError("Pick a time in the future")
+            if (args.scheduledFor > now + 180 * 24 * 60 * 60_000) throw new ConvexError("Meetings can be scheduled up to 6 months ahead")
         }
 
-        return await ctx.db.insert("meetings", {
+        // Only workspace meetings count against the plan; one-to-one calls are short and have no cost to the plan.
+        if (kind === "workspace") {
+            const d = new Date(now)
+            const startOfMonth = new Date(d.getFullYear(), d.getMonth(), 1).getTime()
+            const existingMeetings = await ctx.db
+                .query("meetings")
+                .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
+                .filter((q) => q.and(q.gte(q.field("startedAt"), startOfMonth), q.neq(q.field("kind"), "oneToOne")))
+                .take(2000)
+            const { allowed, limit, plan } = await checkLimit(ctx, args.workspaceId, "meetings", existingMeetings.length)
+            if (!allowed) throw new ConvexError(`LIMIT_REACHED:meetings:${limit}:${plan}`)
+        }
+
+        const id = await ctx.db.insert("meetings", {
             workspaceId: args.workspaceId,
             title,
             roomName,
             createdBy: member._id,
-            startedAt: Date.now(),
+            startedAt: args.scheduledFor ?? now,
+            scheduledFor: args.scheduledFor,
+            kind,
+            inviteeId: invitee?._id,
             activeMembers: [],
         })
+        if (invitee) {
+            await notify(ctx, {
+                workspaceId: args.workspaceId, recipientId: invitee._id, senderId: member._id,
+                type: "meeting_invite", read: false, body: title,
+            }, { email: false })
+        }
+        return id
     }
+})
+
+// Delete a meeting you started (or any, with the moderate-meetings permission). A live call must be ended first.
+// The row is kept, empty and hidden, so the plan's monthly meeting count can't be reset by deleting.
+export const remove = mutation({
+    args: { id: v.id("meetings") },
+    handler: async (ctx, args) => {
+        const { meeting, member } = await requireMeetingMember(ctx, args.id)
+        const isHost = meeting.createdBy === member._id
+        if (!isHost && !(meeting.kind !== "oneToOne" && (await can(ctx, member, "moderateMeetings")))) {
+            throw new ConvexError("Only the person who started this meeting or a moderator can delete it")
+        }
+        const notStarted = !!meeting.scheduledFor && meeting.scheduledFor > Date.now() && (meeting.activeMembers ?? []).length === 0
+        if (!meeting.endedAt && !notStarted) throw new ConvexError("End the meeting before deleting it")
+        for (const t of await ctx.db.query("meetingTranscripts").withIndex("by_meeting_id", (q) => q.eq("meetingId", args.id)).take(300)) {
+            await ctx.db.delete(t._id)
+        }
+        await ctx.db.patch(args.id, { deletedAt: Date.now(), transcript: undefined, summary: undefined, participants: undefined, activeMembers: [], endedAt: meeting.endedAt ?? Date.now() })
+        if (meeting.kind !== "oneToOne") {
+            await logAudit(ctx, meeting.workspaceId, member._id, notStarted && !meeting.endedAt ? "meeting.cancel" : "meeting.delete", meeting.title)
+        }
+        return args.id
+    },
 })
 
 export const end = mutation({
@@ -313,12 +376,15 @@ export const authorizeRoom = query({
             .first()
         if (!meeting || meeting.endedAt) return null
         const member = await findMember(ctx, meeting.workspaceId, userId)
-        if (!member || member.role === "guest") return null
+        if (!member || member.role === "guest" || !visibleTo(meeting, member)) return null
         if ((meeting.kicked ?? []).includes(member._id)) return null
+        if (meeting.scheduledFor && Date.now() < meeting.scheduledFor - EARLY_JOIN_MS) return null
         const user = await ctx.db.get(userId)
+        const oneToOne = meeting.kind === "oneToOne"
         return {
             meetingId: meeting._id,
-            host: meeting.createdBy === member._id || (await can(ctx, member, "moderateMeetings")),
+            oneToOne,
+            host: meeting.createdBy === member._id || (!oneToOne && (await can(ctx, member, "moderateMeetings"))),
             identity: member._id as string,
             name: user?.name ?? user?.email ?? "Member",
         }
@@ -364,7 +430,7 @@ export const hasSummaryClaim = query({
         const meeting = await ctx.db.get(args.id)
         if (!meeting) return false
         const member = await findMember(ctx, meeting.workspaceId, userId)
-        if (!member || member.role === "guest") return false
+        if (!member || member.role === "guest" || !visibleTo(meeting, member)) return false
         const rows = await ctx.db
             .query("aiSummaryLog")
             .withIndex("by_meeting_id", (q) => q.eq("meetingId", args.id))
@@ -406,5 +472,24 @@ export const endStale = internalMutation({
             await ctx.db.patch(m._id, { endedAt: Date.now(), activeMembers: [] })
         }
         return stale.length
+    },
+})
+
+// Every minute: one-to-one calls stop at 15 minutes, even if someone kept the tab open.
+export const endOverTime = internalMutation({
+    args: {},
+    handler: async (ctx) => {
+        const cutoff = Date.now() - ONE_TO_ONE_MAX_MINUTES * 60_000
+        const live = await ctx.db
+            .query("meetings")
+            .withIndex("by_ended_started", (q) => q.eq("endedAt", undefined).lt("startedAt", cutoff))
+            .take(200)
+        let n = 0
+        for (const m of live) {
+            if (m.kind !== "oneToOne") continue
+            await ctx.db.patch(m._id, { endedAt: Date.now(), activeMembers: [] })
+            n++
+        }
+        return n
     },
 })

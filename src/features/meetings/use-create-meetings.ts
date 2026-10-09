@@ -13,6 +13,9 @@ export const useCreateMeeting = () => {
         workspaceId: Id<"workspaces">
         title: string
         roomName: string
+        kind?: "workspace" | "oneToOne"
+        inviteeId?: Id<"members">
+        scheduledFor?: number
     }, options?: {
         onSuccess?: (id: Id<"meetings">) => void
         onError?: (e: Error) => void

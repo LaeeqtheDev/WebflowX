@@ -13,7 +13,7 @@ import { api } from "../../../../../../convex/_generated/api"
 import {
     Bell, MessageSquare, Smile, CheckSquare,
     FileText, RefreshCw, Loader, BellOff,
-    CheckCheck, MessagesSquare, AtSign
+    CheckCheck, MessagesSquare, AtSign, Video
 } from "lucide-react"
 import { Id } from "../../../../../../convex/_generated/dataModel"
 import { useClearAll } from "@/features/notifications/use-clear-all"
@@ -42,6 +42,12 @@ const TYPE_CONFIG = {
         color: "text-orange-ink",
         bg: "bg-[#ff5018]/10",
         label: "assigned a task to you"
+    },
+    meeting_invite: {
+        icon: Video,
+        color: "text-orange-ink",
+        bg: "bg-[#ff5018]/10",
+        label: "invited you to a call"
     },
     task_due: {
         icon: CheckSquare,
@@ -163,6 +169,9 @@ export default function ActivityPage() {
             case "task_due":
             case "task_comment":
                 router.push(`${base}/tasks${notification.taskId ? `?task=${notification.taskId}` : ""}`)
+                break
+            case "meeting_invite":
+                router.push(`${base}/meeting`)
                 break
             case "note_added":
                 router.push(`${base}/notes${notification.noteId ? `?note=${notification.noteId}` : ""}`)

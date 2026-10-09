@@ -43,7 +43,7 @@ const PERMISSION_INFO: { key: PermissionKey; label: string; hint: string }[] = [
   { key: "postInReadOnly", label: "Post in read-only channels", hint: "Write in announcement channels" },
   { key: "mentionEveryone", label: "Use @everyone", hint: "Notify everyone who can see a channel" },
   { key: "uploadFiles", label: "Upload files and images", hint: "Attach files and pictures to messages and docs" },
-  { key: "startMeetings", label: "Start meetings", hint: "Create new meetings" },
+  { key: "startMeetings", label: "Start and schedule meetings", hint: "Workspace meetings. Everyone can still start a 15 minute one-to-one call" },
   { key: "createDocs", label: "Create documents", hint: "Start new docs" },
 ]
 
@@ -57,6 +57,8 @@ const ACTION_LABEL: Record<string, string> = {
   "invite.close_link": "Turned off open invite link",
   "security.require_2fa": "Required two-step verification",
   "security.allow_no_2fa": "Stopped requiring two-step verification",
+  "meeting.delete": "Deleted a meeting",
+  "meeting.cancel": "Cancelled a scheduled meeting",
   "member.role": "Changed a role",
   "member.remove": "Removed a member",
   "member.leave": "Member left",
