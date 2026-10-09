@@ -5,12 +5,31 @@ from story import SPRINTS, TASKS, CLIENTS
 import pools, scenes_clients, scenes_team
 
 
+FEMALE = {"zainab", "maya", "sana", "priya", "noor", "areeba", "hira", "elena", "rania", "sofia", "rebecca", "nadia"}
+HAIR_F = ["bob", "bun", "curly", "straight01", "straight02", "longButNotTooLong", "bigHair", "frida", "miaWallace"]
+HAIR_M = ["shortFlat", "shortWaved", "shortCurly", "shortRound", "theCaesar", "sides"]
+SKIN = {"pk": ["d08b5b", "ae5d29", "edb98a"], "us": ["edb98a", "ffdbb4", "d08b5b"], "eu": ["ffdbb4", "edb98a", "f8d25c"]}
+HAIRC = ["2c1b18", "4a312c", "724133", "b58143"]
+
+
+def avatar(key, name):
+    """Cartoon avatar whose hair and beard follow the person's gender. Deterministic per person, no randomness used."""
+    h = sum(ord(c) * (i + 3) for i, c in enumerate(key))
+    female = key in FEMALE
+    top = (HAIR_F if female else HAIR_M)[h % (len(HAIR_F) if female else len(HAIR_M))]
+    skin = SKIN[PEOPLE[key][3]][h % 3]
+    beard = "" if female or h % 3 == 0 else "&facialHair=" + ["beardLight", "beardMedium", "moustacheFancy"][h % 3] + "&facialHairProbability=100"
+    nobeard = "&facialHairProbability=0" if (female or h % 3 == 0) else ""
+    return ("https://api.dicebear.com/9.x/avataaars/svg?seed=" + name.replace(" ", "%20") + "&top=" + top + "&skinColor=" + skin
+            + "&hairColor=" + HAIRC[h % 4] + beard + nobeard + "&backgroundColor=ffe1d6,fff1c9,dbeafe,e5dcff,d8f5e4")
+
+
 def setup_people():
     for key, (name, title, role, reg, join, bio) in PEOPLE.items():
         j = d(join)
         t = at(j, 3.0)
         email = name.lower().replace(" ", ".").replace("'", "") + "@nf-demo.test"
-        image = "https://api.dicebear.com/9.x/notionists/svg?seed=" + name.replace(" ", "%20") + "&backgroundColor=ffe1d6,fff1c9,dbeafe,e5dcff,d8f5e4"
+        image = avatar(key, name)
         uid = store.add("users", {"name": name, "email": email, "emailVerificationTime": ms(t), "image": image, "title": title, "bio": bio,
                                   "theme": R.choice(["light", "light", "dark", "system"])}, t)
         mid = store.add("members", {"userId": uid, "workspaceId": WS, "role": role}, t + mins(2))
