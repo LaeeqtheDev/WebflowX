@@ -2,13 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-import { ConvexClientProvider } from "@/components/ConvexClientProvider";
-import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
-import { Modals } from "@/components/Modals";
-import { ThemedToaster } from "@/components/theme/themed-toaster";
-import { THEME_BOOT_SCRIPT } from "@/lib/theme";
-import { JotaiProvider } from "./dashboard/workspace/[workspaceId]/components/jotai-provider";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
@@ -87,26 +80,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ConvexAuthNextjsServerProvider>
-      <html lang="en" suppressHydrationWarning>
-        <head>
-          <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
-        </head>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          <ConvexClientProvider>
-            <JotaiProvider>
-              <NuqsAdapter>
-                <ThemedToaster />
-                <Modals />
-                <SpeedInsights />
-                {children}
-              </NuqsAdapter>
-            </JotaiProvider>
-          </ConvexClientProvider>
-        </body>
-      </html>
-    </ConvexAuthNextjsServerProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <SpeedInsights />
+        {children}
+      </body>
+    </html>
   );
 }

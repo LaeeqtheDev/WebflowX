@@ -29,5 +29,5 @@ export const storeTheme = (pref: ThemePref) => {
     try { localStorage.setItem(THEME_KEY, pref) } catch { /* private mode: the saved account setting still wins */ }
 }
 
-// Runs before the page paints so there is no light flash. Only the app (/dashboard) can be dark.
-export const THEME_BOOT_SCRIPT = `try{var p=localStorage.getItem('${THEME_KEY}')||'system';var d=p==='dark'||(p==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d&&/^\\/dashboard/.test(location.pathname))document.documentElement.classList.add('dark')}catch(e){}`
+// The pre-paint dark-mode script lives in public/theme-boot.js (a file, not inline, so the app CSP needs no inline exception).
+// Only the app (/dashboard) can be dark; keep that file's key and path check in step with THEME_KEY above.

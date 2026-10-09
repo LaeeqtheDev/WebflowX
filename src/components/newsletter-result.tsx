@@ -4,6 +4,7 @@ import React, { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMutation } from "convex/react";
+import { PublicConvexProvider } from "./PublicConvexProvider";
 import { api } from "../../convex/_generated/api";
 
 type Mode = "confirm" | "unsubscribe";
@@ -76,7 +77,7 @@ export function NewsletterResult({ mode }: { mode: Mode }) {
       <div className="w-full max-w-lg">
         <p className="mb-5 text-lg font-bold text-[#381d2a]">WebflowX</p>
         <Suspense fallback={<div className="rounded-2xl bg-white p-8 text-[#381d2a]/75">Loading...</div>}>
-          <Inner mode={mode} />
+          <PublicConvexProvider><Inner mode={mode} /></PublicConvexProvider>
         </Suspense>
       </div>
     </main>

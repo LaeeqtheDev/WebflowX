@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { useRouter } from "next/navigation"
-import { Camera, Loader, TrashIcon, Trash2, Crown, Shield, ShieldCheck, Download, Plus, Pencil, Settings2, Users, KeyRound, Plug, ScrollText } from "lucide-react"
+import { Camera, Loader, TrashIcon, Trash2, Crown, Shield, ShieldCheck, Download, Plus, Pencil, Settings2, Users, KeyRound, Plug, ScrollText, Upload } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "../../../../../../convex/_generated/api"
 import { Button } from "@/components/ui/button"
@@ -21,6 +21,7 @@ import { errMsg } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 import { useConfirm } from "../../hooks/use-confirm"
 import { IntegrationsPanel } from "@/features/integrations/integrations-panel"
+import { ImportPanel } from "@/features/import/import-panel"
 
 interface PreferencesModalProps {
   open: boolean
@@ -28,7 +29,7 @@ interface PreferencesModalProps {
   initialValue: string
 }
 
-type Tab = "general" | "members" | "roles" | "integrations" | "audit"
+type Tab = "general" | "members" | "roles" | "integrations" | "audit" | "import"
 
 const PERMISSION_INFO: { key: PermissionKey; label: string; hint: string }[] = [
   { key: "createChannels", label: "Create channels", hint: "Start new public or locked channels" },
@@ -66,6 +67,8 @@ const exportAuditCsv = (rows: { actorName: string; action: string; detail?: stri
 }
 
 const ACTION_LABEL: Record<string, string> = {
+  "import.channel": "Imported a channel",
+  "import.notes": "Imported notes",
   "workspace.update": "Updated workspace",
   "workspace.transfer": "Transferred ownership",
   "invite.reset": "Reset the join code",
@@ -193,6 +196,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
     { id: "roles", label: "Roles & permissions", hint: "Choose what each role is allowed to do", icon: KeyRound, show: perms.isAdmin },
     { id: "integrations", label: "Integrations", hint: "API keys, webhooks and GitHub", icon: Plug, show: perms.isAdmin },
     { id: "audit", label: "Audit log", hint: "The latest 500 admin actions, searchable and exportable", icon: ScrollText, show: perms.isAdmin },
+    { id: "import", label: "Import", hint: "Bring in channels from Slack or pages from Notion", icon: Upload, show: perms.isAdmin },
   ]
   const current = tabs.find((t) => t.id === tab) ?? tabs[0]
 
@@ -437,6 +441,8 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
             )}
 
             {tab === "integrations" && <IntegrationsPanel workspaceId={workspaceId} />}
+
+            {tab === "import" && <ImportPanel workspaceId={workspaceId} />}
 
             {tab === "audit" && (
               <div className="flex flex-col gap-1.5">

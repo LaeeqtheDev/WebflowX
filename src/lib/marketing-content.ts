@@ -254,3 +254,59 @@ export const SITE_FAQS: Faq[] = [
   { q: "Does WebflowX support video calls?", a: "Yes. Host meetings in your workspace, follow a live transcript and get an AI summary with action items afterwards." },
   { q: "Can I export my data?", a: "Yes. Anyone can download their own data, and owners and admins can export the workspace." },
 ]
+
+export type ChangelogEntry = { date: string; title: string; points: string[] }
+
+/** Newest first. Only list things that shipped. */
+export const CHANGELOG: ChangelogEntry[] = [
+  {
+    date: "2026-10-09",
+    title: "Importers, audit log search and a faster public site",
+    points: [
+      "Import Slack export channels and Notion export pages into a workspace (Settings, Import).",
+      "Audit log: search by person, action or detail, export to CSV, and see the last 500 entries.",
+      "Public pages (features, use cases, comparisons, security) are served as static pages.",
+      "Stricter Content-Security-Policy on the signed-in app.",
+      "Sign-in code emails are rate limited per mailbox.",
+    ],
+  },
+  {
+    date: "2026-10-08",
+    title: "Meetings: who can start them, and one-to-one calls",
+    points: [
+      "Workspace meetings are started and scheduled by moderators and above, or by members given that permission.",
+      "Members can start a one-to-one call from a direct message. These end after 15 minutes.",
+      "Schedule meetings ahead, invite people, and delete or cancel a meeting.",
+      "Meeting invitations arrive as notifications.",
+    ],
+  },
+  {
+    date: "2026-10-07",
+    title: "Speed",
+    points: [
+      "Visited pages are kept in the browser for a short time so moving between sections feels instant.",
+      "The editor, renderer and thread views load in the background when the browser is idle.",
+      "A jump-to-latest button in channels.",
+    ],
+  },
+]
+
+export type CaseStudy = {
+  slug: string
+  name: string
+  title: string
+  description: string
+  client: string
+  summary: string
+  challenge: string
+  approach: string
+  /** Real, checkable outcomes only. Do not add a number you cannot show evidence for. */
+  results: string[]
+  published: string
+}
+
+/**
+ * Add a case study here only after the client has approved the text and every figure is real.
+ * Until there is at least one entry, /case-studies is marked noindex and left out of the sitemap.
+ */
+export const CASE_STUDIES: CaseStudy[] = []

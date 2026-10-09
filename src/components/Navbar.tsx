@@ -3,10 +3,10 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
+import { COMPARISONS, FEATURES, USE_CASES } from "@/lib/marketing-content";
 
 const menuItems = [
-  { label: "Product", href: "#features" },
   { label: "Merger", href: "#merger" },
   { label: "Journey", href: "#timeline" },
   { label: "Team", href: "#team" },
@@ -14,7 +14,35 @@ const menuItems = [
   { label: "FAQ", href: "#faq" },
 ];
 
+const productGroups = [
+  { title: "Features", base: "/features", items: FEATURES.map((p) => ({ href: `/features/${p.slug}`, label: p.name })) },
+  { title: "Use cases", base: "/use-cases", items: USE_CASES.map((p) => ({ href: `/use-cases/${p.slug}`, label: p.name })) },
+  { title: "Compare", base: "/compare", items: COMPARISONS.map((p) => ({ href: `/compare/${p.slug}`, label: p.name })) },
+];
+const productExtras = [
+  { href: "/security", label: "Security" },
+  { href: "/changelog", label: "Changelog" },
+];
+
 const Navbar: React.FC = () => {
+  const [productOpen, setProductOpen] = useState(false);
+  const [mobileProduct, setMobileProduct] = useState(false);
+  const productRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!productOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (productRef.current && !productRef.current.contains(e.target as Node)) setProductOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setProductOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [productOpen]);
+
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -55,6 +83,47 @@ const Navbar: React.FC = () => {
         </button>
 
         <div className="hidden items-center gap-8 md:flex">
+          <div
+            ref={productRef}
+            className="relative"
+            onMouseEnter={() => setProductOpen(true)}
+            onMouseLeave={() => setProductOpen(false)}
+          >
+            <button
+              type="button"
+              aria-haspopup="true"
+              aria-expanded={productOpen}
+              onClick={() => setProductOpen((v) => !v)}
+              className={`flex items-center gap-1 text-sm transition-colors ${soft}`}
+            >
+              Product <ChevronDown className={`h-3.5 w-3.5 transition-transform ${productOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+            </button>
+            {productOpen && (
+              <div className="absolute left-1/2 top-full -translate-x-1/2 pt-3">
+                <div className="w-[640px] rounded-2xl border border-[#381d2a]/10 bg-white p-6 text-[#1b1017] shadow-xl">
+                  <div className="grid grid-cols-3 gap-6">
+                    {productGroups.map((g) => (
+                      <div key={g.title}>
+                        <Link href={g.base} onClick={() => setProductOpen(false)} className="lp-label text-[#381d2a]/60 hover:text-[#a82d0a]">{g.title}</Link>
+                        <ul className="mt-3 space-y-1">
+                          {g.items.map((i) => (
+                            <li key={i.href}>
+                              <Link href={i.href} onClick={() => setProductOpen(false)} className="block rounded-md px-2 py-1.5 text-sm hover:bg-[#f7f2ee]">{i.label}</Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-5 flex gap-6 border-t border-[#381d2a]/10 pt-4 text-sm">
+                    {productExtras.map((i) => (
+                      <Link key={i.href} href={i.href} onClick={() => setProductOpen(false)} className="font-medium hover:text-[#a82d0a]">{i.label}</Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
           {menuItems.map((m) => (
             <a
               key={m.href}
@@ -91,6 +160,26 @@ const Navbar: React.FC = () => {
 
       {isOpen && (
         <div className="border-t border-[#381d2a]/10 px-5 pb-5 md:hidden">
+          <button
+            type="button"
+            aria-expanded={mobileProduct}
+            onClick={() => setMobileProduct((v) => !v)}
+            className="flex w-full items-center justify-between border-b border-[#381d2a]/10 py-3.5 text-left text-[#1b1017]"
+          >
+            Product <ChevronDown className={`h-4 w-4 transition-transform ${mobileProduct ? "rotate-180" : ""}`} aria-hidden="true" />
+          </button>
+          {mobileProduct && (
+            <div className="border-b border-[#381d2a]/10 pb-3">
+              {[...productGroups.map((g) => ({ title: g.title, items: g.items })), { title: "More", items: productExtras }].map((g) => (
+                <div key={g.title} className="pt-3">
+                  <p className="lp-label px-1 text-[#381d2a]/55">{g.title}</p>
+                  {g.items.map((i) => (
+                    <Link key={i.href} href={i.href} onClick={() => setIsOpen(false)} className="block px-1 py-2 text-[15px] text-[#1b1017]/85">{i.label}</Link>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
           {menuItems.map((m) => (
             <a
               key={m.href}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { PublicConvexProvider } from "./PublicConvexProvider";
 import { Reveal } from "./landing/ui";
 import { wrap } from "./landing/tokens";
 
@@ -104,7 +105,7 @@ export const NewsletterSignup = () => (
             Occasional emails about new WebflowX features and ways to run your team better.
           </p>
         </div>
-        <SubscribeForm />
+        <PublicConvexProvider><SubscribeForm /></PublicConvexProvider>
       </div>
     </section>
   </>

@@ -1,0 +1,1 @@
+try{var p=localStorage.getItem("wfx-theme")||"system";var d=p==="dark"||(p==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d&&/^\/dashboard/.test(location.pathname))document.documentElement.classList.add("dark")}catch(e){}
