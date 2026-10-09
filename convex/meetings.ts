@@ -248,7 +248,14 @@ export const create = mutation({
             throw new ConvexError("Only moderators and admins can start or schedule workspace meetings")
         }
         await throttle(ctx, userId, "meeting-create", 10, 60 * 60_000, "starting meetings")
-        const title = text(args.title, MAX.meetingTitle, "Meeting title", { required: true, collapse: true })
+        // a one-to-one call is named after the two people, so both of them see the same title
+        let title = ""
+        if (invitee) {
+            const [mine, theirs] = await Promise.all([ctx.db.get(member.userId), ctx.db.get(invitee.userId)])
+            title = text(`${mine?.name ?? "Member"} & ${theirs?.name ?? "Member"}`, MAX.meetingTitle, "Meeting title", { required: true, collapse: true })
+        } else {
+            title = text(args.title, MAX.meetingTitle, "Meeting title", { required: true, collapse: true })
+        }
         const roomName = text(args.roomName, MAX.roomName, "Room name", { required: true })
 
         const now = Date.now()
@@ -284,7 +291,7 @@ export const create = mutation({
         if (invitee) {
             await notify(ctx, {
                 workspaceId: args.workspaceId, recipientId: invitee._id, senderId: member._id,
-                type: "meeting_invite", read: false, body: title,
+                type: "meeting_invite", read: false, body: title, meetingId: id,
             }, { email: false })
         }
         return id
