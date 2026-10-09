@@ -16,3 +16,4 @@ jobs:
       - run: npx tsc --noEmit
       - run: npx tsc --noEmit -p convex
       - run: npx eslint src convex --quiet
+      - run: npm test
