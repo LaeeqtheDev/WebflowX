@@ -9,8 +9,10 @@ import { v, ConvexError } from "convex/values"
 import { internal } from "./_generated/api"
 import { Id } from "./_generated/dataModel"
 import { internalMutation } from "./_generated/server"
+import { SEED_IDS } from "./demoSeedData"
 
 const CAP = 3000
+const SEED = (t: string) => new Set<string>(SEED_IDS[t] ?? [])
 
 export const run = internalMutation({
     args: { workspaceId: v.id("workspaces"), userId: v.id("users"), mode: v.union(v.literal("PREVIEW"), v.literal("DELETE")) },
@@ -26,19 +28,19 @@ export const run = internalMutation({
         const convs = [
             ...(await ctx.db.query("conversations").withIndex("by_member_one", (q) => q.eq("memberOneId", me._id)).take(200)),
             ...(await ctx.db.query("conversations").withIndex("by_member_two", (q) => q.eq("memberTwoId", me._id)).take(200)),
-        ].filter((c) => c.workspaceId === args.workspaceId)
-        const convIds = new Set(convs.map((c) => c._id))
+        ].filter((c, i, a) => c.workspaceId === args.workspaceId && a.findIndex((x) => x._id === c._id) === i && !SEED("conversations").has(c._id))
+        const seedMsg = SEED("messages")
 
         // ---- messages: the owner's own, replies to them, and all DM messages
         const doomed = new Map<Id<"messages">, true>()
         const mine = await ctx.db.query("messages").withIndex("by_member_id", (q) => q.eq("memberId", me._id)).take(CAP)
         if (mine.length === CAP) n.truncatedMessages = 1
-        for (const m of mine) if (m.workspaceId === args.workspaceId) doomed.set(m._id, true)
+        for (const m of mine) if (m.workspaceId === args.workspaceId && !seedMsg.has(m._id)) doomed.set(m._id, true)
         for (const c of convs) {
-            for (const m of await ctx.db.query("messages").withIndex("by_conversation_id", (q) => q.eq("conversationId", c._id)).take(CAP)) doomed.set(m._id, true)
+            for (const m of await ctx.db.query("messages").withIndex("by_conversation_id", (q) => q.eq("conversationId", c._id)).take(CAP)) if (!seedMsg.has(m._id)) doomed.set(m._id, true)
         }
         for (const id of [...doomed.keys()]) {
-            for (const r of await ctx.db.query("messages").withIndex("by_parent_message_id", (q) => q.eq("parentMessagesId", id)).take(500)) doomed.set(r._id, true)
+            for (const r of await ctx.db.query("messages").withIndex("by_parent_message_id", (q) => q.eq("parentMessagesId", id)).take(500)) if (!seedMsg.has(r._id)) doomed.set(r._id, true)
         }
         for (const id of doomed.keys()) {
             const m = await ctx.db.get(id)
@@ -53,13 +55,15 @@ export const run = internalMutation({
         }
         for (const c of convs) { bump("conversations"); if (del) await ctx.db.delete(c._id) }
         // reactions the owner left on other people's messages
-        for (const r of await ctx.db.query("reactions").withIndex("by_member_id", (q) => q.eq("memberId", me._id)).take(CAP)) { bump("reactions"); if (del) await ctx.db.delete(r._id) }
+        const seedReact = SEED("reactions")
+        for (const r of await ctx.db.query("reactions").withIndex("by_member_id", (q) => q.eq("memberId", me._id)).take(CAP)) if (!seedReact.has(r._id)) { bump("reactions"); if (del) await ctx.db.delete(r._id) }
 
         // ---- notes
-        for (const x of await ctx.db.query("notes").withIndex("by_author_id", (q) => q.eq("authorId", me._id)).take(CAP)) { bump("notes"); if (del) await ctx.db.delete(x._id) }
+        const seedNotes = SEED("notes")
+        for (const x of await ctx.db.query("notes").withIndex("by_author_id", (q) => q.eq("authorId", me._id)).take(CAP)) if (!seedNotes.has(x._id)) { bump("notes"); if (del) await ctx.db.delete(x._id) }
 
         // ---- tasks the owner created or owns, with their comments; plus the owner's comments elsewhere
-        const tasks = (await ctx.db.query("tasks").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId)).take(CAP)).filter((t) => t.createdBy === me._id || t.assigneeId === me._id)
+        const tasks = (await ctx.db.query("tasks").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId)).take(CAP)).filter((t) => (t.createdBy === me._id || t.assigneeId === me._id) && !SEED("tasks").has(t._id))
         for (const t of tasks) {
             for (const c of await ctx.db.query("taskComments").withIndex("by_task_id", (q) => q.eq("taskId", t._id)).take(500)) { bump("taskComments"); if (del) await ctx.db.delete(c._id) }
             bump("tasks"); if (del) await ctx.db.delete(t._id)
@@ -67,7 +71,7 @@ export const run = internalMutation({
 
         // ---- pages, databases, templates
         const docs = (await ctx.db.query("docs").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId)).take(CAP))
-        const docIds = new Set(docs.filter((d) => d.createdBy === me._id).map((d) => d._id))
+        const docIds = new Set(docs.filter((d) => d.createdBy === me._id && !SEED("docs").has(d._id)).map((d) => d._id))
         let grew = true
         while (grew) { grew = false; for (const d of docs) if (d.parentId && docIds.has(d.parentId) && !docIds.has(d._id)) { docIds.add(d._id); grew = true } }
         let removedRows = 0
@@ -87,7 +91,7 @@ export const run = internalMutation({
         for (const t of await ctx.db.query("docTemplates").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId)).take(200)) if (t.createdBy === me._id) { bump("docTemplates"); if (del) await ctx.db.delete(t._id) }
 
         // ---- meetings the owner started
-        const meetings = (await ctx.db.query("meetings").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId)).take(CAP)).filter((m) => m.createdBy === me._id)
+        const meetings = (await ctx.db.query("meetings").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId)).take(CAP)).filter((m) => m.createdBy === me._id && !SEED("meetings").has(m._id))
         for (const m of meetings) {
             for (const t of await ctx.db.query("meetingTranscripts").withIndex("by_meeting_id", (q) => q.eq("meetingId", m._id)).take(300)) { bump("meetingTranscripts"); if (del) await ctx.db.delete(t._id) }
             for (const l of await ctx.db.query("aiSummaryLog").withIndex("by_meeting_id", (q) => q.eq("meetingId", m._id)).take(50)) { if (del) await ctx.db.delete(l._id) }
@@ -99,7 +103,7 @@ export const run = internalMutation({
         for (const f of files) { bump("files"); await removeStorage(f.storageId); if (del) await ctx.db.delete(f._id) }
 
         // ---- notifications to or from the owner
-        for (const x of await ctx.db.query("notifications").withIndex("by_workspace_recipient", (q) => q.eq("workspaceId", args.workspaceId).eq("recipientId", me._id)).take(CAP)) { bump("notifications"); if (del) await ctx.db.delete(x._id) }
+        for (const x of await ctx.db.query("notifications").withIndex("by_workspace_recipient", (q) => q.eq("workspaceId", args.workspaceId).eq("recipientId", me._id)).take(CAP)) if (!SEED("notifications").has(x._id)) { bump("notifications"); if (del) await ctx.db.delete(x._id) }
 
         return { mode: args.mode, keeps: "account, workspace, members, channels", ...n }
     },
