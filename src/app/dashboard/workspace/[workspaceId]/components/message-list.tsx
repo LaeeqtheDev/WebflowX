@@ -7,7 +7,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Id } from "../../../../../../convex/_generated/dataModel";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useCurrentMember } from "@/features/members/api/use-current-member";
-import { Loader } from "lucide-react";
+import { Loader, ArrowDown } from "lucide-react";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useSearchParams } from "next/navigation";
 import { ConversationHero } from "./conversation-hero";
@@ -51,6 +51,7 @@ export const MessageList = ({
 
     // The list is flex-col-reverse, so scrollTop 0 is the newest message.
     const stickToBottom = useRef(true);
+    const [showJump, setShowJump] = useState(false);
     const jumpToBottom = () => {
         const el = listRef.current;
         if (el) el.scrollTop = 0;
@@ -77,7 +78,11 @@ export const MessageList = ({
     useEffect(() => {
         const el = listRef.current;
         if (!el) return;
-        const onScroll = () => { stickToBottom.current = Math.abs(el.scrollTop) < 80; };
+        const onScroll = () => {
+            const away = Math.abs(el.scrollTop);
+            stickToBottom.current = away < 80;
+            setShowJump(away > 300);
+        };
         const onResize = () => { if (stickToBottom.current) { jumpToBottom(); requestAnimationFrame(jumpToBottom); } };
         el.addEventListener("scroll", onScroll, { passive: true });
         const vv = window.visualViewport;
@@ -161,6 +166,7 @@ export const MessageList = ({
     }, []);
 
     return (
+        <div className="relative flex-1 min-h-0 flex flex-col">
         <div ref={listRef} className="flex-1 flex flex-col-reverse pb-4 overflow-y-auto messages-scrollbar">
             {/* Add this anchor div at the very top (which is visual bottom due to flex-col-reverse) */}
             <div ref={bottomRef} />
@@ -233,6 +239,21 @@ export const MessageList = ({
             {variant === "conversation" && (
                 <ConversationHero name={memberName} image={memberImage} />
             )}
+        </div>
+        {showJump && (
+            <button
+                type="button"
+                aria-label="Jump to latest message"
+                onClick={() => {
+                    stickToBottom.current = true;
+                    listRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="absolute bottom-3 right-4 z-10 flex items-center gap-1.5 rounded-full bg-[#ff5018] px-3.5 py-2 text-xs font-semibold text-white shadow-lg transition hover:bg-[#e8450f] active:scale-95"
+            >
+                <ArrowDown className="size-4" />
+                Latest
+            </button>
+        )}
         </div>
     );
 };
