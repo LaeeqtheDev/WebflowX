@@ -1,7 +1,9 @@
 "use client"
 
 import { Suspense, useEffect, useState } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { useAuthActions } from "@convex-dev/auth/react"
+import { toast } from "sonner"
 import { Sidebar } from "./components/sidebar"
 import { Toolbar } from "./components/toolbar"
 
@@ -24,6 +26,8 @@ import { BillingReturn } from "./components/billing-return"
 import { PresenceProvider } from "@/features/presence/presence"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace"
+import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspaces"
+import { useCurrentMember } from "@/features/members/api/use-current-member"
 import { RequireTwoFactor } from "@/features/security/two-factor-gate"
 import { preloadWorkspaceChunks } from "@/lib/preload"
 
@@ -149,6 +153,28 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
   const workspaceId = useWorkspaceId()
   const { data: workspace } = useGetWorkspace({ id: workspaceId })
   useEffect(() => { preloadWorkspaceChunks() }, [])
+
+  // Removed from this workspace (or it was deleted): go to another workspace if there is one,
+  // otherwise sign out and send the person to /auth. This also fires live in any open tab.
+  const router = useRouter()
+  const { signOut } = useAuthActions()
+  const { data: member } = useCurrentMember({ workspaceId })
+  const { data: workspaces } = useGetWorkspaces()
+  useEffect(() => {
+    if (member !== null || workspaces === undefined) return // still loading, or still a member
+    // short wait so a momentary empty read while data syncs never kicks anyone out
+    const timer = setTimeout(async () => {
+      const other = workspaces.find((w) => w._id !== workspaceId)
+      toast.error("You no longer have access to that workspace")
+      if (other) {
+        router.replace(`/dashboard/workspace/${other._id}`)
+      } else {
+        await signOut().catch(() => undefined)
+        router.replace("/auth")
+      }
+    }, 600)
+    return () => clearTimeout(timer)
+  }, [member, workspaces, workspaceId, router, signOut])
   const shell = (
     <PresenceProvider workspaceId={workspaceId}>
       <Suspense fallback={null}><BillingReturn /></Suspense>
