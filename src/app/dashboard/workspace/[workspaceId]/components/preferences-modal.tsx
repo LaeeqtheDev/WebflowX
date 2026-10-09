@@ -47,6 +47,24 @@ const PERMISSION_INFO: { key: PermissionKey; label: string; hint: string }[] = [
   { key: "createDocs", label: "Create documents", hint: "Start new docs" },
 ]
 
+// Spreadsheet formulas can start with = + - @, so those cells are prefixed with a quote when the CSV is opened in Excel or Sheets.
+const csvCell = (v: string) => {
+  const safe = /^[=+\-@\t\r]/.test(v) ? `'${v}` : v
+  return `"${safe.replace(/"/g, '""')}"`
+}
+const exportAuditCsv = (rows: { actorName: string; action: string; detail?: string; _creationTime: number }[]) => {
+  const lines = [["Time (UTC)", "Person", "Action", "Detail"].map(csvCell).join(",")]
+  for (const r of rows) {
+    lines.push([new Date(r._creationTime).toISOString(), r.actorName, ACTION_LABEL[r.action] ?? r.action, r.detail ?? ""].map(csvCell).join(","))
+  }
+  const url = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" }))
+  const a = document.createElement("a")
+  a.href = url
+  a.download = `audit-log-${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 const ACTION_LABEL: Record<string, string> = {
   "workspace.update": "Updated workspace",
   "workspace.transfer": "Transferred ownership",
@@ -110,6 +128,12 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
   const { mutate: removeWorkspace, isPending: isRemoving } = useRemoveWorkspace()
 
   const [tab, setTab] = useState<Tab>("general")
+  const [auditSearch, setAuditSearch] = useState("")
+  const auditRows = (audit ?? []).filter((a) => {
+    const q = auditSearch.trim().toLowerCase()
+    if (!q) return true
+    return `${a.actorName} ${ACTION_LABEL[a.action] ?? a.action} ${a.action} ${a.detail ?? ""}`.toLowerCase().includes(q)
+  })
   const [name, setName] = useState(initialValue)
   const [description, setDescription] = useState("")
   const [saving, setSaving] = useState(false)
@@ -168,7 +192,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
     { id: "members", label: "Members", hint: `${members ? members.length : "…"} ${members?.length === 1 ? "person" : "people"} in this workspace`, icon: Users, show: true },
     { id: "roles", label: "Roles & permissions", hint: "Choose what each role is allowed to do", icon: KeyRound, show: perms.isAdmin },
     { id: "integrations", label: "Integrations", hint: "API keys, webhooks and GitHub", icon: Plug, show: perms.isAdmin },
-    { id: "audit", label: "Audit log", hint: "The latest 100 admin actions", icon: ScrollText, show: perms.isAdmin },
+    { id: "audit", label: "Audit log", hint: "The latest 500 admin actions, searchable and exportable", icon: ScrollText, show: perms.isAdmin },
   ]
   const current = tabs.find((t) => t.id === tab) ?? tabs[0]
 
@@ -416,9 +440,16 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
 
             {tab === "audit" && (
               <div className="flex flex-col gap-1.5">
+                <div className="mb-1 flex gap-2">
+                  <Input value={auditSearch} onChange={(e) => setAuditSearch(e.target.value)} placeholder="Search by person, action or detail" aria-label="Search the audit log" />
+                  <Button type="button" variant="outline" disabled={!audit?.length} onClick={() => exportAuditCsv(auditRows)}>
+                    <Download className="size-4 mr-1.5" />CSV
+                  </Button>
+                </div>
                 {audit === undefined && <Loader className="size-5 animate-spin text-[#ff5018] mx-auto my-6" />}
                 {audit?.length === 0 && <p className="text-sm text-ink/65 text-center py-6">Nothing recorded yet.</p>}
-                {audit?.map((a) => (
+                {audit && audit.length > 0 && auditRows.length === 0 && <p className="text-sm text-ink/65 text-center py-6">No entries match your search.</p>}
+                {auditRows.map((a) => (
                   <div key={a._id} className="bg-surface rounded-xl border border-plum/10 px-4 py-2.5">
                     <p className="text-sm text-ink"><span className="font-semibold">{a.actorName}</span> · {ACTION_LABEL[a.action] ?? a.action}</p>
                     <p className="text-xs text-ink/65">

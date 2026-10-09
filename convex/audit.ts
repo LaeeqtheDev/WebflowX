@@ -14,7 +14,7 @@ export const logAudit = async (
     await ctx.db.insert("auditLog", { workspaceId, actorId, action, detail: detail?.slice(0, 300) })
 }
 
-// Owner and admins can read the log (newest 100 entries).
+// Owner and admins can read the log (newest 500 entries).
 export const list = query({
     args: { workspaceId: v.id("workspaces") },
     handler: async (ctx, args) => {
@@ -33,7 +33,7 @@ export const list = query({
             .query("auditLog")
             .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
             .order("desc")
-            .take(100)
+            .take(500)
 
         return await Promise.all(rows.map(async (r) => {
             const actor = await ctx.db.get(r.actorId)
