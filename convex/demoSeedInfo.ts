@@ -17,13 +17,16 @@ const mintId = (tableNumber: number): string => {
     let s1 = 0, s2 = 0
     for (const b of bytes) { s1 = (s1 + b) % 256; s2 = (s2 + s1) % 256 }
     bytes.push(s1, s2)
-    let bits = 0n
-    for (const b of bytes) bits = (bits << 8n) | BigInt(b)
+    // base32 from the least significant end, with plain numbers (no BigInt, the build targets ES2017)
     let out = ""
-    for (let i = 0; i < Math.ceil((bytes.length * 8) / 5); i++) {
-        out = ALPHABET[Number(bits & 31n)] + out
-        bits >>= 5n
+    let acc = 0
+    let accBits = 0
+    for (let i = bytes.length - 1; i >= 0; i--) {
+        acc |= bytes[i] << accBits
+        accBits += 8
+        while (accBits >= 5) { out = ALPHABET[acc & 31] + out; acc >>= 5; accBits -= 5 }
     }
+    if (accBits > 0) out = ALPHABET[acc & 31] + out
     return out
 }
 
