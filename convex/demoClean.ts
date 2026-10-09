@@ -105,6 +105,44 @@ export const run = internalMutation({
         // ---- notifications to or from the owner
         for (const x of await ctx.db.query("notifications").withIndex("by_workspace_recipient", (q) => q.eq("workspaceId", args.workspaceId).eq("recipientId", me._id)).take(CAP)) if (!SEED("notifications").has(x._id)) { bump("notifications"); if (del) await ctx.db.delete(x._id) }
 
+        // ---- leftovers of people who are gone: content whose author no longer has a member row (e.g. the earlier wipe)
+        const alive = new Map<string, boolean>()
+        const isGone = async (id: Id<"members">) => {
+            if (!alive.has(id)) alive.set(id, !!(await ctx.db.get(id)))
+            return !alive.get(id)
+        }
+        for (const m of await ctx.db.query("meetings").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId)).take(CAP)) {
+            if (SEED("meetings").has(m._id) || !(await isGone(m.createdBy))) continue
+            for (const t of await ctx.db.query("meetingTranscripts").withIndex("by_meeting_id", (q) => q.eq("meetingId", m._id)).take(300)) { if (del) await ctx.db.delete(t._id) }
+            for (const l of await ctx.db.query("aiSummaryLog").withIndex("by_meeting_id", (q) => q.eq("meetingId", m._id)).take(50)) { if (del) await ctx.db.delete(l._id) }
+            bump("orphanMeetings"); if (del) await ctx.db.delete(m._id)
+        }
+        for (const x of await ctx.db.query("notes").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId)).take(CAP)) {
+            if (SEED("notes").has(x._id) || !(await isGone(x.authorId))) continue
+            bump("orphanNotes"); if (del) await ctx.db.delete(x._id)
+        }
+        for (const t of await ctx.db.query("tasks").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId)).take(CAP)) {
+            if (SEED("tasks").has(t._id) || !(await isGone(t.createdBy))) continue
+            for (const c of await ctx.db.query("taskComments").withIndex("by_task_id", (q) => q.eq("taskId", t._id)).take(500)) { if (del) await ctx.db.delete(c._id) }
+            bump("orphanTasks"); if (del) await ctx.db.delete(t._id)
+        }
+        for (const d of await ctx.db.query("docs").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId)).take(CAP)) {
+            if (SEED("docs").has(d._id) || !(await isGone(d.createdBy))) continue
+            bump("orphanDocs")
+            if (del) {
+                for (const c of await ctx.db.query("dbConfigs").withIndex("by_doc_id", (q) => q.eq("docId", d._id)).take(5)) await ctx.db.delete(c._id)
+                for (const r of await ctx.db.query("dbRows").withIndex("by_database_id", (q) => q.eq("databaseId", d._id)).take(CAP)) await ctx.db.delete(r._id)
+                await ctx.db.delete(d._id)
+                await ctx.scheduler.runAfter(0, internal.liveblocks.deleteRoom, { roomId: d.liveblocksRoomId })
+            }
+        }
+        const seedMsgs = SEED("messages")
+        for (const m of await ctx.db.query("messages").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId)).take(4000)) {
+            if (seedMsgs.has(m._id) || !(await isGone(m.memberId))) continue
+            for (const r of await ctx.db.query("reactions").withIndex("by_message_id", (q) => q.eq("messageId", m._id)).take(500)) { if (del) await ctx.db.delete(r._id) }
+            bump("orphanMessages"); if (del) await ctx.db.delete(m._id)
+        }
+
         return { mode: args.mode, keeps: "account, workspace, members, channels", ...n }
     },
 })
