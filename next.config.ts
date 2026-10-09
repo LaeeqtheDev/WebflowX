@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { connectSrc } from "./src/lib/csp";
 
 const isDev = process.env.NODE_ENV !== "production";
 
@@ -6,30 +7,6 @@ const isDev = process.env.NODE_ENV !== "production";
 // 'unsafe-inline' remains; 'unsafe-eval' is dev only). Network calls are limited to the vendors listed in connectSrc (Convex, Liveblocks,
 // LiveKit, Deepgram). Only North Foundry's own sites can frame the app (the WebflowX preview on northfoundry.co);
 // nothing else can, and nothing can load plugins or change the base URL / form targets.
-// Hosts the browser is allowed to talk to. Anything not listed here is blocked, so an injected script cannot send data elsewhere.
-// Add a new vendor here (or put extra origins in CSP_CONNECT_EXTRA, space separated) before using it from client code.
-const hostOf = (url?: string) => {
-  try {
-    return url ? new URL(url).host : undefined;
-  } catch {
-    return undefined;
-  }
-};
-const convexHost = hostOf(process.env.NEXT_PUBLIC_CONVEX_URL);
-const livekitHost = hostOf(process.env.NEXT_PUBLIC_LIVEKIT_URL?.replace(/^wss?:/, "https:"));
-const connectSrc = [
-  "'self'",
-  "https://*.convex.cloud", "wss://*.convex.cloud", "https://*.convex.site",
-  ...(convexHost ? [`https://${convexHost}`, `wss://${convexHost}`] : []),
-  "https://*.liveblocks.io", "wss://*.liveblocks.io",
-  "https://*.livekit.cloud", "wss://*.livekit.cloud",
-  ...(livekitHost ? [`https://${livekitHost}`, `wss://${livekitHost}`] : []),
-  "https://api.deepgram.com", "wss://api.deepgram.com",
-  "https://vitals.vercel-insights.com",
-  ...(process.env.CSP_CONNECT_EXTRA ? process.env.CSP_CONNECT_EXTRA.split(/\s+/).filter(Boolean) : []),
-  ...(isDev ? ["ws:", "http://localhost:*"] : []),
-].join(" ");
-
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""}`,
@@ -37,7 +14,7 @@ const csp = [
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob: https:",
   "font-src 'self' data:",
-  `connect-src ${connectSrc}`,
+  `connect-src ${connectSrc()}`,
   "worker-src 'self' blob:",
   // PDFs shared in chat can be previewed in place; they are served from Convex storage
   "frame-src https://*.convex.cloud",
@@ -49,7 +26,6 @@ const csp = [
 ].join("; ");
 
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: csp },
   // (X-Frame-Options can't name an allowed site, so framing is controlled by CSP frame-ancestors above)
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -63,6 +39,8 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      // The signed-in app, sign-in and invite pages get a stricter per-request (nonce) policy from middleware.ts instead.
+      { source: "/((?!(?:dashboard|auth|join)(?:/|$)).*)", headers: [{ key: "Content-Security-Policy", value: csp }] },
       // the service worker must always be fetched fresh so updates roll out
       { source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }, { key: "Service-Worker-Allowed", value: "/" }] },
     ];

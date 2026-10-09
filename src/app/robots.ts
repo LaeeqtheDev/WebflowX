@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next"
 import { SITE_URL } from "@/lib/site"
 
-const PUBLIC = ["/", "/features", "/use-cases", "/compare", "/security", "/terms", "/privacy"]
+const PUBLIC = ["/", "/features", "/use-cases", "/compare", "/security", "/changelog", "/case-studies", "/terms", "/privacy"]
 const PRIVATE = ["/dashboard", "/api", "/join", "/auth", "/newsletter"]
 
 // Search and AI crawlers are named explicitly so the policy is visible and does not depend on the wildcard.
