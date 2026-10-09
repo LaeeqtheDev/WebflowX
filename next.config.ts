@@ -49,6 +49,9 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30,
   },
   experimental: {
+    // Keep visited / prefetched pages in the browser for a while so going back and forth between sections is instant
+    // instead of waiting on a server round trip each time. Pages fetch their live data from Convex themselves.
+    staleTimes: { dynamic: 60, static: 300 },
     // Only bundle the icons / helpers that are actually used.
     optimizePackageImports: [
       "lucide-react",
