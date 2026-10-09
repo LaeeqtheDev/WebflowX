@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "Sign in",
   description: "Sign in or create your WebflowX account to join your team's workspace.",
   alternates: { canonical: "/auth" },
+  robots: { index: false, follow: true },
 }
 
 const AuthPage = async ({ searchParams }: { searchParams: Promise<{ mode?: string; next?: string }> }) => {
