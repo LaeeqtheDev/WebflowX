@@ -270,8 +270,8 @@ export const create = mutation({
             const startOfMonth = new Date(d.getFullYear(), d.getMonth(), 1).getTime()
             const existingMeetings = await ctx.db
                 .query("meetings")
-                .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
-                .filter((q) => q.and(q.gte(q.field("startedAt"), startOfMonth), q.neq(q.field("kind"), "oneToOne")))
+                .withIndex("by_workspace_started", (q) => q.eq("workspaceId", args.workspaceId).gte("startedAt", startOfMonth))
+                .filter((q) => q.neq(q.field("kind"), "oneToOne"))
                 .take(2000)
             const { allowed, limit, plan } = await checkLimit(ctx, args.workspaceId, "meetings", existingMeetings.length)
             if (!allowed) throw new ConvexError(`LIMIT_REACHED:meetings:${limit}:${plan}`)
