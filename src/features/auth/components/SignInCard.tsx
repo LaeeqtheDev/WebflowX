@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { AuthDivider, AuthField } from "./auth-ui";
 import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { FaGithub } from "react-icons/fa";
+import { FaGithub, FaMicrosoft } from "react-icons/fa";
 import { TriangleAlert, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { safeNext } from "@/lib/safe-next";
@@ -40,7 +40,7 @@ export const SignInCard = ({ setState, onEmail }: SignInCardProps) => {
       .finally(() => setPending(false));
   };
 
-  const handleProviderSignIn = (value: "github" | "google") => {
+  const handleProviderSignIn = (value: "github" | "google" | "microsoft-entra-id") => {
     setPending(true);
     const next = new URLSearchParams(window.location.search).get("next");
     const redirectTo = safeNext(next);
@@ -106,6 +106,18 @@ export const SignInCard = ({ setState, onEmail }: SignInCardProps) => {
           GitHub
         </Button>
       </div>
+      {process.env.NEXT_PUBLIC_MICROSOFT_SIGNIN === "1" && (
+        <Button
+          disabled={pending}
+          onClick={() => handleProviderSignIn("microsoft-entra-id")}
+          variant="outline"
+          size="lg"
+          className="mt-3 h-12 w-full cursor-pointer gap-2.5 rounded-xl border-plum/15 bg-surface text-[15px] hover:bg-cream-deep"
+        >
+          <FaMicrosoft className="size-5" />
+          Microsoft
+        </Button>
+      )}
 
       <p className="mt-8 text-center text-sm text-ink/65">
         Don&apos;t have an account?{" "}

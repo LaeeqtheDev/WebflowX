@@ -75,3 +75,9 @@ export const prune = internalMutation({
         return removed
     },
 })
+
+// For server actions that have no database access (for example sending a sign-in code by email).
+export const consumeInternal = internalMutation({
+    args: { key: v.string(), max: v.number(), windowMs: v.number() },
+    handler: async (ctx, args) => consume(ctx, args.key, args.max, args.windowMs),
+})

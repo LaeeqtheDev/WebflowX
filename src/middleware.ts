@@ -13,9 +13,12 @@ const isLegal = createRouteMatcher(["/terms", "/privacy", "/security", "/feature
 
 const isApi = createRouteMatcher(["/api/(.*)"])
 
+// uptime monitors call this without signing in
+const isHealth = createRouteMatcher(["/api/health"])
+
 export default convexAuthNextjsMiddleware(async (request) => {
   const isInvite = request.nextUrl.pathname.startsWith("/join/");
-  if (isLegal(request) && !isInvite) return undefined;
+  if ((isLegal(request) || isHealth(request)) && !isInvite) return undefined;
 
   const authenticated = await isAuthenticatedNextjs();
 

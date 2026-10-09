@@ -1,0 +1,23 @@
+name: Uptime check
+# Pings the live site every 15 minutes. A failed run emails the repository owner through GitHub notifications.
+# Set the repository variable SITE_URL (Settings > Secrets and variables > Actions > Variables), e.g. https://webflow-x.vercel.app
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check /api/health
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          if [ -z "$SITE_URL" ]; then echo "SITE_URL variable is not set"; exit 1; fi
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$SITE_URL/api/health" || true)
+            echo "attempt $i: $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 15
+          done
+          exit 1

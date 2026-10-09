@@ -3,9 +3,33 @@ import type { NextConfig } from "next";
 const isDev = process.env.NODE_ENV !== "production";
 
 // Content-Security-Policy. Scripts stay on this origin (Next.js needs inline bootstrap scripts, so
-// 'unsafe-inline' remains; 'unsafe-eval' is dev only). Network calls are limited to https/wss (Convex, Liveblocks,
+// 'unsafe-inline' remains; 'unsafe-eval' is dev only). Network calls are limited to the vendors listed in connectSrc (Convex, Liveblocks,
 // LiveKit, Deepgram). Only North Foundry's own sites can frame the app (the WebflowX preview on northfoundry.co);
 // nothing else can, and nothing can load plugins or change the base URL / form targets.
+// Hosts the browser is allowed to talk to. Anything not listed here is blocked, so an injected script cannot send data elsewhere.
+// Add a new vendor here (or put extra origins in CSP_CONNECT_EXTRA, space separated) before using it from client code.
+const hostOf = (url?: string) => {
+  try {
+    return url ? new URL(url).host : undefined;
+  } catch {
+    return undefined;
+  }
+};
+const convexHost = hostOf(process.env.NEXT_PUBLIC_CONVEX_URL);
+const livekitHost = hostOf(process.env.NEXT_PUBLIC_LIVEKIT_URL?.replace(/^wss?:/, "https:"));
+const connectSrc = [
+  "'self'",
+  "https://*.convex.cloud", "wss://*.convex.cloud", "https://*.convex.site",
+  ...(convexHost ? [`https://${convexHost}`, `wss://${convexHost}`] : []),
+  "https://*.liveblocks.io", "wss://*.liveblocks.io",
+  "https://*.livekit.cloud", "wss://*.livekit.cloud",
+  ...(livekitHost ? [`https://${livekitHost}`, `wss://${livekitHost}`] : []),
+  "https://api.deepgram.com", "wss://api.deepgram.com",
+  "https://vitals.vercel-insights.com",
+  ...(process.env.CSP_CONNECT_EXTRA ? process.env.CSP_CONNECT_EXTRA.split(/\s+/).filter(Boolean) : []),
+  ...(isDev ? ["ws:", "http://localhost:*"] : []),
+].join(" ");
+
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""}`,
@@ -13,7 +37,7 @@ const csp = [
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' https: wss:${isDev ? " ws: http://localhost:*" : ""}`,
+  `connect-src ${connectSrc}`,
   "worker-src 'self' blob:",
   // PDFs shared in chat can be previewed in place; they are served from Convex storage
   "frame-src https://*.convex.cloud",
