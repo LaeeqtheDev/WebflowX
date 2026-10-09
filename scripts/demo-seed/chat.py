@@ -167,6 +167,7 @@ def deployments():
         ("webflowx", "2026-06-15", "2026-10-09", 0.45, ["daniyal", "hamza", "sana", "bilal"]),
     ]
     prs = {}
+    used = {}
     for name, a, b, p, devs in projects:
         for day in workdays(d(a), d(b)):
             if day == d("2026-08-14") or R.random() > p:
@@ -180,7 +181,11 @@ def deployments():
             titles = [x[0] for x in TASKS if x[1] in name.split("-")[0] or (name == "webflowx" and x[1] == "webflowx")]
             title = short_task(R.choice(titles)) if titles else "dependency updates"
             if R.random() < 0.55:
-                post(ch, None, who, f"Merged pull request #{n} into `main`: {R.choice(pools.PR_VERBS)} {title}", t, bot="GitHub")
+                R.choice(pools.PR_VERBS)  # kept so every other generated value stays exactly as before
+                k = used.get(name, 0)
+                used[name] = k + 1
+                pr_title = pools.PR_TITLES[name][k % len(pools.PR_TITLES[name])]
+                post(ch, None, who, f"Merged pull request #{n} into `main`: {pr_title}", t, bot="GitHub")
             sha = "".join(R.choice(pools.SHAS) for _ in range(7))
             post(ch, None, who, f"Production deployment ready: `{name}` · `{sha}` · by {names[who].split()[0]} · {R.randint(18, 64)}s", t + mins(R.randint(2, 6)), bot="Vercel")
     # two incidents
