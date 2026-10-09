@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { Sidebar } from "./components/sidebar"
 import { Toolbar } from "./components/toolbar"
@@ -25,6 +25,7 @@ import { PresenceProvider } from "@/features/presence/presence"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace"
 import { RequireTwoFactor } from "@/features/security/two-factor-gate"
+import { preloadWorkspaceChunks } from "@/lib/preload"
 
 const Thread = dynamic(() => import("./components/threads").then((m) => m.Thread), { ssr: false })
 const Profile = dynamic(() => import("@/features/members/components/profile").then((m) => m.Profile), { ssr: false })
@@ -147,6 +148,7 @@ const WorkspaceShell = ({ children }: WorkspaceIdLayoutProps) => {
 const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
   const workspaceId = useWorkspaceId()
   const { data: workspace } = useGetWorkspace({ id: workspaceId })
+  useEffect(() => { preloadWorkspaceChunks() }, [])
   const shell = (
     <PresenceProvider workspaceId={workspaceId}>
       <Suspense fallback={null}><BillingReturn /></Suspense>
