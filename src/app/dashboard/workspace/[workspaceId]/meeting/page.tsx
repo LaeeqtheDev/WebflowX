@@ -19,7 +19,7 @@ import { toast } from "sonner"
 import { useLimitHandler } from "@/hooks/use-limit-handler"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
-import { Loader, Video, Plus, Sparkles, Clock, Users, AlertTriangle, ArrowLeft, Phone, CalendarClock, Trash2 } from "lucide-react"
+import { Loader, Video, Plus, Sparkles, Clock, Users, AlertTriangle, ArrowLeft, CalendarClock, Trash2 } from "lucide-react"
 import { useMutation, useConvex } from "convex/react"
 import { api } from "../../../../../../convex/_generated/api"
 import { Id } from "../../../../../../convex/_generated/dataModel"
@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation"
 import { useCreateMeeting } from "@/features/meetings/use-create-meetings"
 import { useGetMeetings } from "@/features/meetings/use-get-meetings"
 import dynamic from "next/dynamic"
+import { SchedulePicker } from "./components/schedule-picker"
 
 // LiveKit and the summary view are only needed once a meeting is open.
 const MeetingRoom = dynamic(() => import("./components/meeting-room").then((m) => m.MeetingRoom), {
@@ -57,18 +58,15 @@ export default function MeetingPage() {
     const [activeMeetingId, setActiveMeetingId] = useState<Id<"meetings"> | null>(null)
     const [showCreate, setShowCreate] = useState(false)
     const [title, setTitle] = useState("")
-    const [createMode, setCreateMode] = useState<"workspace" | "oneToOne">("workspace")
-    const [inviteeId, setInviteeId] = useState("")
     const [scheduleOn, setScheduleOn] = useState(false)
-    const [scheduleAt, setScheduleAt] = useState("")
+    const [scheduleDate, setScheduleDate] = useState<Date | null>(null)
     const removeMeeting = useMutation(api.meetings.remove)
     const [ConfirmDelete, confirmDelete] = useConfirm("Delete this meeting?", "Its summary and transcript are removed for everyone. This can't be undone.")
     // re-evaluated every 20s so "Upcoming" turns into "Join" without a refresh
     const [nowTs, setNowTs] = useState(() => Date.now())
     useEffect(() => { const t = setInterval(() => setNowTs(Date.now()), 20_000); return () => clearInterval(t) }, [])
     const canStartWorkspace = perms.can("startMeetings")
-    const openCreate = (mode: "workspace" | "oneToOne") => { setCreateMode(mode); setShowCreate(true) }
-    const callable = (members ?? []).filter((m) => m._id !== currentMember?._id && m.role !== "guest")
+    const openCreate = () => setShowCreate(true)
     const [selectedChannelId, setSelectedChannelId] = useState("")
     const [isGenerating, setIsGenerating] = useState(false)
     const [selectedMeetingId, setSelectedMeetingId] = useState<Id<"meetings"> | null>(null)
@@ -90,6 +88,18 @@ export default function MeetingPage() {
         } else {
             toast.info("That meeting is older than the list shows or was removed")
         }
+    }, [meetings])
+    // Opened from a call invite (?join=<id>): join that meeting once the list has loaded
+    const joinHandled = useRef(false)
+    useEffect(() => {
+        if (joinHandled.current || !meetings) return
+        const wanted = new URLSearchParams(window.location.search).get("join")
+        joinHandled.current = true
+        if (!wanted) return
+        window.history.replaceState(null, "", window.location.pathname)
+        const found = meetings.find((m) => m._id === wanted)
+        if (!found || found.endedAt) { toast.info("That call has already ended"); return }
+        void handleJoinRef.current(found.roomName, found._id)
     }, [meetings])
     const [generationError, setGenerationError] = useState<string | null>(null)
     const [showMobileDetail, setShowMobileDetail] = useState(false)
@@ -124,30 +134,25 @@ export default function MeetingPage() {
         }
     }
 
+    const handleJoinRef = useRef(handleJoin)
+    useEffect(() => { handleJoinRef.current = handleJoin })
+
     const handleCreate = async () => {
-        const oneToOne = createMode === "oneToOne"
-        let meetingTitle = title.trim()
-        if (oneToOne) {
-            if (!inviteeId) return toast.error("Choose who to call")
-            const other = members?.find((m) => m._id === inviteeId)
-            meetingTitle = `${currentUserName} & ${other?.user.name ?? "teammate"}`
-        } else if (!meetingTitle) {
-            return toast.error("Title is required")
-        }
+        const meetingTitle = title.trim()
+        if (!meetingTitle) return toast.error("Title is required")
         let scheduledFor: number | undefined
-        if (!oneToOne && scheduleOn) {
-            const at = new Date(scheduleAt).getTime()
-            if (!scheduleAt || Number.isNaN(at) || at < Date.now() + 60_000) return toast.error("Pick a time in the future")
-            scheduledFor = at
+        if (scheduleOn) {
+            if (!scheduleDate || scheduleDate.getTime() < Date.now() + 60_000) return toast.error("Pick a time in the future")
+            scheduledFor = scheduleDate.getTime()
         }
         const roomName = `${workspaceId}-${Date.now()}`
 
-        createMeeting({ workspaceId, title: meetingTitle, roomName, kind: createMode, inviteeId: oneToOne ? (inviteeId as Id<"members">) : undefined, scheduledFor }, {
+        createMeeting({ workspaceId, title: meetingTitle, roomName, kind: "workspace", scheduledFor }, {
             onSuccess: async (id) => {
                 if (!id) return
                 setShowCreate(false)
 
-                if (selectedChannelId && !oneToOne) {
+                if (selectedChannelId) {
                     const meetingUrl = `${window.location.origin}/dashboard/workspace/${workspaceId}/meeting`
                     const headline = scheduledFor
                         ? `📅 ${currentUserName} scheduled a meeting: "${meetingTitle}" for ${format(scheduledFor, "EEE d MMM, h:mm a")}\n`
@@ -165,15 +170,13 @@ export default function MeetingPage() {
 
                 setTitle("")
                 setSelectedChannelId("")
-                setInviteeId("")
                 setScheduleOn(false)
-                setScheduleAt("")
+                setScheduleDate(null)
                 if (scheduledFor) {
                     toast.success(`Scheduled for ${format(scheduledFor, "EEE d MMM, h:mm a")}`)
                     setSelectedMeetingId(id)
                     return
                 }
-                if (oneToOne) toast.info("Calling... they get a notification and can join from the Meetings page.")
                 await handleJoin(roomName, id)
             },
             onError: (e) => {
@@ -362,17 +365,9 @@ export default function MeetingPage() {
                     <h1 className="tracking-tight text-[17px] font-semibold text-ink">Meetings</h1>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button
-                        variant="outline"
-                        onClick={() => openCreate("oneToOne")}
-                        className="h-8 rounded-lg font-semibold text-xs px-2.5 sm:px-3"
-                    >
-                        <Phone className="size-3.5 sm:size-4 sm:mr-1" />
-                        <span className="hidden sm:inline">Call someone</span>
-                    </Button>
                     {canStartWorkspace && (
                         <Button
-                            onClick={() => openCreate("workspace")}
+                            onClick={openCreate}
                             className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 rounded-lg font-semibold text-xs px-2.5 sm:px-3"
                         >
                             <Plus className="size-3.5 sm:size-4 sm:mr-1" />
@@ -416,17 +411,12 @@ export default function MeetingPage() {
                             <Video className="size-6 text-[#ff5018]" />
                         </div>
                         <p className="font-semibold tracking-tight text-ink text-center">No meetings yet</p>
-                        <p className="text-sm text-center">{canStartWorkspace ? "Start or schedule a meeting with your team, or call one person for up to 15 minutes" : "Moderators start team meetings. You can call one person for up to 15 minutes."}</p>
-                        <div className="flex gap-2">
-                            {canStartWorkspace && (
-                                <Button onClick={() => openCreate("workspace")} size="sm" className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold">
-                                    <Plus className="size-4 mr-1" /> Start a Meeting
-                                </Button>
-                            )}
-                            <Button onClick={() => openCreate("oneToOne")} size="sm" variant="outline" className="rounded-lg font-semibold">
-                                <Phone className="size-4 mr-1" /> Call someone
+                        <p className="text-sm text-center">{canStartWorkspace ? "Start or schedule a meeting with your team" : "Moderators start team meetings. To talk with one person, open your direct message with them and press Call."}</p>
+                        {canStartWorkspace && (
+                            <Button onClick={openCreate} size="sm" className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold">
+                                <Plus className="size-4 mr-1" /> Start a Meeting
                             </Button>
-                        </div>
+                        )}
                     </div>
                 ) : (
                     <>
@@ -577,87 +567,63 @@ export default function MeetingPage() {
             <ConfirmDelete />
             {/* Create dialog */}
             <Dialog open={showCreate} onOpenChange={setShowCreate}>
-                <DialogContent className="max-w-sm mx-4">
+                <DialogContent className="max-w-md mx-4 max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-[17px] font-semibold tracking-tight">
-                            {createMode === "oneToOne" ? "Call someone" : scheduleOn ? "Schedule a Meeting" : "Start a Meeting"}
+                            {scheduleOn ? "Schedule a Meeting" : "Start a Meeting"}
                         </DialogTitle>
                     </DialogHeader>
                     <div className="flex flex-col gap-3 mt-2">
-                        {createMode === "oneToOne" ? (
-                            <>
-                                <div>
-                                    <label className="text-xs font-medium text-ink/60 mb-1 block">Who do you want to call?</label>
-                                    <Select value={inviteeId} onValueChange={setInviteeId}>
-                                        <SelectTrigger aria-label="Person to call" className="h-9 text-xs rounded-lg">
-                                            <SelectValue placeholder="Choose a teammate..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {callable.map((m) => (
-                                                <SelectItem key={m._id} value={m._id} className="text-xs">{m.user.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="bg-cream border rounded-lg p-3 text-xs text-ink/70">
-                                    <p className="font-medium text-ink">Private, up to 15 minutes</p>
-                                    <p className="mt-1">Only you two can see or join this call. It ends by itself at 15 minutes.</p>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <Input aria-label="Meeting title"
-                                    placeholder="Meeting title..."
-                                    value={title}
-                                    onChange={e => setTitle(e.target.value)}
-                                    onKeyDown={e => e.key === "Enter" && handleCreate()}
-                                    className="text-sm rounded-lg focus-visible:ring-[#ff5018]/40 focus-visible:border-[#ff5018]"
-                                />
-                                <label className="flex items-center gap-2 text-xs font-medium text-ink/70 cursor-pointer">
-                                    <input type="checkbox" checked={scheduleOn} onChange={(e) => setScheduleOn(e.target.checked)} className="accent-[#ff5018]" />
-                                    Schedule for later
-                                </label>
-                                {scheduleOn && (
-                                    <Input aria-label="Meeting date and time" type="datetime-local" value={scheduleAt} min={format(new Date(nowTs + 60_000), "yyyy-MM-dd'T'HH:mm")}
-                                        onChange={(e) => setScheduleAt(e.target.value)} className="text-sm rounded-lg" />
-                                )}
-                                <div>
-                                    <label className="text-xs font-medium text-ink/60 mb-1 block">
-                                        Post to channel (optional)
-                                    </label>
-                                    <Select value={selectedChannelId} onValueChange={setSelectedChannelId}>
-                                        <SelectTrigger aria-label="Channel" className="h-9 text-xs rounded-lg">
-                                            <SelectValue placeholder="Select a channel..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {channels?.map(c => (
-                                                <SelectItem key={c._id} value={c._id} className="text-xs">
-                                                    # {c.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                {!scheduleOn && (
-                                    <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-300">
-                                        <p className="font-medium">Tip for transcripts</p>
-                                        <p className="mt-1">Keep this tab in focus during the meeting for best transcript capture. You can also add transcripts manually after the meeting.</p>
-                                    </div>
-                                )}
-                            </>
+                        <Input aria-label="Meeting title"
+                            placeholder="Meeting title..."
+                            value={title}
+                            onChange={e => setTitle(e.target.value)}
+                            onKeyDown={e => e.key === "Enter" && handleCreate()}
+                            className="text-sm rounded-lg focus-visible:ring-[#ff5018]/40 focus-visible:border-[#ff5018]"
+                        />
+                        <div className="grid grid-cols-2 gap-1 rounded-lg bg-cream p-1" role="tablist" aria-label="When">
+                            {([[false, "Start now"], [true, "Schedule for later"]] as const).map(([later, label]) => (
+                                <button key={label} type="button" role="tab" aria-selected={scheduleOn === later}
+                                    onClick={() => setScheduleOn(later)}
+                                    className={cn("rounded-md px-3 py-1.5 text-xs font-semibold transition-colors", scheduleOn === later ? "bg-surface text-ink shadow-sm" : "text-ink/60 hover:text-ink")}>
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                        {scheduleOn && <SchedulePicker value={scheduleDate} onChange={setScheduleDate} />}
+                        <div>
+                            <label className="text-xs font-medium text-ink/60 mb-1 block">
+                                Post to channel (optional)
+                            </label>
+                            <Select value={selectedChannelId} onValueChange={setSelectedChannelId}>
+                                <SelectTrigger aria-label="Channel" className="h-9 text-xs rounded-lg">
+                                    <SelectValue placeholder="Select a channel..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {channels?.map(c => (
+                                        <SelectItem key={c._id} value={c._id} className="text-xs">
+                                            # {c.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {!scheduleOn && (
+                            <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-300">
+                                <p className="font-medium">Tip for transcripts</p>
+                                <p className="mt-1">Keep this tab in focus during the meeting for best transcript capture. You can also add transcripts manually after the meeting.</p>
+                            </div>
                         )}
                         <Button
                             onClick={handleCreate}
-                            disabled={isCreating}
+                            disabled={isCreating || (scheduleOn && !scheduleDate)}
                             className="bg-[#ff5018] hover:bg-[#e6430f] text-white text-sm rounded-lg font-semibold"
                         >
                             {isCreating
                                 ? <Loader className="size-4 animate-spin" />
-                                : createMode === "oneToOne"
-                                    ? <><Phone className="size-4 mr-2" /> Call now</>
-                                    : scheduleOn
-                                        ? <><CalendarClock className="size-4 mr-2" /> Schedule Meeting</>
-                                        : <><Video className="size-4 mr-2" /> Start Meeting</>
+                                : scheduleOn
+                                    ? <><CalendarClock className="size-4 mr-2" /> Schedule Meeting</>
+                                    : <><Video className="size-4 mr-2" /> Start Meeting</>
                             }
                         </Button>
                     </div>

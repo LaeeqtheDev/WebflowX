@@ -532,6 +532,7 @@ const schema = defineSchema({
         messageId: v.optional(v.id("messages")),
         taskId: v.optional(v.id("tasks")),
         noteId: v.optional(v.id("notes")),
+        meetingId: v.optional(v.id("meetings")),
         channelId: v.optional(v.id("channels")),
         conversationId: v.optional(v.id("conversations")),
         body: v.optional(v.string()),

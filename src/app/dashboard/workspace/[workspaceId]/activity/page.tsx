@@ -171,7 +171,7 @@ export default function ActivityPage() {
                 router.push(`${base}/tasks${notification.taskId ? `?task=${notification.taskId}` : ""}`)
                 break
             case "meeting_invite":
-                router.push(`${base}/meeting`)
+                router.push(`${base}/meeting${notification.meetingId ? `?join=${notification.meetingId}` : ""}`)
                 break
             case "note_added":
                 router.push(`${base}/notes${notification.noteId ? `?note=${notification.noteId}` : ""}`)
