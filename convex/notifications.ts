@@ -7,7 +7,7 @@ import { canAccessChannel } from "./permissions"
 
 // Types that are worth an email when the person hasn't looked at them yet.
 const EMAILED = new Set<Doc<"notifications">["type"]>(["mention", "dm_received", "thread_reply", "task_assigned", "task_comment", "task_due"])
-const PUSHED = EMAILED
+const PUSHED = new Set<Doc<"notifications">["type"]>([...EMAILED, "meeting_invite"])
 // Wait a few minutes first: if they open the app and read it, no email is sent.
 const EMAIL_DELAY_MS = 4 * 60 * 1000
 
@@ -36,7 +36,8 @@ const typeValidator = v.union(
     v.literal("note_added"),
     v.literal("dm_received"),
     v.literal("mention"),
-    v.literal("task_due")
+    v.literal("task_due"),
+    v.literal("meeting_invite")
 )
 
 export const get = query({

@@ -49,14 +49,47 @@ export const MessageList = ({
     const bottomRef = useRef<HTMLDivElement>(null);
     const prevDataLengthRef = useRef<number>(0);
 
-    // Scroll to bottom when new message is added
+    // The list is flex-col-reverse, so scrollTop 0 is the newest message.
+    const stickToBottom = useRef(true);
+    const jumpToBottom = () => {
+        const el = listRef.current;
+        if (el) el.scrollTop = 0;
+    };
+
+    // Scroll to bottom when new message is added. Smooth scrolling is computed against the
+    // keyboard-open layout on phones and ends up short once the keyboard closes, so jump
+    // instantly and again after the keyboard animation has finished.
     useEffect(() => {
         const currentLength = data?.length ?? 0;
-        if (currentLength > prevDataLengthRef.current) {
-            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        const timers: ReturnType<typeof setTimeout>[] = [];
+        if (currentLength > prevDataLengthRef.current && prevDataLengthRef.current > 0) {
+            stickToBottom.current = true;
+            jumpToBottom();
+            requestAnimationFrame(jumpToBottom);
+            timers.push(setTimeout(jumpToBottom, 150), setTimeout(jumpToBottom, 400));
         }
         prevDataLengthRef.current = currentLength;
+        return () => timers.forEach(clearTimeout);
     }, [data?.length]);
+
+    // Track whether the reader is at the bottom, and keep them there when the viewport
+    // changes size (mobile keyboard opening or closing, rotation).
+    useEffect(() => {
+        const el = listRef.current;
+        if (!el) return;
+        const onScroll = () => { stickToBottom.current = Math.abs(el.scrollTop) < 80; };
+        const onResize = () => { if (stickToBottom.current) { jumpToBottom(); requestAnimationFrame(jumpToBottom); } };
+        el.addEventListener("scroll", onScroll, { passive: true });
+        const vv = window.visualViewport;
+        vv?.addEventListener("resize", onResize);
+        const ro = new ResizeObserver(onResize);
+        ro.observe(el);
+        return () => {
+            el.removeEventListener("scroll", onScroll);
+            vv?.removeEventListener("resize", onResize);
+            ro.disconnect();
+        };
+    }, []);
 
     const groupedMessages = useMemo(
         () =>

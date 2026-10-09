@@ -19,6 +19,8 @@ interface MeetingRoomProps {
     roomName: string
     title: string
     startedAt: number
+    /** One-to-one calls stop at this time (epoch ms). */
+    endsAt?: number
     onDisconnect: (transcript: string, reason: "left" | "removed" | "ended" | "lost") => void
 }
 
@@ -154,8 +156,23 @@ async function startTranscription(h: Hooks) {
     }
 }
 
-const MeetingRoomInner = ({ onDisconnect, roomName, title, startedAt }: Pick<MeetingRoomProps, "onDisconnect" | "roomName" | "title" | "startedAt">) => {
+const MeetingRoomInner = ({ onDisconnect, roomName, title, startedAt, endsAt }: Pick<MeetingRoomProps, "onDisconnect" | "roomName" | "title" | "startedAt" | "endsAt">) => {
     const room = useRoomContext()
+    const [left, setLeft] = useState<number | null>(null)
+    const warned = useRef(false)
+    // time-limited call: count down, warn at one minute, hang up at the limit
+    useEffect(() => {
+        if (!endsAt) return
+        const tick = () => {
+            const ms = endsAt - Date.now()
+            setLeft(Math.max(0, ms))
+            if (ms <= 60_000 && !warned.current) { warned.current = true; toast.info("One minute left. This call ends automatically at 15 minutes.") }
+            if (ms <= 0) { clearInterval(timer); void room.disconnect() }
+        }
+        const timer = setInterval(tick, 1000)
+        tick()
+        return () => clearInterval(timer)
+    }, [endsAt, room])
     const { localParticipant } = useLocalParticipant()
 
     const [status, setStatus] = useState<DgStatus>("starting")
@@ -224,14 +241,21 @@ const MeetingRoomInner = ({ onDisconnect, roomName, title, startedAt }: Pick<Mee
     }, [room, onDisconnect])
 
     return (
-        <MeetingStage
-            roomName={roomName}
-            title={title}
-            startedAt={startedAt}
-            status={status}
-            errorMessage={errorMessage}
-            onRetry={retry}
-        />
+        <>
+            <MeetingStage
+                roomName={roomName}
+                title={title}
+                startedAt={startedAt}
+                status={status}
+                errorMessage={errorMessage}
+                onRetry={retry}
+            />
+            {left !== null && (
+                <div role="timer" className={`pointer-events-none absolute right-4 top-4 z-40 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-lg ${left <= 60_000 ? "bg-red-600" : "bg-[#381d2a]"}`}>
+                    Ends in {Math.floor(left / 60000)}:{String(Math.floor((left % 60000) / 1000)).padStart(2, "0")}
+                </div>
+            )}
+        </>
     )
 }
 
@@ -247,7 +271,7 @@ const ConnectionBanner = () => {
     )
 }
 
-export const MeetingRoom = ({ token, serverUrl, roomName, title, startedAt, onDisconnect }: MeetingRoomProps) => {
+export const MeetingRoom = ({ token, serverUrl, roomName, title, startedAt, endsAt, onDisconnect }: MeetingRoomProps) => {
     return (
         <LiveKitRoom
             token={token}
@@ -276,7 +300,7 @@ export const MeetingRoom = ({ token, serverUrl, roomName, title, startedAt, onDi
             } as React.CSSProperties}
         >
             <ConnectionBanner />
-            <MeetingRoomInner onDisconnect={onDisconnect} roomName={roomName} title={title} startedAt={startedAt} />
+            <MeetingRoomInner onDisconnect={onDisconnect} roomName={roomName} title={title} startedAt={startedAt} endsAt={endsAt} />
         </LiveKitRoom>
     )
 }

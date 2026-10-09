@@ -9,6 +9,7 @@ import { ThemedToaster } from "@/components/theme/themed-toaster";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 import { JotaiProvider } from "./dashboard/workspace/[workspaceId]/components/jotai-provider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -99,6 +100,7 @@ export default function RootLayout({
               <NuqsAdapter>
                 <ThemedToaster />
                 <Modals />
+                <SpeedInsights />
                 {children}
               </NuqsAdapter>
             </JotaiProvider>

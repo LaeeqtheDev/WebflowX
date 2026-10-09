@@ -290,6 +290,13 @@ const schema = defineSchema({
         activeMembers: v.optional(v.array(v.id("members"))),
         // members the host removed from this call; they cannot rejoin it
         kicked: v.optional(v.array(v.id("members"))),
+        // "workspace" (default): everyone in the workspace can join. "oneToOne": only the host and the invitee, 15 minutes at most.
+        kind: v.optional(v.union(v.literal("workspace"), v.literal("oneToOne"))),
+        inviteeId: v.optional(v.id("members")),
+        // set for a meeting planned ahead; startedAt then holds the planned start
+        scheduledFor: v.optional(v.number()),
+        // soft delete: the row stays so plan usage still counts it, but its content is gone and it is hidden
+        deletedAt: v.optional(v.number()),
     })
         .index("by_workspace_id", ["workspaceId"])
         .index("by_room_name", ["roomName"])
@@ -518,7 +525,8 @@ const schema = defineSchema({
             v.literal("note_added"),
             v.literal("dm_received"),
             v.literal("mention"),
-            v.literal("task_due")
+            v.literal("task_due"),
+            v.literal("meeting_invite")
         ),
         read: v.boolean(),
         messageId: v.optional(v.id("messages")),

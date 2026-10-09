@@ -18,7 +18,7 @@ export const PERMISSIONS = [
     "postInReadOnly",       // write in announcement (read-only) channels
     "mentionEveryone",      // use @everyone / @channel
     "uploadFiles",          // attach files and images
-    "startMeetings",        // start meetings
+    "startMeetings",        // start or schedule workspace meetings (one-to-one calls are open to every member)
     "createDocs",           // create documents
 ] as const
 export type Permission = (typeof PERMISSIONS)[number]
@@ -28,12 +28,12 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<"moderator" | "member", Permission
         "createChannels", "manageChannels", "viewPrivateChannels", "deleteMessages", "invite", "moderateMeetings", "manageContent",
         "postInReadOnly", "mentionEveryone", "uploadFiles", "startMeetings", "createDocs",
     ],
-    member: ["uploadFiles", "startMeetings", "createDocs"],
+    member: ["uploadFiles", "createDocs"],
 }
 
 // Abilities everyone had before they became configurable. Workspaces that saved permissions
 // earlier keep them until an admin saves the (longer) list again.
-const LEGACY_DEFAULT_ON: Permission[] = ["uploadFiles", "startMeetings", "createDocs"]
+const LEGACY_DEFAULT_ON: Permission[] = ["uploadFiles", "createDocs"]
 
 const clean = (list: string[]): Permission[] =>
     list.filter((p): p is Permission => (PERMISSIONS as readonly string[]).includes(p))

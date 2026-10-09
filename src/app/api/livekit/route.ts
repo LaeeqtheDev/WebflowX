@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
             identity: who.identity,
             name: who.name,
             metadata: JSON.stringify({ host: who.host }),
-            ttl: "1h",
+            ttl: who.oneToOne ? "16m" : "1h",
         })
         at.addGrant({
             roomJoin: true,
