@@ -40,7 +40,7 @@ const SUGGESTED: Record<UseCase, string[]> = {
 }
 
 const primary =
-    "h-12 w-full cursor-pointer rounded-xl bg-brand text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_rgba(255,80,24,0.8)] hover:bg-brand-hover"
+    "h-12 w-full cursor-pointer rounded-xl bg-brand text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_color-mix(in_srgb,var(--wfx-accent)_80%,transparent)] hover:bg-brand-hover"
 
 const Progress = ({ step }: { step: number }) => {
     const t = useT()

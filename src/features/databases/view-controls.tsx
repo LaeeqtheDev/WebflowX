@@ -12,7 +12,7 @@ import type { DbCtx } from "./ctx"
 const sel = "h-8 rounded-md border border-input bg-transparent px-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
 
 const ToolbarButton = ({ active, count, icon: Icon, label }: { active?: boolean; count?: number; icon: React.ComponentType<{ className?: string }>; label: string }) => (
-  <Button type="button" variant="ghost" size="sm" className={cn("h-8 gap-1.5 px-2 text-xs", active && "bg-brand/10 text-[#c73a0a]")}>
+  <Button type="button" variant="ghost" size="sm" className={cn("h-8 gap-1.5 px-2 text-xs", active && "bg-brand/10 text-orange-ink")}>
     <Icon className="size-3.5" /> <span className="hidden sm:inline">{label}</span>{!!count && <span className="rounded-full bg-brand px-1.5 text-[10px] font-semibold text-white">{count}</span>}
   </Button>
 )

@@ -44,6 +44,10 @@ describe("appearance", () => {
     expect(isLook({ ...DEFAULT_LOOK, fontScale: 80 })).toBe(false)
     expect(isLook({ ...DEFAULT_LOOK, accent: "red" })).toBe(false)
   })
+  it("the meeting room and other dark surfaces use theme colours, not fixed plum shades", () => {
+    const hits = execSync(`grep -rnE "\\[#(150c11|1b1017|f4ece7|ff8a63|c73a0a)\\]|rgba\\(255, ?80, ?24" src/app/dashboard src/features/databases src/features/onboarding || true`).toString().trim()
+    expect(hits).toBe("")
+  })
   it("no hardcoded brand orange is left in app components", () => {
     const hits = execSync(`grep -rnE "\\[#(ff5018|e6430f)\\]" src/app/dashboard src/features src/components/ui || true`).toString().trim()
     expect(hits).toBe("")

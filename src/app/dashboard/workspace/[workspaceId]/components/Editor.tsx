@@ -628,7 +628,7 @@ const Editor = ({
                                         }}
                                         type="button"
                                         aria-label="Remove image"
-                                        className="flex opacity-0 group-hover/image:opacity-100 focus-visible:opacity-100 rounded-full bg-[#1b1017]/80 hover:bg-[#1b1017] dark:bg-avatar dark:hover:bg-sidebar absolute -top-2.5 -right-2.5 text-white size-6 z-4 border-2 border-white dark:border-surface items-center justify-center"
+                                        className="flex opacity-0 group-hover/image:opacity-100 focus-visible:opacity-100 rounded-full bg-rail/80 hover:bg-rail dark:bg-avatar dark:hover:bg-sidebar absolute -top-2.5 -right-2.5 text-white size-6 z-4 border-2 border-white dark:border-surface items-center justify-center"
                                     >
                                         <XIcon className="size-3.5" aria-hidden="true" />
                                     </button>
@@ -655,7 +655,7 @@ const Editor = ({
                                         }}
                                         type="button"
                                         aria-label="Remove file"
-                                        className="flex opacity-0 group-hover/file:opacity-100 focus-visible:opacity-100 rounded-full bg-[#1b1017]/80 hover:bg-[#1b1017] dark:bg-avatar dark:hover:bg-sidebar absolute -top-2 -right-2 text-white size-5 z-4 border-2 border-white dark:border-surface items-center justify-center"
+                                        className="flex opacity-0 group-hover/file:opacity-100 focus-visible:opacity-100 rounded-full bg-rail/80 hover:bg-rail dark:bg-avatar dark:hover:bg-sidebar absolute -top-2 -right-2 text-white size-5 z-4 border-2 border-white dark:border-surface items-center justify-center"
                                     >
                                         <XIcon className="size-3" aria-hidden="true" />
                                     </button>

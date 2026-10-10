@@ -41,7 +41,7 @@ export const SidebarButton = ({
                 className={cn(
                     "relative flex h-9 w-11 items-center justify-center rounded-xl transition-all duration-200",
                     isActive
-                        ? "bg-brand text-white shadow-[0_8px_18px_-8px_rgba(255,80,24,0.9)]"
+                        ? "bg-brand text-white shadow-[0_8px_18px_-8px_color-mix(in_srgb,var(--wfx-accent)_90%,transparent)]"
                         : "text-white/65 group-hover:bg-white/[0.08] group-hover:text-white group-active:scale-95 group-focus-visible:ring-2 group-focus-visible:ring-brand/70"
                 )}
             >

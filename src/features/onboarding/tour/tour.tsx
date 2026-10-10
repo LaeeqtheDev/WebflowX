@@ -211,7 +211,7 @@ function Meeting({ s, set, t }: { s: TourState; set: (p: Partial<TourState>) => 
   const [cam, setCam] = useState(true)
   const topic = s.page?.title ?? s.msg2 ?? s.msg1 ?? "WebflowX"
   return (
-    <div className="rounded-xl border border-ink/10 bg-[#1b1017] p-4 text-white">
+    <div className="rounded-xl border border-ink/10 bg-rail p-4 text-white">
       <div className="grid gap-3 sm:grid-cols-3">
         {[t("tour.you"), "Sam", "Priya"].map((n, i) => (
           <div key={n} className="flex aspect-video items-center justify-center rounded-lg bg-white/10">
