@@ -84,6 +84,8 @@ export const applyLook = (look: Look) => {
 
 /** Back to the plain look; used when leaving the signed-in app. */
 export const clearAppearance = () => {
+    // Signing out keeps the page up behind a cover until the sign-in page loads; keep its look until then.
+    if (document.getElementById("wfx-signing-out")) return
     const root = document.documentElement
     root.classList.remove("dark")
     for (const k of ["theme", "accent", "density", "motion"]) delete root.dataset[k]
