@@ -1,5 +1,4 @@
 "use client"
-import { useMemo } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { toast } from "sonner"
 import { api } from "../../../convex/_generated/api"
@@ -7,14 +6,23 @@ import { Id } from "../../../convex/_generated/dataModel"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { errMsg } from "@/lib/errors"
 
+type Marks = { pinned: string[]; saved: string[] } | undefined
+type Sets = { pinned: Set<string>; saved: Set<string> }
+const EMPTY: Sets = { pinned: new Set(), saved: new Set() }
+// Built once per result and shared by every message on screen. Building them inside each message meant copying up to
+// 1,000 ids for every message in the list each time a pin or save changed.
+const built = new WeakMap<object, Sets>()
+const toSets = (marks: Marks): Sets => {
+  if (!marks) return EMPTY
+  let s = built.get(marks)
+  if (!s) { s = { pinned: new Set(marks.pinned), saved: new Set(marks.saved) }; built.set(marks, s) }
+  return s
+}
+
 // Everything pinned in this workspace and what I saved. Every message shares the one subscription.
-export const useMarkSets = () => {
+export const useMarkSets = (): Sets => {
   const workspaceId = useWorkspaceId()
-  const marks = useQuery(api.marks.mine, { workspaceId })
-  return useMemo(
-    () => ({ pinned: new Set<string>(marks?.pinned ?? []), saved: new Set<string>(marks?.saved ?? []) }),
-    [marks]
-  )
+  return toSets(useQuery(api.marks.mine, { workspaceId }))
 }
 
 export const useMessageMarks = (messageId: Id<"messages">) => {

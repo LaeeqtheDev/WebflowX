@@ -39,4 +39,16 @@ describe("public page weight", () => {
   it("serves small images where a plain <image> bypasses the optimiser", () => {
     expect(statSync(join(root, "public", "logo-sm.png")).size).toBeLessThan(20_000)
   })
+
+  it("shows messages without loading the Quill editor", () => {
+    const r = read(join(root, "src", "components", "renderer.tsx"))
+    expect(r).not.toMatch(/from ["']quill["']/)
+    expect(r).toMatch(/renderDelta/)
+    const msg = read(join(root, "src", "app", "dashboard", "workspace", "[workspaceId]", "components", "message.tsx"))
+    expect(msg).toMatch(/import Renderer from ["']@\/components\/renderer["']/)
+  })
+
+  it("builds the pinned/saved lookup once per result, not once per message", () => {
+    expect(read(join(root, "src", "features", "marks", "use-marks.ts"))).toMatch(/WeakMap/)
+  })
 })

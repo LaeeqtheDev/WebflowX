@@ -1,51 +1,24 @@
-import Quill from "quill";
-import "@/app/dashboard/workspace/[workspaceId]/components/mention-blot";
+"use client";
 
-import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { memo } from "react";
 import { usePanel } from "@/hooks/use-panel";
+import { renderDelta } from "@/lib/delta-html";
+
+// Almost every message is plain text with a little formatting, which is turned into HTML directly. Quill (~70 KB, slow to
+// start) is only loaded for the rare message with something else in it, such as an image, a code block or an alignment.
+const QuillRenderer = dynamic(() => import("./renderer-quill"), { ssr: false });
 
 interface RendererProps {
     value: string;
 }
 
-const Renderer = ({value}: RendererProps) => {
-    const [isEmpty, setIsEmpty] = useState(false);
-    const rendererRef = useRef<HTMLDivElement>(null)
-    const { onOpenProfile } = usePanel()
+const Renderer = ({ value }: RendererProps) => {
+    const { onOpenProfile } = usePanel();
+    const rendered = renderDelta(value);
 
-    useEffect(() => {
-        if(!rendererRef.current) return;
-
-
-        const container = rendererRef.current;
-        const quill = new Quill(document.createElement("div"), {
-            theme: "snow"
-        });
-
-        quill.enable(false);
-
-        // a malformed body must never take the whole message list down
-        try {
-            const parsed = JSON.parse(value)
-            quill.setContents(Array.isArray(parsed) ? parsed : parsed?.ops ?? [])
-        } catch {
-            quill.setText(typeof value === "string" ? value.slice(0, 5000) : "")
-        }
-
-        const isEmpty = quill.getText().replace(/<(.|\n)*?>/g,"").trim().length === 0;
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- derived from Quill DOM parsing that can only run in an effect
-        setIsEmpty(isEmpty)
-
-        container.innerHTML = quill.root.innerHTML;
-
-        return () => {
-            if(container){
-                container.innerHTML="";   
-            }
-        }
-    }, [value])
-
-    if(isEmpty) return null
+    if (!rendered) return <QuillRenderer value={value} />;
+    if (rendered.empty) return null;
 
     const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
         const el = (e.target as HTMLElement).closest?.("span.mention") as HTMLElement | null;
@@ -57,7 +30,7 @@ const Renderer = ({value}: RendererProps) => {
         }
     };
 
-    return <div ref={rendererRef} onClick={handleClick} className="ql-editor ql-renderer"/>
-}
+    return <div onClick={handleClick} className="ql-editor ql-renderer" dangerouslySetInnerHTML={{ __html: rendered.html }} />;
+};
 
-export default Renderer
+export default memo(Renderer);

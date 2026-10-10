@@ -12,7 +12,6 @@ export const preloadWorkspaceChunks = () => {
   if (isLowData(conn) || conn?.effectiveType === "3g") return
   const run = () => {
     void import("@/app/dashboard/workspace/[workspaceId]/components/Editor")
-    void import("@/components/renderer")
     void import("@/app/dashboard/workspace/[workspaceId]/components/threads")
   }
   const ric = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback

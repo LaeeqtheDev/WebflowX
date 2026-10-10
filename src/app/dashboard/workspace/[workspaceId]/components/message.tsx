@@ -2,6 +2,7 @@ import { memo } from "react";
 import { parseDelta } from "@/lib/delta";
 import { format, isToday, isYesterday } from "date-fns";
 import { Doc, Id } from "../../../../../../convex/_generated/dataModel";
+import Renderer from "@/components/renderer";
 import dynamic from "next/dynamic";
 import { Hint } from "./hints";
 const MessageToTaskModal = dynamic(() => import("./message-to-task-modal").then((m) => m.MessageToTaskModal), { ssr: false });
@@ -23,7 +24,6 @@ import { useMessageMarks } from "@/features/marks/use-marks";
 import { Pin } from "lucide-react";
 
 
-const Renderer = dynamic(() => import("@/components/renderer"), { ssr: false });
 const Editor = dynamic(
     () => import("@/app/dashboard/workspace/[workspaceId]/components/Editor"),
     { ssr: false }
