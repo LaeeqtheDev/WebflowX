@@ -1,8 +1,4 @@
-import { useParams } from "next/navigation";
-
 import { Id } from "../../convex/_generated/dataModel";
+import { useRouteId } from "./use-route-id";
 
-export const useChannelId = () =>{
-    const params = useParams();
-    return params.channelId as Id<"channels">;
-}
+export const useChannelId = () => useRouteId("channel", "channelId") as Id<"channels">;

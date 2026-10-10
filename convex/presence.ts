@@ -2,7 +2,7 @@ import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { auth } from "./auth"
 
-// Called every ~30 seconds while the app is open and visible. Writes at most once per 25 seconds.
+// Called every minute while the app is open and visible. Writes at most once per 50 seconds.
 export const heartbeat = mutation({
     args: {},
     handler: async (ctx) => {
@@ -11,13 +11,13 @@ export const heartbeat = mutation({
         const now = Date.now()
         const row = await ctx.db.query("presence").withIndex("by_user_id", (q) => q.eq("userId", userId)).unique()
         if (!row) await ctx.db.insert("presence", { userId, lastSeen: now })
-        else if (now - row.lastSeen > 25_000) await ctx.db.patch(row._id, { lastSeen: now })
+        else if (now - row.lastSeen > 50_000) await ctx.db.patch(row._id, { lastSeen: now })
         return null
     },
 })
 
 // When each member of the workspace was last active. The page decides who counts as online
-// (seen in the last ~75 seconds) so the list stays right without the server re-running.
+// (seen in the last ~2.5 minutes) so the list stays right without the server re-running.
 export const list = query({
     args: { workspaceId: v.id("workspaces") },
     handler: async (ctx, args) => {

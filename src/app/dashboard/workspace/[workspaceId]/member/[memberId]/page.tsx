@@ -10,9 +10,8 @@ import { toast } from "sonner";
 import { Conversation } from "./conversation";
 import { NotFoundState } from "@/components/states/not-found-state";
 
-const MemberIdPage = () => {
+const MemberView = ({ memberId }: { memberId: Id<"members"> }) => {
     const workspaceId = useWorkspaceId()
-    const memberId = useMemberId()
     const { mutate, isPending}= useCreateOrGetConversation()
 
     const [conversationId, setConversationId] = useState<Id<"conversations">| null>(null)
@@ -55,6 +54,12 @@ const MemberIdPage = () => {
 
 
    return <Conversation id={conversationId}/>
+}
+
+// keyed by person, so switching direct messages in place starts each conversation fresh
+const MemberIdPage = () => {
+    const memberId = useMemberId()
+    return <MemberView key={memberId} memberId={memberId} />
 }
 
 export default MemberIdPage;

@@ -1,3 +1,4 @@
+import { softNav } from "@/lib/soft-nav"
 import { Button } from "@/components/ui/button"
 import {
     Avatar,
@@ -50,7 +51,7 @@ export const UserItem= ({id, label = "Member", image, variant, unread = 0, isSel
         size={"sm"}
         asChild
         >
-            <Link href={`/dashboard/workspace/${workspaceId}/member/${id}`} aria-current={variant === "active" ? "page" : undefined}>
+            <Link href={`/dashboard/workspace/${workspaceId}/member/${id}`} prefetch={false} onClick={(e) => softNav(e, `/dashboard/workspace/${workspaceId}/member/${id}`)} aria-current={variant === "active" ? "page" : undefined}>
                 {variant === "active" && <span aria-hidden className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-brand" />}
                 <span className="relative shrink-0">
                     <Avatar className="size-5 rounded-md">

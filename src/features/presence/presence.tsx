@@ -5,7 +5,11 @@ import { api } from "../../../convex/_generated/api"
 import { Id } from "../../../convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
 
-const ONLINE_MS = 75_000
+const ONLINE_MS = 150_000
+const BEAT_MS = 60_000
+// Someone who hasn't touched the page for this long isn't "active": stop telling the server they are (they come back
+// green the moment they move the mouse). Saves a database write and a read per idle tab every minute.
+const IDLE_MS = 3 * 60_000
 
 type Ctx = { seen: Map<string, number>; now: number }
 const PresenceContext = createContext<Ctx>({ seen: new Map(), now: 0 })
@@ -15,16 +19,28 @@ export const PresenceProvider = ({ workspaceId, children }: { workspaceId: Id<"w
   const heartbeat = useMutation(api.presence.heartbeat)
   const convex = useConvex()
   // Fetched on a timer instead of subscribed: a live query would re-run for every teammate on every
-  // heartbeat (cost grows with the square of team size). A 30s refresh is plenty for green dots.
+  // heartbeat (cost grows with the square of team size). A one-minute refresh is plenty for green dots.
   const [list, setList] = useState<{ memberId: string; lastSeen: number }[]>([])
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
-    const beat = () => { if (document.visibilityState === "visible") heartbeat({}).catch(() => {}) }
+    let lastActive = Date.now()
+    const active = () => {
+      const wasIdle = Date.now() - lastActive > IDLE_MS
+      lastActive = Date.now()
+      if (wasIdle) beat()
+    }
+    const beat = () => { if (document.visibilityState === "visible" && Date.now() - lastActive < IDLE_MS) heartbeat({}).catch(() => {}) }
     beat()
-    const id = setInterval(beat, 30_000)
+    const id = setInterval(beat, BEAT_MS)
     document.addEventListener("visibilitychange", beat)
-    return () => { clearInterval(id); document.removeEventListener("visibilitychange", beat) }
+    const events = ["pointerdown", "keydown", "wheel", "touchstart"] as const
+    events.forEach((e) => window.addEventListener(e, active, { passive: true }))
+    return () => {
+      clearInterval(id)
+      document.removeEventListener("visibilitychange", beat)
+      events.forEach((e) => window.removeEventListener(e, active))
+    }
   }, [heartbeat])
 
   useEffect(() => {
@@ -34,7 +50,7 @@ export const PresenceProvider = ({ workspaceId, children }: { workspaceId: Id<"w
       convex.query(api.presence.list, { workspaceId }).then((r) => { if (live) setList(r) }).catch(() => {})
     }
     load()
-    const id = setInterval(load, 30_000)
+    const id = setInterval(load, BEAT_MS)
     document.addEventListener("visibilitychange", load)
     return () => { live = false; clearInterval(id); document.removeEventListener("visibilitychange", load) }
   }, [convex, workspaceId])

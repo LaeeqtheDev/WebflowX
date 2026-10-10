@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { forgetLocation, rememberLocation } from "@/lib/last-location";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useGetChannel } from "@/features/channels/api/use-get-channel";
+import { Id } from "../../../../../../../convex/_generated/dataModel";
 import { useChannelId } from "@/hooks/use-channel-id";
 import { Loader, Megaphone, TriangleAlert } from "lucide-react";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -16,8 +17,7 @@ import { useGetMessages } from "@/features/messages/api/use-get-messages";
 import { MessageList } from "../../components/message-list";
 import { ChannelWelcome } from "../../components/first-run";
 
-const ChannelIdPage = () => {
-    const channelId = useChannelId();
+const ChannelView = ({ channelId }: { channelId: Id<"channels"> }) => {
 
     const {results, status, loadMore} = useGetMessages({channelId})
     const {data: channel, isLoading: channelLoading} = useGetChannel({id: channelId})
@@ -88,5 +88,11 @@ const ChannelIdPage = () => {
         </div>
     )
 }
+
+// keyed by channel, so switching channels in place starts each one fresh (editor text, open menus, scroll position)
+const ChannelIdPage = () => {
+    const channelId = useChannelId();
+    return <ChannelView key={channelId} channelId={channelId} />;
+};
 
 export default ChannelIdPage;

@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import Link from "next/link";
+import { softNav } from "@/lib/soft-nav";
 import type { ComponentType } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
@@ -55,7 +56,7 @@ export const SidebarItem = ({ label, id, icon: Icon, variant, onClick }: Sidebar
 
     return (
         <Button asChild variant={"trasnparent"} size={"sm"} className={cn(sidebarItemVariants({ variant }))}>
-            <Link href={`/dashboard/workspace/${workspaceId}/channel/${id}`} aria-current={variant === "active" ? "page" : undefined}>
+            <Link href={`/dashboard/workspace/${workspaceId}/channel/${id}`} prefetch={false} onClick={(e) => softNav(e, `/dashboard/workspace/${workspaceId}/channel/${id}`)} aria-current={variant === "active" ? "page" : undefined}>
                 {variant === "active" && <ActiveMark />}
                 <Icon className="size-[18px] shrink-0 opacity-90" />
                 <span className="truncate">{label}</span>
