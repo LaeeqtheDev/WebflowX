@@ -49,7 +49,8 @@ const Hero = () => {
       // intro
       gsap.set(q(".h-line > span"), { yPercent: 115 });
       gsap.set(q(".h-fade"), { opacity: 0, y: 16 });
-      gsap.set(q(".h-stage"), { opacity: 0, y: 90 });
+      // yPercent, not y: the scroll tour owns `y` on this element, and two tweens on one property fight (reload mid-scroll left the product stuck low under an empty hero)
+      gsap.set(q(".h-stage"), { opacity: 0, yPercent: 8 });
       const desk = window.matchMedia("(min-width: 1024px) and (min-height: 640px)").matches;
       gsap.set(q(".h-frame"), { rotateX: desk ? 26 : 0, scale: desk ? 0.92 : 1, transformOrigin: "50% 0%" });
       const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
@@ -57,7 +58,7 @@ const Hero = () => {
         .to(q(".h-fade.h-pill"), { opacity: 1, y: 0, duration: 0.7 })
         .to(q(".h-line > span"), { yPercent: 0, duration: 1, stagger: 0.1 }, 0.1)
         .to(q(".h-fade:not(.h-pill)"), { opacity: 1, y: 0, duration: 0.7, stagger: 0.1 }, 0.7)
-        .to(q(".h-stage"), { opacity: 1, y: 0, duration: 1.2 }, 0.5);
+        .to(q(".h-stage"), { opacity: 1, yPercent: 0, duration: 1.2 }, 0.5);
 
       // collaborator cursor drifting over the product
       if (!reduced) {
