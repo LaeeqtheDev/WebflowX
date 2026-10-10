@@ -31,4 +31,7 @@ crons.interval("task due reminders", { hours: 1 }, internal.calendar.sendDueRemi
 // Pages left in the trash for 30 days are erased.
 crons.interval("empty old trash", { hours: 24 }, internal.docs.purgeExpired)
 
+// Messages and reactions from people who left a Free workspace are erased 90 days after they left.
+crons.interval("erase expired content of removed members", { hours: 24 }, internal.retention.purgeExpired)
+
 export default crons

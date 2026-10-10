@@ -7,7 +7,7 @@ import { release } from "./files";
 import { ConvexError } from "convex/values";
 import { requireActor, isAdminLike, isOwner, hasPermission, roleOf } from "./permissions";
 import { logAudit } from "./audit";
-import { PLANS, getPlan } from "./limits";
+import { PLANS, getPlan, removedContentDays } from "./limits";
 
 const populateUser = (ctx: QueryCtx, id: Id<"users">) => {
     return ctx.db.get(id)
@@ -177,7 +177,7 @@ export const remove = mutation({
 
         // the member is gone straight away; their messages, reactions and the rest are cleared in batches
         await ctx.db.delete(args.id)
-        await ctx.scheduler.runAfter(0, internal.members.cleanupRemoved, { memberId: args.id, workspaceId: member.workspaceId })
+        await ctx.scheduler.runAfter(0, internal.members.cleanupRemoved, { memberId: args.id, workspaceId: member.workspaceId, userId: member.userId })
         return args.id;
     }
 })
@@ -187,21 +187,42 @@ const CLEAN_BATCH = 200
 // Clears what a removed member left behind, a batch at a time so a very active member can't hit the
 // per-mutation limits. Runs again by itself until every batch comes back short.
 export const cleanupRemoved = internalMutation({
-    args: { memberId: v.id("members"), workspaceId: v.id("workspaces") },
+    args: {
+        memberId: v.id("members"),
+        workspaceId: v.id("workspaces"),
+        userId: v.optional(v.id("users")),
+        // progress markers: kept messages stay in the index, so each pass continues after the last one it handled
+        afterMessage: v.optional(v.number()),
+        afterReaction: v.optional(v.number()),
+    },
     handler: async (ctx, args) => {
         const id = args.memberId
         let more = false
 
-        const messages = await ctx.db.query("messages").withIndex("by_member_id", (q) => q.eq("memberId", id)).take(CLEAN_BATCH)
-        for (const m of messages) {
-            for (const fileId of [m.image, m.file]) if (fileId) await release(ctx, fileId)
-            await ctx.db.delete(m._id)
-        }
-        if (messages.length === CLEAN_BATCH) more = true
+        // Their messages and reactions stay, under the name they had, for as long as the plan keeps history
+        // (90 days on Free, for good on paid plans). Direct messages go with the conversation, as before.
+        const workspace = await ctx.db.get(args.workspaceId)
+        const days = removedContentDays(workspace?.plan)
+        const retainUntil = days === null ? undefined : Date.now() + days * 24 * 60 * 60 * 1000
+        const user = args.userId ? await ctx.db.get(args.userId) : null
+        const removedAuthor = { name: user?.name ?? "Former member", image: user?.image }
 
-        const reactions = await ctx.db.query("reactions").withIndex("by_member_id", (q) => q.eq("memberId", id)).take(CLEAN_BATCH)
-        for (const r of reactions) await ctx.db.delete(r._id)
-        if (reactions.length === CLEAN_BATCH) more = true
+        const messages = await ctx.db.query("messages").withIndex("by_member_id", (q) => q.eq("memberId", id).gt("_creationTime", args.afterMessage ?? 0)).take(CLEAN_BATCH)
+        for (const m of messages) {
+            if (m.conversationId) {
+                for (const fileId of [m.image, m.file]) if (fileId) await release(ctx, fileId)
+                await ctx.db.delete(m._id)
+            } else {
+                await ctx.db.patch(m._id, { removedAuthor, retainUntil })
+            }
+        }
+        const nextMessage = messages.length === CLEAN_BATCH ? messages[messages.length - 1]._creationTime : undefined
+        if (nextMessage !== undefined) more = true
+
+        const reactions = await ctx.db.query("reactions").withIndex("by_member_id", (q) => q.eq("memberId", id).gt("_creationTime", args.afterReaction ?? 0)).take(CLEAN_BATCH)
+        if (retainUntil !== undefined) for (const r of reactions) await ctx.db.patch(r._id, { retainUntil })
+        const nextReaction = reactions.length === CLEAN_BATCH ? reactions[reactions.length - 1]._creationTime : undefined
+        if (nextReaction !== undefined) more = true
 
         const conversations = await ctx.db.query("conversations").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId))
             .filter((q) => q.or(q.eq(q.field("memberOneId"), id), q.eq(q.field("memberTwoId"), id)))
@@ -234,6 +255,6 @@ export const cleanupRemoved = internalMutation({
             if (ch.guestIds?.includes(id)) await ctx.db.patch(ch._id, { guestIds: ch.guestIds.filter((x) => x !== id) })
         }
 
-        if (more) await ctx.scheduler.runAfter(0, internal.members.cleanupRemoved, args)
+        if (more) await ctx.scheduler.runAfter(0, internal.members.cleanupRemoved, { ...args, afterMessage: nextMessage ?? args.afterMessage, afterReaction: nextReaction ?? args.afterReaction })
     },
 })

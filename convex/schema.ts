@@ -179,6 +179,10 @@ const schema = defineSchema({
         updatedAt: v.optional(v.number()),
         // set when an API key, webhook or GitHub hook posted this; shown in place of the author's name
         integrationName: v.optional(v.string()),
+        // set when the author left or was removed: their name and photo as they were, so the message still reads properly
+        removedAuthor: v.optional(v.object({ name: v.string(), image: v.optional(v.string()) })),
+        // when a removed author's message is erased (Free plan: 90 days after they left). Unset on paid plans, which keep full history.
+        retainUntil: v.optional(v.number()),
     })
         .index("byWorkspaceId", ["workspaceId"])
         .index("by_member_id", ["memberId"])
@@ -190,6 +194,7 @@ const schema = defineSchema({
             "conversationId",
         ])
         .index("by_parent_message_id", ["parentMessagesId"])
+        .index("by_retain_until", ["retainUntil"])
         .searchIndex("search_body", {
             searchField: "body",
             filterFields: ["workspaceId"],
@@ -200,10 +205,13 @@ const schema = defineSchema({
         messageId: v.id("messages"),
         memberId: v.id("members"),
         value: v.string(),
+        // set when the reacting member left; erased after this time (Free plan only)
+        retainUntil: v.optional(v.number()),
     })
         .index("byWorkspaceId", ["workspaceId"])
         .index("by_message_id", ["messageId"])
-        .index("by_member_id", ["memberId"]),
+        .index("by_member_id", ["memberId"])
+        .index("by_retain_until", ["retainUntil"]),
 
     notes: defineTable({
         title: v.string(),

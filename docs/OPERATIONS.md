@@ -25,3 +25,11 @@ Settings, Import (owners and admins). Slack: public channels from a standard exp
 
 ## Case studies
 `CASE_STUDIES` in `src/lib/marketing-content.ts` is empty on purpose. Add an entry only with client approval and real figures; until then `/case-studies` is noindex and out of the sitemap.
+
+## Tests
+- `npm test`: Vitest. Pure logic (permissions, limits, importers, content) plus Convex message flows, plan limits and leaving a workspace, run against an in-memory Convex (`convex-test`).
+- `npm run e2e`: Playwright smoke tests against the production build (public pages, SEO files, sign-in page under the nonce CSP, redirects). Build first. Set `PW_CHROMIUM_PATH` to reuse an installed Chromium.
+- Not covered yet: a signed-in browser flow (sign in, send a message, create a task). That needs a dedicated test deployment and test account.
+
+## Leaving a workspace
+A person's channel messages and reactions stay, shown as "Name (former member)". Free plan: erased 90 days after they left (daily job). Paid plans keep them, matching full history. Direct messages are removed on leaving. Rules live in `removedContentDays` (`convex/limits.ts`).

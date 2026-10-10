@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy Policy" updated="October 7, 2026">
+    <LegalPage title="Privacy Policy" updated="October 10, 2026">
       <section>
         <p>This policy explains what WebflowX, operated by North Foundry (&ldquo;we&rdquo;), collects, why, and the choices you have. We do not sell your personal data.</p>
       </section>
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
       </section>
       <section>
         <h2>5. Retention</h2>
-        <p>We keep your data while your account or workspace exists. Deleting a workspace removes its content; leaving a workspace removes your messages and reactions in it. Backups and logs expire on their regular schedule. Meeting AI-usage records are kept for plan accounting.</p>
+        <p>We keep your data while your account or workspace exists. Deleting a workspace removes its content; when you leave or are removed from a workspace, your channel messages and reactions stay in it under the name you had, marked as a former member: for 90 days on the Free plan, after which they are erased, and for as long as the workspace exists on paid plans, which keep full history. Your direct messages are removed when you leave. Backups and logs expire on their regular schedule. Meeting AI-usage records are kept for plan accounting.</p>
       </section>
       <section>
         <h2>6. Your rights and choices</h2>

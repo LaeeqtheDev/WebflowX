@@ -13,7 +13,7 @@ import { emit } from "./integrations";
 import { historyCutoff } from "./limits";
 
 import {
-  extractMentionIds, notifyMentions, populateUser, populateMember, populateReactions, populateThread, getMember, deleteMessageCascade,
+  extractMentionIds, notifyMentions, populateUser, populateMember, populateReactions, populateThread, getMember, deleteMessageCascade, formerAuthor,
 } from "./messageHelpers";
 
 export { getMember, deleteMessageCascade };
@@ -105,10 +105,14 @@ export const get = query({
                 await Promise.all(
                     results.page.map(async (message) => {
                         // one author usually wrote many of the messages on screen: look each up once
-                        const member = await authorOf(message.memberId);
-                        const user = member
-                            ? await userOf(member.userId)
+                        const liveMember = await authorOf(message.memberId);
+                        const liveUser = liveMember
+                            ? await userOf(liveMember.userId)
                             : null;
+                        // authors who left keep their messages (see limits.removedContentDays)
+                        const former = !liveMember || !liveUser ? formerAuthor(message) : null;
+                        const member = liveMember ?? former?.member;
+                        const user = liveUser ?? former?.user;
 
                         if (!member || !user) return null;
 
@@ -436,11 +440,12 @@ export const getById = query({
             if (!conv || (currentMember.role === "guest" || (conv.memberOneId !== currentMember._id && conv.memberTwoId !== currentMember._id))) return null;
         }
 
-        const member = await populateMember(ctx, message.memberId);
-        if (!member) return null;
-
-        const user = await populateUser(ctx, member.userId);
-        if (!user) return null;
+        const liveMember = await populateMember(ctx, message.memberId);
+        const liveUser = liveMember ? await populateUser(ctx, liveMember.userId) : null;
+        const former = !liveMember || !liveUser ? formerAuthor(message) : null;
+        const member = liveMember ?? former?.member;
+        const user = liveUser ?? former?.user;
+        if (!member || !user) return null;
 
         const reactions = await populateReactions(ctx, message._id);
 

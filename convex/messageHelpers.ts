@@ -121,7 +121,9 @@ export const populateThread = async (ctx: QueryCtx, messageId: Id<"messages">) =
     const lastMessageMember = await populateMember(ctx, lastMessage.memberId);
 
     if (!lastMessageMember) {
-        return { count: 0, image: undefined, timestamp: 0, name: "" };
+        const former = formerAuthor(lastMessage);
+        if (!former) return { count: 0, image: undefined, timestamp: 0, name: "" };
+        return { count: recent.length, image: former.user.image, timestamp: lastMessage._creationTime, name: former.user.name };
     }
 
     const lastMessageUser = await populateUser(ctx, lastMessageMember.userId);
@@ -183,4 +185,12 @@ export const deleteMessageCascade = async (
     }
 
     await ctx.db.delete(message._id);
+};
+
+// A message whose author has left: show it under the name and photo they had, marked as a former member.
+export const formerAuthor = (message: Doc<"messages">) => {
+    if (!message.removedAuthor) return null;
+    const member = { _id: message.memberId, _creationTime: message._creationTime, workspaceId: message.workspaceId, userId: "" as Id<"users">, role: "member" as const } as Doc<"members">;
+    const user = { _id: "" as Id<"users">, _creationTime: message._creationTime, name: `${message.removedAuthor.name} (former member)`, image: message.removedAuthor.image } as Doc<"users">;
+    return { member, user };
 };
