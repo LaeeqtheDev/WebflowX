@@ -218,7 +218,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                     <div className="flex items-center gap-1.5 shrink-0">
                         <Avatar className="size-7 rounded-md">
                             <AvatarImage src={meeting.creator?.user?.image} />
-                            <AvatarFallback className="text-[10px] rounded-md bg-[#381d2a] dark:bg-[#4a2838] text-white">
+                            <AvatarFallback className="text-[10px] rounded-md bg-avatar text-white">
                                 {meeting.creator?.user?.name?.[0] ?? "?"}
                             </AvatarFallback>
                         </Avatar>

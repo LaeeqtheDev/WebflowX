@@ -280,7 +280,7 @@ const MessageImpl = ({
                     <button type="button" aria-label={`View ${authorName} profile`} disabled={isBot} className={isBot ? "cursor-default" : undefined} onClick={() => onOpenProfile(memberId)}>
                         <Avatar className="rounded-md mr-1 size-9">
                             <AvatarImage className="rounded-md" src={authorImage} />
-                            <AvatarFallback className="rounded-md bg-[#381d2a] dark:bg-[#4a2838] text-white text-center text-sm font-semibold">
+                            <AvatarFallback className="rounded-md bg-avatar text-white text-center text-sm font-semibold">
                                 {fallbackInitial}
                             </AvatarFallback>
                         </Avatar>

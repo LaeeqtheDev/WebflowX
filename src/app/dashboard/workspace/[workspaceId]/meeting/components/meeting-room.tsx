@@ -251,7 +251,7 @@ const MeetingRoomInner = ({ onDisconnect, roomName, title, startedAt, endsAt }: 
                 onRetry={retry}
             />
             {left !== null && (
-                <div role="timer" className={`pointer-events-none absolute right-4 top-4 z-40 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-lg ${left <= 60_000 ? "bg-red-600" : "bg-[#381d2a]"}`}>
+                <div role="timer" className={`pointer-events-none absolute right-4 top-4 z-40 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-lg ${left <= 60_000 ? "bg-red-600" : "bg-avatar"}`}>
                     Ends in {Math.floor(left / 60000)}:{String(Math.floor((left % 60000) / 1000)).padStart(2, "0")}
                 </div>
             )}
@@ -283,14 +283,14 @@ export const MeetingRoom = ({ token, serverUrl, roomName, title, startedAt, ends
                 const what = kind === "videoinput" ? "camera" : kind === "audioinput" ? "microphone" : "device"
                 toast.error(`Couldn't use your ${what}`, { description: failure === "PermissionDenied" ? "Allow access from the lock icon in the address bar, then try again." : failure === "NotFound" ? `No ${what} was found on this computer.` : "Another app may be using it." })
             }}
-            className="relative h-full w-full bg-[#150c11]"
+            className="relative h-full w-full bg-rail"
             data-lk-theme="default"
             style={{
-                "--lk-bg": "#2a1420",
-                "--lk-bg2": "#381d2a",
-                "--lk-bg3": "#402633",
-                "--lk-control-bg": "#381d2a",
-                "--lk-control-hover-bg": "#4a2a3a",
+                "--lk-bg": "var(--wfx-chrome)",
+                "--lk-bg2": "var(--wfx-avatar)",
+                "--lk-bg3": "var(--sidebar)",
+                "--lk-control-bg": "var(--wfx-avatar)",
+                "--lk-control-hover-bg": "var(--sidebar-accent)",
                 "--lk-accent-bg": "var(--wfx-accent)",
                 "--lk-accent2": "var(--wfx-accent-hover)",
                 "--lk-accent3": "var(--wfx-accent-hover)",

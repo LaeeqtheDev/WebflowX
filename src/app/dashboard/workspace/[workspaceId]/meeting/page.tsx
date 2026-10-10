@@ -461,7 +461,7 @@ export default function MeetingPage() {
                                     <div className="flex items-center gap-1.5 mt-0.5">
                                         <Avatar className="size-4 rounded-md">
                                             <AvatarImage src={meeting.creator?.user?.image} />
-                                            <AvatarFallback className="text-[8px] rounded-md bg-[#381d2a] dark:bg-[#4a2838] text-white">
+                                            <AvatarFallback className="text-[8px] rounded-md bg-avatar text-white">
                                                 {meeting.creator?.user?.name?.[0] ?? "?"}
                                             </AvatarFallback>
                                         </Avatar>

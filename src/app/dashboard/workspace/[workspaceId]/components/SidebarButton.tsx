@@ -47,7 +47,7 @@ export const SidebarButton = ({
             >
                 <Shown className="size-[22px]" />
                 {badge && badge > 0 ? (
-                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[9px] font-bold leading-none text-white ring-2 ring-[#381d2a] dark:ring-[#1e1019]">
+                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[9px] font-bold leading-none text-white ring-2 ring-rail">
                         {badge > 9 ? "9+" : badge}
                     </span>
                 ) : null}

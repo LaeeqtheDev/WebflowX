@@ -214,7 +214,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
             <div className="hidden items-center gap-3 px-2 pb-4 pt-1 md:flex">
               <Avatar className="size-10 rounded-xl">
                 <AvatarImage className="rounded-xl" src={workspace?.imageUrl ?? undefined} />
-                <AvatarFallback className="rounded-xl bg-[#381d2a] text-base font-semibold text-white">{(workspace?.name ?? name).charAt(0).toUpperCase()}</AvatarFallback>
+                <AvatarFallback className="rounded-xl bg-avatar text-base font-semibold text-white">{(workspace?.name ?? name).charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-ink">{workspace?.name ?? name}</p>
@@ -227,7 +227,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
               return (
                 <button key={t.id} onClick={() => setTab(t.id)} aria-current={active ? "page" : undefined}
                   className={cn("flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-xl px-3 py-2.5 text-left text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand",
-                    active ? "bg-[#381d2a] text-white" : "text-ink/70 hover:bg-cream hover:text-ink")}>
+                    active ? "bg-avatar text-white" : "text-ink/70 hover:bg-cream hover:text-ink")}>
                   <Icon className={cn("size-4 shrink-0", active ? "text-brand" : "")} />
                   {t.label}
                 </button>
@@ -247,7 +247,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                 <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-plum/12 bg-surface p-5">
                   <Avatar className="size-20 rounded-2xl">
                     <AvatarImage className="rounded-2xl" src={workspace?.imageUrl ?? undefined} />
-                    <AvatarFallback className="rounded-2xl bg-[#381d2a] dark:bg-[#4a2838] text-white text-3xl font-semibold">
+                    <AvatarFallback className="rounded-2xl bg-avatar text-white text-3xl font-semibold">
                       {(workspace?.name ?? name).charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -332,7 +332,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                       className="flex items-center gap-3 bg-surface rounded-xl border border-plum/10 px-3 py-2.5 text-left hover:bg-cream-soft">
                       <Avatar className="size-9 rounded-lg">
                         <AvatarImage className="rounded-lg" src={m.user.image} />
-                        <AvatarFallback className="rounded-lg bg-[#381d2a] dark:bg-[#4a2838] text-white font-semibold">{(m.user.name ?? "?").charAt(0).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback className="rounded-lg bg-avatar text-white font-semibold">{(m.user.name ?? "?").charAt(0).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-ink truncate">{m.user.name}</p>

@@ -190,7 +190,7 @@ const CalendarPage = () => {
                                         selected === key && "bg-brand/[0.07]"
                                     )}
                                 >
-                                    {hasSprint && <span aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-[#381d2a]/30 dark:bg-white/25" />}
+                                    {hasSprint && <span aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-avatar/30 dark:bg-white/25" />}
                                     <span className={cn("flex size-6 items-center justify-center rounded-full text-xs font-medium", key === todayKey ? "bg-brand text-white" : inMonth ? "text-ink" : "text-ink/40")}>{d}</span>
                                     <span className="hidden flex-col gap-0.5 md:flex">
                                         {shown.map((i) => (

@@ -38,7 +38,7 @@ const SavedPage = () => {
                         <div key={m.messageId} className="flex items-start gap-3 border-b border-plum/10 px-4 py-3 transition-colors hover:bg-cream">
                             <Avatar className="mt-0.5 size-9 shrink-0 rounded-md">
                                 <AvatarImage src={m.authorImage} />
-                                <AvatarFallback className="rounded-md bg-[#381d2a] text-xs text-white dark:bg-[#4a2838]">{m.authorName[0]}</AvatarFallback>
+                                <AvatarFallback className="rounded-md bg-avatar text-xs text-white">{m.authorName[0]}</AvatarFallback>
                             </Avatar>
                             <button
                                 type="button"

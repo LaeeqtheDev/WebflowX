@@ -72,7 +72,7 @@ export const Toolbar = ({ onOpenMenu }: { onOpenMenu?: () => void }) => {
   }
 
   return (
-    <nav className="relative z-10 flex h-14 shrink-0 items-center gap-1 border-b border-white/[0.07] bg-[#2a1420] px-2 md:gap-0 md:px-4">
+    <nav className="relative z-10 flex h-14 shrink-0 items-center gap-1 border-b border-white/[0.07] bg-chrome px-2 md:gap-0 md:px-4">
       {/* LEFT: Menu (phones) + Logo */}
       <div className="flex items-center gap-1 max-md:shrink-0 md:flex-1">
         {onOpenMenu && (

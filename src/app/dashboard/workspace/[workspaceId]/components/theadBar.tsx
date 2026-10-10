@@ -24,7 +24,7 @@ export const ThreadBar = ({count, image, timestamp, onClick,name="Member"}: Thre
         <div className="flex items-center gap-2 overflow-hidden">
         <Avatar className="rounded-md mr-1 size-6">
                     <AvatarImage className="rounded-md" src={image} />
-                    <AvatarFallback className="rounded-md bg-[#381d2a] dark:bg-[#4a2838] text-white text-center text-xs font-semibold">
+                    <AvatarFallback className="rounded-md bg-avatar text-white text-center text-xs font-semibold">
                         {avatarFallBack}
                     </AvatarFallback>
                 </Avatar>

@@ -51,7 +51,7 @@ export const WorkspaceSwitcher = () => {
                     className="cursor-pointer capitalize overflow-hidden rounded-lg"
                     onClick={()=> router.push(`/dashboard/workspace/${workspace._id}`)}
                     >
-                        <div className=" shrink-0 size-9 overflow-hidden bg-[#381d2a] dark:bg-[#4a2838] text-white font-semibold rounded-lg flex items-center justify-center">
+                        <div className=" shrink-0 size-9 overflow-hidden bg-avatar text-white font-semibold rounded-lg flex items-center justify-center">
                             {workspace.imageUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img src={workspace.imageUrl} alt="" className="size-full object-cover" />

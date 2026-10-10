@@ -11,6 +11,9 @@ body,
 
 @theme inline {
   /* WebflowX brand surfaces: these flip in dark mode (see :root and .dark below) */
+  --color-rail: var(--wfx-rail);
+  --color-chrome: var(--wfx-chrome);
+  --color-avatar: var(--wfx-avatar);
   --color-brand: var(--wfx-accent);
   --color-brand-hover: var(--wfx-accent-hover);
   --color-cream: var(--wfx-cream);
@@ -74,6 +77,10 @@ body,
   --wfx-orange-ink-hover: #a82d0a;
   --wfx-accent: #ff5018;
   --wfx-accent-hover: #e6430f;
+  /* app frame: left rail, top bar, and the dark tiles (avatars, active tabs) that carry white text */
+  --wfx-rail: #381d2a;
+  --wfx-chrome: #2a1420;
+  --wfx-avatar: #381d2a;
   color-scheme: light;
   --radius: 0.75rem;
   --background: #fbf9f7;
@@ -122,6 +129,9 @@ body,
   --wfx-plum: #f0dce6;
   --wfx-orange-ink: #ff8a63;
   --wfx-orange-ink-hover: #ffa584;
+  --wfx-rail: #1e1019;
+  --wfx-chrome: #2a1420;
+  --wfx-avatar: #4a2838;
 
   --background: #1a0f15;
   --foreground: #f4ece7;
@@ -528,6 +538,7 @@ html[data-theme="snow"] {
   color-scheme: light;
   --wfx-cream: #f4f6f9; --wfx-cream-soft: #f9fafc; --wfx-cream-deep: #eceff4; --wfx-cream-deep2: #e3e8ef;
   --wfx-surface: #ffffff; --wfx-ink: #10151c; --wfx-plum: #1e293b;
+  --wfx-rail: #111827; --wfx-chrome: #1e293b; --wfx-avatar: #334155;
   --background: #f4f6f9; --foreground: #10151c;
   --card: #ffffff; --card-foreground: #10151c; --popover: #ffffff; --popover-foreground: #10151c;
   --secondary: #e9edf3; --secondary-foreground: #10151c;
@@ -538,51 +549,55 @@ html[data-theme="snow"] {
 }
 html[data-theme="ash"] {
   color-scheme: dark;
-  --wfx-cream: #232428; --wfx-cream-soft: #2b2d31; --wfx-cream-deep: #313338; --wfx-cream-deep2: #383a40;
+  --wfx-cream: #313338; --wfx-cream-soft: #36383e; --wfx-cream-deep: #383a40; --wfx-cream-deep2: #404249;
   --wfx-surface: #2b2d31; --wfx-ink: #f2f3f5; --wfx-plum: #e3e5e8;
-  --background: #232428; --foreground: #f2f3f5;
+  --wfx-rail: #1e1f22; --wfx-chrome: #1e1f22; --wfx-avatar: #4e5058;
+  --background: #313338; --foreground: #f2f3f5;
   --card: #2b2d31; --card-foreground: #f2f3f5; --popover: #2b2d31; --popover-foreground: #f2f3f5;
-  --secondary: #35373c; --secondary-foreground: #f2f3f5;
-  --muted: #313338; --muted-foreground: #b5bac1;
-  --accent: #383a40; --accent-foreground: #f2f3f5;
+  --secondary: #383a40; --secondary-foreground: #f2f3f5;
+  --muted: #383a40; --muted-foreground: #b5bac1;
+  --accent: #404249; --accent-foreground: #f2f3f5;
   --border: rgba(255,255,255,0.08); --input: rgba(255,255,255,0.08);
-  --sidebar: #1e1f22; --sidebar-accent: #2b2d31; --sidebar-border: rgba(255,255,255,0.08);
+  --sidebar: #2b2d31; --sidebar-accent: #35373c; --sidebar-border: rgba(255,255,255,0.08);
 }
 html[data-theme="onyx"] {
   color-scheme: dark;
   --wfx-cream: #000000; --wfx-cream-soft: #0a0a0a; --wfx-cream-deep: #141414; --wfx-cream-deep2: #1c1c1c;
-  --wfx-surface: #0f0f0f; --wfx-ink: #f5f5f5; --wfx-plum: #e8e8e8;
+  --wfx-surface: #0e0e0e; --wfx-ink: #f5f5f5; --wfx-plum: #e8e8e8;
+  --wfx-rail: #000000; --wfx-chrome: #000000; --wfx-avatar: #262626;
   --background: #000000; --foreground: #f5f5f5;
-  --card: #0f0f0f; --card-foreground: #f5f5f5; --popover: #0f0f0f; --popover-foreground: #f5f5f5;
+  --card: #0e0e0e; --card-foreground: #f5f5f5; --popover: #0e0e0e; --popover-foreground: #f5f5f5;
   --secondary: #171717; --secondary-foreground: #f5f5f5;
   --muted: #141414; --muted-foreground: #a3a3a3;
   --accent: #1c1c1c; --accent-foreground: #f5f5f5;
   --border: rgba(255,255,255,0.1); --input: rgba(255,255,255,0.1);
-  --sidebar: #000000; --sidebar-accent: #171717; --sidebar-border: rgba(255,255,255,0.1);
+  --sidebar: #0a0a0a; --sidebar-accent: #171717; --sidebar-border: rgba(255,255,255,0.1);
 }
 html[data-theme="midnight"] {
   color-scheme: dark;
-  --wfx-cream: #0b1020; --wfx-cream-soft: #0f1629; --wfx-cream-deep: #172036; --wfx-cream-deep2: #1e2a45;
-  --wfx-surface: #121a2e; --wfx-ink: #e8edf7; --wfx-plum: #d6e0f5;
-  --background: #0b1020; --foreground: #e8edf7;
-  --card: #121a2e; --card-foreground: #e8edf7; --popover: #121a2e; --popover-foreground: #e8edf7;
+  --wfx-cream: #101830; --wfx-cream-soft: #131d38; --wfx-cream-deep: #1a2544; --wfx-cream-deep2: #223056;
+  --wfx-surface: #16203c; --wfx-ink: #e8edf7; --wfx-plum: #d6e0f5;
+  --wfx-rail: #070c18; --wfx-chrome: #070c18; --wfx-avatar: #2b3b66;
+  --background: #101830; --foreground: #e8edf7;
+  --card: #16203c; --card-foreground: #e8edf7; --popover: #16203c; --popover-foreground: #e8edf7;
   --secondary: #1a2540; --secondary-foreground: #e8edf7;
-  --muted: #172036; --muted-foreground: #9aa8c4;
-  --accent: #1e2a45; --accent-foreground: #e8edf7;
+  --muted: #1a2544; --muted-foreground: #9aa8c4;
+  --accent: #223056; --accent-foreground: #e8edf7;
   --border: rgba(255,255,255,0.09); --input: rgba(255,255,255,0.09);
-  --sidebar: #0a0f1d; --sidebar-accent: #18213a; --sidebar-border: rgba(255,255,255,0.09);
+  --sidebar: #0c1325; --sidebar-accent: #18213a; --sidebar-border: rgba(255,255,255,0.09);
 }
 html[data-theme="forest"] {
   color-scheme: dark;
-  --wfx-cream: #0e1a14; --wfx-cream-soft: #12231b; --wfx-cream-deep: #1a3025; --wfx-cream-deep2: #213b2e;
-  --wfx-surface: #14261e; --wfx-ink: #e6f1ea; --wfx-plum: #d3e8dc;
-  --background: #0e1a14; --foreground: #e6f1ea;
-  --card: #14261e; --card-foreground: #e6f1ea; --popover: #14261e; --popover-foreground: #e6f1ea;
+  --wfx-cream: #12241b; --wfx-cream-soft: #162b21; --wfx-cream-deep: #1d3629; --wfx-cream-deep2: #254332;
+  --wfx-surface: #183025; --wfx-ink: #e6f1ea; --wfx-plum: #d3e8dc;
+  --wfx-rail: #08130d; --wfx-chrome: #08130d; --wfx-avatar: #2f5a43;
+  --background: #12241b; --foreground: #e6f1ea;
+  --card: #183025; --card-foreground: #e6f1ea; --popover: #183025; --popover-foreground: #e6f1ea;
   --secondary: #193026; --secondary-foreground: #e6f1ea;
-  --muted: #1a3025; --muted-foreground: #9db8a8;
-  --accent: #213b2e; --accent-foreground: #e6f1ea;
+  --muted: #1d3629; --muted-foreground: #9db8a8;
+  --accent: #254332; --accent-foreground: #e6f1ea;
   --border: rgba(255,255,255,0.09); --input: rgba(255,255,255,0.09);
-  --sidebar: #0b1510; --sidebar-accent: #1a2f24; --sidebar-border: rgba(255,255,255,0.09);
+  --sidebar: #0e1c15; --sidebar-accent: #1a2f24; --sidebar-border: rgba(255,255,255,0.09);
 }
 
 /* ---------- Accent colours. The default (ember) lives in :root; --wfx-orange-ink is the readable text version. ---------- */

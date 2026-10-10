@@ -188,7 +188,7 @@ export const Header = ({ title }: HeaderProps) => {
                                             <div key={m._id} className="flex items-center gap-2.5">
                                                 <Avatar className="size-7 rounded-md">
                                                     <AvatarImage className="rounded-md" src={m.user.image} />
-                                                    <AvatarFallback className="rounded-md bg-[#381d2a] dark:bg-[#4a2838] text-white text-xs">{(m.user.name ?? "?").charAt(0).toUpperCase()}</AvatarFallback>
+                                                    <AvatarFallback className="rounded-md bg-avatar text-white text-xs">{(m.user.name ?? "?").charAt(0).toUpperCase()}</AvatarFallback>
                                                 </Avatar>
                                                 <span className="text-sm flex-1 truncate">{m.user.name}</span>
                                                 <button aria-label={`Remove ${m.user.name}`} className="text-ink/45 hover:text-rose-600 dark:hover:text-rose-400"

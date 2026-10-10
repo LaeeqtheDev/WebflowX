@@ -156,7 +156,7 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
     return (
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent className="[&>button]:text-white [&>button]:opacity-80 [&>button]:hover:opacity-100 [&>button]:top-5 [&>button]:right-5 flex h-[min(760px,90vh)] w-[min(1040px,calc(100vw-2rem))] max-w-none flex-col gap-0 overflow-hidden rounded-3xl border-plum/10 bg-cream-soft p-0 sm:max-w-none">
-                <DialogHeader className="shrink-0 bg-[#381d2a] px-7 pb-0 pt-6 text-white">
+                <DialogHeader className="shrink-0 bg-avatar px-7 pb-0 pt-6 text-white">
                     <DialogTitle className="flex items-center gap-4">
                         <span className="flex size-11 items-center justify-center rounded-2xl bg-brand text-white">
                             <CurrentIcon className="size-6" />
@@ -207,7 +207,7 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                             </div>
 
                             {currentPlan === "free" && (
-                                <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#381d2a] p-5 text-white">
+                                <div className="flex items-center justify-between gap-4 rounded-2xl bg-avatar p-5 text-white">
                                     <div>
                                         <p className="text-sm font-semibold">Ready to scale?</p>
                                         <p className="mt-1 text-xs text-white/65">
@@ -275,7 +275,7 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                             className={cn(
                                                 "relative flex flex-col rounded-2xl border p-5 transition-shadow",
                                                 plan.popular
-                                                    ? "border-plum dark:border-white/20 bg-[#381d2a] text-white shadow-[0_20px_40px_-24px_rgba(56,29,42,0.9)]"
+                                                    ? "border-plum dark:border-white/20 bg-avatar text-white shadow-[0_20px_40px_-24px_rgba(56,29,42,0.9)]"
                                                     : "border-plum/10 bg-surface text-ink",
                                                 isCurrent && !plan.popular && "border-brand ring-2 ring-brand/20"
                                             )}
@@ -305,7 +305,7 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                                 const base = "mt-4 flex items-center justify-center rounded-full py-2 text-xs font-semibold transition-colors disabled:opacity-60"
                                                 const tone = plan.popular
                                                     ? "bg-brand text-white hover:bg-brand-hover"
-                                                    : "bg-[#381d2a] dark:bg-[#4a2838] text-white hover:bg-[#2a1420] dark:hover:bg-[#5a3246]"
+                                                    : "bg-avatar text-white hover:bg-chrome"
                                                 const spin = <Loader className="size-4 animate-spin" />
                                                 if (isCurrent && !hasSub) {
                                                     return (

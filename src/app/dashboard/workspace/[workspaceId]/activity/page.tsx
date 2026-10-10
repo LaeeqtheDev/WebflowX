@@ -273,12 +273,12 @@ export default function ActivityPage() {
                                     <div className="relative shrink-0">
                                         <Avatar className="size-9 rounded-md">
                                             <AvatarImage src={notification.sender?.user?.image} />
-                                            <AvatarFallback className="text-xs rounded-md bg-[#381d2a] dark:bg-[#4a2838] text-white">
+                                            <AvatarFallback className="text-xs rounded-md bg-avatar text-white">
                                                 {notification.sender?.user?.name?.[0] ?? "?"}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className={cn(
-                                            "absolute -bottom-0.5 -right-0.5 size-4 rounded-md flex items-center justify-center border border-white dark:border-[#241620]",
+                                            "absolute -bottom-0.5 -right-0.5 size-4 rounded-md flex items-center justify-center border border-white dark:border-surface",
                                             config.bg
                                         )}>
                                             <Icon className={cn("size-2.5", config.color)} />

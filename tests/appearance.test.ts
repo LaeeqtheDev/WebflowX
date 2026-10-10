@@ -48,4 +48,14 @@ describe("appearance", () => {
     const hits = execSync(`grep -rnE "\\[#(ff5018|e6430f)\\]" src/app/dashboard src/features src/components/ui || true`).toString().trim()
     expect(hits).toBe("")
   })
+  it("the app frame uses theme colors, not hardcoded plum", () => {
+    const hits = execSync(`grep -rnE "\\[#(381d2a|4a2838|402633|2a1722|1e1019|2a1420|241620|1a0f15)\\]" src/app/dashboard src/features src/components/ui || true`).toString().trim()
+    expect(hits).toBe("")
+  })
+  it("every theme sets the frame colors", () => {
+    for (const id of ["snow", "ash", "onyx", "midnight", "forest"]) {
+      const block = css.slice(css.indexOf(`html[data-theme="${id}"]`)).split("}")[0]
+      for (const v of ["--wfx-rail", "--wfx-chrome", "--wfx-avatar", "--sidebar:"]) expect(block, `${id} ${v}`).toContain(v)
+    }
+  })
 })

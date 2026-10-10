@@ -578,7 +578,7 @@ const Editor = ({
 
                     {/* AI loading overlay */}
                     {isAiLoading && (
-                        <div className="absolute inset-0 bg-white/80 dark:bg-[#1a0f15]/80 flex items-center justify-center z-50 rounded">
+                        <div className="absolute inset-0 bg-white/80 dark:bg-cream/80 flex items-center justify-center z-50 rounded">
                             <div className="flex items-center gap-2">
                                 <Loader2 className="size-4 animate-spin text-brand" />
                                 <span className="text-xs text-muted-foreground font-medium">
@@ -600,7 +600,7 @@ const Editor = ({
                                         }}
                                         type="button"
                                         aria-label="Remove image"
-                                        className="flex opacity-0 group-hover/image:opacity-100 focus-visible:opacity-100 rounded-full bg-[#1b1017]/80 hover:bg-[#1b1017] dark:bg-[#381d2a] dark:hover:bg-[#4d3040] absolute -top-2.5 -right-2.5 text-white size-6 z-4 border-2 border-white dark:border-[#241620] items-center justify-center"
+                                        className="flex opacity-0 group-hover/image:opacity-100 focus-visible:opacity-100 rounded-full bg-[#1b1017]/80 hover:bg-[#1b1017] dark:bg-avatar dark:hover:bg-sidebar absolute -top-2.5 -right-2.5 text-white size-6 z-4 border-2 border-white dark:border-surface items-center justify-center"
                                     >
                                         <XIcon className="size-3.5" aria-hidden="true" />
                                     </button>
@@ -627,7 +627,7 @@ const Editor = ({
                                         }}
                                         type="button"
                                         aria-label="Remove file"
-                                        className="flex opacity-0 group-hover/file:opacity-100 focus-visible:opacity-100 rounded-full bg-[#1b1017]/80 hover:bg-[#1b1017] dark:bg-[#381d2a] dark:hover:bg-[#4d3040] absolute -top-2 -right-2 text-white size-5 z-4 border-2 border-white dark:border-[#241620] items-center justify-center"
+                                        className="flex opacity-0 group-hover/file:opacity-100 focus-visible:opacity-100 rounded-full bg-[#1b1017]/80 hover:bg-[#1b1017] dark:bg-avatar dark:hover:bg-sidebar absolute -top-2 -right-2 text-white size-5 z-4 border-2 border-white dark:border-surface items-center justify-center"
                                     >
                                         <XIcon className="size-3" aria-hidden="true" />
                                     </button>

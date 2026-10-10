@@ -68,7 +68,7 @@ export const lastSeenLabel = (online: boolean, lastSeen?: number) => {
 }
 
 // Small green dot that sits on the corner of an avatar. Renders nothing when the person is offline.
-export const PresenceDot = ({ memberId, className, ring = "ring-[#402633] dark:ring-[#2a1722]" }: { memberId?: string; className?: string; ring?: string }) => {
+export const PresenceDot = ({ memberId, className, ring = "ring-sidebar" }: { memberId?: string; className?: string; ring?: string }) => {
   const { online } = usePresence(memberId)
   if (!online) return null
   return (

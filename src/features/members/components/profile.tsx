@@ -181,7 +181,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                 <div className="flex flex-col items-center justify-center p-6">
                     <Avatar className="w-40 h-40 rounded-2xl">
                         <AvatarImage className="rounded-2xl" src={member.user.image} />
-                        <AvatarFallback className="aspect-square text-6xl rounded-2xl bg-[#381d2a] dark:bg-[#4a2838] text-white font-semibold">
+                        <AvatarFallback className="aspect-square text-6xl rounded-2xl bg-avatar text-white font-semibold">
                             {avatarFallback}
                         </AvatarFallback>
                     </Avatar>

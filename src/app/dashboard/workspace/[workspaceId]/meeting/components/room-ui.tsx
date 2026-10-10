@@ -71,7 +71,7 @@ function Tile({
     return (
         <div
             className={cn(
-                "group relative min-h-0 min-w-0 overflow-hidden rounded-2xl bg-[#2a1420] ring-2 transition-shadow",
+                "group relative min-h-0 min-w-0 overflow-hidden rounded-2xl bg-chrome ring-2 transition-shadow",
                 speaking && !isScreen ? "ring-brand shadow-[0_0_0_4px_rgba(255,80,24,0.18)]" : "ring-white/5",
                 className
             )}
@@ -87,7 +87,7 @@ function Tile({
                     )}
                 />
             ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#381d2a] to-[#2a1420]">
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-avatar to-chrome">
                     <div
                         className={cn(
                             "flex items-center justify-center rounded-full font-semibold text-white shadow-lg transition-transform",
@@ -417,7 +417,7 @@ function ControlBar({
 
     return (
         <div className="flex shrink-0 justify-center px-3 pb-3 pt-1">
-            <div className="flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-white/10 bg-[#1e1019]/95 px-3 py-2 shadow-2xl backdrop-blur sm:gap-3 sm:px-4">
+            <div className="flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-white/10 bg-rail/95 px-3 py-2 shadow-2xl backdrop-blur sm:gap-3 sm:px-4">
                 <SplitCtrl label={mic.enabled ? "Mute" : "Unmute"} active={mic.enabled} onClick={() => mic.toggle()} disabled={mic.pending} kind="audioinput">
                     {mic.enabled ? <Mic className="size-5" /> : <MicOff className="size-5" />}
                 </SplitCtrl>

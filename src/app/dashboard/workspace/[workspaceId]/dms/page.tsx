@@ -103,11 +103,11 @@ export default function DmsPage() {
                                     <div className="relative shrink-0">
                                         <Avatar className="size-11 rounded-md">
                                             <AvatarImage src={conv.otherMember?.user?.image} />
-                                            <AvatarFallback className="text-sm font-medium rounded-md bg-[#381d2a] dark:bg-[#4a2838] text-white">
+                                            <AvatarFallback className="text-sm font-medium rounded-md bg-avatar text-white">
                                                 {conv.otherMember?.user?.name?.[0] ?? "?"}
                                             </AvatarFallback>
                                         </Avatar>
-                                        <div className="absolute bottom-0 right-0 size-2.5 rounded-full bg-green-500 border-2 border-white dark:border-[#241620]" />
+                                        <div className="absolute bottom-0 right-0 size-2.5 rounded-full bg-green-500 border-2 border-white dark:border-surface" />
                                     </div>
 
                                     {/* Content */}

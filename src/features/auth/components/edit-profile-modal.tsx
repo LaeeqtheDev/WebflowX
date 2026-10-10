@@ -83,7 +83,7 @@ export const EditProfileModal = ({ open, setOpen, user }: Props) => {
           <div className="flex items-center gap-4">
             <Avatar className="size-20 rounded-2xl">
               <AvatarImage className="rounded-2xl" src={shownImage} />
-              <AvatarFallback className="rounded-2xl bg-[#381d2a] dark:bg-[#4a2838] text-white text-2xl font-semibold">
+              <AvatarFallback className="rounded-2xl bg-avatar text-white text-2xl font-semibold">
                 {(name || "?").charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>

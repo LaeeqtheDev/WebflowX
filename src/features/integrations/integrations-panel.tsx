@@ -161,7 +161,7 @@ export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces
         return (
           <section key={sec.kind} className="overflow-hidden rounded-2xl border border-plum/12 bg-surface">
             <div className="flex flex-wrap items-start gap-x-4 gap-y-3 p-4 sm:p-5">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#381d2a] text-brand">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-avatar text-brand">
                 <Icon className="size-5" />
               </span>
               <div className="min-w-0 flex-1 basis-56">
@@ -281,13 +281,13 @@ export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces
             {docs.map((d, i) => (
               <button key={d.title} type="button" onClick={() => setDoc(i)}
                 className={cn("whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition",
-                  doc === i ? "bg-[#381d2a] text-white" : "text-ink/65 hover:bg-cream hover:text-ink")}>
+                  doc === i ? "bg-avatar text-white" : "text-ink/65 hover:bg-cream hover:text-ink")}>
                 {d.title}
               </button>
             ))}
           </div>
           <div className="relative p-3 sm:p-4">
-            <pre className="whitespace-pre-wrap break-all rounded-xl bg-[#1e1019] p-4 pr-20 text-xs leading-relaxed text-white/90">{docs[doc].code}</pre>
+            <pre className="whitespace-pre-wrap break-all rounded-xl bg-rail p-4 pr-20 text-xs leading-relaxed text-white/90">{docs[doc].code}</pre>
             <div className="absolute right-5 top-5 sm:right-7 sm:top-7"><CopyBtn value={docs[doc].code} /></div>
           </div>
         </div>

@@ -75,7 +75,7 @@ const WorkspaceShell = ({ children }: WorkspaceIdLayoutProps) => {
         </main>
 
         <Sheet open={drawerOpen} onOpenChange={(open) => setDrawerPath(open ? pathname : null)}>
-          <SheetContent side="left" closeLabel="Close navigation menu" className="bg-[#402633] dark:bg-[#2a1722] text-white" closeIcon={<ChevronLeft className="size-5" />} closeClassName="-right-6 top-1/2 h-16 w-6 -translate-y-1/2 rounded-l-none rounded-r-xl bg-[#402633] dark:bg-[#2a1722] text-white/80 opacity-100 shadow-lg hover:text-white">
+          <SheetContent side="left" closeLabel="Close navigation menu" className="bg-sidebar text-white" closeIcon={<ChevronLeft className="size-5" />} closeClassName="-right-6 top-1/2 h-16 w-6 -translate-y-1/2 rounded-l-none rounded-r-xl bg-sidebar text-white/80 opacity-100 shadow-lg hover:text-white">
             <SheetTitle className="sr-only">Workspace navigation</SheetTitle>
             <SheetDescription className="sr-only">Switch sections, channels and direct messages.</SheetDescription>
             {/* Tapping a link to the page you are already on does not change the route, so close explicitly */}
@@ -116,7 +116,7 @@ const WorkspaceShell = ({ children }: WorkspaceIdLayoutProps) => {
           <ResizablePanel
             defaultSize={220}  // percentage of total width
             minSize={220}      // min width percentage
-            className="bg-[#402633] dark:bg-[#2a1722] text-white overflow-y-auto overflow-x-hidden border-r border-white/5"
+            className="bg-sidebar text-white overflow-y-auto overflow-x-hidden border-r border-white/5"
           >
             <WorkSpaceSidebar />
           </ResizablePanel>

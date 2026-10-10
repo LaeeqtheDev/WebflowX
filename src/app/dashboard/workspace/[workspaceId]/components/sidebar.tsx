@@ -45,7 +45,7 @@ export const Sidebar = () => {
     }, [router, workspaceId])
 
     return (
-        <aside className="w-[72px] h-full shrink-0 bg-[#381d2a] dark:bg-[#1e1019] border-r border-white/[0.06] flex flex-col gap-y-1.5 items-center pt-3 pb-4">
+        <aside className="w-[72px] h-full shrink-0 bg-rail border-r border-white/[0.06] flex flex-col gap-y-1.5 items-center pt-3 pb-4">
             <div className="mb-1.5">
                 <WorkspaceSwitcher />
             </div>

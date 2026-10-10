@@ -67,7 +67,7 @@ export default function DraftsPage() {
                             >
                                 <Avatar className="size-9 shrink-0 mt-0.5 rounded-md">
                                     <AvatarImage src={currentUser?.user?.image} />
-                                    <AvatarFallback className="text-xs rounded-md bg-[#381d2a] dark:bg-[#4a2838] text-white">
+                                    <AvatarFallback className="text-xs rounded-md bg-avatar text-white">
                                         {currentUser?.user?.name?.[0] ?? "?"}
                                     </AvatarFallback>
                                 </Avatar>
