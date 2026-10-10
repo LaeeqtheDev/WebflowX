@@ -126,3 +126,10 @@ export const checkLimitLazy = async (
     const n = await count(limit)
     return { allowed: n < limit, limit, plan }
 }
+
+// What happens to a person's messages and reactions after they leave or are removed from a workspace.
+// They stay visible (under the name the person had) for as long as the plan keeps history: 90 days on Free,
+// and for good on paid plans, which keep full history. Returns the number of days, or null for "keep".
+export const REMOVED_CONTENT_DAYS_FREE = HISTORY_DAYS_FREE
+export const removedContentDays = (plan?: string): number | null =>
+    getPlan(plan) === "free" ? REMOVED_CONTENT_DAYS_FREE : null

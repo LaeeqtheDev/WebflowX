@@ -17,3 +17,24 @@ jobs:
       - run: npx tsc --noEmit -p convex
       - run: npx eslint src convex --quiet
       - run: npm test
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Build
+        run: npm run build
+        env:
+          # placeholders: the smoke tests never reach a real backend
+          NEXT_PUBLIC_CONVEX_URL: https://ci-placeholder.convex.cloud
+          NEXT_PUBLIC_LIVEKIT_URL: wss://ci-placeholder.livekit.cloud
+      - name: Smoke tests
+        run: npm run e2e
+        env:
+          NEXT_PUBLIC_CONVEX_URL: https://ci-placeholder.convex.cloud
+          NEXT_PUBLIC_LIVEKIT_URL: wss://ci-placeholder.livekit.cloud

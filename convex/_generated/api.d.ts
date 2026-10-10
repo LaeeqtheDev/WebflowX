@@ -49,6 +49,7 @@ import type * as permissions from "../permissions.js";
 import type * as presence from "../presence.js";
 import type * as push from "../push.js";
 import type * as pushSend from "../pushSend.js";
+import type * as retention from "../retention.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as reactions from "../reactions.js";
 import type * as sent from "../sent.js";
@@ -115,6 +116,7 @@ declare const fullApi: ApiFromModules<{
   push: typeof push;
   pushSend: typeof pushSend;
   rateLimit: typeof rateLimit;
+  retention: typeof retention;
   reactions: typeof reactions;
   sent: typeof sent;
   sprints: typeof sprints;

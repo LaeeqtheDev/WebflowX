@@ -50,3 +50,12 @@ describe("historyCutoff", () => {
     expect(historyCutoff(undefined)).not.toBeNull()
   })
 })
+
+import { removedContentDays } from "../convex/limits"
+describe("removedContentDays", () => {
+  it("is 90 days on Free and unlimited on paid plans", () => {
+    expect(removedContentDays("free")).toBe(90)
+    expect(removedContentDays(undefined)).toBe(90)
+    for (const p of ["startup", "growth", "enterprise"]) expect(removedContentDays(p)).toBeNull()
+  })
+})

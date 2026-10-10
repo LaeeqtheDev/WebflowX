@@ -260,6 +260,15 @@ export type ChangelogEntry = { date: string; title: string; points: string[] }
 /** Newest first. Only list things that shipped. */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-10-10",
+    title: "Messages stay when someone leaves",
+    points: [
+      "When a person leaves or is removed, their channel messages and reactions now stay, shown as a former member.",
+      "Free plan: kept for 90 days, then erased. Paid plans keep full history, so they stay.",
+      "Direct messages are still removed when a person leaves.",
+    ],
+  },
+  {
     date: "2026-10-09",
     title: "Importers, audit log search and a faster public site",
     points: [
