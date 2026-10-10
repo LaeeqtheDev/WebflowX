@@ -1,5 +1,10 @@
 "use client"
 
+import { useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { forgetLocation, rememberLocation } from "@/lib/last-location";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useGetChannel } from "@/features/channels/api/use-get-channel";
 import { useChannelId } from "@/hooks/use-channel-id";
 import { Loader, Megaphone, TriangleAlert } from "lucide-react";
@@ -17,6 +22,14 @@ const ChannelIdPage = () => {
     const {results, status, loadMore} = useGetMessages({channelId})
     const {data: channel, isLoading: channelLoading} = useGetChannel({id: channelId})
     const perms = usePermissions()
+    const pathname = usePathname()
+    const workspaceId = useWorkspaceId()
+    const found = !!channel
+    useEffect(() => {
+        if (channelLoading) return
+        if (found) rememberLocation(pathname)
+        else forgetLocation()
+    }, [found, channelLoading, pathname])
 
     if(channelLoading || status === "LoadingFirstPage") 
     return(
@@ -39,6 +52,9 @@ const ChannelIdPage = () => {
                 <span className="font-semibold tracking-tight text-ink">
                     Channel not found
                 </span>
+                <Link href={`/dashboard/workspace/${workspaceId}`} className="text-sm font-semibold text-orange-ink hover:underline">
+                    Back to workspace
+                </Link>
             </div>
     
             ) 

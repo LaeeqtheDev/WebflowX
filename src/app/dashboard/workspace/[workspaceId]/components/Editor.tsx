@@ -74,6 +74,7 @@ const Editor = ({
     const mentionRef = useRef<{ query: string; start: number } | null>(null);
     const mentionSelRef = useRef(0);
     const matchesRef = useRef<MentionMember[]>([]);
+    const mentionListRef = useRef<HTMLDivElement>(null);
 
     const mentionMatches: MentionMember[] = (() => {
         if (!mention) return [];
@@ -91,9 +92,14 @@ const Editor = ({
                 const bn = (b.user?.name ?? "").toLowerCase().startsWith(q) ? 0 : 1;
                 return an - bn;
             })
-            .slice(0, 6) as MentionMember[];
+            .slice(0, 50) as MentionMember[];
         return [...specials, ...people];
     })();
+
+    // keep the highlighted person in view when arrowing through a long list
+    useEffect(() => {
+        mentionListRef.current?.querySelector<HTMLElement>('[data-sel="1"]')?.scrollIntoView({ block: "nearest" });
+    }, [mentionSel, mention]);
 
     const containerRef = useRef<HTMLDivElement>(null);
     const submitRef = useRef(onSubmit);
@@ -456,14 +462,15 @@ const Editor = ({
             <div ref={wrapperRef} className="relative">
                 {/* @mention picker */}
                 {mention && mentionMatches.length > 0 && (
-                    <div className="absolute bottom-full left-0 z-9999 mb-2 w-64 overflow-hidden rounded-xl border border-plum/12 bg-surface shadow-lg">
-                        <p className="border-b bg-cream px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink/65">
+                    <div ref={mentionListRef} className="absolute bottom-full left-0 z-9999 mb-2 max-h-72 w-64 overflow-y-auto overscroll-contain rounded-xl border border-plum/12 bg-surface shadow-lg">
+                        <p className="sticky top-0 z-10 border-b bg-cream px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink/65">
                             People
                         </p>
                         {mentionMatches.map((m, i) => (
                             <button
                                 type="button"
                                 key={`${m._id}-${i}`}
+                                data-sel={mentionSel === i ? "1" : undefined}
                                 onMouseDown={(e) => {
                                     e.preventDefault();
                                     pickMention(m);

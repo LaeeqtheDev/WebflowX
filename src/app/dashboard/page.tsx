@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useQuery } from "convex/react"
 import { Loader } from "lucide-react"
 import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspaces"
+import { lastLocation } from "@/lib/last-location"
 import { OnboardingWizard } from "@/features/onboarding/onboarding-wizard"
 import { api } from "../../../convex/_generated/api"
 
@@ -20,6 +21,13 @@ function Home() {
   // Right after "Create workspace" the new workspace shows up a moment before the wizard moves to step 3.
   const justCreated = recentlyStartedSetup()
   const settingUp = !!params.get("setup") || justCreated
+
+  // Go straight back to where they were while the workspace list loads (skipped after a stale link: ?fresh=1).
+  useEffect(() => {
+    if (params.get("fresh") || params.get("setup") || recentlyStartedSetup()) return
+    const last = lastLocation()
+    if (last) router.replace(last)
+  }, [params, router])
 
   const workSpaceId = useMemo(() => data?.[0]?._id, [data])
 

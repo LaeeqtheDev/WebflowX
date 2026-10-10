@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { GetStartedCard, useGetStarted } from "./components/first-run";
 import { cleanChannelName } from "./components/channel-icon";
+import { forgetLocation } from "@/lib/last-location";
 import { Button } from "@/components/ui/button";
 
 // centralized container for all states
@@ -44,6 +45,12 @@ const WorkspaceIdPage = () => {
       setIsOpen(true);
     }
   }, [channelId, workspaceLoading, channelsLoading, workspace, setIsOpen, router, workspaceId, member, memberLoading, isAdmin, IsOpen, started.ready, started.show]);
+
+  const gone = !workspaceLoading && !memberLoading && (!workspace || !member);
+  useEffect(() => {
+    // A remembered link to a workspace this person can no longer open: forget it and start from their list.
+    if (gone) { forgetLocation(); router.replace("/dashboard?fresh=1"); }
+  }, [gone, router]);
 
   if (workspaceLoading || channelsLoading || memberLoading || !started.ready) {
     return (
