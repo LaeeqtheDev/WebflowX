@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { forgetLocation, rememberLocation } from "@/lib/last-location";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { useGetChannels } from "@/features/channels/api/use-get-channels";
+import { recallMessages, rememberMessages } from "@/lib/message-cache";
 import { useGetChannel } from "@/features/channels/api/use-get-channel";
 import { Id } from "../../../../../../../convex/_generated/dataModel";
 import { useChannelId } from "@/hooks/use-channel-id";
@@ -19,11 +21,20 @@ import { ChannelWelcome } from "../../components/first-run";
 
 const ChannelView = ({ channelId }: { channelId: Id<"channels"> }) => {
 
-    const {results, status, loadMore} = useGetMessages({channelId})
-    const {data: channel, isLoading: channelLoading} = useGetChannel({id: channelId})
+    const workspaceId = useWorkspaceId()
+    const {results: live, status, loadMore} = useGetMessages({channelId})
+    const {data: fetched, isLoading: fetchedLoading} = useGetChannel({id: channelId})
+    // The sidebar already has every channel's name: use it so the page can draw before this channel's own query returns.
+    const {data: channels} = useGetChannels({workspaceId})
+    const fromList = channels?.find((c) => c._id === channelId)
+    const channel = fetched ?? fromList
+    const channelLoading = fetchedLoading && !fromList
     const perms = usePermissions()
     const pathname = usePathname()
-    const workspaceId = useWorkspaceId()
+    // On a return visit show what was there last time while the fresh list is on its way.
+    const firstPage = status === "LoadingFirstPage"
+    const results = firstPage ? recallMessages<typeof live[number]>(channelId) ?? [] : live
+    useEffect(() => { if (!firstPage) rememberMessages(channelId, live) }, [firstPage, live, channelId])
     const found = !!channel
     useEffect(() => {
         if (channelLoading) return
@@ -31,7 +42,7 @@ const ChannelView = ({ channelId }: { channelId: Id<"channels"> }) => {
         else forgetLocation()
     }, [found, channelLoading, pathname])
 
-    if(channelLoading || status === "LoadingFirstPage") 
+    if(channelLoading) 
     return(
         <div className="h-full flex-1 flex items-center justify-center bg-cream-soft">
             <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
@@ -69,6 +80,7 @@ const ChannelView = ({ channelId }: { channelId: Id<"channels"> }) => {
             channelName={channel.name}
             channelCreationTime={channel._creationTime}
             data={results}
+            loading={firstPage && results.length === 0}
             loadMore={loadMore}
             isLoadingMore={status === "LoadingMore"}
             canLoadMore={status === "CanLoadMore"}

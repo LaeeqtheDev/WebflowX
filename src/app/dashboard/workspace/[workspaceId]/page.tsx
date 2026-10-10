@@ -12,6 +12,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { GetStartedCard, useGetStarted } from "./components/first-run";
 import { cleanChannelName } from "./components/channel-icon";
+import { useQuery } from "convex/react";
+import { api } from "../../../../../convex/_generated/api";
 import { forgetLocation } from "@/lib/last-location";
 import { Button } from "@/components/ui/button";
 
@@ -46,7 +48,10 @@ const WorkspaceIdPage = () => {
     }
   }, [channelId, workspaceLoading, channelsLoading, workspace, setIsOpen, router, workspaceId, member, memberLoading, isAdmin, IsOpen, started.ready, started.show]);
 
-  const gone = !workspaceLoading && !memberLoading && (!workspace || !member);
+  // Someone who still has to enter their two-step code gets empty answers from the server: not the same as "gone".
+  const tf = useQuery(api.twoFactor.status);
+  const verified = tf !== undefined && (!tf?.enabled || tf.verified);
+  const gone = verified && !workspaceLoading && !memberLoading && (!workspace || !member);
   useEffect(() => {
     // A remembered link to a workspace this person can no longer open: forget it and start from their list.
     if (gone) { forgetLocation(); router.replace("/dashboard?fresh=1"); }

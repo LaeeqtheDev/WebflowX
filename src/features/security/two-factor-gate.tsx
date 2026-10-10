@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useConvexAuth, useMutation, useQuery } from "convex/react"
 import { useAuthActions } from "@convex-dev/auth/react"
 import { Loader, ShieldCheck } from "lucide-react"
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { errMsg } from "@/lib/errors"
 import { TwoFactorSetup } from "./two-factor-setup"
 
+const HINT = "wfx-2fa-on"
 const primary =
   "mt-2 h-12 w-full cursor-pointer rounded-xl bg-brand text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_color-mix(in_srgb,var(--wfx-accent)_80%,transparent)] hover:bg-brand-hover"
 
@@ -68,7 +69,15 @@ export const TwoFactorGate = ({ children }: { children: React.ReactNode }) => {
   const { isLoading, isAuthenticated } = useConvexAuth()
   const status = useQuery(api.twoFactor.status)
 
-  if (isLoading || (isAuthenticated && status === undefined)) {
+  // The server already treats an unverified sign-in as signed out, so waiting on this status protects nothing; it only
+  // costs a round trip before anything can load. So render the app straight away, unless this device last saw the
+  // account with two-step on (then wait, to avoid flashing app screens before the code screen).
+  const [hint] = useState(() => { try { return window.localStorage.getItem(HINT) === "1" } catch { return false } })
+  useEffect(() => {
+    if (status === undefined) return
+    try { window.localStorage.setItem(HINT, status?.enabled ? "1" : "0") } catch { /* private mode */ }
+  }, [status])
+  if (isLoading || (isAuthenticated && status === undefined && hint)) {
     return <div className="flex h-dvh items-center justify-center bg-cream"><Loader className="size-7 animate-spin text-brand" /></div>
   }
   if (isAuthenticated && status?.enabled && !status.verified) return <Challenge />

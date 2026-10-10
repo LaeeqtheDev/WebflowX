@@ -1,6 +1,8 @@
 import { useMemberId } from "@/hooks/use-member-id";
 import { Id } from "../../../../../../../convex/_generated/dataModel";
 import { useGetMember } from "@/features/members/api/use-get-member";
+import { useGetMembers } from "@/features/members/api/use-get-members";
+import { recallMessages, rememberMessages } from "@/lib/message-cache";
 import { useGetMessages } from "@/features/messages/api/use-get-messages";
 import { Loader } from "lucide-react";
 import { Header } from "./header";
@@ -9,7 +11,7 @@ import { MessageList } from "../../components/message-list";
 import { usePanel } from "@/hooks/use-panel";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { NotFoundState } from "@/components/states/not-found-state";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -31,12 +33,20 @@ export const Conversation = ({id}: ConversationProps) => {
     const createMeeting = useMutation(api.meetings.create)
     const [calling, setCalling] = useState(false)
 
-    const {data: member, isLoading: memberLoading} = useGetMember({id: memberId})
-    const {results, status, loadMore} = useGetMessages({
+    const {data: fetched, isLoading: fetchedLoading} = useGetMember({id: memberId})
+    // the member list is already loaded for @mentions and the sidebar: draw the header from it without waiting
+    const {data: members} = useGetMembers({workspaceId})
+    const fromList = members?.find((m) => m._id === memberId)
+    const member = fetched ?? fromList
+    const memberLoading = fetchedLoading && !fromList
+    const {results: live, status, loadMore} = useGetMessages({
         conversationId: id,
     });
+    const firstPage = status === "LoadingFirstPage"
+    const results = firstPage ? recallMessages<typeof live[number]>(id) ?? [] : live
+    useEffect(() => { if (!firstPage) rememberMessages(id, live) }, [firstPage, live, id])
 
-    if(memberLoading || status === "LoadingFirstPage"){
+    if(memberLoading){
         return(
            <div className="h-full flex items-center justify-center">
                   <Loader className="size-6 animate-spin  text-brand "/>
@@ -89,6 +99,7 @@ export const Conversation = ({id}: ConversationProps) => {
             />
             <MessageList
             data={results}
+            loading={firstPage && results.length === 0}
             variant="conversation"
             memberImage={member?.user.image}
             memberName={member?.user.name}

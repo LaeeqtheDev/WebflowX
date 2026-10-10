@@ -24,6 +24,8 @@ interface MessageListProps {
     loadMore: () => void;
     isLoadingMore: boolean;
     canLoadMore: boolean;
+    /** First page still on its way and nothing to show yet: draw placeholder rows instead of the "no messages" welcome. */
+    loading?: boolean;
     /** Shown just under the channel intro when there are no messages yet. */
     emptyState?: React.ReactNode;
 }
@@ -39,6 +41,7 @@ export const MessageList = ({
     isLoadingMore,
     canLoadMore,
     emptyState,
+    loading = false,
 }: MessageListProps) => {
     const workspaceId = useWorkspaceId();
     const { data: currentMember } = useCurrentMember({ workspaceId });
@@ -226,7 +229,20 @@ export const MessageList = ({
                     </span>
                 </div>
             )}
-            {data && data.length === 0 && emptyState}
+            {loading && (
+                <div className="animate-pulse space-y-5 px-5 py-4" aria-hidden>
+                    {[60, 82, 44, 70].map((w, i) => (
+                        <div key={i} className="flex gap-3">
+                            <div className="size-9 shrink-0 rounded-lg bg-plum/10" />
+                            <div className="flex-1 space-y-2 pt-1">
+                                <div className="h-3 w-32 rounded bg-plum/10" />
+                                <div className="h-3 rounded bg-plum/10" style={{ width: `${w}%` }} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+            {!loading && data && data.length === 0 && emptyState}
             {variant === "channel" && channelName && channelCreationTime && (
                 <ChannelHero name={channelName} creationTime={channelCreationTime} />
             )}
