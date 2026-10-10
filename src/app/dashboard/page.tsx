@@ -16,6 +16,9 @@ function recentlyStartedSetup() {
 function Home() {
   const { data, isLoading } = useGetWorkspaces()
   const me = useQuery(api.users.current)
+  // An account that still owes its two-step code is told "no workspaces": not the same as having none.
+  const tf = useQuery(api.twoFactor.status)
+  const verified = tf !== undefined && (!tf?.enabled || tf.verified)
   const params = useSearchParams()
   const router = useRouter()
   // Right after "Create workspace" the new workspace shows up a moment before the wizard moves to step 3.
@@ -37,7 +40,7 @@ function Home() {
     if (workSpaceId && !settingUp) router.replace(`/dashboard/workspace/${workSpaceId}`)
   }, [workSpaceId, isLoading, settingUp, router])
 
-  if (isLoading || (workSpaceId && !settingUp)) {
+  if (isLoading || !verified || (workSpaceId && !settingUp)) {
     return (
       <div className="min-h-screen bg-cream-soft flex items-center justify-center">
         <Loader className="size-6 animate-spin text-brand" />

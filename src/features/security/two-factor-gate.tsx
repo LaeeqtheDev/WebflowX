@@ -69,10 +69,10 @@ export const TwoFactorGate = ({ children }: { children: React.ReactNode }) => {
   const { isLoading, isAuthenticated } = useConvexAuth()
   const status = useQuery(api.twoFactor.status)
 
-  // The server already treats an unverified sign-in as signed out, so waiting on this status protects nothing; it only
-  // costs a round trip before anything can load. So render the app straight away, unless this device last saw the
-  // account with two-step on (then wait, to avoid flashing app screens before the code screen).
-  const [hint] = useState(() => { try { return window.localStorage.getItem(HINT) === "1" } catch { return false } })
+  // Waiting on this status costs a round trip before anything can load, so skip the wait only when this device has
+  // already seen this account without two-step. In every other case (first visit, two-step on, unknown) wait: otherwise an
+  // account that still owes its code gets empty answers from the server and the app would show its first-time screens.
+  const [hint] = useState(() => { try { return window.localStorage.getItem(HINT) !== "0" } catch { return true } })
   useEffect(() => {
     if (status === undefined) return
     try { window.localStorage.setItem(HINT, status?.enabled ? "1" : "0") } catch { /* private mode */ }
