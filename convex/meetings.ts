@@ -1,6 +1,7 @@
 import { v } from "convex/values"
 import { mutation, query, internalMutation, MutationCtx } from "./_generated/server"
 import { Id, Doc } from "./_generated/dataModel"
+import { internal } from "./_generated/api"
 import { logAudit } from "./audit"
 import { notify } from "./notifications"
 import { findMember } from "./access"
@@ -288,6 +289,11 @@ export const create = mutation({
             inviteeId: invitee?._id,
             activeMembers: [],
         })
+        // A one-to-one call ends itself at its time limit. This replaces a job that ran every minute, all day, for nobody.
+        if (kind === "oneToOne") {
+            const endsAt = Math.max(args.scheduledFor ?? now, now) + ONE_TO_ONE_MAX_MINUTES * 60_000 + 5_000
+            await ctx.scheduler.runAt(endsAt, internal.meetings.endOverTime, {})
+        }
         if (invitee) {
             await notify(ctx, {
                 workspaceId: args.workspaceId, recipientId: invitee._id, senderId: member._id,
@@ -482,7 +488,7 @@ export const endStale = internalMutation({
     },
 })
 
-// Every minute: one-to-one calls stop at 15 minutes, even if someone kept the tab open.
+// One-to-one calls stop at 15 minutes, even if someone kept the tab open. Scheduled when the call is created, with an hourly sweep as a safety net.
 export const endOverTime = internalMutation({
     args: {},
     handler: async (ctx) => {

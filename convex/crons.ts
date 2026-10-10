@@ -4,7 +4,8 @@ import { internal } from "./_generated/api"
 const crons = cronJobs()
 
 // Calls where everyone closed the tab without leaving would otherwise stay "live" forever.
-crons.interval("end one-to-one calls at 15 minutes", { minutes: 1 }, internal.meetings.endOverTime)
+// (each call schedules its own end when it is created; this hourly pass only catches anything that slipped through)
+crons.interval("end one-to-one calls at 15 minutes", { hours: 1 }, internal.meetings.endOverTime)
 crons.interval("end stale meetings", { hours: 1 }, internal.meetings.endStale)
 
 // Uploads that never ended up attached to a message are removed after a day.

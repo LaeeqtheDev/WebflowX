@@ -224,11 +224,14 @@ export const cleanupRemoved = internalMutation({
         const nextReaction = reactions.length === CLEAN_BATCH ? reactions[reactions.length - 1]._creationTime : undefined
         if (nextReaction !== undefined) more = true
 
-        const conversations = await ctx.db.query("conversations").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId))
-            .filter((q) => q.or(q.eq(q.field("memberOneId"), id), q.eq(q.field("memberTwoId"), id)))
-            .take(CLEAN_BATCH)
+        // through the member's own indexes: scanning the whole workspace's conversations made this job collide with anyone starting a chat
+        const [asOne, asTwo] = await Promise.all([
+            ctx.db.query("conversations").withIndex("by_member_one", (q) => q.eq("memberOneId", id)).take(CLEAN_BATCH),
+            ctx.db.query("conversations").withIndex("by_member_two", (q) => q.eq("memberTwoId", id)).take(CLEAN_BATCH),
+        ])
+        const conversations = [...new Map([...asOne, ...asTwo].map((c) => [c._id, c])).values()]
         for (const c of conversations) await ctx.db.delete(c._id)
-        if (conversations.length === CLEAN_BATCH) more = true
+        if (asOne.length === CLEAN_BATCH || asTwo.length === CLEAN_BATCH) more = true
 
         const notifications = await ctx.db.query("notifications").withIndex("by_recipient", (q) => q.eq("recipientId", id)).take(CLEAN_BATCH)
         for (const n of notifications) await ctx.db.delete(n._id)
