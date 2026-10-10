@@ -13,12 +13,12 @@ import { useWorkspaceId } from "@/hooks/use-workspace-id"
  * Progress lives in localStorage so a refresh keeps the place; finishing or skipping clears it.
  */
 
-const STEPS = 6
+const STEPS = 11
 const EVENT = "wfx:guide"
 const key = (workspaceId: string) => `wfx:guide:${workspaceId}`
 
 /** Screen to show for each step; "" is the channel the person lands on. */
-const PATH: Record<number, string> = { 1: "", 2: "", 3: "/tasks", 4: "/docs", 5: "/meeting", 6: "" }
+const PATH: Record<number, string> = { 1: "", 2: "", 3: "/threads", 4: "/dms", 5: "/tasks", 6: "/docs", 7: "/notes", 8: "/meeting", 9: "/calendar", 10: "/files", 11: "" }
 
 export const startGuide = (workspaceId: string) => {
   try { window.localStorage.setItem(key(workspaceId), "1") } catch { /* private mode */ }
@@ -55,7 +55,7 @@ export function WorkspaceGuide() {
   const go = (n: number) => {
     const base = `/dashboard/workspace/${workspaceId}`
     const target = PATH[n]
-    const onSpecial = /\/(tasks|docs|meeting)(\/|$)/.test(pathname)
+    const onSpecial = /\/(threads|dms|tasks|docs|notes|meeting|calendar|files)(\/|$)/.test(pathname)
     if (target) router.push(`${base}${target}`)
     else if (onSpecial) router.push(base)
     write(n)
