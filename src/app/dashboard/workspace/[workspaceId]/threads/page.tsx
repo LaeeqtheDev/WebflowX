@@ -47,7 +47,7 @@ const ThreadItem = ({ thread, onSelect }: { thread: ThreadData; onSelect: (threa
                     {preview || "Sent a message"}
                 </p>
                 <div className="flex items-center gap-1 mt-1.5">
-                    <div className="size-1.5 rounded-full bg-[#ff5018]" />
+                    <div className="size-1.5 rounded-full bg-brand" />
                     <span className="text-[11px] text-orange-ink font-medium">
                         {thread.replyCount} {thread.replyCount === 1 ? "reply" : "replies"}
                     </span>
@@ -62,8 +62,8 @@ const ThreadItem = ({ thread, onSelect }: { thread: ThreadData; onSelect: (threa
 
 const EmptySection = ({ label }: { label: string }) => (
     <div className="flex flex-col items-center justify-center py-12 text-ink/60 gap-3">
-        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
-            <MessagesSquare className="size-6 text-[#ff5018]" />
+        <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
+            <MessagesSquare className="size-6 text-brand" />
         </div>
         <p className="text-sm">{label}</p>
     </div>
@@ -88,8 +88,8 @@ export default function ThreadsPage() {
         <div className="h-full flex flex-col overflow-hidden bg-cream-soft">
             {/* Header */}
             <div className="flex items-center gap-3 px-6 h-14 border-b bg-surface shrink-0 shadow-none">
-                <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
-                    <MessagesSquare className="size-4 text-[#ff5018]" />
+                <div className="size-8 rounded-lg bg-brand/10 flex items-center justify-center">
+                    <MessagesSquare className="size-4 text-brand" />
                 </div>
                 <div>
                     <h1 className="tracking-tight text-[17px] font-semibold leading-none text-ink">Threads</h1>
@@ -103,7 +103,7 @@ export default function ThreadsPage() {
             <div className="flex-1 overflow-y-auto bg-surface">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full">
-                        <Loader className="size-5 animate-spin text-[#ff5018]" />
+                        <Loader className="size-5 animate-spin text-brand" />
                     </div>
                 ) : (
                     <>

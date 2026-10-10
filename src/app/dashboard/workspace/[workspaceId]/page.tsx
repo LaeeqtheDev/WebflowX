@@ -48,8 +48,8 @@ const WorkspaceIdPage = () => {
   if (workspaceLoading || channelsLoading || memberLoading || !started.ready) {
     return (
       <CenteredContainer>
-        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
-          <Loader className="size-6 animate-spin text-[#ff5018]" />
+        <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
+          <Loader className="size-6 animate-spin text-brand" />
         </div>
       </CenteredContainer>
     );
@@ -58,8 +58,8 @@ const WorkspaceIdPage = () => {
   if (!workspace || !member) {
     return (
       <CenteredContainer>
-        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
-          <TriangleAlert className="size-6 text-[#ff5018]" />
+        <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
+          <TriangleAlert className="size-6 text-brand" />
         </div>
         <span className="font-semibold tracking-tight text-ink">Workspace Not Found</span>
       </CenteredContainer>
@@ -94,7 +94,7 @@ const WorkspaceIdPage = () => {
     // redirecting to the first channel
     return (
       <CenteredContainer>
-        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-orange-ink flex items-center justify-center">
+        <div className="size-14 rounded-2xl bg-brand/10 text-orange-ink flex items-center justify-center">
           <Loader className="size-6 animate-spin" />
         </div>
       </CenteredContainer>
@@ -104,8 +104,8 @@ const WorkspaceIdPage = () => {
   if (!channels ) {
     return (
       <CenteredContainer>
-        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
-          <TriangleAlert className="size-6 text-[#ff5018]" />
+        <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
+          <TriangleAlert className="size-6 text-brand" />
         </div>
         <span className="font-semibold tracking-tight text-ink">No channels found</span>
       </CenteredContainer>
@@ -115,7 +115,7 @@ const WorkspaceIdPage = () => {
   // No channels yet. Admins get the "create channel" modal; everyone else sees guidance.
   return (
     <CenteredContainer>
-      <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-orange-ink flex items-center justify-center">
+      <div className="size-14 rounded-2xl bg-brand/10 text-orange-ink flex items-center justify-center">
         <TriangleAlert className="size-6" />
       </div>
       <span className="font-semibold tracking-tight text-ink">No channels yet</span>
@@ -128,7 +128,7 @@ const WorkspaceIdPage = () => {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="mt-1 rounded-xl bg-[#ff5018] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#e6430f]"
+          className="mt-1 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
         >
           Create a channel
         </button>

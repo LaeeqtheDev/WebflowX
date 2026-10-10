@@ -28,7 +28,7 @@ const TYPE_CONFIG = {
     thread_reply: {
         icon: MessagesSquare,
         color: "text-orange-ink",
-        bg: "bg-[#ff5018]/10",
+        bg: "bg-brand/10",
         label: "replied to your message"
     },
     reaction: {
@@ -40,19 +40,19 @@ const TYPE_CONFIG = {
     task_assigned: {
         icon: CheckSquare,
         color: "text-orange-ink",
-        bg: "bg-[#ff5018]/10",
+        bg: "bg-brand/10",
         label: "assigned a task to you"
     },
     meeting_invite: {
         icon: Video,
         color: "text-orange-ink",
-        bg: "bg-[#ff5018]/10",
+        bg: "bg-brand/10",
         label: "invited you to a call"
     },
     task_due: {
         icon: CheckSquare,
         color: "text-orange-ink",
-        bg: "bg-[#ff5018]/10",
+        bg: "bg-brand/10",
         label: "a task assigned to you is due soon"
     },
     task_comment: {
@@ -70,13 +70,13 @@ const TYPE_CONFIG = {
     mention: {
         icon: AtSign,
         color: "text-orange-ink",
-        bg: "bg-[#ff5018]/10",
+        bg: "bg-brand/10",
         label: "mentioned you"
     },
     dm_received: {
         icon: MessageSquare,
         color: "text-orange-ink",
-        bg: "bg-[#ff5018]/10",
+        bg: "bg-brand/10",
         label: "sent you a direct message"
     },
 }
@@ -184,8 +184,8 @@ export default function ActivityPage() {
             {/* Header */}
             <div className="flex items-center justify-between px-4 md:px-6 h-14 border-b bg-surface shrink-0 shadow-none">
                 <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
-                        <Bell className="size-4 text-[#ff5018]" />
+                    <div className="size-8 rounded-lg bg-brand/10 flex items-center justify-center">
+                        <Bell className="size-4 text-brand" />
                     </div>
                     <div>
                         <h1 className="tracking-tight text-[17px] font-semibold leading-none text-ink">Activity</h1>
@@ -194,7 +194,7 @@ export default function ActivityPage() {
                         </p>
                     </div>
                     {unreadCount > 0 && (
-                        <Badge className="bg-[#ff5018] text-white text-[11px] h-5 px-2 rounded-md">
+                        <Badge className="bg-brand text-white text-[11px] h-5 px-2 rounded-md">
                             {unreadCount}
                         </Badge>
                     )}
@@ -238,12 +238,12 @@ export default function ActivityPage() {
             <div className="flex-1 overflow-y-auto">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full">
-                        <Loader className="size-5 animate-spin text-[#ff5018]" />
+                        <Loader className="size-5 animate-spin text-brand" />
                     </div>
                 ) : !notifications || notifications.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full gap-4 text-ink/60">
-                        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
-                            <Bell className="size-6 text-[#ff5018]" />
+                        <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
+                            <Bell className="size-6 text-brand" />
                         </div>
                         <div className="text-center">
                             <p className="font-semibold tracking-tight text-ink">No activity yet</p>
@@ -266,7 +266,7 @@ export default function ActivityPage() {
                                     onClick={() => handleClick(notification)}
                                     className={cn(
                                         "flex items-start gap-4 px-4 md:px-6 py-4 cursor-pointer hover:bg-cream transition-colors",
-                                        !notification.read && "border-l-2 border-l-[#ff5018] bg-[#ff5018]/5"
+                                        !notification.read && "border-l-2 border-l-brand bg-brand/5"
                                     )}
                                 >
                                     {/* Avatar with type icon */}
@@ -299,7 +299,7 @@ export default function ActivityPage() {
                                             </p>
                                             <div className="flex items-center gap-1.5 shrink-0">
                                                 {!notification.read && (
-                                                    <div className="size-2 rounded-full bg-[#ff5018]" />
+                                                    <div className="size-2 rounded-full bg-brand" />
                                                 )}
                                                 <span className="text-[11px] text-ink/60 whitespace-nowrap">
                                                     {format(notification._creationTime, "MMM d, h:mm a")}

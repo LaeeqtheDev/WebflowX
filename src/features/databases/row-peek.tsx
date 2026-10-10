@@ -15,7 +15,7 @@ import type { Row } from "./engine"
 
 const DocEditor = dynamic(() => import("@/app/dashboard/workspace/[workspaceId]/docs/components/doc-editor").then((m) => m.DocEditor), {
   ssr: false,
-  loading: () => <div className="flex h-40 items-center justify-center"><Loader className="size-5 animate-spin text-[#ff5018]" /></div>,
+  loading: () => <div className="flex h-40 items-center justify-center"><Loader className="size-5 animate-spin text-brand" /></div>,
 })
 
 const TitleInput = ({ row, ctx }: { row: Row; ctx: DbCtx }) => {

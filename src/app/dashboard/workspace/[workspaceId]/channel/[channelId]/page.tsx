@@ -21,8 +21,8 @@ const ChannelIdPage = () => {
     if(channelLoading || status === "LoadingFirstPage") 
     return(
         <div className="h-full flex-1 flex items-center justify-center bg-cream-soft">
-            <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
-                <Loader className="animate-spin size-6 text-[#ff5018]"/>
+            <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
+                <Loader className="animate-spin size-6 text-brand"/>
             </div>
 
         </div>
@@ -33,8 +33,8 @@ const ChannelIdPage = () => {
         if( !channel) 
         return(
             <div className="h-full flex-1 flex flex-col gap-y-3 items-center justify-center bg-cream-soft">
-                <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
-                    <TriangleAlert className="size-6 text-[#ff5018]"/>
+                <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
+                    <TriangleAlert className="size-6 text-brand"/>
                 </div>
                 <span className="font-semibold tracking-tight text-ink">
                     Channel not found
@@ -60,7 +60,7 @@ const ChannelIdPage = () => {
             />
             {channel.readOnly && !perms.can("postInReadOnly") ? (
                 <div className="mx-3 md:mx-5 mb-5 flex items-center gap-2.5 rounded-xl border border-plum/12 bg-surface px-4 py-3 text-sm text-ink/65">
-                    <Megaphone className="size-4 shrink-0 text-[#ff5018]" />
+                    <Megaphone className="size-4 shrink-0 text-brand" />
                     This is an announcement channel. Only admins and allowed roles can post. You can still reply in threads and react.
                 </div>
             ) : (

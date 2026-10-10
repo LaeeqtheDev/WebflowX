@@ -447,7 +447,7 @@ const Editor = ({
                             >
                                 <Avatar className="size-7 rounded-md">
                                     <AvatarImage className="rounded-md" src={m.user?.image ?? undefined} />
-                                    <AvatarFallback className="rounded-md bg-[#ff5018] text-xs font-semibold text-white">
+                                    <AvatarFallback className="rounded-md bg-brand text-xs font-semibold text-white">
                                         {(m.user?.name ?? "?").charAt(0).toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>
@@ -472,7 +472,7 @@ const Editor = ({
                                 className={cn(
                                     "flex-1 py-2 text-xs font-semibold transition-colors",
                                     activeTab === "format"
-                                        ? "text-orange-ink border-b-2 border-[#ff5018] bg-[#ff5018]/5"
+                                        ? "text-orange-ink border-b-2 border-brand bg-brand/5"
                                         : "text-ink/60 hover:text-ink"
                                 )}
                             >
@@ -487,7 +487,7 @@ const Editor = ({
                                 className={cn(
                                     "flex-1 py-2 text-xs font-semibold transition-colors flex items-center justify-center gap-1",
                                     activeTab === "ai"
-                                        ? "text-orange-ink border-b-2 border-[#ff5018] bg-[#ff5018]/5"
+                                        ? "text-orange-ink border-b-2 border-brand bg-brand/5"
                                         : "text-ink/60 hover:text-ink"
                                 )}
                             >
@@ -514,7 +514,7 @@ const Editor = ({
                                               className={cn(
                                                   "size-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0",
                                                   selectedSlashItem === i
-                                                      ? "bg-[#ff5018] text-white"
+                                                      ? "bg-brand text-white"
                                                       : "bg-cream text-plum"
                                               )}
                                           >
@@ -544,7 +544,7 @@ const Editor = ({
                                               className={cn(
                                                   "size-8 rounded-lg flex items-center justify-center text-sm shrink-0",
                                                   selectedSlashItem === i
-                                                      ? "bg-[#ff5018] text-white"
+                                                      ? "bg-brand text-white"
                                                       : "bg-cream"
                                               )}
                                           >
@@ -580,7 +580,7 @@ const Editor = ({
                     {isAiLoading && (
                         <div className="absolute inset-0 bg-white/80 dark:bg-[#1a0f15]/80 flex items-center justify-center z-50 rounded">
                             <div className="flex items-center gap-2">
-                                <Loader2 className="size-4 animate-spin text-[#ff5018]" />
+                                <Loader2 className="size-4 animate-spin text-brand" />
                                 <span className="text-xs text-muted-foreground font-medium">
                                     AI is writing...
                                 </span>
@@ -632,8 +632,8 @@ const Editor = ({
                                         <XIcon className="size-3" aria-hidden="true" />
                                     </button>
                                 </Hint>
-                                <div className="size-10 rounded-lg bg-[#ff5018]/10 flex items-center justify-center shrink-0">
-                                    <FileText className="size-5 text-[#ff5018]" />
+                                <div className="size-10 rounded-lg bg-brand/10 flex items-center justify-center shrink-0">
+                                    <FileText className="size-5 text-brand" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium truncate">
@@ -778,7 +778,7 @@ const Editor = ({
                                     Cancel
                                 </Button>
                                 <Button
-                                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white"
+                                    className="bg-brand hover:bg-brand-hover text-white"
                                     disabled={disabled || isEmpty}
                                     onClick={() =>
                                         onSubmit({
@@ -810,7 +810,7 @@ const Editor = ({
                                     "ml-auto rounded-lg",
                                     isEmpty
                                         ? "bg-cream hover:bg-cream text-ink/40"
-                                        : "bg-[#ff5018] hover:bg-[#e6430f] text-white cursor-pointer"
+                                        : "bg-brand hover:bg-brand-hover text-white cursor-pointer"
                                 )}
                             >
                                 <MdSend className="size-4" aria-hidden="true" />

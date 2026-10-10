@@ -72,7 +72,7 @@ function Tile({
         <div
             className={cn(
                 "group relative min-h-0 min-w-0 overflow-hidden rounded-2xl bg-[#2a1420] ring-2 transition-shadow",
-                speaking && !isScreen ? "ring-[#ff5018] shadow-[0_0_0_4px_rgba(255,80,24,0.18)]" : "ring-white/5",
+                speaking && !isScreen ? "ring-brand shadow-[0_0_0_4px_rgba(255,80,24,0.18)]" : "ring-white/5",
                 className
             )}
             onDoubleClick={onPin}
@@ -106,7 +106,7 @@ function Tile({
                 <div className="flex min-w-0 items-center gap-1.5 rounded-lg bg-black/55 px-2 py-1 text-xs text-white backdrop-blur">
                     {!isScreen && (micMuted
                         ? <MicOff className="size-3.5 shrink-0 text-red-400" />
-                        : <Mic className={cn("size-3.5 shrink-0", speaking ? "text-[#ff5018]" : "text-white/80")} />)}
+                        : <Mic className={cn("size-3.5 shrink-0", speaking ? "text-brand" : "text-white/80")} />)}
                     {isScreen && <MonitorUp className="size-3.5 shrink-0 text-white/80" />}
                     <span className="truncate">
                         {isScreen ? `${name}'s screen` : name}{p.isLocal && !isScreen ? " (You)" : ""}
@@ -230,7 +230,7 @@ function PersonRow({
     return (
         <div className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-white/5">
             <div
-                className={cn("flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white ring-2", speaking ? "ring-[#ff5018]" : "ring-transparent")}
+                className={cn("flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white ring-2", speaking ? "ring-brand" : "ring-transparent")}
                 style={{ backgroundColor: colorFor(p.identity) }}
             >
                 {initials(name)}
@@ -362,7 +362,7 @@ function SidePanel({
                                         {mine ? "You" : m.from?.name || m.from?.identity} ·{" "}
                                         {new Date(m.timestamp).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                                     </span>
-                                    <span className={cn("max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm", mine ? "bg-[#ff5018] text-white" : "bg-white/10 text-white")}>
+                                    <span className={cn("max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm", mine ? "bg-brand text-white" : "bg-white/10 text-white")}>
                                         {m.message}
                                     </span>
                                 </div>
@@ -379,13 +379,13 @@ function SidePanel({
                             onChange={(e) => setDraft(e.target.value)}
                             maxLength={1000}
                             placeholder="Message everyone"
-                            className="h-10 min-w-0 flex-1 rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/40 focus:border-[#ff5018] focus:outline-none"
+                            className="h-10 min-w-0 flex-1 rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/40 focus:border-brand focus:outline-none"
                         />
                         <button
                             type="submit"
                             aria-label="Send message"
                             disabled={isSending || !draft.trim()}
-                            className="flex size-10 items-center justify-center rounded-xl bg-[#ff5018] text-white transition-opacity disabled:opacity-40"
+                            className="flex size-10 items-center justify-center rounded-xl bg-brand text-white transition-opacity disabled:opacity-40"
                         >
                             <Send className="size-4" />
                         </button>
@@ -412,7 +412,7 @@ function ControlBar({
     const cam = useTrackToggle({ source: Track.Source.Camera })
     const screen = useTrackToggle({ source: Track.Source.ScreenShare })
 
-    const on = "!bg-[#ff5018] hover:!bg-[#e6430f]"
+    const on = "!bg-brand hover:!bg-brand-hover"
     const divider = <div className="mx-0.5 hidden h-8 w-px bg-white/15 sm:block" />
 
     return (
@@ -571,7 +571,7 @@ export function MeetingStage({ roomName, title, startedAt, status, errorMessage,
                         </span>
                     )}
                     {status === "starting" && (
-                        <span className="flex items-center gap-1.5 rounded-full bg-[#ff5018]/15 px-2.5 py-1 text-[#ff8a63]">
+                        <span className="flex items-center gap-1.5 rounded-full bg-brand/15 px-2.5 py-1 text-[#ff8a63]">
                             <Loader2 className="size-3 animate-spin" /> Starting transcript
                         </span>
                     )}

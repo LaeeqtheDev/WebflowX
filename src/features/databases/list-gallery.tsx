@@ -57,7 +57,7 @@ export const GalleryView = ({ view, rows, ctx, onAdd }: ViewProps) => {
           <div className={cn("grid gap-3", grid)}>
             {s.rows.map((r) => <Card key={r._id} row={r} props={props} ctx={ctx} className={cn(size === "lg" ? "min-h-40" : size === "sm" ? "min-h-20" : "min-h-28")} onClick={() => ctx.openRow(r._id)} />)}
             <button type="button" onClick={() => onAdd(gp && s.group ? { [gp.id]: valueForGroup(gp, s.group.key) } : undefined)}
-              className="flex min-h-20 items-center justify-center gap-1.5 rounded-lg border border-dashed border-plum/20 text-sm text-ink/55 hover:border-[#ff5018]/50 hover:text-ink">
+              className="flex min-h-20 items-center justify-center gap-1.5 rounded-lg border border-dashed border-plum/20 text-sm text-ink/55 hover:border-brand/50 hover:text-ink">
               <Plus className="size-4" /> New
             </button>
           </div>

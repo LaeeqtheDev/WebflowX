@@ -92,7 +92,7 @@ export const QuickSwitcher = () => {
                         <CommandItem key={m._id} value={`person ${m.user.name ?? ""} ${m.user.email ?? ""}`} onSelect={() => go(`/member/${m._id}`)}>
                             <Avatar className="size-5 rounded-md">
                                 <AvatarImage className="rounded-md" src={m.user.image} alt="" />
-                                <AvatarFallback className="rounded-md bg-[#ff5018] text-white text-[10px]">
+                                <AvatarFallback className="rounded-md bg-brand text-white text-[10px]">
                                     {(m.user.name ?? "?").charAt(0).toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>

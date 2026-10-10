@@ -122,7 +122,7 @@ export const EditProfileModal = ({ open, setOpen, user }: Props) => {
               checked={emailNotifs}
               onChange={(e) => setEmailNotifs(e.target.checked)}
               disabled={saving}
-              className="mt-1 size-4 accent-[#ff5018]"
+              className="mt-1 size-4 accent-brand"
             />
             <span className="flex flex-col">
               <span className="text-sm font-medium text-ink">Email notifications</span>
@@ -132,7 +132,7 @@ export const EditProfileModal = ({ open, setOpen, user }: Props) => {
 
           <DialogFooter>
             <Button type="button" variant="outline" disabled={saving} onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={saving || uploading} className="bg-[#ff5018] hover:bg-[#e6430f] text-white">
+            <Button type="submit" disabled={saving || uploading} className="bg-brand hover:bg-brand-hover text-white">
               {saving ? "Saving…" : "Save changes"}
             </Button>
           </DialogFooter>

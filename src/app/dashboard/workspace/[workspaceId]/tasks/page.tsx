@@ -125,15 +125,15 @@ export default function TasksPage() {
                     <div className="flex items-center gap-3">
                         <h1 className="tracking-tight text-[17px] font-semibold text-ink">Tasks</h1>
                         {activeSprint && (
-                            <span className="inline-flex items-center rounded-md bg-[#ff5018]/10 text-orange-ink px-2 py-0.5 text-[11px] font-medium">
+                            <span className="inline-flex items-center rounded-md bg-brand/10 text-orange-ink px-2 py-0.5 text-[11px] font-medium">
                                 <Zap className="size-3 mr-1" /> {activeSprint.name}
                             </span>
                         )}
                         <div className="flex items-center border border-plum/15 rounded-lg overflow-hidden bg-surface">
-                            <button aria-label="Board view" type="button" aria-pressed={view === "board"} onClick={() => setView("board")} className={cn("p-1.5 transition-colors", view === "board" ? "bg-[#ff5018] text-white" : "text-ink/60 hover:bg-cream-deep")}>
+                            <button aria-label="Board view" type="button" aria-pressed={view === "board"} onClick={() => setView("board")} className={cn("p-1.5 transition-colors", view === "board" ? "bg-brand text-white" : "text-ink/60 hover:bg-cream-deep")}>
                                 <LayoutGrid className="size-4" />
                             </button>
-                            <button aria-label="List view" type="button" aria-pressed={view === "list"} onClick={() => setView("list")} className={cn("p-1.5 transition-colors", view === "list" ? "bg-[#ff5018] text-white" : "text-ink/60 hover:bg-cream-deep")}>
+                            <button aria-label="List view" type="button" aria-pressed={view === "list"} onClick={() => setView("list")} className={cn("p-1.5 transition-colors", view === "list" ? "bg-brand text-white" : "text-ink/60 hover:bg-cream-deep")}>
                                 <List className="size-4" />
                             </button>
                         </div>
@@ -143,7 +143,7 @@ export default function TasksPage() {
                         {totalTasks > 0 && (
                             <div className="flex items-center gap-2">
                                 <div className="w-24 bg-plum/10 rounded-full h-1.5">
-                                    <div className="bg-[#ff5018] h-1.5 rounded-full transition-all" style={{ width: `${overallPct}%` }} />
+                                    <div className="bg-brand h-1.5 rounded-full transition-all" style={{ width: `${overallPct}%` }} />
                                 </div>
                                 <span className="text-xs font-medium text-ink/60">{overallPct}%</span>
                             </div>
@@ -162,7 +162,7 @@ export default function TasksPage() {
                                 {safeMembers.map(m => <SelectItem key={m._id} value={m._id}>{m.user.name ?? "Unknown"}</SelectItem>)}
                             </SelectContent>
                         </Select>
-                        <Button onClick={() => setShowCreate(true)} className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 max-md:h-10 text-xs rounded-lg font-semibold">
+                        <Button onClick={() => setShowCreate(true)} className="bg-brand hover:bg-brand-hover text-white h-8 max-md:h-10 text-xs rounded-lg font-semibold">
                             <Plus className="size-4 mr-1" /> New Task
                         </Button>
                     </div>
@@ -170,7 +170,7 @@ export default function TasksPage() {
 
                 {isLoading ? (
                     <div className="flex-1 flex items-center justify-center">
-                        <Loader className="size-6 animate-spin text-[#ff5018]" />
+                        <Loader className="size-6 animate-spin text-brand" />
                     </div>
                 ) : view === "board" ? (
                     <div className="flex-1 overflow-x-auto px-4 md:px-6 py-5 bg-cream-soft">

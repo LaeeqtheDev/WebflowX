@@ -29,8 +29,8 @@ export default function DmsPage() {
             {/* Header */}
             <div className="flex items-center justify-between px-4 md:px-6 h-14 border-b bg-surface shrink-0 shadow-none">
                 <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
-                        <MessageSquare className="size-4 text-[#ff5018]" />
+                    <div className="size-8 rounded-lg bg-brand/10 flex items-center justify-center">
+                        <MessageSquare className="size-4 text-brand" />
                     </div>
                     <div>
                         <h1 className="tracking-tight text-[17px] font-semibold leading-none text-ink">Direct Messages</h1>
@@ -54,7 +54,7 @@ export default function DmsPage() {
                         placeholder="Search conversations..."
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        className="pl-8 h-9 text-sm rounded-lg border-plum/15 focus-visible:ring-[#ff5018]/40 focus-visible:border-[#ff5018]"
+                        className="pl-8 h-9 text-sm rounded-lg border-plum/15 focus-visible:ring-brand/40 focus-visible:border-brand"
                     />
                 </div>
             </div>
@@ -63,12 +63,12 @@ export default function DmsPage() {
             <div className="flex-1 overflow-y-auto bg-surface">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full">
-                        <Loader className="size-5 animate-spin text-[#ff5018]" />
+                        <Loader className="size-5 animate-spin text-brand" />
                     </div>
                 ) : !filtered || filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full gap-4 text-ink/60">
-                        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
-                            <MessageSquare className="size-6 text-[#ff5018]" />
+                        <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
+                            <MessageSquare className="size-6 text-brand" />
                         </div>
                         <div className="text-center">
                             <p className="font-semibold tracking-tight text-ink">No conversations yet</p>
@@ -96,7 +96,7 @@ export default function DmsPage() {
                                     }))}
                                     className={cn(
                                         "flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-cream transition-colors",
-                                        hasUnread && "bg-[#ff5018]/5"
+                                        hasUnread && "bg-brand/5"
                                     )}
                                 >
                                     {/* Avatar */}
@@ -141,7 +141,7 @@ export default function DmsPage() {
                                                 {lastMessageText}
                                             </p>
                                             {hasUnread && (
-                                                <span className="text-[10px] bg-[#ff5018] text-white px-1.5 py-0.5 rounded-md font-semibold shrink-0 min-w-4.5 text-center">
+                                                <span className="text-[10px] bg-brand text-white px-1.5 py-0.5 rounded-md font-semibold shrink-0 min-w-4.5 text-center">
                                                     {(conv.unreadCount ?? 0) > 9 ? "9+" : conv.unreadCount}
                                                 </span>
                                             )}

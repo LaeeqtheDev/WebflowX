@@ -19,7 +19,7 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 const PRIORITY_DOT: Record<string, string> = {
     urgent: "bg-rose-500",
-    high: "bg-[#ff5018]",
+    high: "bg-brand",
     medium: "bg-amber-500",
     low: "bg-sky-500",
 }
@@ -142,7 +142,7 @@ const CalendarPage = () => {
         <div className="flex h-full min-h-0 flex-col bg-surface">
             <SubscribeDialog open={subscribeOpen} setOpen={setSubscribeOpen} />
             <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-plum/12 px-4 py-2.5">
-                <CalendarDays className="size-5 text-[#ff5018]" />
+                <CalendarDays className="size-5 text-brand" />
                 <h1 className="mr-2 text-lg font-semibold tracking-tight text-ink">Calendar</h1>
                 <div className="flex items-center gap-1">
                     <Button type="button" variant="outline" size="icon" className="size-9" aria-label="Previous month" onClick={() => setMonth((m) => addMonths(m, -1))}><ChevronLeft className="size-4" /></Button>
@@ -152,7 +152,7 @@ const CalendarPage = () => {
                 <span className="min-w-32 text-[15px] font-semibold text-ink">{format(month, "MMMM yyyy")}</span>
                 <div className="ml-auto flex flex-wrap items-center gap-2">
                     <label className="flex cursor-pointer items-center gap-2 text-sm text-ink/75">
-                        <input type="checkbox" className="size-4 accent-[#ff5018]" checked={onlyMine} onChange={(e) => setOnlyMine(e.target.checked)} />
+                        <input type="checkbox" className="size-4 accent-brand" checked={onlyMine} onChange={(e) => setOnlyMine(e.target.checked)} />
                         Only my tasks
                     </label>
                     <Button type="button" variant="outline" size="sm" className="h-9" onClick={() => setSubscribeOpen(true)}>
@@ -185,17 +185,17 @@ const CalendarPage = () => {
                                     aria-selected={selected === key}
                                     onClick={() => setSelected(key)}
                                     className={cn(
-                                        "relative flex min-h-16 flex-col items-stretch gap-0.5 border-b border-r border-plum/10 p-1 text-left transition-colors hover:bg-cream focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70 md:min-h-24 md:p-1.5",
+                                        "relative flex min-h-16 flex-col items-stretch gap-0.5 border-b border-r border-plum/10 p-1 text-left transition-colors hover:bg-cream focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70 md:min-h-24 md:p-1.5",
                                         !inMonth && "bg-cream-soft/60 text-ink/40",
-                                        selected === key && "bg-[#ff5018]/[0.07]"
+                                        selected === key && "bg-brand/[0.07]"
                                     )}
                                 >
                                     {hasSprint && <span aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-[#381d2a]/30 dark:bg-white/25" />}
-                                    <span className={cn("flex size-6 items-center justify-center rounded-full text-xs font-medium", key === todayKey ? "bg-[#ff5018] text-white" : inMonth ? "text-ink" : "text-ink/40")}>{d}</span>
+                                    <span className={cn("flex size-6 items-center justify-center rounded-full text-xs font-medium", key === todayKey ? "bg-brand text-white" : inMonth ? "text-ink" : "text-ink/40")}>{d}</span>
                                     <span className="hidden flex-col gap-0.5 md:flex">
                                         {shown.map((i) => (
                                             <span key={i.id} className="flex items-center gap-1 truncate rounded px-1 py-0.5 text-[11px] leading-tight text-ink bg-cream-deep2/70">
-                                                {i.kind === "task" ? <span className={cn("size-1.5 shrink-0 rounded-full", PRIORITY_DOT[i.priority])} /> : <Video className="size-3 shrink-0 text-[#ff5018]" />}
+                                                {i.kind === "task" ? <span className={cn("size-1.5 shrink-0 rounded-full", PRIORITY_DOT[i.priority])} /> : <Video className="size-3 shrink-0 text-brand" />}
                                                 <span className={cn("truncate", i.kind === "task" && i.done && "line-through opacity-60")}>{i.title}</span>
                                             </span>
                                         ))}
@@ -204,7 +204,7 @@ const CalendarPage = () => {
                                     {/* phones: dots only */}
                                     <span className="flex flex-wrap gap-0.5 px-0.5 md:hidden" aria-hidden>
                                         {[...tasks, ...others].slice(0, 4).map((i) => (
-                                            <span key={i.id} className={cn("size-1.5 rounded-full", i.kind === "task" ? PRIORITY_DOT[i.priority] : "bg-[#ff5018]")} />
+                                            <span key={i.id} className={cn("size-1.5 rounded-full", i.kind === "task" ? PRIORITY_DOT[i.priority] : "bg-brand")} />
                                         ))}
                                     </span>
                                 </button>
@@ -225,8 +225,8 @@ const CalendarPage = () => {
                     <ul className="mt-3 flex flex-col gap-1.5">
                         {selectedItems.map((i) => (
                             <li key={i.id}>
-                                <button type="button" onClick={() => open(i)} className="flex w-full items-start gap-2 rounded-lg border border-plum/12 bg-surface px-3 py-2 text-left transition-colors hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70">
-                                    {i.kind === "task" ? <span className={cn("mt-1.5 size-2 shrink-0 rounded-full", PRIORITY_DOT[i.priority])} /> : <Video className="mt-0.5 size-4 shrink-0 text-[#ff5018]" />}
+                                <button type="button" onClick={() => open(i)} className="flex w-full items-start gap-2 rounded-lg border border-plum/12 bg-surface px-3 py-2 text-left transition-colors hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70">
+                                    {i.kind === "task" ? <span className={cn("mt-1.5 size-2 shrink-0 rounded-full", PRIORITY_DOT[i.priority])} /> : <Video className="mt-0.5 size-4 shrink-0 text-brand" />}
                                     <span className="min-w-0">
                                         <span className={cn("block truncate text-sm font-medium text-ink", i.kind === "task" && i.done && "line-through opacity-60")}>{i.title}</span>
                                         <span className="block text-xs text-ink/60">

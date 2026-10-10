@@ -2,16 +2,20 @@
 import { useEffect } from "react"
 import { useQuery } from "convex/react"
 import { api } from "../../../convex/_generated/api"
-import { applyTheme, readStoredTheme, isThemePref, storeTheme, type ThemePref } from "@/lib/theme"
+import {
+    applyLook, applyTheme, clearAppearance, DEFAULT_LOOK, isLook, isThemePref, readStoredLook, readStoredTheme, storeLook, storeTheme,
+    type ThemePref,
+} from "@/lib/theme"
 
-// Mounted inside the signed-in app. The theme is a per-member setting saved on the account, so it
+// Mounted inside the signed-in app. Appearance is a per-member setting saved on the account, so it
 // follows each person to any device. localStorage only makes the first paint instant.
 export const ThemeSync = () => {
     const me = useQuery(api.users.current)
     const saved: ThemePref | undefined = me && isThemePref(me.theme) ? me.theme : undefined
+    const savedLook = me && isLook(me.look) ? me.look : undefined
 
     useEffect(() => {
-        if (me === undefined) return // still loading: the boot script already applied the stored theme
+        if (me === undefined) return // still loading: the boot script already applied the stored look
         const pref = saved ?? readStoredTheme()
         storeTheme(pref)
         applyTheme(pref)
@@ -22,8 +26,15 @@ export const ThemeSync = () => {
         return () => mq.removeEventListener("change", onChange)
     }, [me, saved])
 
-    // leaving the app (landing page, sign-in) is always light
-    useEffect(() => () => { document.documentElement.classList.remove("dark") }, [])
+    useEffect(() => {
+        if (me === undefined) return
+        const look = savedLook ?? (me ? readStoredLook() : DEFAULT_LOOK)
+        storeLook(look)
+        applyLook(look)
+    }, [me, savedLook])
+
+    // leaving the app (landing page, sign-in) goes back to the plain light look
+    useEffect(() => () => clearAppearance(), [])
 
     return null
 }

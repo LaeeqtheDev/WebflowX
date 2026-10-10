@@ -39,7 +39,7 @@ export const Reactions =({data, onChange}:ReactionsProps)=>{
                 aria-pressed={reaction.memberIds.includes(currentMemberId)}
                 onClick={()=> onChange(reaction.value)}
                 className={cn("h-6 px-2 rounded-full bg-cream border border-plum/10 text-ink flex items-center gap-x-1 transition-colors hover:border-plum/25",
-                reaction.memberIds.includes(currentMemberId) && "bg-[#ff5018]/10 border-[#ff5018]/40 text-ink"
+                reaction.memberIds.includes(currentMemberId) && "bg-brand/10 border-brand/40 text-ink"
                 )}>
                     {reaction.value}
 

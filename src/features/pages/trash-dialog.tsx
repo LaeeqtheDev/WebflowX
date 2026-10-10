@@ -33,7 +33,7 @@ export const TrashDialog = ({ open, onOpenChange }: { open: boolean; onOpenChang
         </DialogHeader>
         <div className="max-h-[60dvh] overflow-y-auto p-3">
           {items === undefined ? (
-            <div className="flex justify-center py-8"><Loader className="size-5 animate-spin text-[#ff5018]" /></div>
+            <div className="flex justify-center py-8"><Loader className="size-5 animate-spin text-brand" /></div>
           ) : items.length === 0 ? (
             <p className="py-10 text-center text-sm text-ink/60">The trash is empty.</p>
           ) : items.map((d) => (

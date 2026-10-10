@@ -128,7 +128,7 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
                 </Button>
             </div>
             <div className="flex flex-col gap-y-2 h-full items-center justify-center">
-                <Loader className="size-5 animate-spin text-[#ff5018] "/>
+                <Loader className="size-5 animate-spin text-brand "/>
                
             </div>
         </div>
@@ -147,7 +147,7 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
                 </Button>
             </div>
             <div className="flex flex-col gap-y-2 h-full items-center justify-center">
-                <AlertTriangle className="size-5 text-[#ff5018] "/>
+                <AlertTriangle className="size-5 text-brand "/>
                 <p className="text-sm text-ink/60">Message not found</p>
             </div>
         </div>

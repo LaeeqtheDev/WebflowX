@@ -97,7 +97,7 @@ const UsageCard = ({ label, icon: Icon, current, limit }: {
     return (
         <div className="rounded-2xl border border-plum/10 bg-surface p-4 shadow-[0_1px_0_rgba(56,29,42,0.04)]">
             <div className="flex items-center justify-between">
-                <span className="flex size-9 items-center justify-center rounded-xl bg-[#ff5018]/10 text-[#ff5018]">
+                <span className="flex size-9 items-center justify-center rounded-xl bg-brand/10 text-brand">
                     <Icon className="size-5" />
                 </span>
                 <span className={cn(
@@ -114,7 +114,7 @@ const UsageCard = ({ label, icon: Icon, current, limit }: {
             </p>
             <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-plum/8">
                 <div
-                    className={cn("h-full rounded-full transition-all", atLimit ? "bg-red-500" : near ? "bg-amber-500" : "bg-[#ff5018]")}
+                    className={cn("h-full rounded-full transition-all", atLimit ? "bg-red-500" : near ? "bg-amber-500" : "bg-brand")}
                     style={{ width: unlimited ? "8%" : `${Math.max(pct, current > 0 ? 6 : 0)}%` }}
                 />
             </div>
@@ -158,7 +158,7 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
             <DialogContent className="[&>button]:text-white [&>button]:opacity-80 [&>button]:hover:opacity-100 [&>button]:top-5 [&>button]:right-5 flex h-[min(760px,90vh)] w-[min(1040px,calc(100vw-2rem))] max-w-none flex-col gap-0 overflow-hidden rounded-3xl border-plum/10 bg-cream-soft p-0 sm:max-w-none">
                 <DialogHeader className="shrink-0 bg-[#381d2a] px-7 pb-0 pt-6 text-white">
                     <DialogTitle className="flex items-center gap-4">
-                        <span className="flex size-11 items-center justify-center rounded-2xl bg-[#ff5018] text-white">
+                        <span className="flex size-11 items-center justify-center rounded-2xl bg-brand text-white">
                             <CurrentIcon className="size-6" />
                         </span>
                         <span className="flex flex-col">
@@ -189,7 +189,7 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                 <div className="flex-1 overflow-y-auto p-7">
                     {isLoading ? (
                         <div className="flex h-56 items-center justify-center">
-                            <Loader className="size-6 animate-spin text-[#ff5018]" />
+                            <Loader className="size-6 animate-spin text-brand" />
                         </div>
                     ) : activeTab === "usage" ? (
                         <div className="flex flex-col gap-6">
@@ -216,7 +216,7 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                     </div>
                                     <button
                                         onClick={() => setActiveTab("plans")}
-                                        className="flex shrink-0 items-center gap-1.5 rounded-full bg-[#ff5018] px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#e6430f]"
+                                        className="flex shrink-0 items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-brand-hover"
                                     >
                                         View plans <ArrowRight16Regular />
                                     </button>
@@ -235,14 +235,14 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                         <div role="group" aria-label="Billing period" className="flex rounded-full border border-plum/12 bg-surface p-0.5 text-xs font-semibold">
                                             {(["month", "year"] as const).map((i) => (
                                                 <button key={i} type="button" onClick={() => setInterval(i)}
-                                                    className={cn("rounded-full px-3 py-1 transition-colors", interval === i ? "bg-[#ff5018] text-white" : "text-plum/65 hover:text-ink")}>
+                                                    className={cn("rounded-full px-3 py-1 transition-colors", interval === i ? "bg-brand text-white" : "text-plum/65 hover:text-ink")}>
                                                     {i === "month" ? "Monthly" : "Yearly · 2 months free"}
                                                 </button>
                                             ))}
                                         </div>
                                     )}
                                     <span className="flex items-center gap-1.5 text-xs text-plum/60">
-                                        <ShieldCheckmark20Regular className="size-4 text-[#ff5018]" />
+                                        <ShieldCheckmark20Regular className="size-4 text-brand" />
                                         {billing?.canTrial && billing.trialDays > 0 && !hasSub ? `${billing.trialDays}-day free trial, no card needed` : "Secure payments by Stripe"}
                                     </span>
                                 </div>
@@ -255,7 +255,7 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                 </div>
                             )}
                             {billing && billing.status === "trialing" && !billing.cancelAtPeriodEnd && (
-                                <div className="rounded-xl border border-[#ff5018]/25 bg-[#ff5018]/8 px-4 py-3 text-sm text-ink">
+                                <div className="rounded-xl border border-brand/25 bg-brand/8 px-4 py-3 text-sm text-ink">
                                     You&apos;re on a free trial of {current.label} until <strong>{dateOf(billing.trialEnd ?? billing.periodEnd)}</strong>. Add a card before then to keep it.
                                 </div>
                             )}
@@ -277,18 +277,18 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                                 plan.popular
                                                     ? "border-plum dark:border-white/20 bg-[#381d2a] text-white shadow-[0_20px_40px_-24px_rgba(56,29,42,0.9)]"
                                                     : "border-plum/10 bg-surface text-ink",
-                                                isCurrent && !plan.popular && "border-[#ff5018] ring-2 ring-[#ff5018]/20"
+                                                isCurrent && !plan.popular && "border-brand ring-2 ring-brand/20"
                                             )}
                                         >
                                             <div className="flex items-center justify-between">
                                                 <span className={cn(
                                                     "flex size-9 items-center justify-center rounded-xl",
-                                                    plan.popular ? "bg-[#ff5018] text-white" : "bg-[#ff5018]/10 text-[#ff5018]"
+                                                    plan.popular ? "bg-brand text-white" : "bg-brand/10 text-brand"
                                                 )}>
                                                     <Icon className="size-5" />
                                                 </span>
                                                 {isCurrent ? (
-                                                    <span className="rounded-full bg-[#ff5018] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">Current</span>
+                                                    <span className="rounded-full bg-brand px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">Current</span>
                                                 ) : plan.popular ? (
                                                     <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">Most popular</span>
                                                 ) : null}
@@ -304,7 +304,7 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                             {(() => {
                                                 const base = "mt-4 flex items-center justify-center rounded-full py-2 text-xs font-semibold transition-colors disabled:opacity-60"
                                                 const tone = plan.popular
-                                                    ? "bg-[#ff5018] text-white hover:bg-[#e6430f]"
+                                                    ? "bg-brand text-white hover:bg-brand-hover"
                                                     : "bg-[#381d2a] dark:bg-[#4a2838] text-white hover:bg-[#2a1420] dark:hover:bg-[#5a3246]"
                                                 const spin = <Loader className="size-4 animate-spin" />
                                                 if (isCurrent && !hasSub) {
@@ -346,7 +346,7 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                             <ul className={cn("mt-5 flex flex-col gap-2 border-t pt-5", plan.popular ? "border-white/15" : "border-plum/10")}>
                                                 {plan.features.map((f) => (
                                                     <li key={f} className="flex items-start gap-2 text-xs">
-                                                        <Checkmark16Filled className="mt-px size-3.5 shrink-0 text-[#ff5018]" />
+                                                        <Checkmark16Filled className="mt-px size-3.5 shrink-0 text-brand" />
                                                         <span className={plan.popular ? "text-white/85" : "text-plum/80"}>{f}</span>
                                                     </li>
                                                 ))}

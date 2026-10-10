@@ -80,7 +80,7 @@ export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces
   const [reveal, setReveal] = useState<{ kind: Kind; token?: string; secret?: string } | null>(null)
   const [doc, setDoc] = useState(0)
 
-  if (data === undefined) return <Loader className="mx-auto my-8 size-5 animate-spin text-[#ff5018]" />
+  if (data === undefined) return <Loader className="mx-auto my-8 size-5 animate-spin text-brand" />
 
   const site = data.site || "https://YOUR-DEPLOYMENT.convex.site"
   const hookUrl = (kind: Kind, token: string) => `${site}/hooks/${kind === "github" ? "github" : "incoming"}/${token}`
@@ -118,7 +118,7 @@ export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces
     { title: "Incoming webhook", code: `curl -X POST ${site}/hooks/incoming/TOKEN \\\n  -H "Content-Type: application/json" \\\n  -d '{"text":"Deploy finished"}'` },
   ]
 
-  const field = "h-10 w-full rounded-lg border border-plum/15 bg-surface px-3 text-sm text-ink outline-none focus:border-[#ff5018] focus:ring-2 focus:ring-[#ff5018]/20"
+  const field = "h-10 w-full rounded-lg border border-plum/15 bg-surface px-3 text-sm text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
 
   return (
     <div className="flex flex-col gap-5">
@@ -128,7 +128,7 @@ export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces
       </p>
 
       {reveal && (
-        <div className="flex flex-col gap-3 rounded-2xl border-2 border-[#ff5018]/50 bg-[#ff5018]/5 p-4">
+        <div className="flex flex-col gap-3 rounded-2xl border-2 border-brand/50 bg-brand/5 p-4">
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm font-semibold text-ink">Created. Copy it now, we can&apos;t show it again.</p>
             <Button size="sm" variant="outline" className="h-8 rounded-lg" onClick={() => setReveal(null)}>Done</Button>
@@ -161,7 +161,7 @@ export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces
         return (
           <section key={sec.kind} className="overflow-hidden rounded-2xl border border-plum/12 bg-surface">
             <div className="flex flex-wrap items-start gap-x-4 gap-y-3 p-4 sm:p-5">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#381d2a] text-[#ff5018]">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#381d2a] text-brand">
                 <Icon className="size-5" />
               </span>
               <div className="min-w-0 flex-1 basis-56">
@@ -169,14 +169,14 @@ export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces
                   <h3 className="text-[15px] font-semibold tracking-tight text-ink">{sec.title}</h3>
                   <span className={cn(
                     "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                    allowed ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-[#ff5018]/10 text-[#ff5018]"
+                    allowed ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-brand/10 text-brand"
                   )}>
                     {!allowed && <Lock className="size-3" />}{allowed ? "Included" : `Upgrade · ${sec.plan}`}
                   </span>
                 </div>
                 <p className="mt-1 text-[13px] leading-relaxed text-ink/65">{sec.blurb}</p>
               </div>
-              <Button size="sm" className="h-9 shrink-0 gap-1.5 rounded-lg bg-[#ff5018] text-white hover:bg-[#e6430f]"
+              <Button size="sm" className="h-9 shrink-0 gap-1.5 rounded-lg bg-brand text-white hover:bg-brand-hover"
                 onClick={() => { setAdding(adding === sec.kind ? null : sec.kind); setReveal(null) }}>
                 <Plus className="size-4" /> {sec.button}
               </Button>
@@ -211,7 +211,7 @@ export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces
                           return (
                             <button key={ev.id} type="button" onClick={() => setEvents(on ? events.filter((x) => x !== ev.id) : [...events, ev.id])}
                               className={cn("flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition",
-                                on ? "border-[#ff5018] bg-[#ff5018]/10 text-[#ff5018]" : "border-plum/15 bg-surface text-ink/65 hover:text-ink")}>
+                                on ? "border-brand bg-brand/10 text-brand" : "border-plum/15 bg-surface text-ink/65 hover:text-ink")}>
                               {on && <Check className="size-3.5" />}{ev.label}
                             </button>
                           )
@@ -219,13 +219,13 @@ export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces
                       </div>
                     </div>
                     <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-plum/10 bg-surface p-3">
-                      <input type="checkbox" className="mt-0.5 size-4 accent-[#ff5018]" checked={includePrivate} onChange={(e) => setIncludePrivate(e.target.checked)} />
+                      <input type="checkbox" className="mt-0.5 size-4 accent-brand" checked={includePrivate} onChange={(e) => setIncludePrivate(e.target.checked)} />
                       <span className="text-xs text-ink/70"><b className="text-ink">Include locked channels.</b> Off by default, so messages from private channels never leave WebflowX unless you turn this on.</span>
                     </label>
                   </>
                 )}
                 <div className="flex gap-2 pt-1">
-                  <Button size="sm" className="h-9 rounded-lg bg-[#ff5018] px-4 text-white hover:bg-[#e6430f]" disabled={busy || !name.trim()} onClick={submit}>
+                  <Button size="sm" className="h-9 rounded-lg bg-brand px-4 text-white hover:bg-brand-hover" disabled={busy || !name.trim()} onClick={submit}>
                     {busy ? <Loader className="size-4 animate-spin" /> : "Create"}
                   </Button>
                   <Button size="sm" variant="outline" className="h-9 rounded-lg" onClick={() => setAdding(null)}>Cancel</Button>

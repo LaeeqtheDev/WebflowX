@@ -20,16 +20,16 @@ const SavedPage = () => {
     return (
         <div className="flex h-full min-h-0 flex-col bg-surface">
             <div className="flex h-14 shrink-0 items-center gap-2 border-b border-plum/12 px-4">
-                <Bookmark className="size-5 text-[#ff5018]" />
+                <Bookmark className="size-5 text-brand" />
                 <h1 className="text-lg font-semibold tracking-tight text-ink">Saved</h1>
                 <span className="text-sm text-ink/50">only you can see this</span>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto">
                 {items === undefined ? (
-                    <div className="flex h-full items-center justify-center"><Loader className="size-6 animate-spin text-[#ff5018]" /></div>
+                    <div className="flex h-full items-center justify-center"><Loader className="size-6 animate-spin text-brand" /></div>
                 ) : items.length === 0 ? (
                     <div className="mx-auto flex max-w-sm flex-col items-center gap-3 px-6 py-20 text-center">
-                        <div className="flex size-14 items-center justify-center rounded-2xl bg-[#ff5018]/10 text-[#ff5018]"><Bookmark className="size-6" /></div>
+                        <div className="flex size-14 items-center justify-center rounded-2xl bg-brand/10 text-brand"><Bookmark className="size-6" /></div>
                         <p className="font-semibold tracking-tight text-ink">Nothing saved yet</p>
                         <p className="text-sm text-ink/60">Hover a message and choose the bookmark to keep it here for later.</p>
                     </div>

@@ -133,8 +133,8 @@ export const MessageList = ({
             // wait a tick so layout (images, grouping) settles before scrolling
             timers.push(setTimeout(() => {
                 el.scrollIntoView({ behavior: "smooth", block: "center" });
-                el.classList.add("bg-[#ff5018]/15", "transition-colors", "duration-700");
-                timers.push(setTimeout(() => el.classList.remove("bg-[#ff5018]/15"), 3000));
+                el.classList.add("bg-brand/15", "transition-colors", "duration-700");
+                timers.push(setTimeout(() => el.classList.remove("bg-brand/15"), 3000));
             }, 150));
         }
         return () => { /* timers intentionally left to finish the highlight */ };

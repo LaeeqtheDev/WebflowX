@@ -9,11 +9,11 @@ import { PROP_ICON } from "./cells"
 import { groupable, kindOf, opsFor, TITLE } from "./engine"
 import type { DbCtx } from "./ctx"
 
-const sel = "h-8 rounded-md border border-input bg-transparent px-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/50"
+const sel = "h-8 rounded-md border border-input bg-transparent px-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
 
 const ToolbarButton = ({ active, count, icon: Icon, label }: { active?: boolean; count?: number; icon: React.ComponentType<{ className?: string }>; label: string }) => (
-  <Button type="button" variant="ghost" size="sm" className={cn("h-8 gap-1.5 px-2 text-xs", active && "bg-[#ff5018]/10 text-[#c73a0a]")}>
-    <Icon className="size-3.5" /> <span className="hidden sm:inline">{label}</span>{!!count && <span className="rounded-full bg-[#ff5018] px-1.5 text-[10px] font-semibold text-white">{count}</span>}
+  <Button type="button" variant="ghost" size="sm" className={cn("h-8 gap-1.5 px-2 text-xs", active && "bg-brand/10 text-[#c73a0a]")}>
+    <Icon className="size-3.5" /> <span className="hidden sm:inline">{label}</span>{!!count && <span className="rounded-full bg-brand px-1.5 text-[10px] font-semibold text-white">{count}</span>}
   </Button>
 )
 
@@ -149,7 +149,7 @@ export const PropertiesControl = ({ view, ctx, onChange, onAdd }: { view: View; 
             return (
               <button key={p.id} type="button" onClick={() => toggle(p.id)} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-cream-deep">
                 <Icon className="size-3.5 text-ink/55" /><span className="flex-1 truncate">{p.name}</span>
-                {hidden.has(p.id) ? <EyeOff className="size-3.5 text-ink/40" /> : <Eye className="size-3.5 text-[#ff5018]" />}
+                {hidden.has(p.id) ? <EyeOff className="size-3.5 text-ink/40" /> : <Eye className="size-3.5 text-brand" />}
               </button>
             )
           })}

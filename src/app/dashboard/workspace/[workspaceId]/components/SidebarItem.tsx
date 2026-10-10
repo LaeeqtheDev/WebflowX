@@ -23,7 +23,7 @@ const sidebarItemVariants = cva(
 
 // Orange marker on the left edge of the page you're on
 const ActiveMark = () => (
-    <span aria-hidden className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-[#ff5018]" />
+    <span aria-hidden className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-brand" />
 )
 
 interface SidebarItemProps {

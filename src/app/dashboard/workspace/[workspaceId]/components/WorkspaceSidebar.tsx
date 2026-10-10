@@ -39,7 +39,7 @@ export const WorkSpaceSidebar = () => {
     if (memberLoading || workspaceLoading) {
         return (
             <div className="flex flex-col bg-[#402633] dark:bg-[#2a1722] h-full items-center justify-center">
-                <Loader className="size-7 animate-spin text-[#ff5018]" />
+                <Loader className="size-7 animate-spin text-brand" />
             </div>
         )
     }
@@ -47,7 +47,7 @@ export const WorkSpaceSidebar = () => {
     if (!member || !workspace) {
         return (
             <div className="flex flex-col bg-[#402633] dark:bg-[#2a1722] h-full items-center justify-center">
-                <AlertTriangle className="size-7 text-[#ff5018]" />
+                <AlertTriangle className="size-7 text-brand" />
                 <p className="text-white text-sm">Workspace Not Found</p>
             </div>
         )

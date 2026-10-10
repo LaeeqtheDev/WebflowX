@@ -31,7 +31,7 @@ export const EmojiPicker = ({
               type="button"
               aria-label={`Use ${e}`}
               onClick={() => { onChange(e); setOpen(false) }}
-              className={`flex size-8 items-center justify-center rounded-md text-lg hover:bg-cream-deep ${value === e ? "bg-[#ff5018]/15" : ""}`}
+              className={`flex size-8 items-center justify-center rounded-md text-lg hover:bg-cream-deep ${value === e ? "bg-brand/15" : ""}`}
             >
               {e}
             </button>

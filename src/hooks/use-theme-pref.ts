@@ -2,7 +2,7 @@
 import { useCallback, useSyncExternalStore } from "react"
 import { useMutation } from "convex/react"
 import { api } from "../../convex/_generated/api"
-import { applyTheme, storeTheme, type ThemePref } from "@/lib/theme"
+import { applyLook, applyTheme, storeLook, storeTheme, type Look, type ThemePref } from "@/lib/theme"
 
 // Is the app currently dark? (watches the class on <html>, so charts, emoji picker and toasts can follow it)
 export const useIsDark = () =>
@@ -24,6 +24,19 @@ export const useSetTheme = () => {
             storeTheme(pref)
             applyTheme(pref)
             await save({ theme: pref })
+        },
+        [save]
+    )
+}
+
+// Same for accent colour, density, text size and reduced motion.
+export const useSetLook = () => {
+    const save = useMutation(api.users.setLook)
+    return useCallback(
+        async (look: Look) => {
+            storeLook(look)
+            applyLook(look)
+            await save(look)
         },
         [save]
     )

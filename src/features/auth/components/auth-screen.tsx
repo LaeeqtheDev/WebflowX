@@ -75,7 +75,7 @@ export const AuthShell = ({ title, body, children }: { title: string; body: stri
                         </div>
                         <div className="a-card absolute left-40 top-24 w-64 rounded-2xl bg-surface p-4 text-ink shadow-2xl">
                             <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-ink/45">
-                                <CheckSquare className="size-3.5 text-[#ff5018]" /> In progress
+                                <CheckSquare className="size-3.5 text-brand" /> In progress
                             </p>
                             <p className="mt-2 text-sm font-semibold">Deploy checkout fix</p>
                             <p className="mt-2 flex items-center gap-2 text-xs text-ink/60">
@@ -83,7 +83,7 @@ export const AuthShell = ({ title, body, children }: { title: string; body: stri
                                 Dev Patel
                             </p>
                         </div>
-                        <div className="a-card absolute left-6 top-[196px] w-72 rounded-2xl bg-[#ff5018] p-4 text-white shadow-2xl">
+                        <div className="a-card absolute left-6 top-[196px] w-72 rounded-2xl bg-brand p-4 text-white shadow-2xl">
                             <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-white/85">
                                 <Sparkles className="size-3.5" /> AI summary
                             </p>

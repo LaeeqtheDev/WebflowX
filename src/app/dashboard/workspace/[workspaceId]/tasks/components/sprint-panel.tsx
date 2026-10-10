@@ -53,7 +53,7 @@ export const SprintPanel = ({
         <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between mb-1">
                 <p className="text-[13px] font-semibold tracking-tight text-ink">Sprints</p>
-                <button aria-label="Add sprint" type="button" onClick={() => setShowForm(v => !v)} className="size-6 rounded-md flex items-center justify-center text-[#ff5018] hover:bg-[#ff5018]/10 transition-colors">
+                <button aria-label="Add sprint" type="button" onClick={() => setShowForm(v => !v)} className="size-6 rounded-md flex items-center justify-center text-brand hover:bg-brand/10 transition-colors">
                     <Plus className="size-3.5" />
                 </button>
             </div>
@@ -63,7 +63,7 @@ export const SprintPanel = ({
                     <Input aria-label="Sprint name" placeholder="Sprint name" value={name} onChange={e => setName(e.target.value)} className="h-8 text-xs rounded-lg bg-surface" />
                     <Input aria-label="Sprint start date" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="h-8 text-xs rounded-lg bg-surface" />
                     <Input aria-label="Sprint end date" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="h-8 text-xs rounded-lg bg-surface" />
-                    <Button onClick={handleCreate} disabled={isPending} size="sm" className="h-8 text-xs rounded-lg font-semibold bg-[#ff5018] hover:bg-[#e6430f] text-white">
+                    <Button onClick={handleCreate} disabled={isPending} size="sm" className="h-8 text-xs rounded-lg font-semibold bg-brand hover:bg-brand-hover text-white">
                         Create
                     </Button>
                 </div>
@@ -71,13 +71,13 @@ export const SprintPanel = ({
 
             <button
                 onClick={() => onSprintFilter("all")}
-                className={cn("text-[13px] text-left px-2.5 py-1.5 rounded-lg transition-colors", sprintFilter === "all" ? "bg-[#ff5018]/10 text-orange-ink font-semibold" : "text-ink/70 hover:bg-cream-deep")}
+                className={cn("text-[13px] text-left px-2.5 py-1.5 rounded-lg transition-colors", sprintFilter === "all" ? "bg-brand/10 text-orange-ink font-semibold" : "text-ink/70 hover:bg-cream-deep")}
             >
                 All Tasks
             </button>
             <button
                 onClick={() => onSprintFilter("none")}
-                className={cn("text-[13px] text-left px-2.5 py-1.5 rounded-lg transition-colors", sprintFilter === "none" ? "bg-[#ff5018]/10 text-orange-ink font-semibold" : "text-ink/70 hover:bg-cream-deep")}
+                className={cn("text-[13px] text-left px-2.5 py-1.5 rounded-lg transition-colors", sprintFilter === "none" ? "bg-brand/10 text-orange-ink font-semibold" : "text-ink/70 hover:bg-cream-deep")}
             >
                 No Sprint
             </button>
@@ -93,14 +93,14 @@ export const SprintPanel = ({
                             onClick={() => onSprintFilter(sprint._id)}
                             className={cn(
                                 "w-full text-xs text-left px-2.5 py-2 rounded-lg border-l-2 transition-colors flex flex-col gap-1.5",
-                                sprint.status === "active" ? "border-l-[#ff5018]" : "border-l-transparent",
-                                sprintFilter === sprint._id ? "bg-[#ff5018]/10 text-orange-ink" : "text-ink hover:bg-cream-deep"
+                                sprint.status === "active" ? "border-l-brand" : "border-l-transparent",
+                                sprintFilter === sprint._id ? "bg-brand/10 text-orange-ink" : "text-ink hover:bg-cream-deep"
                             )}
                         >
                             <div className="flex items-center justify-between">
                                 <span className="font-semibold tracking-tight truncate">{sprint.name}</span>
                                 <span className={cn("rounded-md px-1.5 py-0.5 text-[10px] font-medium ml-1 shrink-0", {
-                                    "bg-[#ff5018]/10 text-orange-ink": sprint.status === "active",
+                                    "bg-brand/10 text-orange-ink": sprint.status === "active",
                                     "bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300": sprint.status === "completed",
                                     "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300": sprint.status === "planned",
                                 })}>
@@ -109,7 +109,7 @@ export const SprintPanel = ({
                             </div>
                             {total > 0 && (
                                 <div className="w-full bg-plum/10 rounded-full h-1">
-                                    <div className="bg-[#ff5018] h-1 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                                    <div className="bg-brand h-1 rounded-full transition-all" style={{ width: `${pct}%` }} />
                                 </div>
                             )}
                             <span className="text-[11px] text-ink/60">{done}/{total} done</span>

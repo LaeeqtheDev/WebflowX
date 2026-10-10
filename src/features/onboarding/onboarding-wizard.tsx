@@ -40,7 +40,7 @@ const SUGGESTED: Record<UseCase, string[]> = {
 }
 
 const primary =
-    "h-12 w-full cursor-pointer rounded-xl bg-[#ff5018] text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_rgba(255,80,24,0.8)] hover:bg-[#e6430f]"
+    "h-12 w-full cursor-pointer rounded-xl bg-brand text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_rgba(255,80,24,0.8)] hover:bg-brand-hover"
 
 const Progress = ({ step }: { step: number }) => {
     const t = useT()
@@ -52,7 +52,7 @@ const Progress = ({ step }: { step: number }) => {
         </div>
         <div className="mt-2 flex gap-1.5" role="progressbar" aria-valuemin={1} aria-valuemax={TOTAL} aria-valuenow={step}>
             {Array.from({ length: TOTAL }).map((_, i) => (
-                <span key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i < step ? "bg-[#ff5018]" : "bg-ink/10"}`} />
+                <span key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i < step ? "bg-brand" : "bg-ink/10"}`} />
             ))}
         </div>
     </div>
@@ -218,9 +218,9 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
                                     type="button"
                                     onClick={() => toggleUse(key)}
                                     aria-pressed={on}
-                                    className={`cursor-pointer rounded-xl border p-4 text-left transition-colors ${on ? "border-[#ff5018] bg-[#ff5018]/10" : "border-ink/15 bg-surface hover:border-ink/30"}`}
+                                    className={`cursor-pointer rounded-xl border p-4 text-left transition-colors ${on ? "border-brand bg-brand/10" : "border-ink/15 bg-surface hover:border-ink/30"}`}
                                 >
-                                    <Icon className={`size-5 ${on ? "text-[#ff5018]" : "text-ink/55"}`} />
+                                    <Icon className={`size-5 ${on ? "text-brand" : "text-ink/55"}`} />
                                     <p className="mt-3 text-sm font-semibold text-ink">{t(`wiz.use.${key}` as Key)}</p>
                                     <p className="mt-0.5 text-xs text-ink/60">{t(`wiz.use.${key}.hint` as Key)}</p>
                                 </button>
@@ -233,7 +233,7 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
                             const on = tplKey === o.key
                             return (
                                 <button key={o.key ?? "none"} type="button" aria-pressed={on} onClick={() => pickTemplate(o.key)}
-                                    className={`cursor-pointer rounded-full border px-3.5 py-2 text-sm transition-colors ${on ? "border-[#ff5018] bg-[#ff5018]/10 text-ink" : "border-ink/15 bg-surface text-ink/70 hover:border-ink/30"}`}>
+                                    className={`cursor-pointer rounded-full border px-3.5 py-2 text-sm transition-colors ${on ? "border-brand bg-brand/10 text-ink" : "border-ink/15 bg-surface text-ink/70 hover:border-ink/30"}`}>
                                     {o.label}
                                 </button>
                             )
@@ -279,9 +279,9 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
                                     type="button"
                                     aria-pressed={on}
                                     onClick={() => setChosen(on ? picked.filter((x) => x !== c) : [...picked, c].slice(0, 4))}
-                                    className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-3.5 py-2 text-sm transition-colors ${on ? "border-[#ff5018] bg-[#ff5018]/10 text-ink" : "border-ink/15 bg-surface text-ink/70 hover:border-ink/30"}`}
+                                    className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-3.5 py-2 text-sm transition-colors ${on ? "border-brand bg-brand/10 text-ink" : "border-ink/15 bg-surface text-ink/70 hover:border-ink/30"}`}
                                 >
-                                    <Hash className="size-3.5" />{c}{on && <Check className="size-3.5 text-[#ff5018]" />}
+                                    <Hash className="size-3.5" />{c}{on && <Check className="size-3.5 text-brand" />}
                                 </button>
                             )
                         })}
@@ -299,7 +299,7 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
                     <Heading title={t("wiz.s4.h")} text={t("wiz.s4.t")} />
                     <div className="mt-6 flex items-center gap-2 rounded-xl border border-ink/15 bg-surface p-2 pl-4">
                         <span className="min-w-0 flex-1 truncate text-sm text-ink/80">{link || t("wiz.preparing")}</span>
-                        <Button type="button" onClick={copyLink} disabled={!link} className="h-10 shrink-0 rounded-lg bg-[#ff5018] text-white hover:bg-[#e6430f]">
+                        <Button type="button" onClick={copyLink} disabled={!link} className="h-10 shrink-0 rounded-lg bg-brand text-white hover:bg-brand-hover">
                             {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
                             <span className="ml-2">{copied ? t("wiz.copied") : t("wiz.copy")}</span>
                         </Button>

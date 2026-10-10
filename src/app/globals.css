@@ -11,6 +11,8 @@ body,
 
 @theme inline {
   /* WebflowX brand surfaces: these flip in dark mode (see :root and .dark below) */
+  --color-brand: var(--wfx-accent);
+  --color-brand-hover: var(--wfx-accent-hover);
   --color-cream: var(--wfx-cream);
   --color-cream-soft: var(--wfx-cream-soft);
   --color-cream-deep: var(--wfx-cream-deep);
@@ -70,6 +72,8 @@ body,
   --wfx-plum: #381d2a;
   --wfx-orange-ink: #c2370d;
   --wfx-orange-ink-hover: #a82d0a;
+  --wfx-accent: #ff5018;
+  --wfx-accent-hover: #e6430f;
   color-scheme: light;
   --radius: 0.75rem;
   --background: #fbf9f7;
@@ -78,7 +82,7 @@ body,
   --card-foreground: #1b1017;
   --popover: #ffffff;
   --popover-foreground: #1b1017;
-  --primary: #ff5018;
+  --primary: var(--wfx-accent);
   --primary-foreground: #ffffff;
   --secondary: #f1ebe7;
   --secondary-foreground: #381d2a;
@@ -89,20 +93,20 @@ body,
   --destructive: oklch(0.577 0.245 27.325);
   --border: #e8dfda;
   --input: #e2d8d2;
-  --ring: #ff5018;
-  --chart-1: #ff5018;
+  --ring: var(--wfx-accent);
+  --chart-1: var(--wfx-accent);
   --chart-2: #2f7d6b;
   --chart-3: #381d2a;
   --chart-4: #c0561f;
   --chart-5: #7b3f61;
   --sidebar: #402633;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #ff5018;
+  --sidebar-primary: var(--wfx-accent);
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #4d3040;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #4d3040;
-  --sidebar-ring: #ff5018;
+  --sidebar-ring: var(--wfx-accent);
 }
 
 /* Dark mode: a deep plum-black with warm light text. It only applies inside the signed-in app
@@ -125,7 +129,7 @@ body,
   --card-foreground: #f4ece7;
   --popover: #241620;
   --popover-foreground: #f4ece7;
-  --primary: #ff5018;
+  --primary: var(--wfx-accent);
   --primary-foreground: #ffffff;
   --secondary: #2e1d28;
   --secondary-foreground: #f4ece7;
@@ -136,20 +140,20 @@ body,
   --destructive: #ff6b6b;
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.14);
-  --ring: #ff5018;
-  --chart-1: #ff5018;
+  --ring: var(--wfx-accent);
+  --chart-1: var(--wfx-accent);
   --chart-2: #4fc3a1;
   --chart-3: #f0dce6;
   --chart-4: #ff8a63;
   --chart-5: #c58ab0;
   --sidebar: #2a1722;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #ff5018;
+  --sidebar-primary: var(--wfx-accent);
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #3a2330;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #ff5018;
+  --sidebar-ring: var(--wfx-accent);
 }
 
 @layer base {
@@ -200,10 +204,10 @@ body,
 .ql-toolbar button:hover .ql-fill { fill: #381d2a !important; }
 
 .ql-toolbar button.ql-active {
-  background-color: rgba(255, 80, 24, 0.14) !important;
+  background-color: color-mix(in srgb, var(--wfx-accent) 14%, transparent) !important;
 }
-.ql-toolbar button.ql-active .ql-stroke { stroke: #ff5018 !important; }
-.ql-toolbar button.ql-active .ql-fill { fill: #ff5018 !important; }
+.ql-toolbar button.ql-active .ql-stroke { stroke: var(--wfx-accent) !important; }
+.ql-toolbar button.ql-active .ql-fill { fill: var(--wfx-accent) !important; }
 
 .ql-toolbar button svg { transition: stroke 0.15s ease, fill 0.15s ease; }
 
@@ -222,8 +226,8 @@ body,
   font-size: 14px !important;
 }
 
-.ql-editor a { color: #c2370d !important; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255, 80, 24, 0.4); }
-.ql-editor a:hover { text-decoration-color: #ff5018; }
+.ql-editor a { color: var(--wfx-orange-ink) !important; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--wfx-accent) 40%, transparent); }
+.ql-editor a:hover { text-decoration-color: var(--wfx-accent); }
 
 .ql-editor code,
 .ql-renderer code {
@@ -248,8 +252,8 @@ body,
 
 .ql-editor blockquote,
 .ql-renderer blockquote {
-  border-left: 3px solid #ff5018 !important;
-  background: rgba(255, 80, 24, 0.05);
+  border-left: 3px solid var(--wfx-accent) !important;
+  background: color-mix(in srgb, var(--wfx-accent) 5%, transparent);
   border-radius: 0 8px 8px 0;
   padding: 4px 12px !important;
   margin: 6px 0 !important;
@@ -273,77 +277,77 @@ body,
 .ql-editor::selection,
 .ProseMirror ::selection,
 .ProseMirror::selection {
-  background: rgba(255, 80, 24, 0.22);
+  background: color-mix(in srgb, var(--wfx-accent) 22%, transparent);
   color: inherit;
 }
 
 .messages-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #ff5018 transparent;
+  scrollbar-color: var(--wfx-accent) transparent;
 }
 
-.ProseMirror { outline: none; color: #1b1017; line-height: 1.7; caret-color: #ff5018; }
+.ProseMirror { outline: none; color: #1b1017; line-height: 1.7; caret-color: var(--wfx-accent); }
 .ProseMirror h1 { font-size: 2.25rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; margin: 1.25rem 0 0.5rem; }
 .ProseMirror h2 { font-size: 1.65rem; font-weight: 700; line-height: 1.25; letter-spacing: -0.015em; margin: 1.1rem 0 0.5rem; }
 .ProseMirror h3 { font-size: 1.3rem; font-weight: 600; line-height: 1.35; margin: 0.9rem 0 0.4rem; }
 .ProseMirror ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
 .ProseMirror ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
-.ProseMirror li::marker { color: #ff5018; }
+.ProseMirror li::marker { color: var(--wfx-accent); }
 .ProseMirror li { margin: 0.25rem 0; }
 .ProseMirror p { margin: 0.5rem 0; }
 .ProseMirror strong { font-weight: 700; }
 .ProseMirror em { font-style: italic; }
 .ProseMirror u { text-decoration: underline; }
 .ProseMirror s { text-decoration: line-through; }
-.ProseMirror a { color: #c2370d; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255, 80, 24, 0.4); }
-.ProseMirror mark { background: rgba(255, 80, 24, 0.22); color: inherit; border-radius: 4px; padding: 0 3px; }
+.ProseMirror a { color: var(--wfx-orange-ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--wfx-accent) 40%, transparent); }
+.ProseMirror mark { background: color-mix(in srgb, var(--wfx-accent) 22%, transparent); color: inherit; border-radius: 4px; padding: 0 3px; }
 .ProseMirror code { background-color: #f7f2ee; color: #b8340b; border: 1px solid rgba(56, 29, 42, 0.1); border-radius: 6px; padding: 0.1em 0.35em; font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 0.85em; }
 .ProseMirror pre { background: #2a1420; color: #f7f2ee; border-radius: 12px; padding: 14px 16px; margin: 0.75rem 0; overflow-x: auto; }
 .ProseMirror pre code { background: none; border: none; color: inherit; padding: 0; }
-.ProseMirror blockquote { border-left: 3px solid #ff5018; background: rgba(255, 80, 24, 0.05); border-radius: 0 10px 10px 0; margin: 0.75rem 0; padding: 0.4rem 1rem; color: #381d2a; }
+.ProseMirror blockquote { border-left: 3px solid var(--wfx-accent); background: color-mix(in srgb, var(--wfx-accent) 5%, transparent); border-radius: 0 10px 10px 0; margin: 0.75rem 0; padding: 0.4rem 1rem; color: #381d2a; }
 .ProseMirror hr { border: none; border-top: 1px solid rgba(56, 29, 42, 0.15); margin: 1.5rem 0; }
 .ProseMirror table { border-collapse: separate; border-spacing: 0; width: 100%; margin: 1rem 0; border: 1px solid rgba(56, 29, 42, 0.14); border-radius: 12px; overflow: hidden; }
 .ProseMirror td, .ProseMirror th { border-right: 1px solid rgba(56, 29, 42, 0.1); border-bottom: 1px solid rgba(56, 29, 42, 0.1); padding: 8px 12px; text-align: left; }
 .ProseMirror th { background-color: #f7f2ee; font-weight: 600; }
-.ProseMirror .selectedCell { background: rgba(255, 80, 24, 0.12); }
+.ProseMirror .selectedCell { background: color-mix(in srgb, var(--wfx-accent) 12%, transparent); }
 .ProseMirror img { max-width: 100%; border-radius: 10px; margin: 0.5rem 0; }
-.ProseMirror img.ProseMirror-selectednode { outline: 2px solid #ff5018; outline-offset: 2px; }
+.ProseMirror img.ProseMirror-selectednode { outline: 2px solid var(--wfx-accent); outline-offset: 2px; }
 .ProseMirror ul[data-type="taskList"] { list-style: none; padding-left: 0.25rem; }
 .ProseMirror ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.6rem; }
 .ProseMirror ul[data-type="taskList"] li > label { margin-top: 0.35rem; user-select: none; }
-.ProseMirror ul[data-type="taskList"] li > label input { accent-color: #ff5018; width: 1rem; height: 1rem; cursor: pointer; }
+.ProseMirror ul[data-type="taskList"] li > label input { accent-color: var(--wfx-accent); width: 1rem; height: 1rem; cursor: pointer; }
 .ProseMirror ul[data-type="taskList"] li > div { flex: 1; }
 .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div { text-decoration: line-through; color: rgba(27, 16, 23, 0.45); }
 .ProseMirror .collab-caret { position: relative; margin-left: -1px; margin-right: -1px; border-left: 2px solid; border-right: 0; word-break: normal; pointer-events: none; }
 .ProseMirror .collab-caret__label { position: absolute; top: -1.35em; left: -2px; font-size: 11px; font-weight: 600; line-height: 1; white-space: nowrap; color: #fff; padding: 2px 6px; border-radius: 4px 4px 4px 0; user-select: none; }
-.ql-editor span.mention, .ql-renderer span.mention, .ql-container .ql-editor span.mention { background: rgba(255, 80, 24, 0.14); color: #c2370d !important; font-weight: 600; border-radius: 5px; padding: 0 3px; }
+.ql-editor span.mention, .ql-renderer span.mention, .ql-container .ql-editor span.mention { background: color-mix(in srgb, var(--wfx-accent) 14%, transparent); color: var(--wfx-orange-ink) !important; font-weight: 600; border-radius: 5px; padding: 0 3px; }
 .ql-renderer span.mention { cursor: pointer; }
-.ql-renderer span.mention:hover { background: rgba(255, 80, 24, 0.26); text-decoration: underline; }
+.ql-renderer span.mention:hover { background: color-mix(in srgb, var(--wfx-accent) 26%, transparent); text-decoration: underline; }
 .ProseMirror p.is-editor-empty:first-child::before { color: rgba(56, 29, 42, 0.4); content: attr(data-placeholder); float: left; height: 0; pointer-events: none; }
 
 /* ---------- Dark mode overrides for the editors (only the signed-in app is ever dark) ---------- */
 .dark .ql-toolbar {
   border-bottom-color: rgba(255, 255, 255, 0.08) !important;
-  background-color: #20131b !important;
+  background-color: var(--wfx-cream-soft) !important;
 }
 .dark .ql-toolbar .ql-formats:not(:last-child) { border-right-color: rgba(255, 255, 255, 0.12) !important; }
 .dark .ql-toolbar button { color: #e6d6de !important; }
 .dark .ql-toolbar button .ql-stroke { stroke: #c9b6c0 !important; }
 .dark .ql-toolbar button .ql-fill { fill: #c9b6c0 !important; }
 .dark .ql-toolbar button:hover { background-color: rgba(255, 255, 255, 0.09) !important; }
-.dark .ql-toolbar button:hover .ql-stroke { stroke: #f4ece7 !important; }
-.dark .ql-toolbar button:hover .ql-fill { fill: #f4ece7 !important; }
-.dark .ql-toolbar button.ql-active { background-color: rgba(255, 80, 24, 0.24) !important; }
-.dark .ql-toolbar button.ql-active .ql-stroke { stroke: #ff8a63 !important; }
-.dark .ql-toolbar button.ql-active .ql-fill { fill: #ff8a63 !important; }
+.dark .ql-toolbar button:hover .ql-stroke { stroke: var(--wfx-ink) !important; }
+.dark .ql-toolbar button:hover .ql-fill { fill: var(--wfx-ink) !important; }
+.dark .ql-toolbar button.ql-active { background-color: color-mix(in srgb, var(--wfx-accent) 24%, transparent) !important; }
+.dark .ql-toolbar button.ql-active .ql-stroke { stroke: var(--wfx-orange-ink) !important; }
+.dark .ql-toolbar button.ql-active .ql-fill { fill: var(--wfx-orange-ink) !important; }
 
-.dark .ql-editor { color: #f4ece7 !important; }
+.dark .ql-editor { color: var(--wfx-ink) !important; }
 .dark .ql-editor a,
-.dark .ql-snow a { color: #ff8a63 !important; text-decoration-color: rgba(255, 138, 99, 0.5); }
+.dark .ql-snow a { color: var(--wfx-orange-ink) !important; text-decoration-color: rgba(255, 138, 99, 0.5); }
 .dark .ql-editor code,
 .dark .ql-renderer code,
 .dark .ql-snow .ql-editor code {
-  background: #2a1a24;
+  background: var(--wfx-cream-deep);
   color: #ffb596;
   border-color: rgba(255, 255, 255, 0.1);
 }
@@ -351,61 +355,61 @@ body,
 .dark .ql-renderer pre.ql-syntax,
 .dark .ql-snow .ql-editor pre.ql-syntax {
   background: #120a0f !important;
-  color: #f4ece7 !important;
+  color: var(--wfx-ink) !important;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 .dark .ql-editor blockquote,
-.dark .ql-renderer blockquote { background: rgba(255, 80, 24, 0.09); color: #e6d6de; }
+.dark .ql-renderer blockquote { background: color-mix(in srgb, var(--wfx-accent) 9%, transparent); color: #e6d6de; }
 .dark .ql-editor.ql-blank::before { color: #a8969f !important; }
 .dark .ql-editor span.mention,
 .dark .ql-renderer span.mention,
-.dark .ql-container .ql-editor span.mention { background: rgba(255, 80, 24, 0.22); color: #ff9d7c !important; }
-.dark .ql-renderer span.mention:hover { background: rgba(255, 80, 24, 0.36); }
+.dark .ql-container .ql-editor span.mention { background: color-mix(in srgb, var(--wfx-accent) 22%, transparent); color: var(--wfx-orange-ink) !important; }
+.dark .ql-renderer span.mention:hover { background: color-mix(in srgb, var(--wfx-accent) 36%, transparent); }
 .dark .ql-editor td { border-color: rgba(255, 255, 255, 0.2); }
 .dark .ql-editor li[data-list=checked] > .ql-ui,
-.dark .ql-editor li[data-list=unchecked] > .ql-ui { color: #b8a6b0; }
+.dark .ql-editor li[data-list=unchecked] > .ql-ui { color: var(--muted-foreground); }
 .dark .ql-editor ::selection,
 .dark .ql-editor::selection,
 .dark .ProseMirror ::selection,
-.dark .ProseMirror::selection { background: rgba(255, 80, 24, 0.38); }
+.dark .ProseMirror::selection { background: color-mix(in srgb, var(--wfx-accent) 38%, transparent); }
 
 /* Quill dropdown pickers and the link tooltip */
 .dark .ql-snow .ql-picker { color: #e6d6de; }
-.dark .ql-snow .ql-picker-options { background-color: #2a1a24; }
+.dark .ql-snow .ql-picker-options { background-color: var(--wfx-cream-deep); }
 .dark .ql-toolbar.ql-snow .ql-picker-options { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55); }
 .dark .ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-label,
 .dark .ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-options { border-color: rgba(255, 255, 255, 0.16); }
-.dark .ql-snow .ql-picker.ql-expanded .ql-picker-label { color: #f4ece7; }
-.dark .ql-snow .ql-picker.ql-expanded .ql-picker-label .ql-fill { fill: #f4ece7; }
-.dark .ql-snow .ql-picker.ql-expanded .ql-picker-label .ql-stroke { stroke: #f4ece7; }
+.dark .ql-snow .ql-picker.ql-expanded .ql-picker-label { color: var(--wfx-ink); }
+.dark .ql-snow .ql-picker.ql-expanded .ql-picker-label .ql-fill { fill: var(--wfx-ink); }
+.dark .ql-snow .ql-picker.ql-expanded .ql-picker-label .ql-stroke { stroke: var(--wfx-ink); }
 .dark .ql-snow .ql-tooltip {
-  background-color: #2a1a24;
+  background-color: var(--wfx-cream-deep);
   border-color: rgba(255, 255, 255, 0.16);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
-  color: #f4ece7;
+  color: var(--wfx-ink);
 }
 .dark .ql-snow .ql-tooltip input[type=text] {
-  background: #1a0f15;
+  background: var(--wfx-cream);
   border-color: rgba(255, 255, 255, 0.2);
-  color: #f4ece7;
+  color: var(--wfx-ink);
 }
 .dark .ql-snow .ql-tooltip a.ql-action::after,
 .dark .ql-snow .ql-tooltip a.ql-remove::before { border-color: rgba(255, 255, 255, 0.2); }
 
 /* Docs editor (ProseMirror) */
-.dark .ProseMirror { color: #f4ece7; }
-.dark .ProseMirror a { color: #ff8a63; text-decoration-color: rgba(255, 138, 99, 0.5); }
-.dark .ProseMirror mark { background: rgba(255, 80, 24, 0.34); }
-.dark .ProseMirror code { background-color: #2a1a24; color: #ffb596; border-color: rgba(255, 255, 255, 0.1); }
-.dark .ProseMirror pre { background: #120a0f; color: #f4ece7; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); }
+.dark .ProseMirror { color: var(--wfx-ink); }
+.dark .ProseMirror a { color: var(--wfx-orange-ink); text-decoration-color: rgba(255, 138, 99, 0.5); }
+.dark .ProseMirror mark { background: color-mix(in srgb, var(--wfx-accent) 34%, transparent); }
+.dark .ProseMirror code { background-color: var(--wfx-cream-deep); color: #ffb596; border-color: rgba(255, 255, 255, 0.1); }
+.dark .ProseMirror pre { background: #120a0f; color: var(--wfx-ink); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); }
 .dark .ProseMirror pre code { background: none; border: none; color: inherit; }
-.dark .ProseMirror blockquote { background: rgba(255, 80, 24, 0.09); color: #e6d6de; }
+.dark .ProseMirror blockquote { background: color-mix(in srgb, var(--wfx-accent) 9%, transparent); color: #e6d6de; }
 .dark .ProseMirror hr { border-top-color: rgba(255, 255, 255, 0.16); }
 .dark .ProseMirror table { border-color: rgba(255, 255, 255, 0.16); }
 .dark .ProseMirror td, .dark .ProseMirror th { border-right-color: rgba(255, 255, 255, 0.1); border-bottom-color: rgba(255, 255, 255, 0.1); }
-.dark .ProseMirror th { background-color: #2a1a24; }
-.dark .ProseMirror .selectedCell { background: rgba(255, 80, 24, 0.24); }
-.dark .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div { color: #b8a6b0; }
+.dark .ProseMirror th { background-color: var(--wfx-cream-deep); }
+.dark .ProseMirror .selectedCell { background: color-mix(in srgb, var(--wfx-accent) 24%, transparent); }
+.dark .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div { color: var(--muted-foreground); }
 .dark .ProseMirror p.is-editor-empty:first-child::before { color: #a8969f; }
 /* Text the author coloured pure black stays readable on the dark page */
 .dark .ProseMirror [style*="color: #000000"],
@@ -445,19 +449,19 @@ body,
 /* Brand scrollbars: thin orange thumb on a transparent track, everywhere in the app */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 80, 24, 0.6) transparent;
+  scrollbar-color: color-mix(in srgb, var(--wfx-accent) 60%, transparent) transparent;
 }
 *:hover {
-  scrollbar-color: #ff5018 transparent;
+  scrollbar-color: var(--wfx-accent) transparent;
 }
 
 .dark .ql-snow .ql-picker-item:hover,
-.dark .ql-snow .ql-picker-item.ql-selected { color: #ff8a63; }
+.dark .ql-snow .ql-picker-item.ql-selected { color: var(--wfx-orange-ink); }
 
 /* Native controls (selects, checkboxes, radios) follow the theme and use the brand orange. */
-input[type="checkbox"], input[type="radio"] { accent-color: #ff5018; }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--wfx-accent); }
 select, select option { background-color: var(--wfx-surface); color: var(--wfx-ink); }
-.dark select, .dark select option { background-color: #241620; color: #f4ece7; }
+.dark select, .dark select option { background-color: var(--wfx-surface); color: var(--wfx-ink); }
 
 /* The meeting stage draws its own avatar when a camera is off, so hide LiveKit's built-in placeholder icon */
 .lk-participant-placeholder { display: none !important; }
@@ -473,10 +477,10 @@ select, select option { background-color: var(--wfx-surface); color: var(--wfx-i
 .wfx-doc.ProseMirror ul, .wfx-doc.ProseMirror ol { padding-left: 1.6rem; margin: 0.4rem 0; }
 .wfx-doc.ProseMirror ul { list-style-type: none; }
 .wfx-doc.ProseMirror ul:not([data-type="taskList"]) > li { position: relative; }
-.wfx-doc.ProseMirror ul:not([data-type="taskList"]) > li::before { content: ""; position: absolute; left: -1.15rem; top: 0.82em; width: 6px; height: 6px; border-radius: 9999px; background: #ff5018; }
-.wfx-doc.ProseMirror ul:not([data-type="taskList"]) ul:not([data-type="taskList"]) > li::before { background: transparent; box-shadow: inset 0 0 0 1.5px #ff5018; }
+.wfx-doc.ProseMirror ul:not([data-type="taskList"]) > li::before { content: ""; position: absolute; left: -1.15rem; top: 0.82em; width: 6px; height: 6px; border-radius: 9999px; background: var(--wfx-accent); }
+.wfx-doc.ProseMirror ul:not([data-type="taskList"]) ul:not([data-type="taskList"]) > li::before { background: transparent; box-shadow: inset 0 0 0 1.5px var(--wfx-accent); }
 .wfx-doc.ProseMirror ol { list-style-type: decimal; }
-.wfx-doc.ProseMirror ol > li::marker { color: #ff5018; font-weight: 600; font-variant-numeric: tabular-nums; }
+.wfx-doc.ProseMirror ol > li::marker { color: var(--wfx-accent); font-weight: 600; font-variant-numeric: tabular-nums; }
 .wfx-doc.ProseMirror li { margin: 0.2rem 0; }
 .wfx-doc.ProseMirror li > p { margin: 0; }
 
@@ -485,14 +489,14 @@ select, select option { background-color: var(--wfx-surface); color: var(--wfx-i
 .wfx-doc.ProseMirror ul[data-type="taskList"] li { gap: 0.7rem; align-items: flex-start; }
 .wfx-doc.ProseMirror ul[data-type="taskList"] li > label { margin-top: 0.42rem; display: inline-flex; }
 .wfx-doc.ProseMirror ul[data-type="taskList"] li > label input { appearance: none; -webkit-appearance: none; width: 1.1rem; height: 1.1rem; border-radius: 6px; border: 1.75px solid color-mix(in srgb, currentColor 35%, transparent); background: transparent; display: grid; place-content: center; transition: background 0.12s, border-color 0.12s; margin: 0; }
-.wfx-doc.ProseMirror ul[data-type="taskList"] li > label input:hover { border-color: #ff5018; }
+.wfx-doc.ProseMirror ul[data-type="taskList"] li > label input:hover { border-color: var(--wfx-accent); }
 .wfx-doc.ProseMirror ul[data-type="taskList"] li > label input::after { content: ""; width: 0.28rem; height: 0.55rem; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px) scale(0); transition: transform 0.12s; }
-.wfx-doc.ProseMirror ul[data-type="taskList"] li > label input:checked { background: #ff5018; border-color: #ff5018; }
+.wfx-doc.ProseMirror ul[data-type="taskList"] li > label input:checked { background: var(--wfx-accent); border-color: var(--wfx-accent); }
 .wfx-doc.ProseMirror ul[data-type="taskList"] li > label input:checked::after { transform: rotate(45deg) translate(-1px, -1px) scale(1); }
 .wfx-doc.ProseMirror ul[data-type="taskList"] ul[data-type="taskList"] { padding-left: 0.25rem; }
 
 /* quotes, code, rules */
-.wfx-doc.ProseMirror blockquote { border-left: 3px solid #ff5018; background: transparent; border-radius: 0; padding: 0.15rem 0 0.15rem 1.1rem; margin: 1rem 0; font-size: 1.1em; font-style: italic; opacity: 0.88; }
+.wfx-doc.ProseMirror blockquote { border-left: 3px solid var(--wfx-accent); background: transparent; border-radius: 0; padding: 0.15rem 0 0.15rem 1.1rem; margin: 1rem 0; font-size: 1.1em; font-style: italic; opacity: 0.88; }
 .wfx-doc.ProseMirror hr { margin: 2rem auto; width: 100%; border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent); }
 .wfx-doc.ProseMirror pre { border-radius: 14px; padding: 16px 18px; font-size: 0.88em; line-height: 1.65; }
 
@@ -505,7 +509,7 @@ select, select option { background-color: var(--wfx-surface); color: var(--wfx-i
 .wfx-doc.ProseMirror tr > *:last-child { border-right: none; }
 
 /* callouts */
-.wfx-doc.ProseMirror div[data-type="callout"] { --tone: #ff5018; border-radius: 14px; padding: 0.85rem 1.1rem 0.85rem 1.2rem; margin: 1rem 0; border: 1px solid color-mix(in srgb, var(--tone) 28%, transparent); background: color-mix(in srgb, var(--tone) 8%, transparent); box-shadow: inset 3px 0 0 var(--tone); }
+.wfx-doc.ProseMirror div[data-type="callout"] { --tone: var(--wfx-accent); border-radius: 14px; padding: 0.85rem 1.1rem 0.85rem 1.2rem; margin: 1rem 0; border: 1px solid color-mix(in srgb, var(--tone) 28%, transparent); background: color-mix(in srgb, var(--tone) 8%, transparent); box-shadow: inset 3px 0 0 var(--tone); }
 .wfx-doc.ProseMirror div[data-type="callout"][data-tone="tip"] { --tone: #059669; }
 .wfx-doc.ProseMirror div[data-type="callout"][data-tone="warn"] { --tone: #d97706; }
 .wfx-doc.ProseMirror div[data-type="callout"] > :first-child { margin-top: 0; }
@@ -514,7 +518,98 @@ select, select option { background-color: var(--wfx-surface); color: var(--wfx-i
 .wfx-doc.ProseMirror p.is-editor-empty:first-child::before { font-size: 1rem; }
 
 /* Links to WebflowX pages in messages read as a small page chip */
-.ql-editor a[href*="/docs/"], .ql-renderer a[href*="/docs/"] { display: inline-flex; align-items: center; gap: 4px; background: rgba(255, 80, 24, 0.1); color: #c2370d; font-weight: 600; text-decoration: none; border-radius: 6px; padding: 0 7px; }
+.ql-editor a[href*="/docs/"], .ql-renderer a[href*="/docs/"] { display: inline-flex; align-items: center; gap: 4px; background: color-mix(in srgb, var(--wfx-accent) 10%, transparent); color: var(--wfx-orange-ink); font-weight: 600; text-decoration: none; border-radius: 6px; padding: 0 7px; }
 .ql-editor a[href*="/docs/"]::before, .ql-renderer a[href*="/docs/"]::before { content: ""; width: 12px; height: 12px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/%3E%3Cpath d='M14 2v4a2 2 0 0 0 2 2h4'/%3E%3C/svg%3E") center/contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/%3E%3Cpath d='M14 2v4a2 2 0 0 0 2 2h4'/%3E%3C/svg%3E") center/contain no-repeat; }
-.ql-renderer a[href*="/docs/"]:hover { background: rgba(255, 80, 24, 0.2); }
-.dark .ql-editor a[href*="/docs/"], .dark .ql-renderer a[href*="/docs/"] { color: #ff8a63; background: rgba(255, 80, 24, 0.16); }
+.ql-renderer a[href*="/docs/"]:hover { background: color-mix(in srgb, var(--wfx-accent) 20%, transparent); }
+.dark .ql-editor a[href*="/docs/"], .dark .ql-renderer a[href*="/docs/"] { color: var(--wfx-orange-ink); background: color-mix(in srgb, var(--wfx-accent) 16%, transparent); }
+
+/* ---------- Extra themes. html[data-theme] is set by lib/theme.ts; the dark ones also get the .dark class. ---------- */
+html[data-theme="snow"] {
+  color-scheme: light;
+  --wfx-cream: #f4f6f9; --wfx-cream-soft: #f9fafc; --wfx-cream-deep: #eceff4; --wfx-cream-deep2: #e3e8ef;
+  --wfx-surface: #ffffff; --wfx-ink: #10151c; --wfx-plum: #1e293b;
+  --background: #f4f6f9; --foreground: #10151c;
+  --card: #ffffff; --card-foreground: #10151c; --popover: #ffffff; --popover-foreground: #10151c;
+  --secondary: #e9edf3; --secondary-foreground: #10151c;
+  --muted: #eceff4; --muted-foreground: #64748b;
+  --accent: #e3e8ef; --accent-foreground: #10151c;
+  --border: #dde3ec; --input: #dde3ec;
+  --sidebar: #1e293b; --sidebar-accent: #2b3a50; --sidebar-border: #dde3ec;
+}
+html[data-theme="ash"] {
+  color-scheme: dark;
+  --wfx-cream: #232428; --wfx-cream-soft: #2b2d31; --wfx-cream-deep: #313338; --wfx-cream-deep2: #383a40;
+  --wfx-surface: #2b2d31; --wfx-ink: #f2f3f5; --wfx-plum: #e3e5e8;
+  --background: #232428; --foreground: #f2f3f5;
+  --card: #2b2d31; --card-foreground: #f2f3f5; --popover: #2b2d31; --popover-foreground: #f2f3f5;
+  --secondary: #35373c; --secondary-foreground: #f2f3f5;
+  --muted: #313338; --muted-foreground: #b5bac1;
+  --accent: #383a40; --accent-foreground: #f2f3f5;
+  --border: rgba(255,255,255,0.08); --input: rgba(255,255,255,0.08);
+  --sidebar: #1e1f22; --sidebar-accent: #2b2d31; --sidebar-border: rgba(255,255,255,0.08);
+}
+html[data-theme="onyx"] {
+  color-scheme: dark;
+  --wfx-cream: #000000; --wfx-cream-soft: #0a0a0a; --wfx-cream-deep: #141414; --wfx-cream-deep2: #1c1c1c;
+  --wfx-surface: #0f0f0f; --wfx-ink: #f5f5f5; --wfx-plum: #e8e8e8;
+  --background: #000000; --foreground: #f5f5f5;
+  --card: #0f0f0f; --card-foreground: #f5f5f5; --popover: #0f0f0f; --popover-foreground: #f5f5f5;
+  --secondary: #171717; --secondary-foreground: #f5f5f5;
+  --muted: #141414; --muted-foreground: #a3a3a3;
+  --accent: #1c1c1c; --accent-foreground: #f5f5f5;
+  --border: rgba(255,255,255,0.1); --input: rgba(255,255,255,0.1);
+  --sidebar: #000000; --sidebar-accent: #171717; --sidebar-border: rgba(255,255,255,0.1);
+}
+html[data-theme="midnight"] {
+  color-scheme: dark;
+  --wfx-cream: #0b1020; --wfx-cream-soft: #0f1629; --wfx-cream-deep: #172036; --wfx-cream-deep2: #1e2a45;
+  --wfx-surface: #121a2e; --wfx-ink: #e8edf7; --wfx-plum: #d6e0f5;
+  --background: #0b1020; --foreground: #e8edf7;
+  --card: #121a2e; --card-foreground: #e8edf7; --popover: #121a2e; --popover-foreground: #e8edf7;
+  --secondary: #1a2540; --secondary-foreground: #e8edf7;
+  --muted: #172036; --muted-foreground: #9aa8c4;
+  --accent: #1e2a45; --accent-foreground: #e8edf7;
+  --border: rgba(255,255,255,0.09); --input: rgba(255,255,255,0.09);
+  --sidebar: #0a0f1d; --sidebar-accent: #18213a; --sidebar-border: rgba(255,255,255,0.09);
+}
+html[data-theme="forest"] {
+  color-scheme: dark;
+  --wfx-cream: #0e1a14; --wfx-cream-soft: #12231b; --wfx-cream-deep: #1a3025; --wfx-cream-deep2: #213b2e;
+  --wfx-surface: #14261e; --wfx-ink: #e6f1ea; --wfx-plum: #d3e8dc;
+  --background: #0e1a14; --foreground: #e6f1ea;
+  --card: #14261e; --card-foreground: #e6f1ea; --popover: #14261e; --popover-foreground: #e6f1ea;
+  --secondary: #193026; --secondary-foreground: #e6f1ea;
+  --muted: #1a3025; --muted-foreground: #9db8a8;
+  --accent: #213b2e; --accent-foreground: #e6f1ea;
+  --border: rgba(255,255,255,0.09); --input: rgba(255,255,255,0.09);
+  --sidebar: #0b1510; --sidebar-accent: #1a2f24; --sidebar-border: rgba(255,255,255,0.09);
+}
+
+/* ---------- Accent colours. The default (ember) lives in :root; --wfx-orange-ink is the readable text version. ---------- */
+html[data-accent="ocean"] { --wfx-accent: #2563eb; --wfx-accent-hover: #1d4ed8; --wfx-orange-ink: #1d4ed8; --wfx-orange-ink-hover: #1e40af; }
+html.dark[data-accent="ocean"] { --wfx-orange-ink: #7aa7ff; --wfx-orange-ink-hover: #a3c0ff; }
+html[data-accent="violet"] { --wfx-accent: #7c3aed; --wfx-accent-hover: #6d28d9; --wfx-orange-ink: #6d28d9; --wfx-orange-ink-hover: #5b21b6; }
+html.dark[data-accent="violet"] { --wfx-orange-ink: #b794ff; --wfx-orange-ink-hover: #cbb0ff; }
+html[data-accent="emerald"] { --wfx-accent: #047857; --wfx-accent-hover: #065f46; --wfx-orange-ink: #047857; --wfx-orange-ink-hover: #065f46; }
+html.dark[data-accent="emerald"] { --wfx-orange-ink: #4fd1a5; --wfx-orange-ink-hover: #7fe0bf; }
+html[data-accent="rose"] { --wfx-accent: #e11d48; --wfx-accent-hover: #be123c; --wfx-orange-ink: #be123c; --wfx-orange-ink-hover: #9f1239; }
+html.dark[data-accent="rose"] { --wfx-orange-ink: #ff7a98; --wfx-orange-ink-hover: #ff9db3; }
+html[data-accent="teal"] { --wfx-accent: #0f766e; --wfx-accent-hover: #115e59; --wfx-orange-ink: #0f766e; --wfx-orange-ink-hover: #115e59; }
+html.dark[data-accent="teal"] { --wfx-orange-ink: #4fd1c5; --wfx-orange-ink-hover: #7fe0d6; }
+html[data-accent="gold"] { --wfx-accent: #b45309; --wfx-accent-hover: #92400e; --wfx-orange-ink: #92400e; --wfx-orange-ink-hover: #78350f; }
+html.dark[data-accent="gold"] { --wfx-orange-ink: #fbbf24; --wfx-orange-ink-hover: #fcd34d; }
+html[data-accent="slate"] { --wfx-accent: #475569; --wfx-accent-hover: #334155; --wfx-orange-ink: #334155; --wfx-orange-ink-hover: #1e293b; }
+html.dark[data-accent="slate"] { --wfx-orange-ink: #a5b4c8; --wfx-orange-ink-hover: #c3cedd; }
+
+/* ---------- Message density, and reduced motion ---------- */
+html[data-density="compact"] .wfx-msg { padding-top: 1px; padding-bottom: 1px; gap: 0; }
+html[data-density="compact"] .wfx-msg span[class*="size-9"] { width: 1.5rem !important; height: 1.5rem !important; }
+
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}

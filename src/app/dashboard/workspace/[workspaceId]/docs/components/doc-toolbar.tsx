@@ -42,7 +42,7 @@ const ToolbarButton = ({
         title={title}
         className={cn(
             "p-1.5 rounded-lg text-sm text-ink/70 transition-colors hover:bg-cream-deep hover:text-ink min-w-8 h-8 flex items-center justify-center",
-            active && "bg-[#ff5018]/10 text-orange-ink hover:bg-[#ff5018]/15 hover:text-orange-ink-hover",
+            active && "bg-brand/10 text-orange-ink hover:bg-brand/15 hover:text-orange-ink-hover",
             disabled && "opacity-40 cursor-not-allowed"
         )}
     >
@@ -275,7 +275,7 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                         title="Link"
                         className={cn(
                             "p-1.5 rounded-lg text-sm text-ink/70 transition-colors hover:bg-cream-deep hover:text-ink min-w-8 h-8 flex items-center justify-center",
-                            editor.isActive("link") && "bg-[#ff5018]/10 text-orange-ink"
+                            editor.isActive("link") && "bg-brand/10 text-orange-ink"
                         )}
                     >
                         <Link2 className="size-4" />
@@ -288,10 +288,10 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                             value={linkUrl}
                             onChange={(e) => setLinkUrl(e.target.value)}
                             placeholder="Paste a link…"
-                            className="h-9 rounded-lg border border-plum/15 px-3 text-sm focus:border-[#ff5018] focus:outline-none"
+                            className="h-9 rounded-lg border border-plum/15 px-3 text-sm focus:border-brand focus:outline-none"
                         />
                         <div className="flex gap-2">
-                            <button type="submit" className="h-8 flex-1 rounded-lg bg-[#ff5018] text-xs font-semibold text-white hover:bg-[#e6430f]">
+                            <button type="submit" className="h-8 flex-1 rounded-lg bg-brand text-xs font-semibold text-white hover:bg-brand-hover">
                                 {editor.isActive("link") ? "Update" : "Add link"}
                             </button>
                             {editor.isActive("link") && (
@@ -324,7 +324,7 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                     <button
                         className={cn(
                             "p-1.5 rounded-lg text-sm text-ink/70 transition-colors hover:bg-cream-deep hover:text-ink min-w-8 h-8 flex items-center justify-center gap-1",
-                            editor.isActive("table") && "bg-[#ff5018]/10 text-orange-ink hover:bg-[#ff5018]/15 hover:text-orange-ink-hover"
+                            editor.isActive("table") && "bg-brand/10 text-orange-ink hover:bg-brand/15 hover:text-orange-ink-hover"
                         )}
                         title="Table options"
                     >
@@ -436,7 +436,7 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                     <button
                         title="AI writing help (select text first)"
                         disabled={aiBusy}
-                        className="h-8 flex items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-orange-ink bg-[#ff5018]/10 hover:bg-[#ff5018]/15 disabled:opacity-60"
+                        className="h-8 flex items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-orange-ink bg-brand/10 hover:bg-brand/15 disabled:opacity-60"
                     >
                         {aiBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />} AI
                     </button>

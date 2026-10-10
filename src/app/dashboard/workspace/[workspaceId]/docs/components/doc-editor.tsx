@@ -218,7 +218,7 @@ const EditorInner = ({
                     ) : status === "disconnected" ? (
                         <><CloudOff className="size-3.5 text-red-500" /> Offline, changes will sync when you reconnect</>
                     ) : (
-                        <><Loader className="size-3 animate-spin text-[#ff5018]" /> {status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</>
+                        <><Loader className="size-3 animate-spin text-brand" /> {status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</>
                     )}
                 </span>
             </div>
@@ -320,7 +320,7 @@ export const DocEditor = ({
                     <p className="text-xs text-ink/60">Check your connection and try again.</p>
                     <button
                         onClick={() => { setFailed(false); setAttempt((a) => a + 1) }}
-                        className="rounded-lg bg-[#ff5018] px-4 py-2 text-xs font-semibold text-white hover:bg-[#e6430f]"
+                        className="rounded-lg bg-brand px-4 py-2 text-xs font-semibold text-white hover:bg-brand-hover"
                     >
                         Retry
                     </button>
@@ -333,7 +333,7 @@ export const DocEditor = ({
         return (
             <div className="flex items-center justify-center h-full bg-cream-soft">
                 <div className="flex flex-col items-center gap-2">
-                    <Loader className="size-5 animate-spin text-[#ff5018]" />
+                    <Loader className="size-5 animate-spin text-brand" />
                     <p className="text-xs text-ink/60">Connecting to document...</p>
                 </div>
             </div>

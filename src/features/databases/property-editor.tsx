@@ -18,7 +18,7 @@ import { FORMULA_FUNCTIONS } from "./formula"
 import { TITLE } from "./engine"
 import type { DbCtx } from "./ctx"
 
-const sel = "h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/50"
+const sel = "h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
 
 const ROLLUP_LABEL: Record<RollupFn, string> = {
   count: "Count all", countValues: "Count values", countUnique: "Count unique", countEmpty: "Count empty",
@@ -200,7 +200,7 @@ export const PropertyDialog = ({ open, onOpenChange, ctx, propId }: { open: bool
               <Textarea id="prop-formula" rows={4} value={draft.formula ?? ""} onChange={(e) => setDraft({ ...draft, formula: e.target.value })} className="font-mono text-sm" placeholder={'if(prop("Done"), "✅", dateBetween(prop("Due"), now(), "days"))'} />
               <p className="text-xs text-ink/60">Refer to another property with <code className="rounded bg-cream-deep px-1">prop(&quot;Name&quot;)</code>.</p>
               <div className="flex max-h-24 flex-wrap gap-1 overflow-y-auto">
-                {FORMULA_FUNCTIONS.map((f) => <button key={f} type="button" onClick={() => insertFn(f)} className="rounded bg-cream-deep px-1.5 py-0.5 font-mono text-[11px] hover:bg-[#ff5018]/15">{f}</button>)}
+                {FORMULA_FUNCTIONS.map((f) => <button key={f} type="button" onClick={() => insertFn(f)} className="rounded bg-cream-deep px-1.5 py-0.5 font-mono text-[11px] hover:bg-brand/15">{f}</button>)}
               </div>
             </div>
           )}
@@ -215,7 +215,7 @@ export const PropertyDialog = ({ open, onOpenChange, ctx, propId }: { open: bool
           ) : <span />}
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="button" disabled={busy} onClick={submit} className="bg-[#ff5018] text-white hover:bg-[#e6430f]">{busy && <Loader className="mr-1 size-4 animate-spin" />}{existing ? "Save" : "Add property"}</Button>
+            <Button type="button" disabled={busy} onClick={submit} className="bg-brand text-white hover:bg-brand-hover">{busy && <Loader className="mr-1 size-4 animate-spin" />}{existing ? "Save" : "Add property"}</Button>
           </div>
         </DialogFooter>
       </DialogContent>

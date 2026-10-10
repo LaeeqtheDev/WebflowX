@@ -34,10 +34,10 @@ export const BackupCodes = ({ codes, onDone, doneLabel = "I've saved them" }: { 
         <Button type="button" variant="outline" size="sm" className="rounded-lg" onClick={download}><Download className="mr-2 size-4" /> Download</Button>
       </div>
       <label className="flex items-center gap-2 text-sm text-ink">
-        <input type="checkbox" className="size-4 accent-[#ff5018]" checked={saved} onChange={(e) => setSaved(e.target.checked)} />
+        <input type="checkbox" className="size-4 accent-brand" checked={saved} onChange={(e) => setSaved(e.target.checked)} />
         I&apos;ve stored these codes
       </label>
-      <Button type="button" disabled={!saved} onClick={onDone} className="bg-[#ff5018] text-white hover:bg-[#e6430f]">{doneLabel}</Button>
+      <Button type="button" disabled={!saved} onClick={onDone} className="bg-brand text-white hover:bg-brand-hover">{doneLabel}</Button>
     </div>
   )
 }
@@ -85,7 +85,7 @@ export const TwoFactorSetup = ({ onDone, onCancel }: { onDone: () => void; onCan
     )
   }
   if (loadError) return <p className="text-sm text-destructive">{loadError}</p>
-  if (!secret || !qr) return <div className="flex justify-center py-8"><Loader className="size-6 animate-spin text-[#ff5018]" /></div>
+  if (!secret || !qr) return <div className="flex justify-center py-8"><Loader className="size-6 animate-spin text-brand" /></div>
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
@@ -112,7 +112,7 @@ export const TwoFactorSetup = ({ onDone, onCancel }: { onDone: () => void; onCan
       {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
       <div className="flex justify-end gap-2">
         {onCancel && <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>Cancel</Button>}
-        <Button type="submit" disabled={busy || code.length !== 6} className="bg-[#ff5018] text-white hover:bg-[#e6430f]">
+        <Button type="submit" disabled={busy || code.length !== 6} className="bg-brand text-white hover:bg-brand-hover">
           <ShieldCheck className="mr-2 size-4" /> {busy ? "Checking…" : "Turn on"}
         </Button>
       </div>

@@ -40,7 +40,7 @@ export const UpgradeModal = ({ limitInfo, onClose, onUpgrade }: UpgradeModalProp
             <DialogContent className="max-w-sm">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <Zap className="size-5 text-[#ff5018]" />
+                        <Zap className="size-5 text-brand" />
                         Limit Reached
                     </DialogTitle>
                 </DialogHeader>
@@ -56,7 +56,7 @@ export const UpgradeModal = ({ limitInfo, onClose, onUpgrade }: UpgradeModalProp
                     </div>
                     <p className="text-xs text-center text-muted-foreground">
                         Upgrade to{" "}
-                        <span className="font-semibold text-[#ff5018]">{nextPlan}</span>
+                        <span className="font-semibold text-brand">{nextPlan}</span>
                         {" "}to get more {featureLabel}
                     </p>
                     <div className="flex gap-2">
@@ -69,7 +69,7 @@ export const UpgradeModal = ({ limitInfo, onClose, onUpgrade }: UpgradeModalProp
                         </Button>
                         <Button
                             onClick={onUpgrade}
-                            className="flex-1 h-8 text-xs bg-[#ff5018] hover:bg-[#e6430f] text-white"
+                            className="flex-1 h-8 text-xs bg-brand hover:bg-brand-hover text-white"
                         >
                             <Zap className="size-3.5 mr-1" /> Upgrade Now
                         </Button>

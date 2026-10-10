@@ -41,7 +41,7 @@ const Avatar = ({ name, image }: { name: string; image?: string }) =>
     // eslint-disable-next-line @next/next/no-img-element
     <img src={image} alt="" className="size-4 shrink-0 rounded-full object-cover" />
   ) : (
-    <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-[#ff5018]/20 text-[9px] font-semibold uppercase text-ink">{name.slice(0, 1)}</span>
+    <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-brand/20 text-[9px] font-semibold uppercase text-ink">{name.slice(0, 1)}</span>
   )
 
 // ---- read-only rendering ----
@@ -77,7 +77,7 @@ export const CellValue = ({ prop, row, ctx }: { prop: Prop; row: Row; ctx: DbCtx
 }
 
 const Box = ({ checked }: { checked: boolean }) => (
-  <span className={cn("flex size-4 items-center justify-center rounded border", checked ? "border-[#ff5018] bg-[#ff5018] text-white" : "border-ink/30 bg-surface")}>
+  <span className={cn("flex size-4 items-center justify-center rounded border", checked ? "border-brand bg-brand text-white" : "border-ink/30 bg-surface")}>
     {checked && <Check className="size-3" strokeWidth={3} />}
   </span>
 )
@@ -102,7 +102,7 @@ const OptionPicker = ({ prop, value, multi, ctx, onChange }: { prop: Prop; value
         {opts.map((o) => (
           <button key={o.id} type="button" onClick={() => toggle(o.id)} className="flex w-full items-center justify-between rounded-md px-2 py-1 hover:bg-cream-deep">
             <Chip option={o} />
-            {value.includes(o.id) && <Check className="size-3.5 text-[#ff5018]" />}
+            {value.includes(o.id) && <Check className="size-3.5 text-brand" />}
           </button>
         ))}
         {!opts.length && !q && <p className="px-2 py-1 text-xs text-ink/50">No options yet.</p>}
@@ -130,7 +130,7 @@ const ListPicker = ({ items, value, multi, onChange, placeholder }: {
         {shown.map((i) => (
           <button key={i.id} type="button" onClick={() => toggle(i.id)} className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-1 text-left text-sm hover:bg-cream-deep">
             <span className="flex min-w-0 items-center gap-1.5">{i.image !== undefined && <Avatar name={i.label} image={i.image || undefined} />}<span className="truncate">{i.label || "Untitled"}</span></span>
-            {value.includes(i.id) && <Check className="size-3.5 shrink-0 text-[#ff5018]" />}
+            {value.includes(i.id) && <Check className="size-3.5 shrink-0 text-brand" />}
           </button>
         ))}
         {!shown.length && <p className="px-2 py-1 text-xs text-ink/50">Nothing found.</p>}
@@ -176,7 +176,7 @@ const TextEditor = ({ prop, initial, onDone }: { prop: Prop; initial: string; on
       ref={ref} type={type} value={v} step="any" onChange={(e) => setV(e.target.value)}
       onBlur={() => onDone(v)}
       onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onDone(v) } else if (e.key === "Escape") onDone(null) }}
-      className="h-full w-full bg-transparent px-2 text-sm outline-none ring-2 ring-[#ff5018]/60"
+      className="h-full w-full bg-transparent px-2 text-sm outline-none ring-2 ring-brand/60"
     />
   )
 }

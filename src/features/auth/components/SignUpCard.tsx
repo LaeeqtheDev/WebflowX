@@ -80,7 +80,7 @@ export const SignUpCard = ({ setState, onEmail }: SignUpCardProps) => {
           </div>
         <Button
           type="submit"
-          className="mt-2 h-12 w-full cursor-pointer rounded-xl bg-[#ff5018] text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_rgba(255,80,24,0.8)] hover:bg-[#e6430f]"
+          className="mt-2 h-12 w-full cursor-pointer rounded-xl bg-brand text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_rgba(255,80,24,0.8)] hover:bg-brand-hover"
           size="lg"
           disabled={pending}
         >
@@ -127,8 +127,8 @@ export const SignUpCard = ({ setState, onEmail }: SignUpCardProps) => {
 
       <p className="mt-6 text-center text-xs text-ink/55">
         By continuing you agree to our{" "}
-        <Link href="/terms" className="underline underline-offset-2 hover:text-[#ff5018]">Terms</Link> and{" "}
-        <Link href="/privacy" className="underline underline-offset-2 hover:text-[#ff5018]">Privacy Policy</Link>.
+        <Link href="/terms" className="underline underline-offset-2 hover:text-brand">Terms</Link> and{" "}
+        <Link href="/privacy" className="underline underline-offset-2 hover:text-brand">Privacy Policy</Link>.
       </p>
 
       <p className="mt-5 text-center text-sm text-ink/65">
@@ -136,7 +136,7 @@ export const SignUpCard = ({ setState, onEmail }: SignUpCardProps) => {
         <button
           type="button"
           onClick={() => setState("signIn")}
-          className="cursor-pointer font-semibold text-[#ff5018] underline-offset-4 hover:underline"
+          className="cursor-pointer font-semibold text-brand underline-offset-4 hover:underline"
         >
           Log in
         </button>

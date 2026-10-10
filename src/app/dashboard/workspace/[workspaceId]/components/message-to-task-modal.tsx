@@ -89,7 +89,7 @@ export const MessageToTaskModal = ({ open, onClose, messageId, body, authorName 
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="Task title"
-                        className="text-sm rounded-lg focus-visible:ring-[#ff5018]/40 focus-visible:border-[#ff5018]"
+                        className="text-sm rounded-lg focus-visible:ring-brand/40 focus-visible:border-brand"
                     />
                     <div className="bg-cream border border-plum/10 rounded-lg p-3 text-xs text-ink/70 max-h-24 overflow-y-auto whitespace-pre-wrap">
                         <span className="font-semibold text-ink">{authorName}: </span>
@@ -99,7 +99,7 @@ export const MessageToTaskModal = ({ open, onClose, messageId, body, authorName 
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         placeholder="Add notes (optional)"
-                        className="min-h-16 text-sm rounded-lg focus-visible:ring-[#ff5018]/40 focus-visible:border-[#ff5018]"
+                        className="min-h-16 text-sm rounded-lg focus-visible:ring-brand/40 focus-visible:border-brand"
                     />
                     <div className="grid grid-cols-2 gap-3">
                         <div>
@@ -133,7 +133,7 @@ export const MessageToTaskModal = ({ open, onClose, messageId, body, authorName 
                     <Button
                         onClick={handleSubmit}
                         disabled={isPending}
-                        className="bg-[#ff5018] hover:bg-[#e6430f] text-white text-sm rounded-lg font-semibold"
+                        className="bg-brand hover:bg-brand-hover text-white text-sm rounded-lg font-semibold"
                     >
                         {isPending ? <Loader className="size-4 animate-spin" /> : "Create task"}
                     </Button>

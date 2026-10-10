@@ -18,7 +18,17 @@ const schema = defineSchema({
         // false turns off notification emails (mentions, DMs, replies, tasks). Default is on.
         emailNotifications: v.optional(v.boolean()),
         // each member's own appearance setting
-        theme: v.optional(v.union(v.literal("light"), v.literal("dark"), v.literal("system"))),
+        theme: v.optional(v.union(
+            v.literal("light"), v.literal("dark"), v.literal("system"),
+            v.literal("snow"), v.literal("ash"), v.literal("onyx"), v.literal("midnight"), v.literal("forest"),
+        )),
+        // accent colour, message density, text size and motion; follows the member across devices
+        look: v.optional(v.object({
+            accent: v.union(v.literal("ember"), v.literal("ocean"), v.literal("violet"), v.literal("emerald"), v.literal("rose"), v.literal("teal"), v.literal("gold"), v.literal("slate")),
+            density: v.union(v.literal("cozy"), v.literal("compact")),
+            fontScale: v.union(v.literal(90), v.literal(100), v.literal(112), v.literal(125)),
+            reducedMotion: v.boolean(),
+        })),
         // false turns off browser push notifications. Default is on once a device has subscribed.
         pushNotifications: v.optional(v.boolean()),
     })

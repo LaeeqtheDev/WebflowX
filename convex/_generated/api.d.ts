@@ -10,6 +10,7 @@
 
 import type * as ResendOTP from "../ResendOTP.js";
 import type * as access from "../access.js";
+import type * as appearanceDefs from "../appearanceDefs.js";
 import type * as attachments from "../attachments.js";
 import type * as audit from "../audit.js";
 import type * as auth from "../auth.js";
@@ -76,6 +77,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   ResendOTP: typeof ResendOTP;
   access: typeof access;
+  appearanceDefs: typeof appearanceDefs;
   attachments: typeof attachments;
   audit: typeof audit;
   auth: typeof auth;

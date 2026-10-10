@@ -24,7 +24,7 @@ interface ToolbarProps{
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👀", "🙏"];
 
-const sheetRow = "flex h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-[15px] font-medium text-ink transition-colors hover:bg-cream active:bg-cream disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70";
+const sheetRow = "flex h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-[15px] font-medium text-ink transition-colors hover:bg-cream active:bg-cream disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70";
 
 export const Toolbar2 =({
     isAuthor,
@@ -59,7 +59,7 @@ export const Toolbar2 =({
                 aria-label="Message actions"
                 aria-haspopup="dialog"
                 onClick={() => setSheetOpen(true)}
-                className="flex size-10 items-center justify-center rounded-lg text-ink/60 transition-colors hover:bg-cream active:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70"
+                className="flex size-10 items-center justify-center rounded-lg text-ink/60 transition-colors hover:bg-cream active:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70"
             >
                 <MoreHorizontal className="size-5" />
             </button>
@@ -77,7 +77,7 @@ export const Toolbar2 =({
                             aria-label={`React with ${emoji}`}
                             disabled={isPending}
                             onClick={run(() => handleReaction(emoji))}
-                            className="flex size-11 items-center justify-center rounded-lg text-xl transition-colors hover:bg-surface active:bg-surface disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70"
+                            className="flex size-11 items-center justify-center rounded-lg text-xl transition-colors hover:bg-surface active:bg-surface disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70"
                         >
                             {emoji}
                         </button>
@@ -125,14 +125,14 @@ export const Toolbar2 =({
         onEmojiSelect={(emoji)=> handleReaction(emoji.native)} 
         >
         <Button variant={"ghost"} size={"iconSm"} aria-label="Add reaction" className="rounded-md hover:bg-cream" disabled={isPending}>
-                <Smile className="size-4 text-[#ff5018]"/>
+                <Smile className="size-4 text-brand"/>
             </Button>
         </EmojiPopover>
 
         {!hideThreadButton && (
                         <Hint label="Reply in thread">
                         <Button variant={"ghost"} size={"iconSm"} aria-label="Reply in thread" className="rounded-md hover:bg-cream" disabled={isPending} onClick={handleThread}>
-                            <MessageSquareTextIcon className="size-4 text-[#ff5018]"/>
+                            <MessageSquareTextIcon className="size-4 text-brand"/>
                         </Button>
                         </Hint>
         )}
@@ -140,7 +140,7 @@ export const Toolbar2 =({
         {handleSave && (
             <Hint label={isSaved ? "Remove from saved" : "Save for later"}>
                 <Button variant={"ghost"} size={"iconSm"} aria-label={isSaved ? "Remove from saved" : "Save for later"} aria-pressed={isSaved} className="rounded-md hover:bg-cream" disabled={isPending} onClick={handleSave}>
-                    <Bookmark className={`size-4 text-[#ff5018] ${isSaved ? "fill-current" : ""}`}/>
+                    <Bookmark className={`size-4 text-brand ${isSaved ? "fill-current" : ""}`}/>
                 </Button>
             </Hint>
         )}
@@ -148,7 +148,7 @@ export const Toolbar2 =({
         {handlePin && (
             <Hint label={isPinned ? "Unpin" : "Pin to channel"}>
                 <Button variant={"ghost"} size={"iconSm"} aria-label={isPinned ? "Unpin message" : "Pin message"} aria-pressed={isPinned} className="rounded-md hover:bg-cream" disabled={isPending} onClick={handlePin}>
-                    <Pin className={`size-4 text-[#ff5018] ${isPinned ? "fill-current" : ""}`}/>
+                    <Pin className={`size-4 text-brand ${isPinned ? "fill-current" : ""}`}/>
                 </Button>
             </Hint>
         )}
@@ -156,7 +156,7 @@ export const Toolbar2 =({
         {handleCreateTask && (
             <Hint label="Create task from message">
                 <Button variant={"ghost"} size={"iconSm"} aria-label="Create task from message" className="rounded-md hover:bg-cream" disabled={isPending} onClick={handleCreateTask}>
-                    <ListChecks className="size-4 text-[#ff5018]"/>
+                    <ListChecks className="size-4 text-brand"/>
                 </Button>
             </Hint>
         )}
@@ -164,7 +164,7 @@ export const Toolbar2 =({
             {isAuthor && (
                 <Hint label="Edit Message">
                 <Button variant={"ghost"} size={"iconSm"} aria-label="Edit message" className="rounded-md hover:bg-cream" disabled={isPending} onClick={handleEdit}>
-                    <Pencil className="size-4 text-[#ff5018]" />
+                    <Pencil className="size-4 text-brand" />
                 </Button>
                 </Hint>
     
@@ -172,7 +172,7 @@ export const Toolbar2 =({
            {canDelete && (
              <Hint label="Delete Message">
              <Button variant={"ghost"} size={"iconSm"} aria-label="Delete message" className="rounded-md hover:bg-cream" disabled={isPending} onClick={handleDelete}>
-                 <TrashIcon className="size-4 text-[#ff5018]"/>
+                 <TrashIcon className="size-4 text-brand"/>
              </Button>
              </Hint>
            )}

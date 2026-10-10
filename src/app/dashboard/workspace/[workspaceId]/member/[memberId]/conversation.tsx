@@ -39,7 +39,7 @@ export const Conversation = ({id}: ConversationProps) => {
     if(memberLoading || status === "LoadingFirstPage"){
         return(
            <div className="h-full flex items-center justify-center">
-                  <Loader className="size-6 animate-spin  text-[#ff5018] "/>
+                  <Loader className="size-6 animate-spin  text-brand "/>
               </div>
         )
       }

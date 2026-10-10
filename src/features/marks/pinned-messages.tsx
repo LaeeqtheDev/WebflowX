@@ -31,9 +31,9 @@ export const PinnedMessages = ({ channelId, conversationId, memberId }: {
         <button
           type="button"
           aria-label={`Pinned messages${count ? ` (${count})` : ""}`}
-          className="ml-auto flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm text-ink/70 transition-colors hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70 max-md:h-10"
+          className="ml-auto flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm text-ink/70 transition-colors hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70 max-md:h-10"
         >
-          <Pin className="size-4 text-[#ff5018]" />
+          <Pin className="size-4 text-brand" />
           {count > 0 && <span className="text-xs font-semibold">{count}</span>}
         </button>
       </PopoverTrigger>

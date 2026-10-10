@@ -57,7 +57,7 @@ function SheetContent({
         {children}
         <DialogPrimitive.Close
           aria-label={closeLabel}
-          className={cn("absolute right-2 top-2 z-10 flex size-10 items-center justify-center rounded-lg text-current opacity-80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70", closeClassName)}
+          className={cn("absolute right-2 top-2 z-10 flex size-10 items-center justify-center rounded-lg text-current opacity-80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70", closeClassName)}
         >
           {closeIcon ?? <XIcon className="size-5" />}
         </DialogPrimitive.Close>

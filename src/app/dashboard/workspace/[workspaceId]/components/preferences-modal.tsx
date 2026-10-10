@@ -104,8 +104,8 @@ const ACTION_LABEL: Record<string, string> = {
 }
 
 const RoleIcon = ({ role, isOwner }: { role: string; isOwner?: boolean }) =>
-  isOwner ? <Crown className="size-3.5 text-[#ff5018]" /> :
-  role === "admin" ? <ShieldCheck className="size-3.5 text-[#ff5018]" /> :
+  isOwner ? <Crown className="size-3.5 text-brand" /> :
+  role === "admin" ? <ShieldCheck className="size-3.5 text-brand" /> :
   role === "moderator" ? <Shield className="size-3.5 text-plum" /> : null
 
 export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesModalProps) => {
@@ -226,9 +226,9 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
               const active = tab === t.id
               return (
                 <button key={t.id} onClick={() => setTab(t.id)} aria-current={active ? "page" : undefined}
-                  className={cn("flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-xl px-3 py-2.5 text-left text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#ff5018]",
+                  className={cn("flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-xl px-3 py-2.5 text-left text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand",
                     active ? "bg-[#381d2a] text-white" : "text-ink/70 hover:bg-cream hover:text-ink")}>
-                  <Icon className={cn("size-4 shrink-0", active ? "text-[#ff5018]" : "")} />
+                  <Icon className={cn("size-4 shrink-0", active ? "text-brand" : "")} />
                   {t.label}
                 </button>
               )
@@ -278,7 +278,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                     <Textarea id="ws-desc" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={300} rows={3} placeholder="What is this workspace for?" disabled={!canEdit || saving} />
                   </div>
                   {canEdit && (
-                    <Button type="submit" disabled={saving} className="w-fit bg-[#ff5018] hover:bg-[#e6430f] text-white">
+                    <Button type="submit" disabled={saving} className="w-fit bg-brand hover:bg-brand-hover text-white">
                       {saving ? "Saving…" : "Save changes"}
                     </Button>
                   )}
@@ -297,7 +297,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                           .then(() => toast.success(next ? "Everyone must now use two-step verification" : "Two-step verification is optional again"))
                           .catch((err) => toast.error(errMsg(err, "Couldn't change that setting")))
                       }}
-                      className={cn("relative h-6 w-11 shrink-0 rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]", workspace?.require2fa ? "bg-[#ff5018]" : "bg-ink/20")}>
+                      className={cn("relative h-6 w-11 shrink-0 rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-brand", workspace?.require2fa ? "bg-brand" : "bg-ink/20")}>
                       <span className={cn("absolute left-0.5 top-0.5 size-5 rounded-full bg-white shadow transition-transform", workspace?.require2fa && "translate-x-5")} />
                     </button>
                   </div>
@@ -326,7 +326,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
               <div className="flex flex-col gap-3">
                 <Input aria-label="Search members" placeholder="Search members" value={filter} onChange={(e) => setFilter(e.target.value)} className="bg-surface" />
                 <div className="flex flex-col gap-1.5">
-                  {!members && <Loader className="size-5 animate-spin text-[#ff5018] mx-auto my-6" />}
+                  {!members && <Loader className="size-5 animate-spin text-brand mx-auto my-6" />}
                   {[...shownMembers].sort((a, b) => order(a) - order(b)).map((m) => (
                     <button key={m._id} onClick={() => { onOpenProfile(m._id); setOpen(false) }}
                       className="flex items-center gap-3 bg-surface rounded-xl border border-plum/10 px-3 py-2.5 text-left hover:bg-cream-soft">
@@ -364,7 +364,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                       </div>
                       {(["moderator", "member"] as const).map((role) => (
                         <div key={role} className="flex justify-center">
-                          <input type="checkbox" aria-label={`${p.label} for ${role}`} className="size-4 accent-[#ff5018] cursor-pointer"
+                          <input type="checkbox" aria-label={`${p.label} for ${role}`} className="size-4 accent-brand cursor-pointer"
                             disabled={!rolePerms}
                             checked={!!rolePerms?.[role]?.includes(p.key)} onChange={() => toggle(role, p.key)} />
                         </div>
@@ -401,7 +401,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                 </div>
 
                 {roleDraft && (
-                  <form className="bg-surface rounded-xl border border-[#ff5018]/40 p-4 flex flex-col gap-3"
+                  <form className="bg-surface rounded-xl border border-brand/40 p-4 flex flex-col gap-3"
                     onSubmit={(e) => {
                       e.preventDefault()
                       saveCustomRole({ workspaceId, ...roleDraft })
@@ -425,7 +425,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                     <div className="grid gap-x-4 gap-y-2 sm:grid-cols-2">
                       {PERMISSION_INFO.map((p) => (
                         <label key={p.key} className="flex items-start gap-2 text-sm cursor-pointer">
-                          <input type="checkbox" className="mt-0.5 size-4 accent-[#ff5018]" checked={roleDraft.permissions.includes(p.key)}
+                          <input type="checkbox" className="mt-0.5 size-4 accent-brand" checked={roleDraft.permissions.includes(p.key)}
                             onChange={(e) => setRoleDraft({ ...roleDraft, permissions: e.target.checked ? [...roleDraft.permissions, p.key] : roleDraft.permissions.filter((k) => k !== p.key) })} />
                           <span>{p.label}</span>
                         </label>
@@ -433,7 +433,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                     </div>
                     <div className="flex justify-end gap-2">
                       <Button type="button" variant="outline" onClick={() => setRoleDraft(null)}>Cancel</Button>
-                      <Button type="submit" className="bg-[#ff5018] hover:bg-[#e6430f] text-white">Save role</Button>
+                      <Button type="submit" className="bg-brand hover:bg-brand-hover text-white">Save role</Button>
                     </div>
                   </form>
                 )}
@@ -452,7 +452,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
                     <Download className="size-4 mr-1.5" />CSV
                   </Button>
                 </div>
-                {audit === undefined && <Loader className="size-5 animate-spin text-[#ff5018] mx-auto my-6" />}
+                {audit === undefined && <Loader className="size-5 animate-spin text-brand mx-auto my-6" />}
                 {audit?.length === 0 && <p className="text-sm text-ink/65 text-center py-6">Nothing recorded yet.</p>}
                 {audit && audit.length > 0 && auditRows.length === 0 && <p className="text-sm text-ink/65 text-center py-6">No entries match your search.</p>}
                 {auditRows.map((a) => (

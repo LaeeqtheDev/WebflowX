@@ -40,7 +40,7 @@ const TitleCell = ({ row, ctx }: { row: Row; ctx: ViewProps["ctx"] }) => {
   return edit ? (
     <input autoFocus value={v} maxLength={200} onChange={(e) => setV(e.target.value)} onBlur={() => done(true)}
       onKeyDown={(e) => { if (e.key === "Enter") done(true); else if (e.key === "Escape") { setV(row.title); done(false) } }}
-      className="h-8 w-full bg-transparent px-2 text-sm font-medium outline-none ring-2 ring-[#ff5018]/60" />
+      className="h-8 w-full bg-transparent px-2 text-sm font-medium outline-none ring-2 ring-brand/60" />
   ) : (
     <div className="group/t flex min-h-8 w-full items-center gap-1 px-2">
       <span role="button" tabIndex={0} onClick={() => { setV(row.title); setEdit(true) }} onKeyDown={(e) => { if (e.key === "Enter") { setV(row.title); setEdit(true) } }}
@@ -128,7 +128,7 @@ export const TableView = ({ view, rows, ctx, onView, onAdd, onMove }: ViewProps)
       <div data-col style={{ width: w(p.id) }}
         draggable={!isTitle} onDragStart={() => { dragId.current = p.id }} onDragOver={(e) => { if (!isTitle && dragId.current) { e.preventDefault(); setOver(p.id) } }}
         onDragLeave={() => setOver((o) => (o === p.id ? null : o))} onDrop={() => reorder(p.id)} onDragEnd={() => { dragId.current = null; setOver(null) }}
-        className={cn("relative min-w-0", over === p.id && "bg-[#ff5018]/10")}>
+        className={cn("relative min-w-0", over === p.id && "bg-brand/10")}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button type="button" className="flex h-8 w-full items-center gap-1.5 px-2 text-left text-xs font-medium text-ink/65 hover:bg-cream-deep">
@@ -142,7 +142,7 @@ export const TableView = ({ view, rows, ctx, onView, onAdd, onMove }: ViewProps)
             {!isTitle && <DropdownMenuItem onClick={() => onView({ ...view, hidden: [...view.hidden, p.id] })}><EyeOff className="mr-2 size-3.5" /> Hide in view</DropdownMenuItem>}
           </DropdownMenuContent>
         </DropdownMenu>
-        <span role="separator" aria-orientation="vertical" onPointerDown={(e) => startResize(e, p.id)} className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-[#ff5018]/40" />
+        <span role="separator" aria-orientation="vertical" onPointerDown={(e) => startResize(e, p.id)} className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-brand/40" />
       </div>
     )
   }
@@ -167,7 +167,7 @@ export const TableView = ({ view, rows, ctx, onView, onAdd, onMove }: ViewProps)
     <div key={r._id} role="row" style={{ gridTemplateColumns: cols }}
       onDragOver={(e) => { if (dragRow.current) { e.preventDefault(); const b = e.currentTarget.getBoundingClientRect(); setRowOver({ id: r._id, after: e.clientY > b.top + b.height / 2 }) } }}
       onDrop={(e) => { e.preventDefault(); dropRow(r, rowOver?.id === r._id ? rowOver.after : false, groupKey) }}
-      className={cn("group grid border-b border-plum/10 hover:bg-cream-soft/60", rowOver?.id === r._id && (rowOver.after ? "border-b-2 border-b-[#ff5018]" : "border-t-2 border-t-[#ff5018]"))}>
+      className={cn("group grid border-b border-plum/10 hover:bg-cream-soft/60", rowOver?.id === r._id && (rowOver.after ? "border-b-2 border-b-brand" : "border-t-2 border-t-brand"))}>
       <div className="flex items-center justify-end gap-0.5 pr-1">
         <span
           draggable={canReorder}
@@ -180,7 +180,7 @@ export const TableView = ({ view, rows, ctx, onView, onAdd, onMove }: ViewProps)
         </span>
         <input type="checkbox" aria-label="Select row" checked={selected.has(r._id)}
           onChange={(e) => setSelected((s) => { const n = new Set(s); if (e.target.checked) n.add(r._id); else n.delete(r._id); return n })}
-          className={cn("size-3.5 accent-[#ff5018]", !selected.has(r._id) && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100 max-md:opacity-60")} />
+          className={cn("size-3.5 accent-brand", !selected.has(r._id) && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100 max-md:opacity-60")} />
       </div>
       <div className="sticky left-0 z-[1] min-w-0 border-r border-plum/10 bg-surface group-hover:bg-cream-soft"><TitleCell row={r} ctx={ctx} /></div>
       {props.map((p) => <div key={p.id} className="min-w-0 border-r border-plum/5"><Cell prop={p} row={r} ctx={ctx} /></div>)}
@@ -191,7 +191,7 @@ export const TableView = ({ view, rows, ctx, onView, onAdd, onMove }: ViewProps)
   return (
     <div className="flex h-full flex-col">
       {selected.size > 0 && (
-        <div className="flex items-center gap-3 border-b border-plum/12 bg-[#ff5018]/8 px-4 py-1.5 text-sm">
+        <div className="flex items-center gap-3 border-b border-plum/12 bg-brand/8 px-4 py-1.5 text-sm">
           <span>{selected.size} selected</span>
           <Button size="sm" variant="ghost" className="h-7 text-destructive" onClick={remove}><Trash2 className="mr-1 size-3.5" /> Delete</Button>
           <Button size="sm" variant="ghost" className="h-7" onClick={() => setSelected(new Set())}>Clear</Button>

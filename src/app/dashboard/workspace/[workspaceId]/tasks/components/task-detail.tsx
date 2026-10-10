@@ -113,7 +113,7 @@ export const TaskDetail = ({
                                 if (t !== task.title) onUpdate(task._id, { title: t })
                             }}
                             onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur() }}
-                            className="-mx-2 w-[calc(100%+1rem)] rounded-lg bg-transparent px-2 py-1 text-2xl font-semibold tracking-tight text-ink outline-none transition-colors hover:bg-cream-soft focus:bg-cream-soft focus:ring-2 focus:ring-[#ff5018]/40"
+                            className="-mx-2 w-[calc(100%+1rem)] rounded-lg bg-transparent px-2 py-1 text-2xl font-semibold tracking-tight text-ink outline-none transition-colors hover:bg-cream-soft focus:bg-cream-soft focus:ring-2 focus:ring-brand/40"
                         />
                     ) : (
                         <h2 className="text-2xl font-semibold tracking-tight text-ink">{task.title}</h2>
@@ -131,7 +131,7 @@ export const TaskDetail = ({
                                     onInput={(e) => grow(e.currentTarget)}
                                     onBlur={(e) => { const v = e.target.value; if (v !== (task.description ?? "")) onUpdate(task._id, { description: v.trim() === "" ? undefined : v }) }}
                                     placeholder="What needs to happen, and why? Add context, links or acceptance criteria."
-                                    className="min-h-[9rem] w-full resize-none rounded-xl border border-plum/12 bg-transparent px-3.5 py-3 text-sm leading-relaxed outline-none transition-colors placeholder:text-ink/40 focus:border-[#ff5018] focus:ring-2 focus:ring-[#ff5018]/20"
+                                    className="min-h-[9rem] w-full resize-none rounded-xl border border-plum/12 bg-transparent px-3.5 py-3 text-sm leading-relaxed outline-none transition-colors placeholder:text-ink/40 focus:border-brand focus:ring-2 focus:ring-brand/20"
                                 />
                             ) : (
                                 <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink/70">{task.description || "No description provided."}</p>
@@ -167,7 +167,7 @@ export const TaskDetail = ({
 
                         <section className="border-t border-plum/10 pt-5">
                             <h3 className="mb-3 flex items-center gap-1.5 text-[13px] font-semibold tracking-tight text-ink">
-                                <MessageSquare className="size-3.5 text-[#ff5018]" /> Activity
+                                <MessageSquare className="size-3.5 text-brand" /> Activity
                                 {!!comments?.length && <span className="text-xs font-normal text-ink/50">{comments.length}</span>}
                             </h3>
                             <div className="mb-4 flex flex-col gap-4">
@@ -201,7 +201,7 @@ export const TaskDetail = ({
                                     onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing) handleComment() }}
                                     className="h-10 rounded-xl text-sm" />
                                 <Button aria-label="Post comment" size="iconSm" onClick={handleComment} disabled={isCommenting || !commentBody.trim()}
-                                    className="size-10 shrink-0 rounded-xl bg-[#ff5018] text-white hover:bg-[#e6430f]">
+                                    className="size-10 shrink-0 rounded-xl bg-brand text-white hover:bg-brand-hover">
                                     <Send className="size-4" />
                                 </Button>
                             </div>

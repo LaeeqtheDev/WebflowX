@@ -210,7 +210,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
 
     return (
         <>
-            <div className="border rounded-xl p-5 flex flex-col gap-5 hover:border-[#ff5018]/40 hover:shadow-sm transition-colors bg-surface">
+            <div className="border rounded-xl p-5 flex flex-col gap-5 hover:border-brand/40 hover:shadow-sm transition-colors bg-surface">
                 {/* Header */}
                 <div className="flex items-start justify-between">
                     {/* title, time and length are already shown above this card */}
@@ -233,7 +233,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                     <div className="bg-cream border border-plum/10 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-1.5">
-                                <span className="inline-flex items-center gap-1 bg-[#ff5018]/10 text-orange-ink rounded-md px-2 py-0.5 text-[11px] font-medium">
+                                <span className="inline-flex items-center gap-1 bg-brand/10 text-orange-ink rounded-md px-2 py-0.5 text-[11px] font-medium">
                                     <Sparkles className="size-3" />
                                     AI
                                 </span>
@@ -297,7 +297,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                             <textarea aria-label="Edit summary"
                                 value={editedSummary}
                                 onChange={e => setEditedSummary(e.target.value)}
-                                className="w-full text-sm text-ink/80 bg-surface border border-plum/15 rounded-lg p-3 resize-none h-48 outline-none focus:border-[#ff5018] focus:ring-2 focus:ring-[#ff5018]/20 transition-colors leading-relaxed"
+                                className="w-full text-sm text-ink/80 bg-surface border border-plum/15 rounded-lg p-3 resize-none h-48 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-colors leading-relaxed"
                             />
                         ) : (
                             <div className="text-sm text-ink/80 whitespace-pre-wrap leading-relaxed">
@@ -359,7 +359,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                 <DialogContent className="max-w-lg">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-[17px] font-semibold tracking-tight">
-                            <ListChecks className="size-5 text-[#ff5018]" />
+                            <ListChecks className="size-5 text-brand" />
                             Create tasks from action items
                         </DialogTitle>
                         <DialogDescription>
@@ -376,7 +376,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                                     type="checkbox"
                                     checked={selectedItems.has(i)}
                                     onChange={() => toggleItem(i)}
-                                    className="mt-0.5 accent-[#ff5018]"
+                                    className="mt-0.5 accent-brand"
                                 />
                                 <span className="text-ink/80">{item}</span>
                             </label>
@@ -390,7 +390,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                             size="sm"
                             disabled={isCreatingTasks || selectedItems.size === 0}
                             onClick={handleCreateTasks}
-                            className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg"
+                            className="bg-brand hover:bg-brand-hover text-white rounded-lg"
                         >
                             {isCreatingTasks ? <Loader2 className="size-3.5 animate-spin" /> : `Create ${selectedItems.size} task${selectedItems.size === 1 ? "" : "s"}`}
                         </Button>
@@ -403,7 +403,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                 <DialogContent className="max-w-lg">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-[17px] font-semibold tracking-tight">
-                            <FileText className="size-5 text-[#ff5018]" />
+                            <FileText className="size-5 text-brand" />
                             Add Meeting Transcript
                         </DialogTitle>
                         <DialogDescription>
@@ -420,7 +420,7 @@ Example:
 [10:02 AM] John: Agreed, let's prioritize that..."
                             value={manualTranscript}
                             onChange={e => setManualTranscript(e.target.value)}
-                            className="min-h-50 text-sm font-mono rounded-lg focus-visible:ring-[#ff5018]/40 focus-visible:border-[#ff5018]"
+                            className="min-h-50 text-sm font-mono rounded-lg focus-visible:ring-brand/40 focus-visible:border-brand"
                         />
                         <div className="flex items-center justify-between">
                             <span className="text-xs text-ink/60">
@@ -442,7 +442,7 @@ Example:
                                     onClick={handleManualTranscriptSubmit}
                                     disabled={isGenerating || manualTranscript.trim().length < 10}
                                     size="sm"
-                                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold"
+                                    className="bg-brand hover:bg-brand-hover text-white rounded-lg font-semibold"
                                 >
                                     {isGenerating ? (
                                         <>

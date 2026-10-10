@@ -55,7 +55,7 @@ export const SharePagePicker = ({
                                     onPick({ id: p._id, title: p.title || "Untitled", url: `${window.location.origin}/dashboard/workspace/${workspaceId}/docs/${p._id}` })
                                     setOpen(false)
                                 }}
-                                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left hover:bg-[#ff5018]/10"
+                                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left hover:bg-brand/10"
                             >
                                 <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-plum/12 bg-cream-soft text-ink/70">
                                     {p.icon ? <RenderIcon value={p.icon} className="size-4" /> : p.type === "database" ? <Database className="size-4" /> : <FileText className="size-4" />}

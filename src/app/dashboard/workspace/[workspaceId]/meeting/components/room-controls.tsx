@@ -18,7 +18,7 @@ export function CtrlButton({
             title={label}
             aria-label={label}
             className={cn(
-                "relative flex size-11 shrink-0 items-center justify-center rounded-full text-white outline-none transition-all focus-visible:ring-2 focus-visible:ring-[#ff5018] active:scale-95 disabled:opacity-50 sm:size-12",
+                "relative flex size-11 shrink-0 items-center justify-center rounded-full text-white outline-none transition-all focus-visible:ring-2 focus-visible:ring-brand active:scale-95 disabled:opacity-50 sm:size-12",
                 danger ? "bg-red-600 hover:bg-red-500"
                     : active ? "bg-white/10 hover:bg-white/20"
                         : "bg-red-500 hover:bg-red-400",
@@ -27,7 +27,7 @@ export function CtrlButton({
         >
             {children}
             {!!badge && (
-                <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-[#ff5018] px-1 text-[10px] font-bold">
+                <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold">
                     {badge > 9 ? "9+" : badge}
                 </span>
             )}
@@ -43,7 +43,7 @@ export function DevicePicker({ kind }: { kind: "audioinput" | "videoinput" }) {
             <DropdownMenuTrigger asChild>
                 <button
                     aria-label={kind === "audioinput" ? "Choose microphone" : "Choose camera"}
-                    className="flex h-9 w-7 items-center justify-center rounded-full text-white/80 outline-none hover:bg-white/15 hover:text-white focus-visible:ring-2 focus-visible:ring-[#ff5018]"
+                    className="flex h-9 w-7 items-center justify-center rounded-full text-white/80 outline-none hover:bg-white/15 hover:text-white focus-visible:ring-2 focus-visible:ring-brand"
                 >
                     <ChevronUp className="size-4" />
                 </button>
@@ -76,7 +76,7 @@ export function SplitCtrl({
                 disabled={disabled}
                 title={label}
                 aria-label={label}
-                className="flex size-11 items-center justify-center rounded-full text-white outline-none transition-all hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-[#ff5018] active:scale-95 disabled:opacity-50 sm:size-12"
+                className="flex size-11 items-center justify-center rounded-full text-white outline-none transition-all hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-brand active:scale-95 disabled:opacity-50 sm:size-12"
             >
                 {children}
             </button>

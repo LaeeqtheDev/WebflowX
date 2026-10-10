@@ -21,7 +21,7 @@ export const WorkspaceSection = ({ children, label, hint, onNew }: WorkspaceSect
                     onClick={toggle}
                     aria-label={`${on ? "Collapse" : "Expand"} ${label}`}
                     aria-expanded={on}
-                    className="flex min-w-0 items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/50 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70"
+                    className="flex min-w-0 items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/50 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70"
                 >
                     <ChevronDown aria-hidden className={cn("size-3.5 shrink-0 transition-transform", !on && "-rotate-90")} />
                     <span className="truncate">{label}</span>

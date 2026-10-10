@@ -34,7 +34,7 @@ export const TaskCard = ({
 
     return (
         <div
-            className="bg-surface border border-plum/12 rounded-xl p-3.5 flex flex-col gap-2.5 group cursor-pointer hover:border-[#ff5018]/40 hover:shadow-sm transition-all"
+            className="bg-surface border border-plum/12 rounded-xl p-3.5 flex flex-col gap-2.5 group cursor-pointer hover:border-brand/40 hover:shadow-sm transition-all"
             onClick={() => onOpen(task)}
         >
             <div className="flex items-start justify-between gap-2">

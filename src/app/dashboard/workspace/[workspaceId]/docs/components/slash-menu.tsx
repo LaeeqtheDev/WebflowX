@@ -129,7 +129,7 @@ export const SlashMenu = ({ editor, onImages }: { editor: Editor; onImages: (fil
                             aria-selected={i === index}
                             onMouseEnter={() => setIndex(i)}
                             onClick={() => pick(item)}
-                            className={cn("flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left", i === index && "bg-[#ff5018]/10")}
+                            className={cn("flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left", i === index && "bg-brand/10")}
                         >
                             <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-plum/12 bg-cream-soft"><item.icon className="size-4 text-ink/70" /></span>
                             <span className="min-w-0">

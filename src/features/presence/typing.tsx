@@ -46,9 +46,9 @@ export const TypingIndicator = ({ channelId, conversationId }: { channelId?: Id<
       {active && (
         <>
           <span aria-hidden className="flex gap-0.5">
-            <span className="size-1 rounded-full bg-[#ff5018] animate-bounce [animation-delay:-0.2s]" />
-            <span className="size-1 rounded-full bg-[#ff5018] animate-bounce [animation-delay:-0.1s]" />
-            <span className="size-1 rounded-full bg-[#ff5018] animate-bounce" />
+            <span className="size-1 rounded-full bg-brand animate-bounce [animation-delay:-0.2s]" />
+            <span className="size-1 rounded-full bg-brand animate-bounce [animation-delay:-0.1s]" />
+            <span className="size-1 rounded-full bg-brand animate-bounce" />
           </span>
           {text}
         </>

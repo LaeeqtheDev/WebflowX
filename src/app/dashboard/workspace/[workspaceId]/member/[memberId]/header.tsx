@@ -48,7 +48,7 @@ export const Header = ({
             <span className="truncate">
                 {memberName}
             </span>
-            <FaChevronDown className="size-2.5 ml-2 text-[#ff5018]"/>
+            <FaChevronDown className="size-2.5 ml-2 text-brand"/>
             </Button>
             {conversationId && <PinnedMessages conversationId={conversationId} memberId={otherMemberId} />}
             {onCall && (
@@ -59,7 +59,7 @@ export const Header = ({
                     disabled={calling}
                     aria-label={`Call ${memberName}`}
                     title="Call (up to 15 minutes)"
-                    className="ml-auto h-8 gap-1.5 px-2.5 text-xs font-semibold text-ink/80 hover:text-[#ff5018]"
+                    className="ml-auto h-8 gap-1.5 px-2.5 text-xs font-semibold text-ink/80 hover:text-brand"
                 >
                     {calling ? <Loader className="size-4 animate-spin" /> : <Phone className="size-4" />}
                     <span className="max-sm:hidden">Call</span>

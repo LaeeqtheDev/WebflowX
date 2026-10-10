@@ -8,7 +8,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { SignInFlow } from "../../types/types";
 
 const primary =
-  "mt-2 h-12 w-full cursor-pointer rounded-xl bg-[#ff5018] text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_rgba(255,80,24,0.8)] hover:bg-[#e6430f]";
+  "mt-2 h-12 w-full cursor-pointer rounded-xl bg-brand text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_rgba(255,80,24,0.8)] hover:bg-brand-hover";
 
 const ErrorBox = ({ text }: { text: string }) =>
   text ? (
@@ -43,7 +43,7 @@ export const VerifyEmailCard = ({ email, setState }: { email: string; setState: 
   return (
     <div className="w-full">
       <BackToSignIn onClick={() => setState("signIn")} />
-      <MailCheck className="size-9 text-[#ff5018]" />
+      <MailCheck className="size-9 text-brand" />
       <h1 className="mt-4 text-[2rem] font-semibold leading-tight tracking-[-0.03em] text-ink">Check your email</h1>
       <p className="mt-2 text-[15px] text-ink/65">We sent an 8-digit code to <strong className="text-ink">{email}</strong>. It expires in 15 minutes.</p>
       <ErrorBox text={error} />

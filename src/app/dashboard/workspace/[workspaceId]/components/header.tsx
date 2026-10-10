@@ -102,16 +102,16 @@ export const Header = ({ title }: HeaderProps) => {
                 <DialogTrigger asChild>
                     <Button variant={"ghost"} className="text-lg font-semibold tracking-tight px-2 overflow-hidden w-auto rounded-lg hover:bg-cream max-md:h-10" size={"sm"}>
                         <span className="flex items-center gap-2 truncate font-semibold tracking-tight">
-                            {channel?.isPrivate ? <Lock className="size-5 shrink-0 text-[#ff5018]" /> : <ChannelIcon name={title} className="size-5 shrink-0 text-[#ff5018]" />}{cleanChannelName(title)}
+                            {channel?.isPrivate ? <Lock className="size-5 shrink-0 text-brand" /> : <ChannelIcon name={title} className="size-5 shrink-0 text-brand" />}{cleanChannelName(title)}
                         </span>
-                        <FaChevronDown className="text-[#ff5018] size-2.5 ml-2" />
+                        <FaChevronDown className="text-brand size-2.5 ml-2" />
                     </Button>
                 </DialogTrigger>
 
                 <DialogContent className="p-0 bg-cream overflow-hidden rounded-2xl">
                     <DialogHeader className="px-6 py-5 border-b bg-surface ">
                         <DialogTitle className="font-semibold tracking-tight flex items-center gap-2">
-                            {channel?.isPrivate && <Lock className="size-4 text-[#ff5018]" />}
+                            {channel?.isPrivate && <Lock className="size-4 text-brand" />}
                             {cleanChannelName(title)}
                         </DialogTitle>
                     </DialogHeader>
@@ -122,7 +122,7 @@ export const Header = ({ title }: HeaderProps) => {
                                 <div className="px-5 py-4 bg-surface rounded-xl border border-plum/12 cursor-pointer hover:bg-cream/60">
                                     <div className="flex items-center justify-between">
                                         <p className="text-sm font-semibold">Channel Name</p>
-                                        {canManage && <p className="text-sm text-[#ff5018] hover:underline hover:underline-offset-4 font-semibold">Edit</p>}
+                                        {canManage && <p className="text-sm text-brand hover:underline hover:underline-offset-4 font-semibold">Edit</p>}
                                     </div>
                                     <p className="text-sm">{cleanChannelName(title)}</p>
                                 </div>
@@ -146,7 +146,7 @@ export const Header = ({ title }: HeaderProps) => {
                             {canManage ? (
                                 <>
                                     <Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={250} rows={2} placeholder="What is this channel about?" />
-                                    <Button size="sm" className="mt-2 bg-[#ff5018] hover:bg-[#e6430f] text-white" disabled={updatingChannel || description === (channel?.description ?? "")} onClick={saveDescription}>Save</Button>
+                                    <Button size="sm" className="mt-2 bg-brand hover:bg-brand-hover text-white" disabled={updatingChannel || description === (channel?.description ?? "")} onClick={saveDescription}>Save</Button>
                                 </>
                             ) : (
                                 <p className="text-sm text-ink/65">{channel?.description || "No description yet."}</p>
@@ -160,7 +160,7 @@ export const Header = ({ title }: HeaderProps) => {
                                         <span className="block text-sm font-semibold">Locked channel</span>
                                         <span className="block text-xs text-ink/55">Only people you add, plus roles allowed to see locked channels, can open it.</span>
                                     </span>
-                                    <input type="checkbox" className="size-4 accent-[#ff5018]" checked={!!channel.isPrivate}
+                                    <input type="checkbox" className="size-4 accent-brand" checked={!!channel.isPrivate}
                                         onChange={(e) => run(() => setAccess({ id: channelId, isPrivate: e.target.checked }), "Couldn't change channel access")} />
                                 </label>
 
@@ -209,7 +209,7 @@ export const Header = ({ title }: HeaderProps) => {
                                 <div className="flex flex-col gap-1.5">
                                     {guestList.map((g) => (
                                         <label key={g._id} className="flex items-center gap-2.5 cursor-pointer">
-                                            <input type="checkbox" className="size-4 accent-[#ff5018]" checked={guestIds.includes(g._id as Id<"members">)}
+                                            <input type="checkbox" className="size-4 accent-brand" checked={guestIds.includes(g._id as Id<"members">)}
                                                 onChange={(e) => run(() => setGuests({
                                                     id: channelId,
                                                     guestIds: e.target.checked ? [...guestIds, g._id as Id<"members">] : guestIds.filter((id) => id !== g._id),
@@ -227,7 +227,7 @@ export const Header = ({ title }: HeaderProps) => {
                                     <span className="block text-sm font-semibold">Announcement channel (read-only)</span>
                                     <span className="block text-xs text-ink/55">Everyone can read and reply in threads; only roles allowed to post can start messages.</span>
                                 </span>
-                                <input type="checkbox" className="size-4 accent-[#ff5018]" checked={!!channel.readOnly}
+                                <input type="checkbox" className="size-4 accent-brand" checked={!!channel.readOnly}
                                     onChange={(e) => run(() => setReadOnly({ id: channelId, readOnly: e.target.checked }), "Couldn't change channel mode")} />
                             </label>
                         )}

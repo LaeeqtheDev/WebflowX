@@ -129,7 +129,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                     </Button>
                 </div>
                 <div className="flex flex-col gap-y-2 h-full items-center justify-center">
-                    <Loader className="size-5 animate-spin text-[#ff5018]" />
+                    <Loader className="size-5 animate-spin text-brand" />
                 </div>
             </div>
         )
@@ -146,7 +146,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                     </Button>
                 </div>
                 <div className="flex flex-col gap-y-2 h-full items-center justify-center">
-                    <AlertTriangle className="size-5 text-[#ff5018]" />
+                    <AlertTriangle className="size-5 text-brand" />
                     <p className="text-sm text-ink/60">Member not found</p>
                 </div>
             </div>
@@ -195,7 +195,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                         <span aria-hidden className={`size-2 rounded-full ${presence.online ? "bg-emerald-500" : "bg-ink/25"}`} />
                         {lastSeenLabel(presence.online, presence.lastSeen)}
                     </p>
-                    <span className="mt-2 w-fit text-[11px] font-semibold uppercase tracking-wide rounded-full px-2 py-0.5 bg-[#ff5018]/10 text-orange-ink">
+                    <span className="mt-2 w-fit text-[11px] font-semibold uppercase tracking-wide rounded-full px-2 py-0.5 bg-brand/10 text-orange-ink">
                         {isTargetOwner ? "Owner" : customRoleName ?? member.role}
                     </span>
                     {member.user.bio && <p className="text-sm text-ink/75 mt-3 whitespace-pre-wrap">{member.user.bio}</p>}
@@ -211,7 +211,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant={"outline"} className="w-full capitalize rounded-lg border-plum/15">
-                                            {member.role} <ChevronDown className="size-4 ml-2 text-[#ff5018]" />
+                                            {member.role} <ChevronDown className="size-4 ml-2 text-brand" />
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="w-full rounded-xl p-1.5">
@@ -231,7 +231,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant={"outline"} className="w-full rounded-lg border-plum/15">
-                                            {customRoleName ?? "Custom role: none"} <ChevronDown className="size-4 ml-2 text-[#ff5018]" />
+                                            {customRoleName ?? "Custom role: none"} <ChevronDown className="size-4 ml-2 text-brand" />
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="w-full rounded-xl p-1.5">
@@ -279,8 +279,8 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                 <div className="flex flex-col p-6">
                     <p className="text-sm font-semibold tracking-tight text-ink mb-4">Contact Information</p>
                     <div className="flex items-center gap-2">
-                        <div className="size-9 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
-                            <MailIcon className="size-4 text-[#ff5018]" />
+                        <div className="size-9 rounded-lg bg-brand/10 flex items-center justify-center">
+                            <MailIcon className="size-4 text-brand" />
                         </div>
                         <div className="flex flex-col">
                             <p className="text-[13px] font-semibold text-ink/60">

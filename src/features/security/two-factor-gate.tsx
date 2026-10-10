@@ -11,7 +11,7 @@ import { errMsg } from "@/lib/errors"
 import { TwoFactorSetup } from "./two-factor-setup"
 
 const primary =
-  "mt-2 h-12 w-full cursor-pointer rounded-xl bg-[#ff5018] text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_rgba(255,80,24,0.8)] hover:bg-[#e6430f]"
+  "mt-2 h-12 w-full cursor-pointer rounded-xl bg-brand text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_rgba(255,80,24,0.8)] hover:bg-brand-hover"
 
 const Challenge = () => {
   const verify = useMutation(api.twoFactor.verify)
@@ -33,7 +33,7 @@ const Challenge = () => {
 
   return (
     <AuthShell title="One more step." body="Your account is protected with two-step verification.">
-      <ShieldCheck className="size-9 text-[#ff5018]" />
+      <ShieldCheck className="size-9 text-brand" />
       <h1 className="mt-4 text-[2rem] font-semibold leading-tight tracking-[-0.03em] text-ink">Enter your code</h1>
       <p className="mt-2 text-[15px] text-ink/65">
         {backup ? "Enter one of your backup codes. Each one works once." : "Open your authenticator app and enter the 6-digit code for WebflowX."}
@@ -69,7 +69,7 @@ export const TwoFactorGate = ({ children }: { children: React.ReactNode }) => {
   const status = useQuery(api.twoFactor.status)
 
   if (isLoading || (isAuthenticated && status === undefined)) {
-    return <div className="flex h-dvh items-center justify-center bg-cream"><Loader className="size-7 animate-spin text-[#ff5018]" /></div>
+    return <div className="flex h-dvh items-center justify-center bg-cream"><Loader className="size-7 animate-spin text-brand" /></div>
   }
   if (isAuthenticated && status?.enabled && !status.verified) return <Challenge />
   return <>{children}</>
@@ -80,11 +80,11 @@ export const RequireTwoFactor = ({ workspaceName, children }: { workspaceName?: 
   const status = useQuery(api.twoFactor.status)
   const { signOut } = useAuthActions()
   const [done, setDone] = useState(false)
-  if (status === undefined) return <div className="flex h-dvh items-center justify-center bg-cream"><Loader className="size-7 animate-spin text-[#ff5018]" /></div>
+  if (status === undefined) return <div className="flex h-dvh items-center justify-center bg-cream"><Loader className="size-7 animate-spin text-brand" /></div>
   if (status?.enabled || done) return <>{children}</>
   return (
     <AuthShell title="Security first." body="This workspace asks everyone to use two-step verification.">
-      <ShieldCheck className="size-9 text-[#ff5018]" />
+      <ShieldCheck className="size-9 text-brand" />
       <h1 className="mt-4 text-[2rem] font-semibold leading-tight tracking-[-0.03em] text-ink">Set up two-step verification</h1>
       <p className="mt-2 mb-6 text-[15px] text-ink/65">{workspaceName ?? "This workspace"} requires it. It takes about a minute.</p>
       <TwoFactorSetup onDone={() => setDone(true)} />

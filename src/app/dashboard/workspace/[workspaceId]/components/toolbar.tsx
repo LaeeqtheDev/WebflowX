@@ -80,7 +80,7 @@ export const Toolbar = ({ onOpenMenu }: { onOpenMenu?: () => void }) => {
             type="button"
             onClick={onOpenMenu}
             aria-label="Open navigation menu"
-            className="flex size-10 items-center justify-center rounded-xl text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70 active:scale-95 md:hidden"
+            className="flex size-10 items-center justify-center rounded-xl text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70 active:scale-95 md:hidden"
           >
             <Menu className="size-5" />
           </button>
@@ -101,7 +101,7 @@ export const Toolbar = ({ onOpenMenu }: { onOpenMenu?: () => void }) => {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Search workspace"
-          className="group flex h-10 md:h-9 w-full items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.07] px-3.5 text-left transition-all hover:border-white/20 hover:bg-white/[0.11] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70"
+          className="group flex h-10 md:h-9 w-full items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.07] px-3.5 text-left transition-all hover:border-white/20 hover:bg-white/[0.11] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70"
         >
           <Search className="size-4 shrink-0 text-white/60 transition-colors group-hover:text-white" />
           <span className="truncate text-[13px] font-medium tracking-tight text-white/60 group-hover:text-white/80">
@@ -170,7 +170,7 @@ export const Toolbar = ({ onOpenMenu }: { onOpenMenu?: () => void }) => {
           href="mailto:support@northfoundry.co"
           aria-label="Help and support: support@northfoundry.co"
           title="Help & support · support@northfoundry.co"
-          className="flex size-10 md:size-9 items-center justify-center rounded-xl text-white/70 transition-all hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70 active:scale-95"
+          className="flex size-10 md:size-9 items-center justify-center rounded-xl text-white/70 transition-all hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70 active:scale-95"
         >
           <Info className="size-5" />
         </a>

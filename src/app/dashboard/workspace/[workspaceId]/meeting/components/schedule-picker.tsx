@@ -52,7 +52,7 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
         { label: "Tomorrow 9 AM", date: at(addDays(today, 1), 9, 0) },
         { label: "Monday 9 AM", date: at(nextMonday(today), 9, 0) },
     ]
-    const selectClass = "h-9 rounded-lg border bg-surface px-2 text-sm text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/40"
+    const selectClass = "h-9 rounded-lg border bg-surface px-2 text-sm text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
     const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
     return (
@@ -64,8 +64,8 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
                         type="button"
                         onClick={() => choose(q.date)}
                         className={cn(
-                            "rounded-full border px-3 py-1 text-xs font-medium transition-colors hover:border-[#ff5018]/50 hover:bg-[#ff5018]/10",
-                            value && value.getTime() === q.date.getTime() ? "border-[#ff5018] bg-[#ff5018]/10 text-[#ff5018]" : "text-ink/70",
+                            "rounded-full border px-3 py-1 text-xs font-medium transition-colors hover:border-brand/50 hover:bg-brand/10",
+                            value && value.getTime() === q.date.getTime() ? "border-brand bg-brand/10 text-brand" : "text-ink/70",
                         )}
                     >
                         {q.label}
@@ -105,9 +105,9 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
                                     "mx-auto flex size-8 items-center justify-center rounded-full text-xs transition-colors",
                                     !isSameMonth(day, month) && "text-ink/30",
                                     past && "cursor-not-allowed text-ink/20",
-                                    !past && !selected && "hover:bg-[#ff5018]/10",
-                                    isSameDay(day, today) && !selected && "font-bold text-[#ff5018]",
-                                    selected && "bg-[#ff5018] font-semibold text-white",
+                                    !past && !selected && "hover:bg-brand/10",
+                                    isSameDay(day, today) && !selected && "font-bold text-brand",
+                                    selected && "bg-brand font-semibold text-white",
                                 )}
                             >
                                 {format(day, "d")}

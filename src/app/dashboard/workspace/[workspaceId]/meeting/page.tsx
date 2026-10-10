@@ -32,7 +32,7 @@ import { SchedulePicker } from "./components/schedule-picker"
 // LiveKit and the summary view are only needed once a meeting is open.
 const MeetingRoom = dynamic(() => import("./components/meeting-room").then((m) => m.MeetingRoom), {
     ssr: false,
-    loading: () => <div className="flex h-full items-center justify-center"><Loader className="size-6 animate-spin text-[#ff5018]" /></div>,
+    loading: () => <div className="flex h-full items-center justify-center"><Loader className="size-6 animate-spin text-brand" /></div>,
 })
 const MeetingSummary = dynamic(() => import("./components/meeting-summary").then((m) => m.MeetingSummary), { ssr: false })
 
@@ -334,8 +334,8 @@ export default function MeetingPage() {
     if (isGenerating) {
         return (
             <div className="h-full flex items-center justify-center flex-col gap-3 px-4 bg-cream-soft">
-                <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
-                    <Sparkles className="size-6 text-[#ff5018] animate-pulse" />
+                <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
+                    <Sparkles className="size-6 text-brand animate-pulse" />
                 </div>
                 <p className="font-semibold tracking-tight text-center text-ink">Generating AI summary...</p>
                 <p className="text-sm text-ink/60 text-center">This will just take a moment</p>
@@ -359,8 +359,8 @@ export default function MeetingPage() {
                             <ArrowLeft className="size-4" />
                         </Button>
                     )}
-                    <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
-                        <Video className="size-4 text-[#ff5018]" />
+                    <div className="size-8 rounded-lg bg-brand/10 flex items-center justify-center">
+                        <Video className="size-4 text-brand" />
                     </div>
                     <h1 className="tracking-tight text-[17px] font-semibold text-ink">Meetings</h1>
                 </div>
@@ -368,7 +368,7 @@ export default function MeetingPage() {
                     {canStartWorkspace && (
                         <Button
                             onClick={openCreate}
-                            className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 rounded-lg font-semibold text-xs px-2.5 sm:px-3"
+                            className="bg-brand hover:bg-brand-hover text-white h-8 rounded-lg font-semibold text-xs px-2.5 sm:px-3"
                         >
                             <Plus className="size-3.5 sm:size-4 sm:mr-1" />
                             <span className="hidden sm:inline">New Meeting</span>
@@ -401,19 +401,19 @@ export default function MeetingPage() {
             <div className="flex-1 flex overflow-hidden">
                 {isLoading ? (
                     <div className="flex-1 flex items-center justify-center">
-                        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
-                            <Loader className="size-6 animate-spin text-[#ff5018]" />
+                        <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
+                            <Loader className="size-6 animate-spin text-brand" />
                         </div>
                     </div>
                 ) : meetings?.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center gap-3 text-ink/60 px-4">
-                        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
-                            <Video className="size-6 text-[#ff5018]" />
+                        <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
+                            <Video className="size-6 text-brand" />
                         </div>
                         <p className="font-semibold tracking-tight text-ink text-center">No meetings yet</p>
                         <p className="text-sm text-center">{canStartWorkspace ? "Start or schedule a meeting with your team" : "Moderators start team meetings. To talk with one person, open your direct message with them and press Call."}</p>
                         {canStartWorkspace && (
-                            <Button onClick={openCreate} size="sm" className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold">
+                            <Button onClick={openCreate} size="sm" className="bg-brand hover:bg-brand-hover text-white rounded-lg font-semibold">
                                 <Plus className="size-4 mr-1" /> Start a Meeting
                             </Button>
                         )}
@@ -430,8 +430,8 @@ export default function MeetingPage() {
                                     key={meeting._id}
                                     onClick={() => handleSelectMeeting(meeting)}
                                     className={cn(
-                                        "flex flex-col gap-1 px-3 sm:px-4 py-3 bg-surface rounded-xl border cursor-pointer hover:border-[#ff5018]/40 hover:shadow-sm transition-colors",
-                                        selectedMeeting?._id === meeting._id && "border-[#ff5018]/60 bg-cream"
+                                        "flex flex-col gap-1 px-3 sm:px-4 py-3 bg-surface rounded-xl border cursor-pointer hover:border-brand/40 hover:shadow-sm transition-colors",
+                                        selectedMeeting?._id === meeting._id && "border-brand/60 bg-cream"
                                     )}
                                 >
                                     <div className="flex items-center justify-between gap-2">
@@ -510,7 +510,7 @@ export default function MeetingPage() {
                                                         onClick={() => handleJoin(selectedMeeting.roomName, selectedMeeting._id)}
                                                         disabled={early}
                                                         title={early ? "You can join 10 minutes before it starts" : undefined}
-                                                        className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 rounded-lg font-semibold text-xs w-full sm:w-auto"
+                                                        className="bg-brand hover:bg-brand-hover text-white h-8 rounded-lg font-semibold text-xs w-full sm:w-auto"
                                                     >
                                                         <Video className="size-3.5 mr-1" /> {early ? "Not open yet" : "Join Meeting"}
                                                     </Button>
@@ -541,7 +541,7 @@ export default function MeetingPage() {
                                     {/* Summary component */}
                                     {isUpcoming(selectedMeeting) ? (
                                         <div className="rounded-xl border bg-surface p-4 text-sm text-ink/70 flex items-start gap-3">
-                                            <CalendarClock className="size-5 text-[#ff5018] shrink-0 mt-0.5" />
+                                            <CalendarClock className="size-5 text-brand shrink-0 mt-0.5" />
                                             <div>
                                                 <p className="font-semibold text-ink">Scheduled for {format(selectedMeeting.scheduledFor!, "EEEE d MMMM, h:mm a")}</p>
                                                 <p className="mt-1">Everyone in the workspace can join from 10 minutes before the start. The transcript and summary appear here afterwards.</p>
@@ -553,8 +553,8 @@ export default function MeetingPage() {
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center h-full text-ink/60 gap-3 px-4">
-                                    <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
-                                        <Video className="size-6 text-[#ff5018]" />
+                                    <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
+                                        <Video className="size-6 text-brand" />
                                     </div>
                                     <p className="text-sm text-center">Select a meeting to view details</p>
                                 </div>
@@ -579,7 +579,7 @@ export default function MeetingPage() {
                             value={title}
                             onChange={e => setTitle(e.target.value)}
                             onKeyDown={e => e.key === "Enter" && handleCreate()}
-                            className="text-sm rounded-lg focus-visible:ring-[#ff5018]/40 focus-visible:border-[#ff5018]"
+                            className="text-sm rounded-lg focus-visible:ring-brand/40 focus-visible:border-brand"
                         />
                         <div className="grid grid-cols-2 gap-1 rounded-lg bg-cream p-1" role="tablist" aria-label="When">
                             {([[false, "Start now"], [true, "Schedule for later"]] as const).map(([later, label]) => (
@@ -617,7 +617,7 @@ export default function MeetingPage() {
                         <Button
                             onClick={handleCreate}
                             disabled={isCreating || (scheduleOn && !scheduleDate)}
-                            className="bg-[#ff5018] hover:bg-[#e6430f] text-white text-sm rounded-lg font-semibold"
+                            className="bg-brand hover:bg-brand-hover text-white text-sm rounded-lg font-semibold"
                         >
                             {isCreating
                                 ? <Loader className="size-4 animate-spin" />

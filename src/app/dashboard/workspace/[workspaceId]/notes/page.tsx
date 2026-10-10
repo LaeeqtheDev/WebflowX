@@ -168,7 +168,7 @@ export default function NotesPage() {
                         className={cn(
                             "flex-1 flex items-center justify-center gap-1.5 h-14 text-sm font-semibold tracking-tight border-b-2 transition-colors",
                             tab === "personal"
-                                ? "border-[#ff5018] text-orange-ink"
+                                ? "border-brand text-orange-ink"
                                 : "border-transparent text-ink/60 hover:text-ink"
                         )}
                     >
@@ -180,7 +180,7 @@ export default function NotesPage() {
                         className={cn(
                             "flex-1 flex items-center justify-center gap-1.5 h-14 text-sm font-semibold tracking-tight border-b-2 transition-colors",
                             tab === "workspace"
-                                ? "border-[#ff5018] text-orange-ink"
+                                ? "border-brand text-orange-ink"
                                 : "border-transparent text-ink/60 hover:text-ink"
                         )}
                     >
@@ -193,7 +193,7 @@ export default function NotesPage() {
                 <div className="px-4 py-3 border-b border-plum/12">
                     <Button
                         onClick={handleNewNote}
-                        className="w-full bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold"
+                        className="w-full bg-brand hover:bg-brand-hover text-white rounded-lg font-semibold"
                         size="sm"
                     >
                         <Plus className="size-4 mr-1" /> New Note
@@ -204,11 +204,11 @@ export default function NotesPage() {
                 <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
                     {isLoading ? (
                         <div className="flex items-center justify-center h-full">
-                            <Loader className="size-5 animate-spin text-[#ff5018]" />
+                            <Loader className="size-5 animate-spin text-brand" />
                         </div>
                     ) : sortedNotes.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full gap-3 p-4">
-                            <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
+                            <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
                                 <FileText className="size-6" />
                             </div>
                             <p className="text-sm font-semibold tracking-tight text-ink">No notes yet</p>
@@ -219,20 +219,20 @@ export default function NotesPage() {
                                 key={note._id}
                                 onClick={() => handleSelectNote(note as Note)}
                                 className={cn(
-                                    "p-3.5 bg-surface border border-plum/12 rounded-xl cursor-pointer hover:border-[#ff5018]/40 hover:shadow-sm transition-all group",
-                                    selectedNote?._id === note._id && "border-[#ff5018] ring-1 ring-[#ff5018]/20"
+                                    "p-3.5 bg-surface border border-plum/12 rounded-xl cursor-pointer hover:border-brand/40 hover:shadow-sm transition-all group",
+                                    selectedNote?._id === note._id && "border-brand ring-1 ring-brand/20"
                                 )}
                             >
                                 <div className="flex items-start justify-between gap-1">
                                     <div className="flex items-center gap-1 flex-1 min-w-0">
-                                        {note.isPinned && <Pin className="size-3 text-[#ff5018] shrink-0" />}
+                                        {note.isPinned && <Pin className="size-3 text-brand shrink-0" />}
                                         <p className="text-sm font-semibold tracking-tight text-ink truncate">{note.title}</p>
                                     </div>
                                     <div className="flex items-center gap-1 opacity-0 max-md:opacity-100 group-hover:opacity-100 transition-opacity shrink-0">
                                         {isAdmin && tab === "workspace" && (
                                             <button aria-label="Pin or unpin note" type="button"
                                                 onClick={(e) => { e.stopPropagation(); handleTogglePin(note._id) }}
-                                                className="p-1 rounded-md text-ink/50 hover:text-orange-ink-hover hover:bg-[#ff5018]/10 transition-colors"
+                                                className="p-1 rounded-md text-ink/50 hover:text-orange-ink-hover hover:bg-brand/10 transition-colors"
                                             >
                                                 {note.isPinned
                                                     ? <PinOff className="size-3.5" />
@@ -313,7 +313,7 @@ export default function NotesPage() {
                             <Button
                                 onClick={handleCreate}
                                 disabled={isCreatingNote || !newTitle.trim()}
-                                className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold"
+                                className="bg-brand hover:bg-brand-hover text-white rounded-lg font-semibold"
                             >
                                 {isCreatingNote ? <Loader className="size-4 animate-spin" /> : "Save Note"}
                             </Button>
@@ -333,7 +333,7 @@ export default function NotesPage() {
                                     <ArrowLeft className="size-4" />
                                 </Button>
                                 <div className="flex items-center gap-2 min-w-0">
-                                    {selectedNote.isPinned && <Pin className="size-4 text-[#ff5018] shrink-0" />}
+                                    {selectedNote.isPinned && <Pin className="size-4 text-brand shrink-0" />}
                                     <span className="text-xs font-medium text-ink/60 capitalize truncate rounded-md bg-cream px-2 py-0.5">
                                         {selectedNote.type} note
                                     </span>
@@ -344,7 +344,7 @@ export default function NotesPage() {
                                     size="sm"
                                     onClick={handleUpdate}
                                     disabled={isUpdatingNote}
-                                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold shrink-0"
+                                    className="bg-brand hover:bg-brand-hover text-white rounded-lg font-semibold shrink-0"
                                 >
                                     {isUpdatingNote
                                         ? <Loader className="size-4 animate-spin" />
@@ -367,14 +367,14 @@ export default function NotesPage() {
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center h-full gap-3 p-4 bg-cream-soft">
-                        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
+                        <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
                             <FileText className="size-6" />
                         </div>
                         <p className="text-sm text-ink/60 text-center">Select a note or create a new one</p>
                         <Button
                             onClick={handleNewNote}
                             size="sm"
-                            className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold"
+                            className="bg-brand hover:bg-brand-hover text-white rounded-lg font-semibold"
                         >
                             <Plus className="size-4 mr-1" /> New Note
                         </Button>

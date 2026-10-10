@@ -59,11 +59,32 @@ export const updateProfile = mutation({
 
 // Each member picks their own appearance; it is stored on their account and follows them across devices.
 export const setTheme = mutation({
-    args: { theme: v.union(v.literal("light"), v.literal("dark"), v.literal("system")) },
+    args: {
+        theme: v.union(
+            v.literal("light"), v.literal("dark"), v.literal("system"),
+            v.literal("snow"), v.literal("ash"), v.literal("onyx"), v.literal("midnight"), v.literal("forest"),
+        ),
+    },
     handler: async (ctx, args) => {
         const userId = await auth.getUserId(ctx)
         if (!userId) throw new ConvexError("Please sign in")
         await ctx.db.patch(userId, { theme: args.theme })
         return args.theme
+    },
+})
+
+// Accent colour, message density, text size and reduced motion. Same idea as the theme: saved on the account.
+export const setLook = mutation({
+    args: {
+        accent: v.union(v.literal("ember"), v.literal("ocean"), v.literal("violet"), v.literal("emerald"), v.literal("rose"), v.literal("teal"), v.literal("gold"), v.literal("slate")),
+        density: v.union(v.literal("cozy"), v.literal("compact")),
+        fontScale: v.union(v.literal(90), v.literal(100), v.literal(112), v.literal(125)),
+        reducedMotion: v.boolean(),
+    },
+    handler: async (ctx, args) => {
+        const userId = await auth.getUserId(ctx)
+        if (!userId) throw new ConvexError("Please sign in")
+        await ctx.db.patch(userId, { look: args })
+        return args
     },
 })

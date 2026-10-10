@@ -26,14 +26,14 @@ const Notifications = () => {
   return (
     <section className={card}>
       <div className="flex items-start gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#ff5018]/10 text-[#ff5018]">{state === "on" ? <Bell className="size-5" /> : <BellOff className="size-5" />}</div>
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">{state === "on" ? <Bell className="size-5" /> : <BellOff className="size-5" />}</div>
         <div className="min-w-0 flex-1">
           <p className="font-semibold tracking-tight text-ink">Browser notifications</p>
           <p className="mt-0.5 text-sm text-ink/65">Get a pop-up for mentions, direct messages, thread replies and tasks, even when WebflowX isn&apos;t open. You won&apos;t get them while you&apos;re looking at the app.</p>
           {note[state] && <p className="mt-2 text-sm text-ink/60">{note[state]}</p>}
           {error && <p className="mt-2 text-sm text-destructive" role="alert">{error}</p>}
           <div className="mt-3 flex flex-wrap gap-2">
-            {state === "off" && <Button type="button" size="sm" disabled={busy} onClick={enable} className="bg-[#ff5018] text-white hover:bg-[#e6430f]">Turn on for this device</Button>}
+            {state === "off" && <Button type="button" size="sm" disabled={busy} onClick={enable} className="bg-brand text-white hover:bg-brand-hover">Turn on for this device</Button>}
             {state === "on" && <Button type="button" size="sm" variant="outline" disabled={busy} onClick={disable}>Turn off for this device</Button>}
             {canInstall && <Button type="button" size="sm" variant="outline" onClick={install}><Download className="mr-2 size-4" /> Install the app</Button>}
           </div>
@@ -79,7 +79,7 @@ const TwoStep = () => {
   return (
     <section className={card}>
       <div className="flex items-start gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#ff5018]/10 text-[#ff5018]">{enabled ? <ShieldCheck className="size-5" /> : <ShieldOff className="size-5" />}</div>
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">{enabled ? <ShieldCheck className="size-5" /> : <ShieldOff className="size-5" />}</div>
         <div className="min-w-0 flex-1">
           <p className="font-semibold tracking-tight text-ink">Two-step verification {enabled && <span className="ml-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">On</span>}</p>
           <p className="mt-0.5 text-sm text-ink/65">Asks for a code from your authenticator app each time you sign in, so a stolen password isn&apos;t enough.</p>
@@ -95,7 +95,7 @@ const TwoStep = () => {
               {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
               <div className="flex gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={reset} disabled={busy}>Cancel</Button>
-                <Button type="submit" size="sm" disabled={busy || code.trim().length < 6} className={mode === "disable" ? "bg-rose-600 text-white hover:bg-rose-700" : "bg-[#ff5018] text-white hover:bg-[#e6430f]"}>
+                <Button type="submit" size="sm" disabled={busy || code.trim().length < 6} className={mode === "disable" ? "bg-rose-600 text-white hover:bg-rose-700" : "bg-brand text-white hover:bg-brand-hover"}>
                   {mode === "disable" ? "Turn off" : "Get new codes"}
                 </Button>
               </div>
@@ -107,7 +107,7 @@ const TwoStep = () => {
               <span className="text-xs text-ink/55">{status?.backupCodesLeft ?? 0} backup codes left</span>
             </div>
           ) : (
-            <Button type="button" size="sm" className="mt-3 bg-[#ff5018] text-white hover:bg-[#e6430f]" onClick={() => setMode("setup")}>Set up</Button>
+            <Button type="button" size="sm" className="mt-3 bg-brand text-white hover:bg-brand-hover" onClick={() => setMode("setup")}>Set up</Button>
           )}
         </div>
       </div>

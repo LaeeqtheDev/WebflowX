@@ -53,9 +53,9 @@ const ActionRow = ({ icon: Icon, title, description, onClick }: {
     <button
         type="button"
         onClick={onClick}
-        className="group flex min-h-14 w-full items-center gap-3 rounded-xl border border-plum/12 bg-surface px-3.5 py-2.5 text-left transition-colors hover:border-[#ff5018]/40 hover:bg-cream-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70"
+        className="group flex min-h-14 w-full items-center gap-3 rounded-xl border border-plum/12 bg-surface px-3.5 py-2.5 text-left transition-colors hover:border-brand/40 hover:bg-cream-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70"
     >
-        <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#ff5018]/10 text-orange-ink">
+        <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-orange-ink">
             <Icon className="size-[18px]" />
         </span>
         <span className="min-w-0 flex-1">
@@ -157,7 +157,7 @@ const Step = ({ done, title, children }: { done: boolean; title: string; childre
             aria-hidden
             className={cn(
                 "flex size-6 shrink-0 items-center justify-center rounded-full border-2",
-                done ? "border-[#ff5018] bg-[#ff5018] text-white" : "border-plum/25"
+                done ? "border-brand bg-brand text-white" : "border-plum/25"
             )}
         >
             {done && <Check className="size-3.5" strokeWidth={3} />}
@@ -172,7 +172,7 @@ const Step = ({ done, title, children }: { done: boolean; title: string; childre
     </li>
 )
 
-const pill = "inline-flex h-10 items-center rounded-lg border border-plum/15 bg-cream-soft px-3 text-[13px] font-semibold text-orange-ink transition-colors hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70 md:h-8"
+const pill = "inline-flex h-10 items-center rounded-lg border border-plum/15 bg-cream-soft px-3 text-[13px] font-semibold text-orange-ink transition-colors hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70 md:h-8"
 
 export const GetStartedCard = () => {
     const router = useRouter()
@@ -195,13 +195,13 @@ export const GetStartedCard = () => {
                     type="button"
                     onClick={dismiss}
                     aria-label="Dismiss get started checklist"
-                    className="-mr-1 -mt-1 flex size-10 items-center justify-center rounded-lg text-ink/55 transition-colors hover:bg-surface hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70"
+                    className="-mr-1 -mt-1 flex size-10 items-center justify-center rounded-lg text-ink/55 transition-colors hover:bg-surface hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70"
                 >
                     <X className="size-4" />
                 </button>
             </div>
             <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-plum/10" aria-hidden>
-                <div className="h-full rounded-full bg-[#ff5018] transition-all" style={{ width: `${(doneCount / 3) * 100}%` }} />
+                <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${(doneCount / 3) * 100}%` }} />
             </div>
             <ul className="mt-3 flex flex-col gap-2">
                 <Step done={steps.invite} title="Invite a teammate">

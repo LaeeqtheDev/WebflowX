@@ -24,10 +24,10 @@ const Card = ({ icon, title, body, busy, onClick, onDelete }: {
       type="button"
       onClick={onClick}
       disabled={busy}
-      className="flex w-full items-start gap-3 rounded-xl border border-plum/12 bg-surface p-3 text-left transition-colors hover:border-[#ff5018]/50 hover:bg-[#ff5018]/5 disabled:opacity-60"
+      className="flex w-full items-start gap-3 rounded-xl border border-plum/12 bg-surface p-3 text-left transition-colors hover:border-brand/50 hover:bg-brand/5 disabled:opacity-60"
     >
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#ff5018]/10 text-lg">
-        {busy ? <Loader className="size-4 animate-spin text-[#ff5018]" /> : icon}
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-lg">
+        {busy ? <Loader className="size-4 animate-spin text-brand" /> : icon}
       </span>
       <span className="min-w-0">
         <span className="block truncate text-sm font-semibold tracking-tight text-ink">{title}</span>
@@ -89,7 +89,7 @@ export const NewPageDialog = ({ open, onOpenChange, parentId }: { open: boolean;
                 aria-selected={tab === t.id}
                 onClick={() => setTab(t.id)}
                 className={cn("rounded-t-lg border-b-2 px-3 py-2 text-sm font-medium transition-colors",
-                  tab === t.id ? "border-[#ff5018] text-ink" : "border-transparent text-ink/60 hover:text-ink")}
+                  tab === t.id ? "border-brand text-ink" : "border-transparent text-ink/60 hover:text-ink")}
               >
                 {t.label}
               </button>
@@ -101,7 +101,7 @@ export const NewPageDialog = ({ open, onOpenChange, parentId }: { open: boolean;
           {tab === "pages" && (
             <div className="grid gap-2.5 sm:grid-cols-2">
               {DOC_TEMPLATES.map((t) => (
-                <Card key={t.id} icon={<RenderIcon value={t.icon} className="size-4 text-[#ff5018]" />} title={t.name} body={t.description} busy={busy === t.id}
+                <Card key={t.id} icon={<RenderIcon value={t.icon} className="size-4 text-brand" />} title={t.name} body={t.description} busy={busy === t.id}
                   onClick={() => run(t.id, async () => {
                     const id = await createDoc({ workspaceId, title: t.id === "blank" ? "Untitled" : t.name, type: "document", parentId, icon: t.id === "blank" ? undefined : t.icon })
                     go(id, t.id !== "blank" ? `?t=${t.id}` : "")
@@ -117,13 +117,13 @@ export const NewPageDialog = ({ open, onOpenChange, parentId }: { open: boolean;
 
           {tab === "databases" && (
             <div className="grid gap-2.5 sm:grid-cols-2">
-              <Card icon={<Table2 className="size-4 text-[#ff5018]" />} title="Blank database" body="Start with a table and add your own properties" busy={busy === "blank-db"}
+              <Card icon={<Table2 className="size-4 text-brand" />} title="Blank database" body="Start with a table and add your own properties" busy={busy === "blank-db"}
                 onClick={() => run("blank-db", async () => {
                   const id = await createDb({ workspaceId, parentId, title: "Untitled database", icon: "i:table" })
                   go(id)
                 }, "Couldn't create the database")} />
               {DB_TEMPLATES().map((t) => (
-                <Card key={t.id} icon={<RenderIcon value={t.icon} className="size-4 text-[#ff5018]" />} title={t.name} body={t.description} busy={busy === t.id}
+                <Card key={t.id} icon={<RenderIcon value={t.icon} className="size-4 text-brand" />} title={t.name} body={t.description} busy={busy === t.id}
                   onClick={() => run(t.id, async () => {
                     const id = await createDb({ workspaceId, parentId, title: t.name, icon: t.icon, properties: t.properties, views: t.views, rows: t.rows })
                     go(id)
@@ -134,7 +134,7 @@ export const NewPageDialog = ({ open, onOpenChange, parentId }: { open: boolean;
 
           {tab === "saved" && (
             saved === undefined ? (
-              <div className="flex justify-center py-10"><Loader className="size-5 animate-spin text-[#ff5018]" /></div>
+              <div className="flex justify-center py-10"><Loader className="size-5 animate-spin text-brand" /></div>
             ) : saved.length === 0 ? (
               <p className="py-10 text-center text-sm text-ink/60">
                 Nothing saved yet. Open any page and choose <b>Save as template</b> from its menu to reuse it here.
@@ -142,7 +142,7 @@ export const NewPageDialog = ({ open, onOpenChange, parentId }: { open: boolean;
             ) : (
               <div className="grid gap-2.5 sm:grid-cols-2">
                 {saved.map((t) => (
-                  <Card key={t._id} icon={<RenderIcon value={t.icon ?? "i:file-text"} className="size-4 text-[#ff5018]" />} title={t.name} body="Saved template" busy={busy === t._id}
+                  <Card key={t._id} icon={<RenderIcon value={t.icon ?? "i:file-text"} className="size-4 text-brand" />} title={t.name} body="Saved template" busy={busy === t._id}
                     onClick={() => run(t._id, async () => {
                       const id = await createDoc({ workspaceId, title: t.name, type: "document", parentId, icon: t.icon ?? undefined })
                       go(id, `?tpl=${t._id}`)

@@ -186,7 +186,7 @@ export const DatabaseView = ({ docId }: { docId: Id<"docs"> }) => {
     return applySorts(list, view, env, comp)
   }, [ctx, rows, view, env, comp, search, props])
 
-  if (config === undefined || rowsRaw === undefined) return <div className="flex h-full items-center justify-center"><Loader className="size-5 animate-spin text-[#ff5018]" /></div>
+  if (config === undefined || rowsRaw === undefined) return <div className="flex h-full items-center justify-center"><Loader className="size-5 animate-spin text-brand" /></div>
   if (!config || !ctx) return <div className="flex h-full items-center justify-center p-6 text-sm text-ink/60">This database isn&apos;t available to you.</div>
 
   const addRow = async (values?: Record<string, unknown>, afterPosition?: number) => {
@@ -280,7 +280,7 @@ export const DatabaseView = ({ docId }: { docId: Id<"docs"> }) => {
               {config.canEditSchema && <DropdownMenuItem onClick={() => setPropDlg("new")}><Plus className="mr-2 size-3.5" /> New property</DropdownMenuItem>}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button type="button" size="sm" className="ml-1 h-8 bg-[#ff5018] text-white hover:bg-[#e6430f]" onClick={() => void addRow()}><Plus className="mr-1 size-3.5" /> New</Button>
+          <Button type="button" size="sm" className="ml-1 h-8 bg-brand text-white hover:bg-brand-hover" onClick={() => void addRow()}><Plus className="mr-1 size-3.5" /> New</Button>
         </div>
       </div>
 
@@ -302,7 +302,7 @@ export const DatabaseView = ({ docId }: { docId: Id<"docs"> }) => {
           <Input aria-label="View name" autoFocus value={renameText} maxLength={40} onChange={(e) => setRenameText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && renaming && renameText.trim()) { updateView({ ...(local[renaming.id] ?? renaming), name: renameText.trim() }); setRenaming(null) } }} />
           <DialogFooter>
             <Button variant="outline" onClick={() => setRenaming(null)}>Cancel</Button>
-            <Button className="bg-[#ff5018] text-white hover:bg-[#e6430f]" disabled={!renameText.trim()} onClick={() => { if (renaming) { updateView({ ...(local[renaming.id] ?? renaming), name: renameText.trim() }); setRenaming(null) } }}>Save</Button>
+            <Button className="bg-brand text-white hover:bg-brand-hover" disabled={!renameText.trim()} onClick={() => { if (renaming) { updateView({ ...(local[renaming.id] ?? renaming), name: renameText.trim() }); setRenaming(null) } }}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

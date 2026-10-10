@@ -57,7 +57,7 @@ const FilesPage = () => {
         <div className="flex h-full min-h-0 flex-col bg-surface">
             {preview && <AttachmentPreview open onOpenChange={(o) => !o && setPreview(null)} url={preview.url} name={preview.name} type={preview.type} />}
             <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-plum/12 px-4 py-2.5">
-                <Files className="size-5 text-[#ff5018]" />
+                <Files className="size-5 text-brand" />
                 <h1 className="text-lg font-semibold tracking-tight text-ink">Files</h1>
                 <div className="relative ml-auto w-full sm:w-72">
                     <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink/45" />
@@ -72,8 +72,8 @@ const FilesPage = () => {
                         role="tab"
                         aria-selected={category === c.id}
                         onClick={() => setCategory(c.id)}
-                        className={cn("whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5018]/70",
-                            category === c.id ? "bg-[#ff5018] text-white" : "bg-cream text-ink/75 hover:bg-cream-deep2")}
+                        className={cn("whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70",
+                            category === c.id ? "bg-brand text-white" : "bg-cream text-ink/75 hover:bg-cream-deep2")}
                     >
                         {c.label}
                     </button>
@@ -82,10 +82,10 @@ const FilesPage = () => {
 
             <div className="min-h-0 flex-1 overflow-y-auto p-4">
                 {data === undefined ? (
-                    <div className="flex h-full items-center justify-center"><Loader className="size-6 animate-spin text-[#ff5018]" /></div>
+                    <div className="flex h-full items-center justify-center"><Loader className="size-6 animate-spin text-brand" /></div>
                 ) : shown.length === 0 ? (
                     <div className="mx-auto flex max-w-sm flex-col items-center gap-3 py-20 text-center">
-                        <div className="flex size-14 items-center justify-center rounded-2xl bg-[#ff5018]/10 text-[#ff5018]"><Files className="size-6" /></div>
+                        <div className="flex size-14 items-center justify-center rounded-2xl bg-brand/10 text-brand"><Files className="size-6" /></div>
                         <p className="font-semibold tracking-tight text-ink">{deferred ? "No files match that name" : "No files yet"}</p>
                         <p className="text-sm text-ink/60">{deferred ? "Try a different word." : "Files and images shared in channels and direct messages show up here."}</p>
                     </div>
@@ -100,12 +100,12 @@ const FilesPage = () => {
                                             type="button"
                                             onClick={() => canPreview(f.contentType) ? setPreview({ url: f.url, name: f.name, type: f.contentType }) : window.open(f.url, "_blank", "noopener,noreferrer")}
                                             aria-label={`${canPreview(f.contentType) ? "Preview" : "Open"} ${f.name}`}
-                                            className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#ff5018]/70"
+                                            className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand/70"
                                         >
                                             {f.contentType.startsWith("image/") ? (
                                                 <img src={f.url} alt="" loading="lazy" referrerPolicy="no-referrer" className="size-full object-cover" />
                                             ) : (
-                                                <Icon type={f.contentType} className="size-10 text-[#ff5018]" />
+                                                <Icon type={f.contentType} className="size-10 text-brand" />
                                             )}
                                         </button>
                                         <div className="flex flex-1 flex-col gap-0.5 p-3">

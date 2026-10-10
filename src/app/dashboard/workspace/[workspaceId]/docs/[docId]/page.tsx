@@ -34,13 +34,13 @@ import dynamic from "next/dynamic"
 
 const DatabaseView = dynamic(() => import("@/features/databases/database-view").then((m) => m.DatabaseView), {
     ssr: false,
-    loading: () => <div className="flex h-full items-center justify-center"><Loader className="size-6 animate-spin text-[#ff5018]" /></div>,
+    loading: () => <div className="flex h-full items-center justify-center"><Loader className="size-6 animate-spin text-brand" /></div>,
 })
 
 // TipTap + Liveblocks are heavy; load them only on the editor screen.
 const DocEditor = dynamic(() => import("../components/doc-editor").then((m) => m.DocEditor), {
     ssr: false,
-    loading: () => <div className="flex h-full items-center justify-center"><Loader className="size-6 animate-spin text-[#ff5018]" /></div>,
+    loading: () => <div className="flex h-full items-center justify-center"><Loader className="size-6 animate-spin text-brand" /></div>,
 })
 
 const USER_COLORS = [
@@ -192,7 +192,7 @@ export default function DocPage() {
     if (isLoading || !currentMember) {
         return (
             <div className="h-full flex items-center justify-center bg-cream-soft">
-                <Loader className="size-5 animate-spin text-[#ff5018]" />
+                <Loader className="size-5 animate-spin text-brand" />
             </div>
         )
     }
@@ -200,13 +200,13 @@ export default function DocPage() {
     if (!doc) {
         return (
             <div className="h-full flex flex-col items-center justify-center gap-3 bg-cream-soft px-4">
-                <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
+                <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
                     <FileText className="size-6" />
                 </div>
                 <p className="text-sm font-semibold tracking-tight text-ink text-center">Document not found</p>
                 <Button
                     size="sm"
-                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold"
+                    className="bg-brand hover:bg-brand-hover text-white rounded-lg font-semibold"
                     onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}
                 >
                     <ArrowLeft className="size-4 mr-1" /> Back to Docs
@@ -269,7 +269,7 @@ export default function DocPage() {
                     <Button variant="ghost" size="sm" aria-label={favoriteSet.has(doc._id) ? "Remove from favorites" : "Add to favorites"} aria-pressed={favoriteSet.has(doc._id)}
                         className="h-8 w-8 rounded-lg p-0 hover:bg-cream-deep"
                         onClick={() => toggleFavorite({ id: doc._id }).catch((e) => toast.error(friendlyError(e, "Couldn't update favorites")))}>
-                        <Star className={`size-4 ${favoriteSet.has(doc._id) ? "fill-[#ff5018] text-[#ff5018]" : "text-ink/55"}`} />
+                        <Star className={`size-4 ${favoriteSet.has(doc._id) ? "fill-brand text-brand" : "text-ink/55"}`} />
                     </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -314,7 +314,7 @@ export default function DocPage() {
                             <Button
                                 onClick={handleShare}
                                 disabled={!shareChannelId}
-                                className="w-full h-8 text-xs rounded-lg font-semibold bg-[#ff5018] hover:bg-[#e6430f] text-white"
+                                className="w-full h-8 text-xs rounded-lg font-semibold bg-brand hover:bg-brand-hover text-white"
                             >
                                 Share
                             </Button>
@@ -339,7 +339,7 @@ export default function DocPage() {
                     <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-ink/45">Inside</span>
                     {byId.get(doc._id)!.children.map((c) => (
                         <button key={c._id} type="button" onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs/${c._id}`)}
-                            className="flex max-w-[200px] items-center gap-1.5 rounded-lg border border-plum/12 bg-cream-soft px-2 py-1 text-xs text-ink hover:border-[#ff5018]/40">
+                            className="flex max-w-[200px] items-center gap-1.5 rounded-lg border border-plum/12 bg-cream-soft px-2 py-1 text-xs text-ink hover:border-brand/40">
                             <PageIcon node={c} className="size-3.5 text-[13px]" /> <span className="truncate">{c.title || "Untitled"}</span>
                         </button>
                     ))}
@@ -351,7 +351,7 @@ export default function DocPage() {
                 {doc.type === "database" ? (
                     <DatabaseView docId={doc._id} />
                 ) : tplId && tplHtml === undefined ? (
-                    <div className="flex h-full items-center justify-center"><Loader className="size-5 animate-spin text-[#ff5018]" /></div>
+                    <div className="flex h-full items-center justify-center"><Loader className="size-5 animate-spin text-brand" /></div>
                 ) : (
                     <DocEditor
                         key={doc._id}
@@ -379,7 +379,7 @@ export default function DocPage() {
                     <Input aria-label="Template name" value={tplName} maxLength={120} onChange={(e) => setTplName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSaveTemplate()} className="h-10 rounded-lg" />
                     <div className="flex justify-end gap-2">
                         <Button variant="outline" onClick={() => setTplOpen(false)}>Cancel</Button>
-                        <Button className="bg-[#ff5018] text-white hover:bg-[#e6430f]" onClick={handleSaveTemplate}>Save template</Button>
+                        <Button className="bg-brand text-white hover:bg-brand-hover" onClick={handleSaveTemplate}>Save template</Button>
                     </div>
                 </DialogContent>
             </Dialog>

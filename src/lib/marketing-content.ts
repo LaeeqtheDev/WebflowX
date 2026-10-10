@@ -261,6 +261,16 @@ export type ChangelogEntry = { date: string; title: string; points: string[] }
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-10",
+    title: "More themes and an Appearance panel",
+    points: [
+      "Seven themes: Sand and Snow (light), Plum, Ash, Midnight, Forest and Onyx (dark), or sync with your computer.",
+      "Eight accent colors that recolor buttons, links and highlights across the app.",
+      "Cozy or compact message display, four text sizes and a reduced-motion switch.",
+      "Your choices are saved to your account and follow you to any device.",
+    ],
+  },
+  {
+    date: "2026-10-10",
     title: "A guided tour, templates and six languages for setup",
     points: [
       "New workspaces get an optional practice tour: send a message, use / for AI, turn a message into a task, write a page and run a meeting. At the end you choose what to keep.",

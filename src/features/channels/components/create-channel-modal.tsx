@@ -83,14 +83,14 @@ export const CreateChannelModal = () => {
                         placeholder="e.g. plan-budget"
                     />
                     <label className="flex items-start gap-3 rounded-xl border border-plum/12 bg-cream-soft px-4 py-3 cursor-pointer">
-                        <input type="checkbox" className="mt-1 size-4 accent-[#ff5018]" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} disabled={isPending} />
+                        <input type="checkbox" className="mt-1 size-4 accent-brand" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} disabled={isPending} />
                         <span>
-                            <span className="flex items-center gap-1.5 text-sm font-semibold"><Lock className="size-3.5 text-[#ff5018]" /> Make this channel locked</span>
+                            <span className="flex items-center gap-1.5 text-sm font-semibold"><Lock className="size-3.5 text-brand" /> Make this channel locked</span>
                             <span className="block text-xs text-ink/65">Only people you choose (and roles allowed to see locked channels) can open it.</span>
                         </span>
                     </label>
                     <label className="flex items-start gap-3 rounded-xl border border-plum/12 bg-cream-soft px-4 py-3 cursor-pointer">
-                        <input type="checkbox" className="mt-1 size-4 accent-[#ff5018]" checked={readOnly} onChange={(e) => setReadOnly(e.target.checked)} disabled={isPending} />
+                        <input type="checkbox" className="mt-1 size-4 accent-brand" checked={readOnly} onChange={(e) => setReadOnly(e.target.checked)} disabled={isPending} />
                         <span>
                             <span className="block text-sm font-semibold">Announcement channel (read-only)</span>
                             <span className="block text-xs text-ink/65">Everyone can read; only admins and allowed roles can post.</span>
@@ -100,7 +100,7 @@ export const CreateChannelModal = () => {
                         <div className="max-h-40 overflow-y-auto rounded-xl border border-plum/12 divide-y">
                             {(members ?? []).filter((m) => m._id !== me?.memberId).map((m) => (
                                 <label key={m._id} className="flex items-center gap-3 px-3 py-2 text-sm cursor-pointer hover:bg-cream-soft">
-                                    <input type="checkbox" className="size-4 accent-[#ff5018]" checked={picked.includes(m._id)}
+                                    <input type="checkbox" className="size-4 accent-brand" checked={picked.includes(m._id)}
                                         onChange={(e) => setPicked((p) => e.target.checked ? [...p, m._id] : p.filter((id) => id !== m._id))} />
                                     <span className="truncate">{m.user.name}</span>
                                 </label>

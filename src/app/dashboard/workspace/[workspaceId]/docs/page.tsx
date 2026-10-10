@@ -81,8 +81,8 @@ export default function DocsPage() {
             {/* Header */}
             <div className="flex items-center justify-between px-4 sm:px-6 h-14 border-b border-plum/12 bg-surface shrink-0">
                 <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
-                        <FileText className="size-4 text-[#ff5018]" />
+                    <div className="size-8 rounded-lg bg-brand/10 flex items-center justify-center">
+                        <FileText className="size-4 text-brand" />
                     </div>
                     <div>
                         <h1 className="tracking-tight text-[17px] font-semibold leading-none text-ink">Pages</h1>
@@ -106,7 +106,7 @@ export default function DocsPage() {
                 </Button>
                 <Button
                     onClick={() => setShowCreate(true)}
-                    className="bg-[#ff5018] hover:bg-[#e6430f] text-white h-8 text-xs px-3 rounded-lg font-semibold md:hidden"
+                    className="bg-brand hover:bg-brand-hover text-white h-8 text-xs px-3 rounded-lg font-semibold md:hidden"
                 >
                     <Plus className="size-3.5 sm:size-4 sm:mr-1" /> 
                     <span className="hidden sm:inline">New page</span>
@@ -123,18 +123,18 @@ export default function DocsPage() {
             <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full">
-                        <Loader className="size-5 animate-spin text-[#ff5018]" />
+                        <Loader className="size-5 animate-spin text-brand" />
                     </div>
                 ) : !docs || docs.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full gap-4 px-4">
-                        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
-                            <FileText className="size-6 text-[#ff5018]" />
+                        <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
+                            <FileText className="size-6 text-brand" />
                         </div>
                         <div className="text-center">
                             <p className="text-sm font-semibold tracking-tight text-ink">No pages yet</p>
                             <p className="text-xs mt-1 text-ink/60">Write a page, plan with a database, or start from a template</p>
                         </div>
-                        <Button onClick={() => setShowCreate(true)} size="sm" className="bg-[#ff5018] hover:bg-[#e6430f] text-white rounded-lg font-semibold">
+                        <Button onClick={() => setShowCreate(true)} size="sm" className="bg-brand hover:bg-brand-hover text-white rounded-lg font-semibold">
                             <Plus className="size-4 mr-1" /> New page
                         </Button>
                     </div>
@@ -145,21 +145,21 @@ export default function DocsPage() {
                         {visibleDocs.map(doc => (
                             <div
                                 key={doc._id}
-                                className="group relative flex flex-col gap-3 p-3 sm:p-4 border border-plum/12 rounded-xl cursor-pointer hover:shadow-sm transition-all hover:border-[#ff5018]/40 bg-surface"
+                                className="group relative flex flex-col gap-3 p-3 sm:p-4 border border-plum/12 rounded-xl cursor-pointer hover:shadow-sm transition-all hover:border-brand/40 bg-surface"
                                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs/${doc._id}`)}
                             >
                                 {/* Doc preview area */}
                                 <div className={cn(
                                     "w-full h-20 sm:h-24 rounded-lg flex items-center justify-center",
-                                    doc.type === "spreadsheet" ? "bg-green-50 dark:bg-green-500/10" : doc.type === "database" ? "bg-sky-50 dark:bg-sky-500/10" : "bg-[#ff5018]/10"
+                                    doc.type === "spreadsheet" ? "bg-green-50 dark:bg-green-500/10" : doc.type === "database" ? "bg-sky-50 dark:bg-sky-500/10" : "bg-brand/10"
                                 )}>
                                     {doc.icon
-                                        ? <RenderIcon value={doc.icon} className="size-8 text-3xl text-[#ff5018] sm:size-9 sm:text-4xl" />
+                                        ? <RenderIcon value={doc.icon} className="size-8 text-3xl text-brand sm:size-9 sm:text-4xl" />
                                         : doc.type === "spreadsheet"
                                             ? <FileSpreadsheet className="size-8 sm:size-9 text-green-600 dark:text-green-400" />
                                             : doc.type === "database"
                                                 ? <Table2 className="size-8 sm:size-9 text-sky-600 dark:text-sky-400" />
-                                                : <FileText className="size-8 sm:size-9 text-[#ff5018]" />
+                                                : <FileText className="size-8 sm:size-9 text-brand" />
                                     }
                                 </div>
 

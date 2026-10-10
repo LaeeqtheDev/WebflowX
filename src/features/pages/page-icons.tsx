@@ -52,7 +52,7 @@ export const IconPicker = ({ value, onChange, children, allowClear = true }: {
               type="button"
               aria-label={`Use the ${name.replace(/-/g, " ")} icon`}
               onClick={() => { onChange(iconKey(name)); setOpen(false) }}
-              className={cn("flex size-8 items-center justify-center rounded-md text-ink/75 hover:bg-cream-deep hover:text-[#ff5018]", value === iconKey(name) && "bg-[#ff5018]/15 text-[#ff5018]")}
+              className={cn("flex size-8 items-center justify-center rounded-md text-ink/75 hover:bg-cream-deep hover:text-brand", value === iconKey(name) && "bg-brand/15 text-brand")}
             >
               <Icon className="size-4" />
             </button>

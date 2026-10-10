@@ -177,9 +177,9 @@ const MessageImpl = ({
                 <div
                     id={`msg-${id}`}
                     className={cn(
-                        "flex flex-col gap-2 p-1.5 px-5 max-md:pl-3 max-md:pr-11 max-md:min-h-10 hover:bg-cream/70 group relative",
-                        isEditing && "bg-[#ff5018]/10 hover:bg-[#ff5018]/10",
-                    marks.isPinned && !isEditing && "bg-[#ff5018]/[0.06] hover:bg-[#ff5018]/[0.09]",
+                        "wfx-msg flex flex-col gap-2 p-1.5 px-5 max-md:pl-3 max-md:pr-11 max-md:min-h-10 hover:bg-cream/70 group relative",
+                        isEditing && "bg-brand/10 hover:bg-brand/10",
+                    marks.isPinned && !isEditing && "bg-brand/[0.06] hover:bg-brand/[0.09]",
                         isRemovingMessage &&
                             "bg-rose-500/50 transform transition-all scale-y-0 origin-bottom duration-200"
                     )}
@@ -269,9 +269,9 @@ const MessageImpl = ({
             <div
                 id={`msg-${id}`}
                 className={cn(
-                    "flex flex-col gap-2 p-1.5 px-5 max-md:pl-3 max-md:pr-11 max-md:min-h-10 hover:bg-cream/70 group relative",
-                    isEditing && "bg-[#ff5018]/10 hover:bg-[#ff5018]/10",
-                    marks.isPinned && !isEditing && "bg-[#ff5018]/[0.06] hover:bg-[#ff5018]/[0.09]",
+                    "wfx-msg flex flex-col gap-2 p-1.5 px-5 max-md:pl-3 max-md:pr-11 max-md:min-h-10 hover:bg-cream/70 group relative",
+                    isEditing && "bg-brand/10 hover:bg-brand/10",
+                    marks.isPinned && !isEditing && "bg-brand/[0.06] hover:bg-brand/[0.09]",
                     isRemovingMessage &&
                         "bg-rose-500/50 transform transition-all scale-y-0 origin-bottom duration-200"
                 )}

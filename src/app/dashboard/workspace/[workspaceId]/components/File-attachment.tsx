@@ -32,7 +32,7 @@ const getFileColor = (fileType?: string) => {
     if (fileType.startsWith("image/") || fileType.includes("video") || fileType.includes("audio"))
         return "bg-[#381d2a] dark:bg-[#4a2838] text-white";
     if (fileType.includes("pdf") || fileType.includes("presentation") || fileType.includes("powerpoint"))
-        return "bg-[#ff5018]/10 text-[#ff5018]";
+        return "bg-brand/10 text-brand";
     return "bg-cream text-plum";
 };
 

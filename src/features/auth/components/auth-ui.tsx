@@ -18,7 +18,7 @@ export const AuthField = ({
                 <Input
                     {...props}
                     type={isPassword && show ? "text" : type}
-                    className="h-12 rounded-xl border-plum/15 bg-surface px-4 text-base md:text-[15px] shadow-none focus-visible:border-[#ff5018] focus-visible:ring-[3px] focus-visible:ring-[#ff5018]/20"
+                    className="h-12 rounded-xl border-plum/15 bg-surface px-4 text-base md:text-[15px] shadow-none focus-visible:border-brand focus-visible:ring-[3px] focus-visible:ring-brand/20"
                 />
                 {isPassword && (
                     <button

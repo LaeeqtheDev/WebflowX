@@ -96,15 +96,15 @@ export const CalendarView = ({ view, rows, ctx, onView, onAdd }: ViewProps) => {
               <div key={d}
                 onDragOver={(e) => { if (drag) { e.preventDefault(); setOver(d) } }}
                 onDrop={(e) => { e.preventDefault(); if (drag) moveTo(drag, d); setDrag(null); setOver(null) }}
-                className={cn("group/day min-w-0 border-b border-r border-plum/10 p-1", !inMonth && "bg-cream-soft/60", over === d && "bg-[#ff5018]/10")}>
+                className={cn("group/day min-w-0 border-b border-r border-plum/10 p-1", !inMonth && "bg-cream-soft/60", over === d && "bg-brand/10")}>
                 <div className="flex items-center justify-between px-0.5">
-                  <span className={cn("flex size-6 items-center justify-center rounded-full text-xs", d === today ? "bg-[#ff5018] font-semibold text-white" : inMonth ? "text-ink" : "text-ink/40")}>{new Date(d).getDate()}</span>
+                  <span className={cn("flex size-6 items-center justify-center rounded-full text-xs", d === today ? "bg-brand font-semibold text-white" : inMonth ? "text-ink" : "text-ink/40")}>{new Date(d).getDate()}</span>
                   <button type="button" aria-label={`Add on ${toDateStr(d)}`} onClick={() => add(d)} className="rounded p-0.5 text-ink/40 opacity-0 hover:bg-cream-deep hover:text-ink focus-visible:opacity-100 group-hover/day:opacity-100 max-md:opacity-60"><Plus className="size-3.5" /></button>
                 </div>
                 <div className="mt-0.5 space-y-0.5">
                   {list.slice(0, 4).map((r) => (
                     <button key={r._id} type="button" draggable onDragStart={() => setDrag(r._id)} onDragEnd={() => { setDrag(null); setOver(null) }} onClick={() => ctx.openRow(r._id)}
-                      className="block w-full truncate rounded bg-[#ff5018]/12 px-1.5 py-0.5 text-left text-xs text-ink hover:bg-[#ff5018]/25">{r.title || "Untitled"}</button>
+                      className="block w-full truncate rounded bg-brand/12 px-1.5 py-0.5 text-left text-xs text-ink hover:bg-brand/25">{r.title || "Untitled"}</button>
                   ))}
                   {list.length > 4 && <p className="px-1 text-[11px] text-ink/50">+{list.length - 4} more</p>}
                 </div>

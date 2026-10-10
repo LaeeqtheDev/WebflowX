@@ -29,8 +29,8 @@ export default function DraftsPage() {
         <div className="h-full flex flex-col overflow-hidden bg-cream-soft">
             {/* Header */}
             <div className="flex items-center gap-3 px-6 h-14 border-b bg-surface shrink-0 shadow-none">
-                <div className="size-8 rounded-lg bg-[#ff5018]/10 flex items-center justify-center">
-                    <SendHorizonal className="size-4 text-[#ff5018]" />
+                <div className="size-8 rounded-lg bg-brand/10 flex items-center justify-center">
+                    <SendHorizonal className="size-4 text-brand" />
                 </div>
                 <div>
                     <h1 className="tracking-tight text-[17px] font-semibold leading-none text-ink">Sent</h1>
@@ -44,12 +44,12 @@ export default function DraftsPage() {
             <div className="flex-1 overflow-y-auto bg-surface divide-y divide-plum/10">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full">
-                        <Loader className="size-5 animate-spin text-[#ff5018]" />
+                        <Loader className="size-5 animate-spin text-brand" />
                     </div>
                 ) : !messages || messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full gap-4 text-ink/60">
-                        <div className="size-14 rounded-2xl bg-[#ff5018]/10 text-[#ff5018] flex items-center justify-center">
-                            <SendHorizonal className="size-6 text-[#ff5018]" />
+                        <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
+                            <SendHorizonal className="size-6 text-brand" />
                         </div>
                         <div className="text-center">
                             <p className="font-semibold tracking-tight text-ink">No messages sent yet</p>

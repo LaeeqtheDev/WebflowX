@@ -154,10 +154,10 @@ export const PageTree = ({ onNavigate }: { onNavigate?: () => void }) => {
           onDrop={(e) => { e.preventDefault(); onDrop(node, zoneFor(e)) }}
           className={cn(
             "group relative flex h-8 items-center gap-1 rounded-md pr-1 text-sm transition-colors",
-            active ? "bg-[#ff5018]/12 text-ink" : "text-ink/80 hover:bg-cream-deep",
-            isDrop && drop?.zone === "inside" && "bg-[#ff5018]/15 ring-1 ring-[#ff5018]/50",
-            isDrop && drop?.zone === "before" && "before:absolute before:inset-x-1 before:top-0 before:h-0.5 before:rounded before:bg-[#ff5018]",
-            isDrop && drop?.zone === "after" && "after:absolute after:inset-x-1 after:bottom-0 after:h-0.5 after:rounded after:bg-[#ff5018]",
+            active ? "bg-brand/12 text-ink" : "text-ink/80 hover:bg-cream-deep",
+            isDrop && drop?.zone === "inside" && "bg-brand/15 ring-1 ring-brand/50",
+            isDrop && drop?.zone === "before" && "before:absolute before:inset-x-1 before:top-0 before:h-0.5 before:rounded before:bg-brand",
+            isDrop && drop?.zone === "after" && "after:absolute after:inset-x-1 after:bottom-0 after:h-0.5 after:rounded after:bg-brand",
             dragId === node._id && "opacity-40"
           )}
           style={{ paddingLeft: 4 + depth * 14 }}
@@ -208,7 +208,7 @@ export const PageTree = ({ onNavigate }: { onNavigate?: () => void }) => {
                     </DropdownMenuItem>
                   </IconPicker>
                   <DropdownMenuItem onClick={() => toggleFavorite({ id: node._id }).catch((e) => toast.error(friendlyError(e, "Couldn't update favorites")))}>
-                    <Star className={cn("mr-2 size-3.5", favoriteSet.has(node._id) && "fill-[#ff5018] text-[#ff5018]")} />
+                    <Star className={cn("mr-2 size-3.5", favoriteSet.has(node._id) && "fill-brand text-brand")} />
                     {favoriteSet.has(node._id) ? "Remove from favorites" : "Add to favorites"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => { setMoveQuery(""); setMoveNode(node) }}>
@@ -249,7 +249,7 @@ export const PageTree = ({ onNavigate }: { onNavigate?: () => void }) => {
     <div className="flex h-full flex-col bg-surface">
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-plum/12 px-3">
         <span className="text-[15px] font-semibold tracking-tight text-ink">Pages</span>
-        <Button size="sm" className="h-8 gap-1 rounded-lg bg-[#ff5018] px-2.5 text-xs font-semibold text-white hover:bg-[#e6430f]"
+        <Button size="sm" className="h-8 gap-1 rounded-lg bg-brand px-2.5 text-xs font-semibold text-white hover:bg-brand-hover"
           onClick={() => { setNewParent(undefined); setNewOpen(true) }}>
           <Plus className="size-3.5" /> New
         </Button>
@@ -264,12 +264,12 @@ export const PageTree = ({ onNavigate }: { onNavigate?: () => void }) => {
           if (n) void doMove(n, null)
         }}>
         <button type="button" onClick={() => { router.push(`/dashboard/workspace/${workspaceId}/docs`); onNavigate?.() }}
-          className={cn("mb-1 flex h-8 w-full items-center gap-2 rounded-md px-2 text-sm text-ink/80 hover:bg-cream-deep", !activeId && "bg-[#ff5018]/12 font-semibold text-ink")}>
+          className={cn("mb-1 flex h-8 w-full items-center gap-2 rounded-md px-2 text-sm text-ink/80 hover:bg-cream-deep", !activeId && "bg-brand/12 font-semibold text-ink")}>
           <Home className="size-4 text-ink/55" /> All pages
         </button>
 
         {isLoading ? (
-          <div className="flex justify-center py-8"><Loader className="size-4 animate-spin text-[#ff5018]" /></div>
+          <div className="flex justify-center py-8"><Loader className="size-4 animate-spin text-brand" /></div>
         ) : (
           <>
             {favorites.length > 0 && (
@@ -282,7 +282,7 @@ export const PageTree = ({ onNavigate }: { onNavigate?: () => void }) => {
             {roots.length === 0 ? (
               <div className="px-2 py-6 text-center">
                 <p className="text-sm text-ink/60">No pages yet.</p>
-                <Button variant="link" className="text-[#ff5018]" onClick={() => { setNewParent(undefined); setNewOpen(true) }}>Create the first one</Button>
+                <Button variant="link" className="text-brand" onClick={() => { setNewParent(undefined); setNewOpen(true) }}>Create the first one</Button>
               </div>
             ) : roots.map((n) => renderNode(n, 0))}
           </>

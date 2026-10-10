@@ -17,7 +17,7 @@ import {
 } from "./state"
 
 type T = ReturnType<typeof useT>
-const primary = "cursor-pointer rounded-xl bg-[#ff5018] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#e6430f] disabled:cursor-not-allowed disabled:opacity-50"
+const primary = "cursor-pointer rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
 const ghost = "cursor-pointer rounded-xl border border-ink/15 bg-surface px-4 py-2 text-sm text-ink/80 hover:border-ink/30"
 
 const SIDEBAR_FOR_STEP: Record<number, "chat" | "tasks" | "docs" | "meeting" | "search" | null> = {
@@ -28,11 +28,11 @@ const SIDEBAR_FOR_STEP: Record<number, "chat" | "tasks" | "docs" | "meeting" | "
 
 const Msg = ({ who, text, reacted, children }: { who: string; text: string; reacted?: string; children?: React.ReactNode }) => (
   <div className="flex gap-3 rounded-lg px-3 py-2.5">
-    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#ff5018]/15 text-sm font-semibold text-[#ff5018]">{who.slice(0, 1).toUpperCase()}</span>
+    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand/15 text-sm font-semibold text-brand">{who.slice(0, 1).toUpperCase()}</span>
     <div className="min-w-0 flex-1">
       <p className="text-sm font-semibold text-ink">{who}</p>
       <p className="mt-0.5 break-words text-sm text-ink/80">{text}</p>
-      {reacted && <span className="mt-1.5 inline-flex rounded-full border border-[#ff5018]/40 bg-[#ff5018]/10 px-2 py-0.5 text-xs">{reacted} 1</span>}
+      {reacted && <span className="mt-1.5 inline-flex rounded-full border border-brand/40 bg-brand/10 px-2 py-0.5 text-xs">{reacted} 1</span>}
       {children}
     </div>
   </div>
@@ -77,7 +77,7 @@ function ChatSteps({ s, set, t }: { s: TourState; set: (p: Partial<TourState>) =
                   <button key={e} type="button" disabled={s.step !== 3} onClick={() => set({ reacted: e })} className={`${ghost} px-2.5 py-1 disabled:opacity-40`} aria-label={e}>{e}</button>
                 ))}
                 <button type="button" disabled={s.step !== 3} onClick={() => setThread((v) => !v)} className={`${ghost} py-1 text-xs disabled:opacity-40`}>{t("tour.s3.thread")}</button>
-                <button type="button" disabled={s.step !== 4 || !!s.task} onClick={() => setTaskOpen(true)} className={`${ghost} py-1 text-xs ${s.step === 4 && !s.task ? "!border-[#ff5018] !text-[#ff5018]" : "disabled:opacity-40"}`}>{t("tour.s3.task")}</button>
+                <button type="button" disabled={s.step !== 4 || !!s.task} onClick={() => setTaskOpen(true)} className={`${ghost} py-1 text-xs ${s.step === 4 && !s.task ? "!border-brand !text-brand" : "disabled:opacity-40"}`}>{t("tour.s3.task")}</button>
                 <button type="button" disabled className={`${ghost} py-1 text-xs opacity-40`}>{t("tour.s3.save")}</button>
               </div>
             )}
@@ -100,7 +100,7 @@ function ChatSteps({ s, set, t }: { s: TourState; set: (p: Partial<TourState>) =
             <div className="absolute bottom-full left-3 z-10 mb-1 w-64 rounded-xl border border-ink/15 bg-white p-1.5 shadow-lg" role="menu">
               <div className="mb-1 flex gap-1">
                 {(["ai", "fmt"] as const).map((k) => (
-                  <button key={k} type="button" onClick={() => setMenu(k)} className={`flex-1 rounded-md px-2 py-1 text-xs font-semibold ${menu === k ? "bg-[#ff5018]/10 text-[#ff5018]" : "text-ink/60"}`}>{t(k === "ai" ? "tour.s2.tabAi" : "tour.s2.tabFmt")}</button>
+                  <button key={k} type="button" onClick={() => setMenu(k)} className={`flex-1 rounded-md px-2 py-1 text-xs font-semibold ${menu === k ? "bg-brand/10 text-brand" : "text-ink/60"}`}>{t(k === "ai" ? "tour.s2.tabAi" : "tour.s2.tabFmt")}</button>
                 ))}
               </div>
               {menu === "ai"
@@ -138,7 +138,7 @@ function ChatSteps({ s, set, t }: { s: TourState; set: (p: Partial<TourState>) =
             <p className="mt-4 text-sm font-medium text-ink">{t("tour.s4.priority")}</p>
             <div className="mt-1 flex flex-wrap gap-1.5">
               {(["urgent", "high", "medium", "low"] as const).map((p) => (
-                <button key={p} type="button" aria-pressed={priority === p} onClick={() => setPriority(p)} className={`rounded-full border px-3 py-1 text-xs ${priority === p ? "border-[#ff5018] bg-[#ff5018]/10 text-ink" : "border-ink/15 text-ink/70"}`}>{t(`tour.p.${p}` as Key)}</button>
+                <button key={p} type="button" aria-pressed={priority === p} onClick={() => setPriority(p)} className={`rounded-full border px-3 py-1 text-xs ${priority === p ? "border-brand bg-brand/10 text-ink" : "border-ink/15 text-ink/70"}`}>{t(`tour.p.${p}` as Key)}</button>
               ))}
             </div>
             <button type="button" disabled={!taskTitle.trim()} onClick={() => { set({ task: { title: taskTitle.trim(), priority, stage: "todo" } }); setTaskOpen(false) }} className={`${primary} mt-5 w-full`}>{t("tour.s4.create")}</button>
@@ -215,7 +215,7 @@ function Meeting({ s, set, t }: { s: TourState; set: (p: Partial<TourState>) => 
       <div className="grid gap-3 sm:grid-cols-3">
         {[t("tour.you"), "Sam", "Priya"].map((n, i) => (
           <div key={n} className="flex aspect-video items-center justify-center rounded-lg bg-white/10">
-            <span className="flex size-12 items-center justify-center rounded-full bg-[#ff5018]/70 text-lg font-semibold">{n.slice(0, 1)}</span>
+            <span className="flex size-12 items-center justify-center rounded-full bg-brand/70 text-lg font-semibold">{n.slice(0, 1)}</span>
             {i === 0 && !cam && <span className="sr-only">off</span>}
           </div>
         ))}
@@ -375,26 +375,26 @@ export function OnboardingTour({ workspaceId, workspaceName, channels, initial, 
         <span className="font-semibold">WebflowX</span>
         <span className="text-xs font-semibold uppercase tracking-wider text-ink/50">{t("tour.step", { n: s.step, total: TOUR_STEPS })}</span>
         <div className="hidden h-1.5 w-40 gap-1 sm:flex" role="progressbar" aria-valuemin={1} aria-valuemax={TOUR_STEPS} aria-valuenow={s.step}>
-          {Array.from({ length: TOUR_STEPS }).map((_, i) => <span key={i} className={`h-1.5 flex-1 rounded-full ${i < s.step ? "bg-[#ff5018]" : "bg-ink/10"}`} />)}
+          {Array.from({ length: TOUR_STEPS }).map((_, i) => <span key={i} className={`h-1.5 flex-1 rounded-full ${i < s.step ? "bg-brand" : "bg-ink/10"}`} />)}
         </div>
         <div className="ml-auto flex items-center gap-3">
           <LanguagePicker />
           {s.step < TOUR_STEPS && <button type="button" onClick={leave} className="cursor-pointer text-sm font-medium text-ink/70 hover:text-ink">{t("tour.skip")}</button>}
         </div>
       </header>
-      <p className="bg-[#ff5018]/10 px-4 py-1.5 text-center text-xs text-ink/70">{t("tour.practice")}</p>
+      <p className="bg-brand/10 px-4 py-1.5 text-center text-xs text-ink/70">{t("tour.practice")}</p>
 
       <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto p-4 md:grid-cols-[13rem_1fr] lg:grid-cols-[13rem_1fr_20rem]">
         <nav className="hidden rounded-xl border border-ink/10 bg-surface p-3 md:block" aria-hidden>
           <p className="px-2 text-xs font-semibold uppercase tracking-wider text-ink/50">{t("tour.sb.channels")}</p>
           <ul className="mt-1 space-y-0.5 text-sm">
             {Array.from(new Set(["general", ...channels])).map((c) => (
-              <li key={c} className={`flex items-center gap-1.5 rounded-md px-2 py-1 ${c === "general" && active === "chat" ? "bg-[#ff5018]/10 font-semibold" : "text-ink/70"}`}><Hash className="size-3.5" />{c}</li>
+              <li key={c} className={`flex items-center gap-1.5 rounded-md px-2 py-1 ${c === "general" && active === "chat" ? "bg-brand/10 font-semibold" : "text-ink/70"}`}><Hash className="size-3.5" />{c}</li>
             ))}
           </ul>
           <ul className="mt-4 space-y-0.5 text-sm">
             {nav.map(({ id, icon: Icon, label }) => (
-              <li key={id} className={`flex items-center gap-2 rounded-md px-2 py-1.5 ${active === id ? "bg-[#ff5018]/10 font-semibold" : "text-ink/70"}`}><Icon className="size-4" />{label}</li>
+              <li key={id} className={`flex items-center gap-2 rounded-md px-2 py-1.5 ${active === id ? "bg-brand/10 font-semibold" : "text-ink/70"}`}><Icon className="size-4" />{label}</li>
             ))}
           </ul>
         </nav>
@@ -409,7 +409,7 @@ export function OnboardingTour({ workspaceId, workspaceName, channels, initial, 
             <ul className="grid gap-3 sm:grid-cols-2">
               {MORE.map(({ icon: Icon, k }) => (
                 <li key={k} className="flex gap-3 rounded-xl border border-ink/10 bg-surface p-4">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#ff5018]/10 text-[#ff5018]"><Icon className="size-[18px]" /></span>
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand"><Icon className="size-[18px]" /></span>
                   <span><span className="block text-sm font-semibold">{t(`tour.s9.${k}` as Key)}</span><span className="block text-xs text-ink/60">{t(`tour.s9.${k}.d` as Key)}</span></span>
                 </li>
               ))}
@@ -418,8 +418,8 @@ export function OnboardingTour({ workspaceId, workspaceName, channels, initial, 
           {s.step === 10 && <Finish s={s} workspaceId={workspaceId} workspaceName={workspaceName} onClose={finish} t={t} />}
         </main>
 
-        <aside className="rounded-xl border border-[#ff5018]/30 bg-white p-5 md:col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-1 lg:self-start">
-          <span className="flex size-9 items-center justify-center rounded-lg bg-[#ff5018]/10 text-[#ff5018]">{s.step === 9 ? <BookOpen className="size-[18px]" /> : s.step === 10 ? <Bell className="size-[18px]" /> : <Check className="size-[18px]" />}</span>
+        <aside className="rounded-xl border border-brand/30 bg-white p-5 md:col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-1 lg:self-start">
+          <span className="flex size-9 items-center justify-center rounded-lg bg-brand/10 text-brand">{s.step === 9 ? <BookOpen className="size-[18px]" /> : s.step === 10 ? <Bell className="size-[18px]" /> : <Check className="size-[18px]" />}</span>
           <h2 className="mt-3 text-xl font-semibold tracking-tight">{t(`tour.s${s.step}.title` as Key)}</h2>
           {s.step !== 10 && <p className="mt-2 text-sm text-ink/70">{t(`tour.s${s.step}.body` as Key)}</p>}
           {s.step < TOUR_STEPS && (

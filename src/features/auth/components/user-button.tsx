@@ -4,7 +4,7 @@ import { useCurrentUser } from "@/app/auth/api/user-current-user"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator} from "@/components/ui/dropdown-menu"
 import { useAuthActions } from "@convex-dev/auth/react"
-import { Download, Loader, LogOut, Monitor, Moon, ShieldCheck, Sun, UserPen } from "lucide-react"
+import { Download, Loader, LogOut, Monitor, Moon, Palette, ShieldCheck, Sun, UserPen } from "lucide-react"
 import { useSetTheme } from "@/hooks/use-theme-pref"
 import { isThemePref, type ThemePref } from "@/lib/theme"
 import { errMsg } from "@/lib/errors"
@@ -13,12 +13,14 @@ import { useDataExport } from "@/lib/export-data"
 import { useState } from "react"
 import { EditProfileModal } from "./edit-profile-modal"
 import { SecurityModal } from "@/features/security/security-modal"
+import { AppearanceModal } from "./appearance-modal"
 
 export const UserButton = () => {
     const {data, isLoading} = useCurrentUser();
     const {signOut} = useAuthActions();
     const [editOpen, setEditOpen] = useState(false)
     const [securityOpen, setSecurityOpen] = useState(false)
+    const [appearanceOpen, setAppearanceOpen] = useState(false)
     const { exportMine, busy, progress } = useDataExport()
     const setTheme = useSetTheme()
 
@@ -37,11 +39,12 @@ export const UserButton = () => {
         <>
         <EditProfileModal open={editOpen} setOpen={setEditOpen} user={data} />
         <SecurityModal open={securityOpen} setOpen={setSecurityOpen} />
+        <AppearanceModal open={appearanceOpen} setOpen={setAppearanceOpen} user={data} />
         <DropdownMenu modal={false}>
             <DropdownMenuTrigger className="outline-none relative">
                 <Avatar className=" rounded-lg size-10 hover:opacity-80 transition ring-1 ring-white/15">
                     <AvatarImage className="rounded-lg" src={image}  alt={name} />
-                    <AvatarFallback className="rounded-lg bg-[#ff5018] text-white font-semibold">
+                    <AvatarFallback className="rounded-lg bg-brand text-white font-semibold">
                         {avatarFallback}
                     </AvatarFallback>
                 </Avatar>
@@ -65,7 +68,7 @@ export const UserButton = () => {
                     <div role="radiogroup" aria-label="Appearance" className="grid grid-cols-3 gap-1 rounded-lg bg-ink/5 p-1">
                         {([["light", "Light", Sun], ["dark", "Dark", Moon], ["system", "Auto", Monitor]] as const).map(([value, label, Icon]) => {
                             const current: ThemePref = isThemePref(data.theme) ? data.theme : "system"
-                            const active = current === value
+                            const active = current === value || (value === "dark" && ["ash", "onyx", "midnight", "forest"].includes(current)) || (value === "light" && current === "snow")
                             return (
                                 <button
                                     key={value}
@@ -82,6 +85,10 @@ export const UserButton = () => {
                         })}
                     </div>
                 </div>
+                <DropdownMenuItem onClick={() => setAppearanceOpen(true)} className="h-10 rounded-lg cursor-pointer">
+                    <Palette className="size-4 mr-2" />
+                    More themes, accents &amp; text size
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                     disabled={busy}

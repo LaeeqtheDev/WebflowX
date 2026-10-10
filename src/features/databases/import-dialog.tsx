@@ -162,7 +162,7 @@ export const ImportDialog = ({ open, onOpenChange, ctx, existingRows }: { open: 
           <DialogDescription>Rows are added to this database. Nothing existing is changed.</DialogDescription>
         </DialogHeader>
         {!data ? (
-          <button type="button" onClick={() => fileRef.current?.click()} className="flex h-36 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-plum/20 text-sm text-ink/70 hover:border-[#ff5018]/50">
+          <button type="button" onClick={() => fileRef.current?.click()} className="flex h-36 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-plum/20 text-sm text-ink/70 hover:border-brand/50">
             <Upload className="size-5" /> Choose a .csv file
             <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void load(f) }} />
           </button>
@@ -191,7 +191,7 @@ export const ImportDialog = ({ open, onOpenChange, ctx, existingRows }: { open: 
         )}
         <DialogFooter>
           <Button type="button" variant="outline" disabled={!!busy} onClick={() => { onOpenChange(false); reset() }}>Cancel</Button>
-          {data && <Button type="button" disabled={!!busy || room === 0 || !map.includes("__title")} onClick={run} className="bg-[#ff5018] text-white hover:bg-[#e6430f]">{busy ? <><Loader className="mr-1 size-4 animate-spin" />{busy}</> : `Import ${Math.min(body.length, room)} rows`}</Button>}
+          {data && <Button type="button" disabled={!!busy || room === 0 || !map.includes("__title")} onClick={run} className="bg-brand text-white hover:bg-brand-hover">{busy ? <><Loader className="mr-1 size-4 animate-spin" />{busy}</> : `Import ${Math.min(body.length, room)} rows`}</Button>}
         </DialogFooter>
       </DialogContent>
     </Dialog>

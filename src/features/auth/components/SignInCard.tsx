@@ -68,13 +68,13 @@ export const SignInCard = ({ setState, onEmail }: SignInCardProps) => {
           <AuthField label="Email" disabled={pending} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" type="email" required />
           <AuthField label="Password" disabled={pending} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" type="password" required />
         <div className="-mt-1 text-right">
-          <button type="button" onClick={() => { onEmail(email); setState("resetPassword"); }} className="cursor-pointer text-sm font-medium text-[#ff5018] underline-offset-4 hover:underline">
+          <button type="button" onClick={() => { onEmail(email); setState("resetPassword"); }} className="cursor-pointer text-sm font-medium text-brand underline-offset-4 hover:underline">
             Forgot password?
           </button>
         </div>
         <Button
           type="submit"
-          className="mt-2 h-12 w-full cursor-pointer rounded-xl bg-[#ff5018] text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_rgba(255,80,24,0.8)] hover:bg-[#e6430f]"
+          className="mt-2 h-12 w-full cursor-pointer rounded-xl bg-brand text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_rgba(255,80,24,0.8)] hover:bg-brand-hover"
           size="lg"
           disabled={pending}
         >
@@ -124,7 +124,7 @@ export const SignInCard = ({ setState, onEmail }: SignInCardProps) => {
         <button
           type="button"
           onClick={() => setState("signUp")}
-          className="cursor-pointer font-semibold text-[#ff5018] underline-offset-4 hover:underline"
+          className="cursor-pointer font-semibold text-brand underline-offset-4 hover:underline"
         >
           Sign up
         </button>

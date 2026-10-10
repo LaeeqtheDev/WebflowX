@@ -40,7 +40,7 @@ export const BoardView = ({ view, rows, ctx, onView, onAdd, onMove }: ViewProps)
         <p className="max-w-sm text-sm text-ink/70">A board needs a property to make its columns from.</p>
         {candidates.length ? (
           <div className="flex flex-wrap justify-center gap-2">
-            {candidates.map((p) => <button key={p.id} type="button" onClick={() => onView({ ...view, groupBy: p.id })} className="rounded-lg border border-plum/15 bg-surface px-3 py-1.5 text-sm hover:border-[#ff5018]/50">Group by {p.name}</button>)}
+            {candidates.map((p) => <button key={p.id} type="button" onClick={() => onView({ ...view, groupBy: p.id })} className="rounded-lg border border-plum/15 bg-surface px-3 py-1.5 text-sm hover:border-brand/50">Group by {p.name}</button>)}
           </div>
         ) : <p className="text-xs text-ink/55">Add a Select or Status property first.</p>}
       </div>
@@ -78,7 +78,7 @@ export const BoardView = ({ view, rows, ctx, onView, onAdd, onMove }: ViewProps)
         <section key={g.key} aria-label={g.label}
           onDragOver={(e) => { if (dragging) { e.preventDefault(); setOverCol(g.key) } }}
           onDrop={(e) => { e.preventDefault(); drop(g.key) }}
-          className={cn("flex w-72 shrink-0 flex-col rounded-xl bg-cream-soft p-2", overCol === g.key && "ring-2 ring-[#ff5018]/40")}>
+          className={cn("flex w-72 shrink-0 flex-col rounded-xl bg-cream-soft p-2", overCol === g.key && "ring-2 ring-brand/40")}>
           <header className="flex items-center gap-2 px-1.5 pb-2 pt-1">
             {g.option ? <Chip option={g.option} /> : <span className="text-sm font-medium">{g.label}</span>}
             <span className="text-xs text-ink/50">{g.rows.length}</span>
@@ -90,7 +90,7 @@ export const BoardView = ({ view, rows, ctx, onView, onAdd, onMove }: ViewProps)
                 onDragEnd={() => { setDragging(null); setOverCol(null); setOverCard(null) }}
                 onDragOver={(e) => { if (dragging && dragging !== r._id) { e.preventDefault(); e.stopPropagation(); setOverCol(g.key); setOverCard(r._id) } }}
                 onDrop={(e) => { e.preventDefault(); e.stopPropagation(); drop(g.key, r._id) }}
-                className={cn(dragging === r._id && "opacity-40", overCard === r._id && "border-t-2 border-[#ff5018] pt-1")}>
+                className={cn(dragging === r._id && "opacity-40", overCard === r._id && "border-t-2 border-brand pt-1")}>
                 <Card row={r} props={props} ctx={ctx} onClick={() => ctx.openRow(r._id)} />
               </div>
             ))}
