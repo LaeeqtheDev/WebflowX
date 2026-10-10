@@ -42,7 +42,7 @@ export const AuthDivider = () => (
             <span className="w-full border-t border-plum/12" />
         </div>
         <div className="relative flex justify-center">
-            <span className="bg-cream-soft px-3 text-xs text-ink/50">or continue with</span>
+            <span className="bg-cream-soft px-3 text-xs text-ink/60">or continue with</span>
         </div>
     </div>
 )

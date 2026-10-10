@@ -42,7 +42,7 @@ export const TypingIndicator = ({ channelId, conversationId }: { channelId?: Id<
 
   // reserve the line so the input doesn't jump up and down
   return (
-    <div className="h-5 px-4 md:px-6 text-xs text-ink/55 flex items-center gap-1.5" aria-live="polite">
+    <div className="h-5 px-4 md:px-6 text-xs text-ink/60 flex items-center gap-1.5" aria-live="polite">
       {active && (
         <>
           <span aria-hidden className="flex gap-0.5">

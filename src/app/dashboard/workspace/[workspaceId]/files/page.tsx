@@ -111,7 +111,7 @@ const FilesPage = () => {
                                         <div className="flex flex-1 flex-col gap-0.5 p-3">
                                             <p className="truncate text-sm font-medium text-ink" title={f.name}>{f.name}</p>
                                             <p className="truncate text-xs text-ink/60">{f.uploaderName} · {f.where}</p>
-                                            <p className="text-xs text-ink/50">{format(f.createdAt, "MMM d, yyyy")}{f.size ? ` · ${sizeLabel(f.size)}` : ""}</p>
+                                            <p className="text-xs text-ink/60">{format(f.createdAt, "MMM d, yyyy")}{f.size ? ` · ${sizeLabel(f.size)}` : ""}</p>
                                             <div className="mt-2 flex gap-1">
                                                 {canPreview(f.contentType) && (
                                                     <Button type="button" variant="ghost" size="sm" aria-label="Preview" className="h-8 px-2" onClick={() => setPreview({ url: f.url, name: f.name, type: f.contentType })}><Eye className="size-4" /></Button>
@@ -124,7 +124,7 @@ const FilesPage = () => {
                                 )
                             })}
                         </ul>
-                        {(data?.length ?? 0) >= 100 && <p className="mt-4 text-center text-xs text-ink/55">Showing the 100 most recent. Search by name to find older files.</p>}
+                        {(data?.length ?? 0) >= 100 && <p className="mt-4 text-center text-xs text-ink/60">Showing the 100 most recent. Search by name to find older files.</p>}
                     </>
                 )}
             </div>

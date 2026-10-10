@@ -13,7 +13,7 @@ import { emit } from "./integrations";
 import { historyCutoff } from "./limits";
 
 import {
-  extractMentionIds, notifyMentions, populateUser, populateMember, populateReactions, populateThread, getMember, deleteMessageCascade, formerAuthor,
+  extractMentionIds, notifyMentions, populateUser, populateMember, populateReactions, populateThread, getMember, deleteMessageCascade, formerAuthor, authorLabel,
 } from "./messageHelpers";
 
 export { getMember, deleteMessageCascade };
@@ -548,6 +548,7 @@ export const search = query({
             visible.push(m);
             if (visible.length >= 10) break;
         }
-        return visible;
+        // who wrote each hit (a former member shows under the name they had)
+        return Promise.all(visible.map(async (m) => ({ ...m, authorName: (await authorLabel(ctx, m)).name })));
     },
 });

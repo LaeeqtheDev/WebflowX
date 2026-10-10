@@ -168,7 +168,7 @@ export const TaskDetail = ({
                         <section className="border-t border-plum/10 pt-5">
                             <h3 className="mb-3 flex items-center gap-1.5 text-[13px] font-semibold tracking-tight text-ink">
                                 <MessageSquare className="size-3.5 text-brand" /> Activity
-                                {!!comments?.length && <span className="text-xs font-normal text-ink/50">{comments.length}</span>}
+                                {!!comments?.length && <span className="text-xs font-normal text-ink/60">{comments.length}</span>}
                             </h3>
                             <div className="mb-4 flex flex-col gap-4">
                                 {comments?.length === 0 && <p className="text-xs text-ink/60">No comments yet. Start the conversation below.</p>}
@@ -180,8 +180,8 @@ export const TaskDetail = ({
                                         </Avatar>
                                         <div className="min-w-0 flex-1">
                                             <p className="flex items-baseline gap-2">
-                                                <span className="text-xs font-semibold text-ink">{comment.member?.user?.name ?? "Unknown"}</span>
-                                                <span className="text-[11px] text-ink/50">{formatDistanceToNow(comment._creationTime, { addSuffix: true })}</span>
+                                                <span className="text-xs font-semibold text-ink">{comment.member?.user?.name ?? "Former member"}</span>
+                                                <span className="text-[11px] text-ink/60">{formatDistanceToNow(comment._creationTime, { addSuffix: true })}</span>
                                             </p>
                                             <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink/80">{comment.body}</p>
                                         </div>
@@ -210,7 +210,7 @@ export const TaskDetail = ({
 
                     {/* Right: properties */}
                     <aside className="border-t border-plum/10 bg-cream-soft/60 px-4 py-5 md:border-l md:border-t-0">
-                        <h3 className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-wide text-ink/50">Details</h3>
+                        <h3 className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-wide text-ink/60">Details</h3>
 
                         <Field icon={CircleDot} label="Status">
                             <Select value={task.status} onValueChange={v => onUpdate(task._id, { status: v as Task["status"] })} disabled={!canSetStatus}>
@@ -289,7 +289,7 @@ export const TaskDetail = ({
                                 <Person name={task.creator?.user?.name} image={task.creator?.user?.image} />
                             </Field>
                             {task.updatedAt && (
-                                <p className="px-2 pt-1 text-[11px] text-ink/50">Updated {formatDistanceToNow(task.updatedAt, { addSuffix: true })}</p>
+                                <p className="px-2 pt-1 text-[11px] text-ink/60">Updated {formatDistanceToNow(task.updatedAt, { addSuffix: true })}</p>
                             )}
                         </div>
                         {isAdmin && (
@@ -304,7 +304,7 @@ export const TaskDetail = ({
                                     </div>
                                 ) : (
                                     <button type="button" onClick={() => setConfirmDelete(true)}
-                                        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-ink/55 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400">
+                                        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-ink/60 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400">
                                         <Trash2 className="size-3.5" /> Delete task
                                     </button>
                                 )}

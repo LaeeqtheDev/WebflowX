@@ -49,7 +49,7 @@ export const SignInCard = ({ setState, onEmail }: SignInCardProps) => {
 
   return (
     <div className="w-full">
-      <Link href="/" className="mb-10 inline-flex items-center gap-1.5 text-sm text-ink/55 transition-colors hover:text-ink">
+      <Link href="/" className="mb-10 inline-flex items-center gap-1.5 text-sm text-ink/60 transition-colors hover:text-ink">
         <ArrowLeft size={16} />
         Back to home
       </Link>

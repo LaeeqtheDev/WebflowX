@@ -41,7 +41,7 @@ export const TrashDialog = ({ open, onOpenChange }: { open: boolean; onOpenChang
               <PageIcon node={{ icon: d.icon, type: d.type }} className="size-5 text-lg" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-ink">{d.title || "Untitled"}</p>
-                <p className="text-xs text-ink/55">
+                <p className="text-xs text-ink/60">
                   {d.inside > 0 ? `+ ${d.inside} page${d.inside === 1 ? "" : "s"} inside · ` : ""}{d.daysLeft} day{d.daysLeft === 1 ? "" : "s"} left
                 </p>
               </div>

@@ -42,7 +42,7 @@ export const TaskCard = ({
                 {isAdmin && (
                     <button aria-label="Delete task" type="button"
                         onClick={(e) => { e.stopPropagation(); onDelete(task._id) }}
-                        className="opacity-0 max-md:opacity-100 group-hover:opacity-100 transition-opacity text-ink/50 hover:text-destructive shrink-0"
+                        className="opacity-0 max-md:opacity-100 group-hover:opacity-100 transition-opacity text-ink/60 hover:text-destructive shrink-0"
                     >
                         <Trash2 className="size-3.5" />
                     </button>

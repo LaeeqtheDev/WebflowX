@@ -91,7 +91,7 @@ function ChatSteps({ s, set, t }: { s: TourState; set: (p: Partial<TourState>) =
             )}
           </Msg>
         )}
-        {!s.msg2 && s.step >= 3 && s.msg1 && <p className="px-3 text-xs text-ink/50">{t("tour.s4.body")}</p>}
+        {!s.msg2 && s.step >= 3 && s.msg1 && <p className="px-3 text-xs text-ink/60">{t("tour.s4.body")}</p>}
       </div>
 
       {(s.step === 1 || s.step === 2) && (
@@ -124,7 +124,7 @@ function ChatSteps({ s, set, t }: { s: TourState; set: (p: Partial<TourState>) =
             {s.step === 2 && !slashOpen && <button type="button" onClick={() => setDraft((d) => `${d.trim()} /`)} className={ghost}>{t("tour.s2.insert")}</button>}
             <button type="submit" disabled={!draft.trim() || slashOpen} className={primary}>{t("tour.send")}</button>
           </form>
-          {s.step === 2 && <p className="mt-2 text-xs text-ink/50">{t("tour.s2.note")}</p>}
+          {s.step === 2 && <p className="mt-2 text-xs text-ink/60">{t("tour.s2.note")}</p>}
         </div>
       )}
 
@@ -158,11 +158,11 @@ function Board({ s, set, t }: { s: TourState; set: (p: Partial<TourState>) => vo
     <div className="grid gap-3 sm:grid-cols-3">
       {cols.map((c) => (
         <div key={c.stage} className="min-h-[10rem] rounded-xl border border-ink/10 bg-surface p-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-ink/55">{t(c.label)}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink/60">{t(c.label)}</p>
           {s.task?.stage === c.stage ? (
             <div className="mt-3 rounded-lg border border-ink/10 bg-white p-3">
               <p className="text-sm font-medium text-ink">{s.task.title}</p>
-              <p className="mt-1 text-xs text-ink/55">{t(`tour.p.${s.task.priority}` as Key)}</p>
+              <p className="mt-1 text-xs text-ink/60">{t(`tour.p.${s.task.priority}` as Key)}</p>
               {c.stage !== "done" && (
                 <button type="button" onClick={() => set({ task: { ...s.task!, stage: next(c.stage) } })} className={`${primary} mt-3 w-full py-1.5 text-xs`}>
                   {t("tour.s5.move", { col: t(c.stage === "todo" ? "tour.s5.progress" : "tour.s5.finished") })}
@@ -232,12 +232,12 @@ function Meeting({ s, set, t }: { s: TourState; set: (p: Partial<TourState>) => 
       )}
       {s.meeting === "ended" && (
         <div className="mt-4 rounded-lg bg-white p-4 text-ink">
-          <p className="text-xs font-semibold uppercase tracking-wider text-ink/55">{t("tour.s7.sumH")}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink/60">{t("tour.s7.sumH")}</p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
             <li>{t("tour.s7.sumTopic", { title: topic })}</li>
             {s.task && <li>{t("tour.s7.sumAction", { task: s.task.title })}</li>}
           </ul>
-          <p className="mt-3 text-xs text-ink/55">{t("tour.s7.sumNote")}</p>
+          <p className="mt-3 text-xs text-ink/60">{t("tour.s7.sumNote")}</p>
         </div>
       )}
     </div>
@@ -259,12 +259,12 @@ function SearchStep({ s, set, t }: { s: TourState; set: (p: Partial<TourState>) 
   useEffect(() => { if (results.length && !s.searched) set({ searched: true }) }, [results.length, s.searched, set])
   return (
     <div className="rounded-xl border border-ink/10 bg-surface p-4">
-      <div className="flex items-center gap-2 rounded-lg border border-ink/15 bg-white px-3 py-2"><Search className="size-4 text-ink/50" />
+      <div className="flex items-center gap-2 rounded-lg border border-ink/15 bg-white px-3 py-2"><Search className="size-4 text-ink/60" />
         <input value={q} onChange={(e) => setQ(e.target.value)} autoFocus placeholder={t("tour.s8.ph")} aria-label={t("tour.s8.ph")} className="w-full bg-transparent text-sm outline-none" />
       </div>
       <ul className="mt-3 space-y-1.5">
         {results.map((r, i) => <li key={i} className="rounded-lg bg-white px-3 py-2 text-sm"><span className="mr-2 rounded bg-ink/10 px-1.5 py-0.5 text-xs">{t(r.kind)}</span>{r.text.slice(0, 100)}</li>)}
-        {q.trim() && !results.length && <li className="px-1 text-sm text-ink/50">{t("tour.s8.none")}</li>}
+        {q.trim() && !results.length && <li className="px-1 text-sm text-ink/60">{t("tour.s8.none")}</li>}
       </ul>
     </div>
   )
@@ -373,7 +373,7 @@ export function OnboardingTour({ workspaceId, workspaceName, channels, initial, 
     <div className="fixed inset-0 z-50 flex flex-col bg-cream-soft text-ink" role="dialog" aria-modal="true" aria-label="WebflowX tour">
       <header className="flex flex-wrap items-center gap-3 border-b border-ink/10 bg-white px-4 py-3">
         <span className="font-semibold">WebflowX</span>
-        <span className="text-xs font-semibold uppercase tracking-wider text-ink/50">{t("tour.step", { n: s.step, total: TOUR_STEPS })}</span>
+        <span className="text-xs font-semibold uppercase tracking-wider text-ink/60">{t("tour.step", { n: s.step, total: TOUR_STEPS })}</span>
         <div className="hidden h-1.5 w-40 gap-1 sm:flex" role="progressbar" aria-valuemin={1} aria-valuemax={TOUR_STEPS} aria-valuenow={s.step}>
           {Array.from({ length: TOUR_STEPS }).map((_, i) => <span key={i} className={`h-1.5 flex-1 rounded-full ${i < s.step ? "bg-brand" : "bg-ink/10"}`} />)}
         </div>
@@ -386,7 +386,7 @@ export function OnboardingTour({ workspaceId, workspaceName, channels, initial, 
 
       <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto p-4 md:grid-cols-[13rem_1fr] lg:grid-cols-[13rem_1fr_20rem]">
         <nav className="hidden rounded-xl border border-ink/10 bg-surface p-3 md:block" aria-hidden>
-          <p className="px-2 text-xs font-semibold uppercase tracking-wider text-ink/50">{t("tour.sb.channels")}</p>
+          <p className="px-2 text-xs font-semibold uppercase tracking-wider text-ink/60">{t("tour.sb.channels")}</p>
           <ul className="mt-1 space-y-0.5 text-sm">
             {Array.from(new Set(["general", ...channels])).map((c) => (
               <li key={c} className={`flex items-center gap-1.5 rounded-md px-2 py-1 ${c === "general" && active === "chat" ? "bg-brand/10 font-semibold" : "text-ink/70"}`}><Hash className="size-3.5" />{c}</li>

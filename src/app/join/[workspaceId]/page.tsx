@@ -134,7 +134,7 @@ const JoinPage = () => {
         const closed = data?.invitesOpen === false
         return (
             <AuthShell title={panelTitle} body={panelBody}>
-                <Link href="/" className="mb-10 inline-flex items-center gap-1.5 text-sm text-ink/55 transition-colors hover:text-ink">
+                <Link href="/" className="mb-10 inline-flex items-center gap-1.5 text-sm text-ink/60 transition-colors hover:text-ink">
                     <ArrowLeft size={16} /> Back to home
                 </Link>
                 <Heading
@@ -152,7 +152,7 @@ const JoinPage = () => {
                 {data && !closed && !inviteCode && (
                     <div className="mt-8">
                         <CodeInput onComplete={(v) => setTypedCode(v)} />
-                        <p className="mt-5 text-sm text-ink/55">No code? Ask whoever invited you to copy the link again from <strong className="text-ink/75">Invite people</strong>. The full link ends in <code className="rounded bg-cream-deep px-1">?code=XXXXXX</code> and signs you up without typing anything.</p>
+                        <p className="mt-5 text-sm text-ink/60">No code? Ask whoever invited you to copy the link again from <strong className="text-ink/75">Invite people</strong>. The full link ends in <code className="rounded bg-cream-deep px-1">?code=XXXXXX</code> and signs you up without typing anything.</p>
                     </div>
                 )}
                 {data && !closed && !!inviteCode && (
@@ -183,7 +183,7 @@ const JoinPage = () => {
                 </div>
             )}
             <div className="mt-8"><CodeInput onComplete={handleComplete} /></div>
-            <Link href="/dashboard" className="mt-8 inline-flex items-center gap-1.5 text-sm text-ink/55 transition-colors hover:text-ink">
+            <Link href="/dashboard" className="mt-8 inline-flex items-center gap-1.5 text-sm text-ink/60 transition-colors hover:text-ink">
                 <ArrowLeft size={16} /> Back to dashboard
             </Link>
         </AuthShell>

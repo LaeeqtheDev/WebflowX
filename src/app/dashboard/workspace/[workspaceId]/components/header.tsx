@@ -158,7 +158,7 @@ export const Header = ({ title }: HeaderProps) => {
                                 <label className="flex items-center justify-between gap-3 cursor-pointer">
                                     <span>
                                         <span className="block text-sm font-semibold">Locked channel</span>
-                                        <span className="block text-xs text-ink/55">Only people you add, plus roles allowed to see locked channels, can open it.</span>
+                                        <span className="block text-xs text-ink/60">Only people you add, plus roles allowed to see locked channels, can open it.</span>
                                     </span>
                                     <input type="checkbox" className="size-4 accent-brand" checked={!!channel.isPrivate}
                                         onChange={(e) => run(() => setAccess({ id: channelId, isPrivate: e.target.checked }), "Couldn't change channel access")} />
@@ -167,7 +167,7 @@ export const Header = ({ title }: HeaderProps) => {
                                 {channel.isPrivate && (
                                     <div className="mt-4 flex flex-col gap-2">
                                         <div className="flex items-center justify-between">
-                                            <p className="text-xs font-semibold uppercase tracking-wide text-ink/55">In this channel ({ids.length})</p>
+                                            <p className="text-xs font-semibold uppercase tracking-wide text-ink/60">In this channel ({ids.length})</p>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button size="sm" variant="outline" className="rounded-lg" disabled={addable.length === 0}>
@@ -205,7 +205,7 @@ export const Header = ({ title }: HeaderProps) => {
                         {canManage && channel && guestList.length > 0 && (
                             <div className="px-5 py-4 bg-surface rounded-xl border border-plum/12">
                                 <p className="text-sm font-semibold">Guests in this channel</p>
-                                <p className="text-xs text-ink/55 mb-2">Guests can only open channels you tick here.</p>
+                                <p className="text-xs text-ink/60 mb-2">Guests can only open channels you tick here.</p>
                                 <div className="flex flex-col gap-1.5">
                                     {guestList.map((g) => (
                                         <label key={g._id} className="flex items-center gap-2.5 cursor-pointer">
@@ -225,7 +225,7 @@ export const Header = ({ title }: HeaderProps) => {
                             <label className="px-5 py-4 bg-surface rounded-xl border border-plum/12 flex items-center justify-between gap-3 cursor-pointer">
                                 <span>
                                     <span className="block text-sm font-semibold">Announcement channel (read-only)</span>
-                                    <span className="block text-xs text-ink/55">Everyone can read and reply in threads; only roles allowed to post can start messages.</span>
+                                    <span className="block text-xs text-ink/60">Everyone can read and reply in threads; only roles allowed to post can start messages.</span>
                                 </span>
                                 <input type="checkbox" className="size-4 accent-brand" checked={!!channel.readOnly}
                                     onChange={(e) => run(() => setReadOnly({ id: channelId, readOnly: e.target.checked }), "Couldn't change channel mode")} />

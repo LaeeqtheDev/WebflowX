@@ -53,7 +53,7 @@ export const UserButton = () => {
             <DropdownMenuContent align="center" side="right" className="w-60 rounded-xl p-1.5">
                 <div className="px-2 py-2 mb-1">
                     <p className="text-sm font-semibold text-ink truncate">{name}</p>
-                    {data.title && <p className="text-xs text-ink/55 truncate">{data.title}</p>}
+                    {data.title && <p className="text-xs text-ink/60 truncate">{data.title}</p>}
                 </div>
                 <DropdownMenuItem onClick={() => setEditOpen(true)} className="h-10 rounded-lg cursor-pointer">
                     <UserPen className="size-4 mr-2" />
@@ -64,8 +64,8 @@ export const UserButton = () => {
                     Security &amp; notifications
                 </DropdownMenuItem>
                 <div className="px-2 pt-1 pb-2">
-                    <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink/55">Appearance</p>
-                    <div role="radiogroup" aria-label="Appearance" className="grid grid-cols-3 gap-1 rounded-lg bg-ink/5 p-1">
+                    <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink/60">Appearance</p>
+                    <div role="radiogroup" aria-label="Appearance" className="grid grid-cols-3 gap-1 rounded-lg bg-ink/10 p-1">
                         {([["light", "Light", Sun], ["dark", "Dark", Moon], ["system", "Auto", Monitor]] as const).map(([value, label, Icon]) => {
                             const current: ThemePref = isThemePref(data.theme) ? data.theme : "system"
                             const active = current === value || (value === "dark" && ["ash", "onyx", "midnight", "forest"].includes(current)) || (value === "light" && current === "snow")
@@ -76,7 +76,7 @@ export const UserButton = () => {
                                     role="radio"
                                     aria-checked={active}
                                     onClick={() => setTheme(value).catch((e) => toast.error(errMsg(e, "Couldn't save your theme")))}
-                                    className={`flex h-8 items-center justify-center gap-1.5 rounded-md text-xs font-medium transition-colors ${active ? "bg-surface text-ink shadow-sm" : "text-ink/65 hover:text-ink"}`}
+                                    className={`flex h-8 items-center justify-center gap-1.5 rounded-md text-xs font-medium transition-colors ${active ? "bg-brand text-white shadow-sm" : "text-ink/70 hover:bg-ink/10 hover:text-ink"}`}
                                 >
                                     <Icon className="size-3.5" aria-hidden />
                                     {label}

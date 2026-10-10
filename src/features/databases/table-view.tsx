@@ -107,7 +107,7 @@ export const TableView = ({ view, rows, ctx, onView, onAdd, onMove }: ViewProps)
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button type="button" className="group/c flex h-8 w-full items-center gap-1 px-2 text-left text-ink/55 hover:bg-cream-deep">
+          <button type="button" className="group/c flex h-8 w-full items-center gap-1 px-2 text-left text-ink/60 hover:bg-cream-deep">
             {shownFn ? <><span className="truncate">{CALC_LABEL[shownFn]}</span><span className="ml-auto truncate font-medium text-ink">{value}</span></> : <span className="opacity-0 hover:opacity-100 focus-visible:opacity-100 group-hover/c:opacity-100">Calculate</span>}
           </button>
         </DropdownMenuTrigger>
@@ -216,19 +216,19 @@ export const TableView = ({ view, rows, ctx, onView, onAdd, onMove }: ViewProps)
                     {collapsed.has(g.key) ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
                   </button>
                   {g.option ? <Chip option={g.option} /> : <span className="text-sm font-medium">{g.label}</span>}
-                  <span className="text-xs text-ink/50">{g.rows.length}</span>
+                  <span className="text-xs text-ink/60">{g.rows.length}</span>
                 </div>
               )}
               {!collapsed.has(g.key) && g.rows.map((r) => rowEl(r, g.key))}
               {!collapsed.has(g.key) && (
                 <button type="button" onClick={() => onAdd(groupProp ? { [groupProp.id]: valueForGroup(groupProp, g.key) } : undefined)}
-                  className="sticky left-0 flex h-8 w-full items-center gap-1.5 px-3 text-sm text-ink/55 hover:bg-cream-soft hover:text-ink">
+                  className="sticky left-0 flex h-8 w-full items-center gap-1.5 px-3 text-sm text-ink/60 hover:bg-cream-soft hover:text-ink">
                   <Plus className="size-3.5" /> New
                 </button>
               )}
             </div>
           ))}
-          {rows.length === 0 && !groupProp && <p className="px-4 py-6 text-sm text-ink/55">No rows to show. Add one with “New”, or clear the filters.</p>}
+          {rows.length === 0 && !groupProp && <p className="px-4 py-6 text-sm text-ink/60">No rows to show. Add one with “New”, or clear the filters.</p>}
         </div>
       </div>
       <div className="overflow-x-auto border-t border-plum/12 bg-surface">

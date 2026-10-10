@@ -150,7 +150,7 @@ body,
   --destructive: #ff6b6b;
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.14);
-  --ring: var(--wfx-accent);
+  --ring: var(--wfx-orange-ink);
   --chart-1: var(--wfx-accent);
   --chart-2: #4fc3a1;
   --chart-3: #f0dce6;
@@ -163,7 +163,7 @@ body,
   --sidebar-accent: #3a2330;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: var(--wfx-accent);
+  --sidebar-ring: var(--wfx-orange-ink);
 }
 
 @layer base {
@@ -551,7 +551,7 @@ html[data-theme="ash"] {
   color-scheme: dark;
   --wfx-cream: #313338; --wfx-cream-soft: #36383e; --wfx-cream-deep: #383a40; --wfx-cream-deep2: #404249;
   --wfx-surface: #2b2d31; --wfx-ink: #f2f3f5; --wfx-plum: #e3e5e8;
-  --wfx-rail: #1e1f22; --wfx-chrome: #1e1f22; --wfx-avatar: #4e5058;
+  --wfx-rail: #1e1f22; --wfx-chrome: #1e1f22; --wfx-avatar: #44464d;
   --background: #313338; --foreground: #f2f3f5;
   --card: #2b2d31; --card-foreground: #f2f3f5; --popover: #2b2d31; --popover-foreground: #f2f3f5;
   --secondary: #383a40; --secondary-foreground: #f2f3f5;
@@ -590,7 +590,7 @@ html[data-theme="forest"] {
   color-scheme: dark;
   --wfx-cream: #12241b; --wfx-cream-soft: #162b21; --wfx-cream-deep: #1d3629; --wfx-cream-deep2: #254332;
   --wfx-surface: #183025; --wfx-ink: #e6f1ea; --wfx-plum: #d3e8dc;
-  --wfx-rail: #08130d; --wfx-chrome: #08130d; --wfx-avatar: #2f5a43;
+  --wfx-rail: #08130d; --wfx-chrome: #08130d; --wfx-avatar: #2a503b;
   --background: #12241b; --foreground: #e6f1ea;
   --card: #183025; --card-foreground: #e6f1ea; --popover: #183025; --popover-foreground: #e6f1ea;
   --secondary: #193026; --secondary-foreground: #e6f1ea;
@@ -614,7 +614,7 @@ html.dark[data-accent="teal"] { --wfx-orange-ink: #4fd1c5; --wfx-orange-ink-hove
 html[data-accent="gold"] { --wfx-accent: #b45309; --wfx-accent-hover: #92400e; --wfx-orange-ink: #92400e; --wfx-orange-ink-hover: #78350f; }
 html.dark[data-accent="gold"] { --wfx-orange-ink: #fbbf24; --wfx-orange-ink-hover: #fcd34d; }
 html[data-accent="slate"] { --wfx-accent: #475569; --wfx-accent-hover: #334155; --wfx-orange-ink: #334155; --wfx-orange-ink-hover: #1e293b; }
-html.dark[data-accent="slate"] { --wfx-orange-ink: #a5b4c8; --wfx-orange-ink-hover: #c3cedd; }
+html.dark[data-accent="slate"] { --wfx-accent: #64748b; --wfx-accent-hover: #56657a; --wfx-orange-ink: #a5b4c8; --wfx-orange-ink-hover: #c3cedd; }
 
 /* ---------- Message density, and reduced motion ---------- */
 html[data-density="compact"] .wfx-msg { padding-top: 2px; padding-bottom: 2px; gap: 0.25rem; }

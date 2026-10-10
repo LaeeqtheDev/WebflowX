@@ -105,7 +105,7 @@ const OptionPicker = ({ prop, value, multi, ctx, onChange }: { prop: Prop; value
             {value.includes(o.id) && <Check className="size-3.5 text-brand" />}
           </button>
         ))}
-        {!opts.length && !q && <p className="px-2 py-1 text-xs text-ink/50">No options yet.</p>}
+        {!opts.length && !q && <p className="px-2 py-1 text-xs text-ink/60">No options yet.</p>}
         {q.trim() && !exact && ctx.canEditSchema && (
           <button type="button" disabled={busy} onClick={create} className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-sm hover:bg-cream-deep">
             <Plus className="size-3.5" /> Create <Chip option={{ name: q.trim(), color: "gray" }} />
@@ -133,7 +133,7 @@ const ListPicker = ({ items, value, multi, onChange, placeholder }: {
             {value.includes(i.id) && <Check className="size-3.5 shrink-0 text-brand" />}
           </button>
         ))}
-        {!shown.length && <p className="px-2 py-1 text-xs text-ink/50">Nothing found.</p>}
+        {!shown.length && <p className="px-2 py-1 text-xs text-ink/60">Nothing found.</p>}
       </div>
       {value.length > 0 && <Button variant="ghost" size="sm" className="h-7 w-full text-xs" onClick={() => onChange([])}>Clear</Button>}
     </div>

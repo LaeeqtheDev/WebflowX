@@ -22,7 +22,7 @@ const SavedPage = () => {
             <div className="flex h-14 shrink-0 items-center gap-2 border-b border-plum/12 px-4">
                 <Bookmark className="size-5 text-brand" />
                 <h1 className="text-lg font-semibold tracking-tight text-ink">Saved</h1>
-                <span className="text-sm text-ink/50">only you can see this</span>
+                <span className="text-sm text-ink/60">only you can see this</span>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto">
                 {items === undefined ? (
@@ -54,14 +54,14 @@ const SavedPage = () => {
                                 <span className="flex flex-wrap items-center gap-x-2 text-sm">
                                     <span className="font-semibold text-ink">{m.authorName}</span>
                                     <span className="rounded-md bg-cream-deep2 px-2 py-0.5 text-[11px] font-medium text-ink/70">{m.where}</span>
-                                    <span className="text-[11px] text-ink/55">{format(m.createdAt, "MMM d, h:mm a")}</span>
+                                    <span className="text-[11px] text-ink/60">{format(m.createdAt, "MMM d, h:mm a")}</span>
                                 </span>
                                 <span className="mt-0.5 line-clamp-3 block text-sm text-ink/80">{m.body || "Attachment"}</span>
                             </button>
                             <button
                                 type="button"
                                 aria-label="Remove from saved"
-                                className="flex size-9 shrink-0 items-center justify-center rounded-lg text-ink/50 hover:bg-cream-deep2 hover:text-ink"
+                                className="flex size-9 shrink-0 items-center justify-center rounded-lg text-ink/60 hover:bg-cream-deep2 hover:text-ink"
                                 onClick={() => toggleSave({ messageId: m.messageId }).catch((e) => toast.error(errMsg(e, "Couldn't remove that")))}
                             >
                                 <BookmarkX className="size-4" />

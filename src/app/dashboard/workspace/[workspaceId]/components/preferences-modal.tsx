@@ -218,7 +218,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
               </Avatar>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-ink">{workspace?.name ?? name}</p>
-                <p className="text-xs text-ink/55">Settings</p>
+                <p className="text-xs text-ink/60">Settings</p>
               </div>
             </div>
             {tabs.filter((t) => t.show).map((t) => {

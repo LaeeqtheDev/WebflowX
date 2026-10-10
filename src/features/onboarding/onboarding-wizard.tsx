@@ -46,7 +46,7 @@ const Progress = ({ step }: { step: number }) => {
     const t = useT()
     return (
     <div className="mb-8">
-        <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-ink/50">
+        <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-ink/60">
             <span>{t("wiz.step", { n: step, total: TOTAL })}</span>
             <span>{t("wiz.pct", { p: Math.round(((step - 1) / (TOTAL - 1)) * 100) })}</span>
         </div>
@@ -202,7 +202,7 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
         <AuthShell title={t(stepKey(step, "title"))} body={t(stepKey(step, "body"))}>
             <div className="mb-6 flex items-center justify-between">
                 <LanguagePicker />
-                <button type="button" onClick={() => { void signOut() }} className="cursor-pointer text-sm text-ink/55 hover:text-ink">{t("wiz.signout")}</button>
+                <button type="button" onClick={() => { void signOut() }} className="cursor-pointer text-sm text-ink/60 hover:text-ink">{t("wiz.signout")}</button>
             </div>
             <Progress step={step} />
 
@@ -220,7 +220,7 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
                                     aria-pressed={on}
                                     className={`cursor-pointer rounded-xl border p-4 text-left transition-colors ${on ? "border-brand bg-brand/10" : "border-ink/15 bg-surface hover:border-ink/30"}`}
                                 >
-                                    <Icon className={`size-5 ${on ? "text-brand" : "text-ink/55"}`} />
+                                    <Icon className={`size-5 ${on ? "text-brand" : "text-ink/60"}`} />
                                     <p className="mt-3 text-sm font-semibold text-ink">{t(`wiz.use.${key}` as Key)}</p>
                                     <p className="mt-0.5 text-xs text-ink/60">{t(`wiz.use.${key}.hint` as Key)}</p>
                                 </button>
@@ -239,7 +239,7 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
                             )
                         })}
                     </div>
-                    {template && <p className="mt-2 text-xs text-ink/55">{t("wiz.tpl.hint")} {template.channels.map((c) => `#${c}`).join(" ")}</p>}
+                    {template && <p className="mt-2 text-xs text-ink/60">{t("wiz.tpl.hint")} {template.channels.map((c) => `#${c}`).join(" ")}</p>}
                     <Button className={`${primary} mt-8`} size="lg" onClick={() => go(2)}>{t("wiz.continue")}</Button>
                 </>
             )}
@@ -261,7 +261,7 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
                     <Button type="submit" className={`${primary} mt-6`} size="lg" disabled={isPending || name.trim().length < 3}>
                         {isPending ? t("wiz.creating") : t("wiz.create")}
                     </Button>
-                    <button type="button" onClick={() => go(1)} className="mt-6 inline-flex cursor-pointer items-center gap-1.5 text-sm text-ink/55 hover:text-ink">
+                    <button type="button" onClick={() => go(1)} className="mt-6 inline-flex cursor-pointer items-center gap-1.5 text-sm text-ink/60 hover:text-ink">
                         <ArrowLeft size={16} /> {t("wiz.back")}
                     </button>
                 </form>
@@ -286,8 +286,8 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
                             )
                         })}
                     </div>
-                    <p className="mt-3 text-xs text-ink/55">{t("wiz.s3.hint")}</p>
-                    {template && <p className="mt-1 text-xs text-ink/55">{t(`tpl.${template.key}` as Key)}: {t("wiz.tpl.hint")}</p>}
+                    <p className="mt-3 text-xs text-ink/60">{t("wiz.s3.hint")}</p>
+                    {template && <p className="mt-1 text-xs text-ink/60">{t(`tpl.${template.key}` as Key)}: {t("wiz.tpl.hint")}</p>}
                     <Button className={`${primary} mt-8`} size="lg" disabled={busy} onClick={addChannels}>
                         {busy ? t("wiz.s3.adding") : picked.length ? t("wiz.s3.add", { n: picked.length }) : t("wiz.continue")}
                     </Button>
@@ -305,7 +305,7 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
                         </Button>
                     </div>
                     <Button className={`${primary} mt-8`} size="lg" onClick={() => go(5)}>{t("wiz.continue")}</Button>
-                    <button type="button" onClick={() => go(5)} className="mt-4 cursor-pointer text-sm text-ink/55 hover:text-ink">{t("wiz.skipNow")}</button>
+                    <button type="button" onClick={() => go(5)} className="mt-4 cursor-pointer text-sm text-ink/60 hover:text-ink">{t("wiz.skipNow")}</button>
                 </>
             )}
 

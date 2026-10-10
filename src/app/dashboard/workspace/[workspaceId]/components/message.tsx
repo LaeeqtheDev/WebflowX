@@ -186,7 +186,7 @@ const MessageImpl = ({
                 >
                     <div className="flex items-start gap-2">
                         <Hint label={formatFullTime(new Date(createdAt))}>
-                            <button className="text-xs text-ink/50 opacity-0 group-hover:opacity-100 w-10 leading-5.5 text-center hover:underline">
+                            <button className="text-xs text-ink/60 opacity-0 group-hover:opacity-100 w-10 leading-5.5 text-center hover:underline">
                                 {format(new Date(createdAt), "hh:mm")}
                             </button>
                         </Hint>
@@ -216,7 +216,7 @@ const MessageImpl = ({
                                     </div>
                                 )}
                                 {updatedAt ? (
-                                    <span className="text-xs text-ink/50">
+                                    <span className="text-xs text-ink/60">
                                         (edited)
                                     </span>
                                 ) : null}
@@ -308,7 +308,7 @@ const MessageImpl = ({
                                 {isBot && <span className="ml-1.5 rounded bg-plum/10 px-1.5 py-0.5 align-middle text-[10px] font-bold uppercase tracking-wide text-plum dark:bg-white/10 dark:text-white/70">App</span>}
                                 <span>&nbsp;&nbsp;</span>
                                 <Hint label={formatFullTime(new Date(createdAt))}>
-                                    <button className="text-xs text-ink/50 hover:underline">
+                                    <button className="text-xs text-ink/60 hover:underline">
                                         {format(new Date(createdAt), "h:mm a")}
                                     </button>
                                 </Hint>
@@ -332,7 +332,7 @@ const MessageImpl = ({
                                 </div>
                             )}
                             {updatedAt ? (
-                                <span className="text-xs text-ink/50">
+                                <span className="text-xs text-ink/60">
                                     (edited)
                                 </span>
                             ) : null}

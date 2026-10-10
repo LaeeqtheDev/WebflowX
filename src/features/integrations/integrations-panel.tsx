@@ -255,7 +255,7 @@ export const IntegrationsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces
                       <Power className="size-3.5" />{r.active ? "Turn off" : "Turn on"}
                     </Button>
                     <button aria-label={`Delete ${r.name}`} title="Delete"
-                      className="flex size-8 items-center justify-center rounded-lg text-ink/50 hover:bg-rose-500/10 hover:text-rose-600"
+                      className="flex size-8 items-center justify-center rounded-lg text-ink/60 hover:bg-rose-500/10 hover:text-rose-600"
                       onClick={async () => { if (await confirmDelete()) run(() => remove({ id: r._id })) }}>
                       <Trash2 className="size-4" />
                     </button>

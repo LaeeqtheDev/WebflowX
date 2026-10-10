@@ -104,7 +104,7 @@ const TwoStep = () => {
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Button type="button" size="sm" variant="outline" onClick={() => setMode("regen")}>New backup codes</Button>
               <Button type="button" size="sm" variant="ghost" className="text-rose-600 hover:text-rose-700 dark:text-rose-400" onClick={() => setMode("disable")}>Turn off</Button>
-              <span className="text-xs text-ink/55">{status?.backupCodesLeft ?? 0} backup codes left</span>
+              <span className="text-xs text-ink/60">{status?.backupCodesLeft ?? 0} backup codes left</span>
             </div>
           ) : (
             <Button type="button" size="sm" className="mt-3 bg-brand text-white hover:bg-brand-hover" onClick={() => setMode("setup")}>Set up</Button>

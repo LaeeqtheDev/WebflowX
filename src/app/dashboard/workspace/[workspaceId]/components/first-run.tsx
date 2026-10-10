@@ -163,7 +163,7 @@ const Step = ({ done, title, children }: { done: boolean; title: string; childre
             {done && <Check className="size-3.5" strokeWidth={3} />}
         </span>
         <span className="min-w-0 flex-1">
-            <span className={cn("block text-sm font-semibold tracking-tight", done ? "text-ink/55" : "text-ink")}>
+            <span className={cn("block text-sm font-semibold tracking-tight", done ? "text-ink/60" : "text-ink")}>
                 {title}
                 <span className="sr-only">{done ? " (done)" : " (to do)"}</span>
             </span>
@@ -195,7 +195,7 @@ export const GetStartedCard = () => {
                     type="button"
                     onClick={dismiss}
                     aria-label="Dismiss get started checklist"
-                    className="-mr-1 -mt-1 flex size-10 items-center justify-center rounded-lg text-ink/55 transition-colors hover:bg-surface hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70"
+                    className="-mr-1 -mt-1 flex size-10 items-center justify-center rounded-lg text-ink/60 transition-colors hover:bg-surface hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70"
                 >
                     <X className="size-4" />
                 </button>

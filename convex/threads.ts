@@ -3,6 +3,7 @@ import { query } from "./_generated/server"
 import { Doc, Id } from "./_generated/dataModel"
 import { auth } from "./auth"
 import { canAccessChannel, assert2fa } from "./permissions"
+import { authorLabel } from "./messageHelpers"
 
 const EMPTY = { myThreads: [], participatedThreads: [] }
 
@@ -56,18 +57,18 @@ export const get = query({
             const channel = await ctx.db.get(msg.channelId)
             if (channel && !canAccessChannel(workspace, member, channel)) continue
 
+            // people who have left still show, under the name they had
             const msgMember = await ctx.db.get(msg.memberId)
-            const msgUser = msgMember ? await ctx.db.get(msgMember.userId) : null
+            const msgAuthor = await authorLabel(ctx, msg)
             const lastReply = replies[0]
-            const lastReplyMember = await ctx.db.get(lastReply.memberId)
-            const lastReplyUser = lastReplyMember ? await ctx.db.get(lastReplyMember.userId) : null
+            const lastReplyAuthor = await authorLabel(ctx, lastReply)
 
             rows.push({
                 ...msg,
                 replyCount: replies.length,
                 lastReplyAt: lastReply._creationTime,
-                lastReplyUser: lastReplyUser?.name ?? "Someone",
-                author: { member: msgMember, user: msgUser },
+                lastReplyUser: lastReplyAuthor.name,
+                author: { member: msgMember, user: { name: msgAuthor.name, image: msgAuthor.image } },
                 channel,
                 isMyThread: msg.memberId === member._id,
                 memberReplied: info.repliedByMe,

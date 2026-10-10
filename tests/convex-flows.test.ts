@@ -117,6 +117,35 @@ describe("leaving a workspace", () => {
     expect(reactions[0].retainUntil).toBe(row?.retainUntil)
   })
 
+  it("shows a former member by name in threads, saved, pinned and search", async () => {
+    const { t, ids } = await setup("growth")
+    const parent = await asUser(t, ids.alice).mutation(api.messages.create, { workspaceId: ids.ws, channelId: ids.general, body: delta("quarterly roadmap kickoff") })
+    await asUser(t, ids.bob).mutation(api.messages.create, { workspaceId: ids.ws, channelId: ids.general, parentMessageId: parent, body: delta("sounds good") })
+    const reply = await asUser(t, ids.alice).mutation(api.messages.create, { workspaceId: ids.ws, channelId: ids.general, parentMessageId: parent, body: delta("thanks") })
+    await asUser(t, ids.bob).mutation(api.marks.toggleSave, { messageId: parent })
+    await t.run((c) => c.db.insert("pins", { workspaceId: ids.ws, channelId: ids.general, messageId: parent, pinnedBy: ids.aliceM }))
+
+    await asUser(t, ids.alice).mutation(api.members.remove, { id: ids.aliceM })
+    await t.finishAllScheduledFunctions(vi.runAllTimers)
+
+    const bob = asUser(t, ids.bob)
+    const threads = await bob.query(api.threads.get, { workspaceId: ids.ws })
+    const row = threads.participatedThreads[0]
+    expect(row.author.user?.name).toBe("Alice Member (former member)")
+    expect(row.lastReplyUser).toBe("Alice Member (former member)")
+    expect(reply).toBeTruthy()
+
+    const saved = await bob.query(api.marks.savedList, { workspaceId: ids.ws })
+    expect(saved[0].authorName).toBe("Alice Member (former member)")
+
+    const pins = await bob.query(api.marks.pinned, { channelId: ids.general })
+    expect(pins[0].authorName).toBe("Alice Member (former member)")
+    expect(pins[0].pinnedByName).toBe("Former member")
+
+    const found = await bob.query(api.messages.search, { workspaceId: ids.ws, query: "roadmap" })
+    expect(found[0].authorName).toBe("Alice Member (former member)")
+  })
+
   it("keeps everything with no deadline on paid plans", async () => {
     const { t, ids } = await setup("growth")
     const id = await asUser(t, ids.alice).mutation(api.messages.create, { workspaceId: ids.ws, channelId: ids.general, body: delta("staying on record") })

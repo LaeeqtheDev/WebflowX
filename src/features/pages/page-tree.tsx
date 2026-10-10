@@ -25,7 +25,7 @@ type Zone = "before" | "inside" | "after"
 export const PageIcon = ({ node, className }: { node: Pick<PageNode, "icon" | "type">; className?: string }) => {
   if (node.icon) return <RenderIcon value={node.icon} className={cn("text-ink/60", className)} />
   const Icon = node.type === "database" ? Table2 : node.type === "spreadsheet" ? FileSpreadsheet : FileText
-  return <Icon className={cn("size-4 shrink-0 text-ink/55", className)} aria-hidden="true" />
+  return <Icon className={cn("size-4 shrink-0 text-ink/60", className)} aria-hidden="true" />
 }
 
 export const PageTree = ({ onNavigate }: { onNavigate?: () => void }) => {
@@ -164,7 +164,7 @@ export const PageTree = ({ onNavigate }: { onNavigate?: () => void }) => {
         >
           {withChildren ? (
             <button type="button" aria-label={expanded ? "Collapse" : "Expand"} aria-expanded={expanded} onClick={() => toggle(node._id)}
-              className={cn("flex size-5 shrink-0 items-center justify-center rounded text-ink/50 hover:bg-plum/10", node.children.length === 0 && "opacity-30")}>
+              className={cn("flex size-5 shrink-0 items-center justify-center rounded text-ink/60 hover:bg-plum/10", node.children.length === 0 && "opacity-30")}>
               <ChevronRight className={cn("size-3.5 transition-transform", expanded && "rotate-90")} />
             </button>
           ) : <span className="size-5 shrink-0" />}
@@ -189,12 +189,12 @@ export const PageTree = ({ onNavigate }: { onNavigate?: () => void }) => {
 
           {renaming !== node._id && (
             <div className="flex shrink-0 items-center opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
-              <button type="button" aria-label={`Add a page inside ${node.title}`} onClick={() => addSub(node)} className="rounded p-1 text-ink/55 hover:bg-plum/10 hover:text-ink">
+              <button type="button" aria-label={`Add a page inside ${node.title}`} onClick={() => addSub(node)} className="rounded p-1 text-ink/60 hover:bg-plum/10 hover:text-ink">
                 <Plus className="size-3.5" />
               </button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button type="button" aria-label={`Options for ${node.title}`} className="rounded p-1 text-ink/55 hover:bg-plum/10 hover:text-ink">
+                  <button type="button" aria-label={`Options for ${node.title}`} className="rounded p-1 text-ink/60 hover:bg-plum/10 hover:text-ink">
                     <MoreHorizontal className="size-3.5" />
                   </button>
                 </DropdownMenuTrigger>
@@ -265,7 +265,7 @@ export const PageTree = ({ onNavigate }: { onNavigate?: () => void }) => {
         }}>
         <button type="button" onClick={() => { router.push(`/dashboard/workspace/${workspaceId}/docs`); onNavigate?.() }}
           className={cn("mb-1 flex h-8 w-full items-center gap-2 rounded-md px-2 text-sm text-ink/80 hover:bg-cream-deep", !activeId && "bg-brand/12 font-semibold text-ink")}>
-          <Home className="size-4 text-ink/55" /> All pages
+          <Home className="size-4 text-ink/60" /> All pages
         </button>
 
         {isLoading ? (
@@ -293,7 +293,7 @@ export const PageTree = ({ onNavigate }: { onNavigate?: () => void }) => {
 
       <div className="shrink-0 border-t border-plum/12 p-2">
         <button type="button" onClick={() => setTrashOpen(true)} className="flex h-8 w-full items-center gap-2 rounded-md px-2 text-sm text-ink/70 hover:bg-cream-deep">
-          <Trash2 className="size-4 text-ink/55" /> Trash
+          <Trash2 className="size-4 text-ink/60" /> Trash
         </button>
       </div>
       <TrashDialog open={trashOpen} onOpenChange={setTrashOpen} />
@@ -326,7 +326,7 @@ export const PageTree = ({ onNavigate }: { onNavigate?: () => void }) => {
             {moveNode?.parentId && !moveQuery && (
               <button type="button" className="flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-sm hover:bg-cream-deep"
                 onClick={() => { void doMove(moveNode, null); setMoveNode(null) }}>
-                <Home className="size-4 text-ink/55" /> Top level
+                <Home className="size-4 text-ink/60" /> Top level
               </button>
             )}
             {moveChoices.length === 0 && <p className="px-2 py-4 text-center text-sm text-ink/60">No pages found</p>}

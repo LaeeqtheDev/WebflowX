@@ -41,9 +41,9 @@ export const PinnedMessages = ({ channelId, conversationId, memberId }: {
         <div className="border-b border-plum/12 px-4 py-3 text-sm font-semibold tracking-tight text-ink">Pinned messages</div>
         <div className="max-h-[60vh] overflow-y-auto">
           {pins === undefined ? (
-            <p className="px-4 py-6 text-center text-sm text-ink/55">Loading…</p>
+            <p className="px-4 py-6 text-center text-sm text-ink/60">Loading…</p>
           ) : pins.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-ink/55">Nothing pinned yet. Hover a message and choose the pin to keep it handy for everyone here.</p>
+            <p className="px-4 py-6 text-center text-sm text-ink/60">Nothing pinned yet. Hover a message and choose the pin to keep it handy for everyone here.</p>
           ) : (
             pins.map((p) => (
               <div key={p.messageId} className="flex items-start gap-2 border-b border-plum/8 px-4 py-3 last:border-0">
@@ -55,13 +55,13 @@ export const PinnedMessages = ({ channelId, conversationId, memberId }: {
                     router.push(messageLink({ workspaceId, channelId, memberId, messageId: p.messageId }))
                   }}
                 >
-                  <span className="block text-xs font-semibold text-ink">{p.authorName} <span className="font-normal text-ink/50">· pinned by {p.pinnedByName}</span></span>
+                  <span className="block text-xs font-semibold text-ink">{p.authorName} <span className="font-normal text-ink/60">· pinned by {p.pinnedByName}</span></span>
                   <span className="mt-0.5 line-clamp-3 block text-sm text-ink/80">{p.body || "Attachment"}</span>
                 </button>
                 <button
                   type="button"
                   aria-label="Unpin"
-                  className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg text-ink/50 hover:bg-cream hover:text-ink"
+                  className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg text-ink/60 hover:bg-cream hover:text-ink"
                   onClick={() => togglePin({ messageId: p.messageId }).catch((e) => toast.error(errMsg(e, "Couldn't unpin")))}
                 >
                   <PinOff className="size-4" />

@@ -194,3 +194,20 @@ export const formerAuthor = (message: Doc<"messages">) => {
     const user = { _id: "" as Id<"users">, _creationTime: message._creationTime, name: `${message.removedAuthor.name} (former member)`, image: message.removedAuthor.image } as Doc<"users">;
     return { member, user };
 };
+
+// The name and photo to show for whoever wrote a message, wherever it is listed (saved, pinned, threads, search).
+// Someone who has left shows under the name they had, marked as a former member; never "Unknown".
+export const authorLabel = async (ctx: QueryCtx, message: Doc<"messages">) => {
+    const member = await ctx.db.get(message.memberId);
+    const user = member ? await ctx.db.get(member.userId) : null;
+    if (user) return { name: user.name ?? "Member", image: user.image, former: false };
+    const former = formerAuthor(message);
+    return { name: former?.user.name ?? "Former member", image: former?.user.image, former: true };
+};
+
+// Same, for someone who did something other than write the message (pinned it, replied last).
+export const memberLabel = async (ctx: QueryCtx, memberId: Id<"members">) => {
+    const member = await ctx.db.get(memberId);
+    const user = member ? await ctx.db.get(member.userId) : null;
+    return user ? (user.name ?? "Member") : "Former member";
+};

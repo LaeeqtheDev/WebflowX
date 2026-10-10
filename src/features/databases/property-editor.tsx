@@ -135,7 +135,7 @@ export const PropertyDialog = ({ open, onOpenChange, ctx, propId }: { open: bool
             <select id="prop-type" className={sel} value={draft.type} onChange={(e) => setType(e.target.value as PropType)}>
               {PROP_TYPES.map((t) => <option key={t} value={t}>{PROP_LABEL[t]}</option>)}
             </select>
-            {existing && existing.type !== draft.type && <p className="text-xs text-ink/55">Existing values are converted where that makes sense, and cleared otherwise.</p>}
+            {existing && existing.type !== draft.type && <p className="text-xs text-ink/60">Existing values are converted where that makes sense, and cleared otherwise.</p>}
           </div>
 
           {(draft.type === "select" || draft.type === "multiSelect" || draft.type === "status") && (

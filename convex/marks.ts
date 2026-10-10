@@ -5,6 +5,7 @@ import { auth } from "./auth"
 import { canViewChannel, assert2fa } from "./permissions"
 import { snippetOf } from "./validate"
 import { throttle } from "./rateLimit"
+import { authorLabel, memberLabel } from "./messageHelpers"
 
 const MAX_PINS_PER_ROOM = 50
 const MAX_SAVED = 300
@@ -107,8 +108,7 @@ export const mine = query({
 })
 
 async function describe(ctx: QueryCtx, message: Doc<"messages">) {
-    const author = await ctx.db.get(message.memberId)
-    const user = author ? await ctx.db.get(author.userId) : null
+    const author = await authorLabel(ctx, message)
     let where = ""
     if (message.channelId) {
         const ch = await ctx.db.get(message.channelId)
@@ -119,8 +119,8 @@ async function describe(ctx: QueryCtx, message: Doc<"messages">) {
     return {
         messageId: message._id,
         body: snippetOf(message.body, 400),
-        authorName: user?.name ?? "Member",
-        authorImage: user?.image,
+        authorName: author.name,
+        authorImage: author.image,
         createdAt: message._creationTime,
         channelId: message.channelId,
         conversationId: message.conversationId,
@@ -144,9 +144,7 @@ export const pinned = query({
             if (!message) continue
             // the same access check as reading the message
             if (!(await memberFor(ctx, userId, message))) return []
-            const pinner = await ctx.db.get(p.pinnedBy)
-            const pinnerUser = pinner ? await ctx.db.get(pinner.userId) : null
-            out.push({ ...(await describe(ctx, message)), pinnedByName: pinnerUser?.name ?? "Someone" })
+            out.push({ ...(await describe(ctx, message)), pinnedByName: await memberLabel(ctx, p.pinnedBy) })
         }
         return out
     },

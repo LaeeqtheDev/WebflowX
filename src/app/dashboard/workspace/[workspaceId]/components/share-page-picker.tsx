@@ -32,7 +32,7 @@ export const SharePagePicker = ({
             <PopoverTrigger asChild>{children}</PopoverTrigger>
             <PopoverContent align="start" className="w-80 p-0">
                 <div className="flex items-center gap-2 border-b border-plum/12 px-3 py-2">
-                    <Search className="size-4 text-ink/50" />
+                    <Search className="size-4 text-ink/60" />
                     <input
                         autoFocus
                         value={q}
@@ -43,9 +43,9 @@ export const SharePagePicker = ({
                 </div>
                 <div className="max-h-72 overflow-y-auto p-1">
                     {pages === undefined ? (
-                        <p className="px-3 py-6 text-center text-xs text-ink/55">Loading…</p>
+                        <p className="px-3 py-6 text-center text-xs text-ink/60">Loading…</p>
                     ) : list.length === 0 ? (
-                        <p className="px-3 py-6 text-center text-xs text-ink/55">{q ? "No pages match." : "No pages yet. Create one in Docs."}</p>
+                        <p className="px-3 py-6 text-center text-xs text-ink/60">{q ? "No pages match." : "No pages yet. Create one in Docs."}</p>
                     ) : (
                         list.map((p) => (
                             <button

@@ -39,7 +39,7 @@ const Card = ({ icon, title, body, busy, onClick, onDelete }: {
         type="button"
         aria-label={`Delete template ${title}`}
         onClick={onDelete}
-        className="absolute right-1.5 top-1.5 rounded-md p-1.5 text-ink/50 opacity-0 hover:bg-cream-deep hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100 max-md:opacity-100"
+        className="absolute right-1.5 top-1.5 rounded-md p-1.5 text-ink/60 opacity-0 hover:bg-cream-deep hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100 max-md:opacity-100"
       >
         <Trash2 className="size-3.5" />
       </button>

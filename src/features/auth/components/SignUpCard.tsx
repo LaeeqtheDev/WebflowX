@@ -56,7 +56,7 @@ export const SignUpCard = ({ setState, onEmail }: SignUpCardProps) => {
 
   return (
     <div className="w-full">
-      <Link href="/" className="mb-10 inline-flex items-center gap-1.5 text-sm text-ink/55 transition-colors hover:text-ink">
+      <Link href="/" className="mb-10 inline-flex items-center gap-1.5 text-sm text-ink/60 transition-colors hover:text-ink">
         <ArrowLeft size={16} />
         Back to home
       </Link>
@@ -125,7 +125,7 @@ export const SignUpCard = ({ setState, onEmail }: SignUpCardProps) => {
         </Button>
       )}
 
-      <p className="mt-6 text-center text-xs text-ink/55">
+      <p className="mt-6 text-center text-xs text-ink/60">
         By continuing you agree to our{" "}
         <Link href="/terms" className="underline underline-offset-2 hover:text-brand">Terms</Link> and{" "}
         <Link href="/privacy" className="underline underline-offset-2 hover:text-brand">Privacy Policy</Link>.

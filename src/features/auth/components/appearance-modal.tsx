@@ -119,7 +119,7 @@ const AppearanceBody = ({ user }: { user: Doc<"users"> }) => {
                         <div className="overflow-hidden rounded-lg border border-ink/10 bg-cream-soft py-2">
                             {[["Sam", "Standup moved to 10, recap before please."], ["Priya", "Done. I'll add it to the board."]].map(([who, text]) => (
                                 <div key={who} className={`flex items-start gap-3 px-3 ${look.density === "compact" ? "py-0.5" : "py-2"}`}>
-                                    <span className={`flex shrink-0 items-center justify-center rounded-md bg-avatar font-semibold text-surface ${look.density === "compact" ? "size-6 text-xs" : "size-9 text-sm"}`}>{who[0]}</span>
+                                    <span className={`flex shrink-0 items-center justify-center rounded-md bg-avatar font-semibold text-white ${look.density === "compact" ? "size-6 text-xs" : "size-9 text-sm"}`}>{who[0]}</span>
                                     <p className="min-w-0 text-sm leading-snug text-ink"><span className="font-semibold">{who}</span>{look.density === "compact" ? " " : <br />}{text}</p>
                                 </div>
                             ))}

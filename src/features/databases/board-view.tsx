@@ -42,7 +42,7 @@ export const BoardView = ({ view, rows, ctx, onView, onAdd, onMove }: ViewProps)
           <div className="flex flex-wrap justify-center gap-2">
             {candidates.map((p) => <button key={p.id} type="button" onClick={() => onView({ ...view, groupBy: p.id })} className="rounded-lg border border-plum/15 bg-surface px-3 py-1.5 text-sm hover:border-brand/50">Group by {p.name}</button>)}
           </div>
-        ) : <p className="text-xs text-ink/55">Add a Select or Status property first.</p>}
+        ) : <p className="text-xs text-ink/60">Add a Select or Status property first.</p>}
       </div>
     )
   }
@@ -81,7 +81,7 @@ export const BoardView = ({ view, rows, ctx, onView, onAdd, onMove }: ViewProps)
           className={cn("flex w-72 shrink-0 flex-col rounded-xl bg-cream-soft p-2", overCol === g.key && "ring-2 ring-brand/40")}>
           <header className="flex items-center gap-2 px-1.5 pb-2 pt-1">
             {g.option ? <Chip option={g.option} /> : <span className="text-sm font-medium">{g.label}</span>}
-            <span className="text-xs text-ink/50">{g.rows.length}</span>
+            <span className="text-xs text-ink/60">{g.rows.length}</span>
           </header>
           <div className="flex-1 space-y-2 overflow-y-auto">
             {g.rows.map((r) => (
@@ -96,7 +96,7 @@ export const BoardView = ({ view, rows, ctx, onView, onAdd, onMove }: ViewProps)
             ))}
           </div>
           <button type="button" onClick={() => onAdd(g.key === "" ? undefined : { [groupProp.id]: valueForGroup(groupProp, g.key) })}
-            className="mt-2 flex h-8 items-center gap-1.5 rounded-md px-2 text-sm text-ink/55 hover:bg-cream-deep hover:text-ink">
+            className="mt-2 flex h-8 items-center gap-1.5 rounded-md px-2 text-sm text-ink/60 hover:bg-cream-deep hover:text-ink">
             <Plus className="size-3.5" /> New
           </button>
         </section>

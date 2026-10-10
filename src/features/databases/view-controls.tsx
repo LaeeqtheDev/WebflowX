@@ -72,7 +72,7 @@ export const FilterControl = ({ view, ctx, onChange }: { view: View; ctx: DbCtx;
           const p = propOf(c.propId)
           return (
             <div key={c.id} className="flex flex-wrap items-center gap-1.5">
-              <span className="w-12 shrink-0 text-xs text-ink/55">
+              <span className="w-12 shrink-0 text-xs text-ink/60">
                 {i === 0 ? "Where" : i === 1 ? (
                   <select aria-label="Match" className={cn(sel, "w-16 px-1 text-xs")} value={view.filter.match} onChange={(e) => set(cs, e.target.value === "or" ? "or" : "and")}><option value="and">and</option><option value="or">or</option></select>
                 ) : view.filter.match}
@@ -131,7 +131,7 @@ export const GroupControl = ({ view, ctx, onChange }: { view: View; ctx: DbCtx; 
         <option value="">None</option>
         {ctx.props.filter(groupable).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
       </select>
-      {view.type === "board" && !view.groupBy && <p className="text-xs text-ink/55">A board needs a property to make its columns from.</p>}
+      {view.type === "board" && !view.groupBy && <p className="text-xs text-ink/60">A board needs a property to make its columns from.</p>}
     </PopoverContent>
   </Popover>
 )
@@ -148,12 +148,12 @@ export const PropertiesControl = ({ view, ctx, onChange, onAdd }: { view: View; 
             const Icon = PROP_ICON[p.type]
             return (
               <button key={p.id} type="button" onClick={() => toggle(p.id)} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-cream-deep">
-                <Icon className="size-3.5 text-ink/55" /><span className="flex-1 truncate">{p.name}</span>
+                <Icon className="size-3.5 text-ink/60" /><span className="flex-1 truncate">{p.name}</span>
                 {hidden.has(p.id) ? <EyeOff className="size-3.5 text-ink/40" /> : <Eye className="size-3.5 text-brand" />}
               </button>
             )
           })}
-          {!ctx.props.length && <p className="px-2 py-1 text-xs text-ink/55">No properties yet.</p>}
+          {!ctx.props.length && <p className="px-2 py-1 text-xs text-ink/60">No properties yet.</p>}
         </div>
         {onAdd && ctx.canEditSchema && <Button type="button" variant="ghost" size="sm" className="mt-1 h-8 w-full justify-start text-xs" onClick={onAdd}><Plus className="mr-1 size-3.5" /> New property</Button>}
       </PopoverContent>

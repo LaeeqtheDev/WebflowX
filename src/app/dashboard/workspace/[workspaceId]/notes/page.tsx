@@ -232,7 +232,7 @@ export default function NotesPage() {
                                         {isAdmin && tab === "workspace" && (
                                             <button aria-label="Pin or unpin note" type="button"
                                                 onClick={(e) => { e.stopPropagation(); handleTogglePin(note._id) }}
-                                                className="p-1 rounded-md text-ink/50 hover:text-orange-ink-hover hover:bg-brand/10 transition-colors"
+                                                className="p-1 rounded-md text-ink/60 hover:text-orange-ink-hover hover:bg-brand/10 transition-colors"
                                             >
                                                 {note.isPinned
                                                     ? <PinOff className="size-3.5" />
@@ -242,7 +242,7 @@ export default function NotesPage() {
                                         {canDelete(note as Note) && (
                                             <button aria-label="Delete note" type="button"
                                                 onClick={(e) => { e.stopPropagation(); handleDelete(note._id) }}
-                                                className="p-1 rounded-md text-ink/50 hover:text-destructive hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                                                className="p-1 rounded-md text-ink/60 hover:text-destructive hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                                             >
                                                 <Trash2 className="size-3.5" />
                                             </button>

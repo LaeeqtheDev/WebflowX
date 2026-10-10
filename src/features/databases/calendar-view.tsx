@@ -85,7 +85,7 @@ export const CalendarView = ({ view, rows, ctx, onView, onAdd }: ViewProps) => {
         )}
       </div>
       <div className="flex-1 overflow-auto">
-        <div className="grid min-w-[44rem] grid-cols-7 border-b border-plum/12 text-center text-[11px] font-medium uppercase tracking-wide text-ink/50">
+        <div className="grid min-w-[44rem] grid-cols-7 border-b border-plum/12 text-center text-[11px] font-medium uppercase tracking-wide text-ink/60">
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => <div key={d} className="py-1.5">{d}</div>)}
         </div>
         <div className="grid min-w-[44rem] grid-cols-7" style={{ gridAutoRows: "minmax(6.5rem, 1fr)" }}>
@@ -106,14 +106,14 @@ export const CalendarView = ({ view, rows, ctx, onView, onAdd }: ViewProps) => {
                     <button key={r._id} type="button" draggable onDragStart={() => setDrag(r._id)} onDragEnd={() => { setDrag(null); setOver(null) }} onClick={() => ctx.openRow(r._id)}
                       className="block w-full truncate rounded bg-brand/12 px-1.5 py-0.5 text-left text-xs text-ink hover:bg-brand/25">{r.title || "Untitled"}</button>
                   ))}
-                  {list.length > 4 && <p className="px-1 text-[11px] text-ink/50">+{list.length - 4} more</p>}
+                  {list.length > 4 && <p className="px-1 text-[11px] text-ink/60">+{list.length - 4} more</p>}
                 </div>
               </div>
             )
           })}
         </div>
       </div>
-      {undated > 0 && <div className="border-t border-plum/12 px-4 py-1.5 text-xs text-ink/55">{undated} {undated === 1 ? "row has" : "rows have"} no date and {undated === 1 ? "isn't" : "aren't"} shown.</div>}
+      {undated > 0 && <div className="border-t border-plum/12 px-4 py-1.5 text-xs text-ink/60">{undated} {undated === 1 ? "row has" : "rows have"} no date and {undated === 1 ? "isn't" : "aren't"} shown.</div>}
     </div>
   )
 }

@@ -86,7 +86,7 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
                         </button>
                     </div>
                 </div>
-                <div className="grid grid-cols-7 text-center text-[11px] font-medium text-ink/50">
+                <div className="grid grid-cols-7 text-center text-[11px] font-medium text-ink/60">
                     {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => <span key={i} className="py-1">{d}</span>)}
                 </div>
                 <div className="grid grid-cols-7 gap-y-0.5">
@@ -122,7 +122,7 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
                 <select aria-label="Hour" className={selectClass} value={hour12} onChange={(e) => setTime(e.target.value, String(minute).padStart(2, "0"), pm)}>
                     {HOURS.map((h) => <option key={h} value={h}>{h}</option>)}
                 </select>
-                <span className="text-ink/50">:</span>
+                <span className="text-ink/60">:</span>
                 <select aria-label="Minute" className={selectClass} value={String(minute).padStart(2, "0")} onChange={(e) => setTime(hour12, e.target.value, pm)}>
                     {(MINUTES.includes(String(minute).padStart(2, "0")) ? MINUTES : [String(minute).padStart(2, "0"), ...MINUTES]).map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>

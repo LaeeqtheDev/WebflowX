@@ -19,7 +19,7 @@ const ErrorBox = ({ text }: { text: string }) =>
   ) : null;
 
 const BackToSignIn = ({ onClick }: { onClick: () => void }) => (
-  <button type="button" onClick={onClick} className="mb-10 inline-flex cursor-pointer items-center gap-1.5 text-sm text-ink/55 transition-colors hover:text-ink">
+  <button type="button" onClick={onClick} className="mb-10 inline-flex cursor-pointer items-center gap-1.5 text-sm text-ink/60 transition-colors hover:text-ink">
     <ArrowLeft size={16} /> Back to log in
   </button>
 );
@@ -51,7 +51,7 @@ export const VerifyEmailCard = ({ email, setState }: { email: string; setState: 
         <AuthField label="Verification code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="12345678" inputMode="numeric" autoComplete="one-time-code" disabled={pending} required minLength={8} maxLength={8} />
         <Button type="submit" className={primary} size="lg" disabled={pending}>Verify and continue</Button>
       </form>
-      <p className="mt-6 text-sm text-ink/55">
+      <p className="mt-6 text-sm text-ink/60">
         Nothing yet? Check spam, or{" "}
         <button type="button" onClick={() => setState("signIn")} className="cursor-pointer font-semibold text-orange-ink underline underline-offset-2">log in with your password</button>{" "}
         and we&apos;ll send a fresh code.

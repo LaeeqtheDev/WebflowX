@@ -30,7 +30,7 @@ const ThreadItem = ({ thread, onSelect }: { thread: ThreadData; onSelect: (threa
                 <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5">
                         <span className="text-sm font-semibold truncate">
-                            {thread.author?.user?.name ?? "Unknown"}
+                            {thread.author?.user?.name ?? "Former member"}
                         </span>
                         {thread.channel && (
                             <span className="flex items-center gap-0.5 text-[11px] font-medium text-ink/70 bg-cream-deep2 px-2 py-0.5 rounded-md">

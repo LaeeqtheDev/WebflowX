@@ -172,7 +172,7 @@ export const ImportDialog = ({ open, onOpenChange, ctx, existingRows }: { open: 
             <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
               {headers.map((h, i) => (
                 <div key={i} className="grid grid-cols-[1fr_1fr] items-center gap-2 sm:grid-cols-[1fr_1fr_6.5rem]">
-                  <div className="min-w-0"><p className="truncate text-sm font-medium">{h || `Column ${i + 1}`}</p><p className="truncate text-xs text-ink/50">{body[0]?.[i] ?? ""}</p></div>
+                  <div className="min-w-0"><p className="truncate text-sm font-medium">{h || `Column ${i + 1}`}</p><p className="truncate text-xs text-ink/60">{body[0]?.[i] ?? ""}</p></div>
                   <select aria-label={`Destination for ${h}`} value={map[i]} onChange={(e) => setMap((m) => m.map((x, j) => (j === i ? e.target.value : e.target.value === "__title" && x === "__title" ? "__skip" : x)))} className="h-9 rounded-md border border-input bg-transparent px-2 text-sm">
                     <option value="__skip">Skip</option>
                     <option value="__title">Name</option>

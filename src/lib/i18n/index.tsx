@@ -64,7 +64,7 @@ export function LanguagePicker({ className = "" }: { className?: string }) {
   const locale = useLocale()
   const t = useT()
   return (
-    <label className={`inline-flex items-center gap-2 text-sm text-ink/55 ${className}`}>
+    <label className={`inline-flex items-center gap-2 text-sm text-ink/60 ${className}`}>
       <span className="sr-only">{t("lang.label")}</span>
       <select
         value={locale}

@@ -163,7 +163,7 @@ const CalendarPage = () => {
 
             <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
                 <div className="flex min-h-0 flex-1 flex-col overflow-auto">
-                    <div className="grid grid-cols-7 border-b border-plum/12 text-center text-[11px] font-semibold uppercase tracking-wide text-ink/55" aria-hidden>
+                    <div className="grid grid-cols-7 border-b border-plum/12 text-center text-[11px] font-semibold uppercase tracking-wide text-ink/60" aria-hidden>
                         {WEEKDAYS.map((d) => <div key={d} className="py-2">{d}</div>)}
                     </div>
                     <div className="grid flex-1 grid-cols-7 grid-rows-6" role="grid" aria-label={format(month, "MMMM yyyy")}>
@@ -215,12 +215,12 @@ const CalendarPage = () => {
 
                 <aside className="shrink-0 border-t border-plum/12 bg-cream-soft/50 p-4 lg:w-80 lg:border-l lg:border-t-0 lg:overflow-y-auto" aria-live="polite">
                     <h2 className="text-sm font-semibold tracking-tight text-ink">{format(new Date(`${selected}T12:00:00`), "EEEE, MMMM d")}</h2>
-                    {data === undefined && <p className="mt-3 text-sm text-ink/55">Loading…</p>}
+                    {data === undefined && <p className="mt-3 text-sm text-ink/60">Loading…</p>}
                     {data !== undefined && selectedSprints.length > 0 && (
                         <p className="mt-2 text-xs text-ink/65">Sprint: {selectedSprints.map((s) => s.title).join(", ")}</p>
                     )}
                     {data !== undefined && selectedItems.length === 0 && (
-                        <p className="mt-3 text-sm text-ink/55">Nothing due or scheduled this day.</p>
+                        <p className="mt-3 text-sm text-ink/60">Nothing due or scheduled this day.</p>
                     )}
                     <ul className="mt-3 flex flex-col gap-1.5">
                         {selectedItems.map((i) => (

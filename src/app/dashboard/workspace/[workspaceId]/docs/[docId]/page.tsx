@@ -269,7 +269,7 @@ export default function DocPage() {
                     <Button variant="ghost" size="sm" aria-label={favoriteSet.has(doc._id) ? "Remove from favorites" : "Add to favorites"} aria-pressed={favoriteSet.has(doc._id)}
                         className="h-8 w-8 rounded-lg p-0 hover:bg-cream-deep"
                         onClick={() => toggleFavorite({ id: doc._id }).catch((e) => toast.error(friendlyError(e, "Couldn't update favorites")))}>
-                        <Star className={`size-4 ${favoriteSet.has(doc._id) ? "fill-brand text-brand" : "text-ink/55"}`} />
+                        <Star className={`size-4 ${favoriteSet.has(doc._id) ? "fill-brand text-brand" : "text-ink/60"}`} />
                     </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>

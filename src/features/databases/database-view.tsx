@@ -239,7 +239,7 @@ export const DatabaseView = ({ docId }: { docId: Id<"docs"> }) => {
                 </button>
                 {active && (
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild><button type="button" aria-label="View options" className="mr-1 rounded p-1 text-ink/55 hover:bg-surface"><MoreHorizontal className="size-3.5" /></button></DropdownMenuTrigger>
+                    <DropdownMenuTrigger asChild><button type="button" aria-label="View options" className="mr-1 rounded p-1 text-ink/60 hover:bg-surface"><MoreHorizontal className="size-3.5" /></button></DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-48">
                       <DropdownMenuItem onClick={() => { setRenaming(baseView); setRenameText(baseView.name) }}><Pencil className="mr-2 size-3.5" /> Rename</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => duplicateView(view)}><Copy className="mr-2 size-3.5" /> Duplicate</DropdownMenuItem>

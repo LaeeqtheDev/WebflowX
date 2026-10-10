@@ -13,7 +13,7 @@ const sections = (rows: Row[], view: ViewProps["view"], ctx: ViewProps["ctx"]): 
 }
 
 const Heading = ({ g }: { g?: Group }) =>
-  g ? <div className="mb-2 mt-4 flex items-center gap-2 first:mt-0">{g.option ? <Chip option={g.option} /> : <span className="text-sm font-medium">{g.label}</span>}<span className="text-xs text-ink/50">{g.rows.length}</span></div> : null
+  g ? <div className="mb-2 mt-4 flex items-center gap-2 first:mt-0">{g.option ? <Chip option={g.option} /> : <span className="text-sm font-medium">{g.label}</span>}<span className="text-xs text-ink/60">{g.rows.length}</span></div> : null
 
 export const ListView = ({ view, rows, ctx, onAdd }: ViewProps) => {
   const props = visibleProps(view, ctx)
@@ -32,13 +32,13 @@ export const ListView = ({ view, rows, ctx, onAdd }: ViewProps) => {
                   {props.map((p) => <span key={p.id} className="flex max-w-[14rem] min-w-0 items-center"><CellValue prop={p} row={r} ctx={ctx} /></span>)}
                 </div>
               ))}
-              <button type="button" onClick={() => onAdd(gp && s.group ? { [gp.id]: valueForGroup(gp, s.group.key) } : undefined)} className="flex h-9 w-full items-center gap-1.5 px-3 text-sm text-ink/55 hover:bg-cream-soft hover:text-ink">
+              <button type="button" onClick={() => onAdd(gp && s.group ? { [gp.id]: valueForGroup(gp, s.group.key) } : undefined)} className="flex h-9 w-full items-center gap-1.5 px-3 text-sm text-ink/60 hover:bg-cream-soft hover:text-ink">
                 <Plus className="size-3.5" /> New
               </button>
             </div>
           </div>
         ))}
-        {rows.length === 0 && <p className="py-6 text-center text-sm text-ink/55">No rows to show.</p>}
+        {rows.length === 0 && <p className="py-6 text-center text-sm text-ink/60">No rows to show.</p>}
       </div>
     </div>
   )
@@ -57,7 +57,7 @@ export const GalleryView = ({ view, rows, ctx, onAdd }: ViewProps) => {
           <div className={cn("grid gap-3", grid)}>
             {s.rows.map((r) => <Card key={r._id} row={r} props={props} ctx={ctx} className={cn(size === "lg" ? "min-h-40" : size === "sm" ? "min-h-20" : "min-h-28")} onClick={() => ctx.openRow(r._id)} />)}
             <button type="button" onClick={() => onAdd(gp && s.group ? { [gp.id]: valueForGroup(gp, s.group.key) } : undefined)}
-              className="flex min-h-20 items-center justify-center gap-1.5 rounded-lg border border-dashed border-plum/20 text-sm text-ink/55 hover:border-brand/50 hover:text-ink">
+              className="flex min-h-20 items-center justify-center gap-1.5 rounded-lg border border-dashed border-plum/20 text-sm text-ink/60 hover:border-brand/50 hover:text-ink">
               <Plus className="size-4" /> New
             </button>
           </div>

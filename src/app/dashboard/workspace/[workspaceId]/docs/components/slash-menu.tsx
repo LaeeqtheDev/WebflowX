@@ -134,7 +134,7 @@ export const SlashMenu = ({ editor, onImages }: { editor: Editor; onImages: (fil
                             <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-plum/12 bg-cream-soft"><item.icon className="size-4 text-ink/70" /></span>
                             <span className="min-w-0">
                                 <span className="block text-sm font-medium text-ink">{item.title}</span>
-                                <span className="block truncate text-[11px] text-ink/55">{item.hint}</span>
+                                <span className="block truncate text-[11px] text-ink/60">{item.hint}</span>
                             </span>
                         </button>
                     ))}

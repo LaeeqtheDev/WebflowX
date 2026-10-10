@@ -112,7 +112,7 @@ export const EditProfileModal = ({ open, setOpen, user }: Props) => {
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="pf-bio">About</Label>
             <Textarea id="pf-bio" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={300} rows={3} placeholder="A line or two about you" disabled={saving} />
-            <p className="text-xs text-ink/50 text-right">{bio.length}/300</p>
+            <p className="text-xs text-ink/60 text-right">{bio.length}/300</p>
           </div>
 
           <label htmlFor="pf-email-notifs" className="flex items-start gap-3 rounded-xl border border-ink/10 bg-surface px-4 py-3 cursor-pointer">
