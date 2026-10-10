@@ -74,6 +74,10 @@ const mw = convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
     return NextResponse.redirect(new URL(`/auth?next=${encodeURIComponent(next)}`, request.url));
   }
 
+  // The preview on northfoundry.co loads the landing page in an iframe. It shares a site with this app, so a signed-in
+  // team member's cookies come along; without this they would see their own workspace inside the public preview.
+  if (request.nextUrl.pathname === "/" && request.headers.get("sec-fetch-dest") === "iframe") return undefined;
+
   if (isPublicPage(request) && authenticated) {
     const next = request.nextUrl.searchParams.get("next");
     // only follow same-site relative paths
