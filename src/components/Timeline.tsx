@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import { gsap, MOTION_OK, ScrollTrigger } from "./landing/gsap";
+import { MOTION_OK, whenGsap } from "./landing/gsap";
 import { Heading, Label, Reveal } from "./landing/ui";
 import { AppFrame, ScaledFrame, TasksPane } from "./landing/mock";
 import { wrap } from "./landing/tokens";
@@ -105,7 +105,7 @@ function Together() {
         <clipPath id="tg-b"><rect x="340" y="80" width="150" height="150" rx="30" /></clipPath>
       </defs>
       <rect x="30" y="80" width="150" height="150" rx="30" fill="#fff" stroke="none" />
-      <image href="/logo.png" x="55" y="105" width="100" height="100" preserveAspectRatio="xMidYMid meet" clipPath="url(#tg-a)" />
+      <image href="/logo-sm.png" x="55" y="105" width="100" height="100" preserveAspectRatio="xMidYMid meet" clipPath="url(#tg-a)" />
       <rect className="draw" x="30" y="80" width="150" height="150" rx="30" />
       <rect x="340" y="80" width="150" height="150" rx="30" fill="#fff" stroke="none" />
       <image href="/northfoundry-logo.png" x="340" y="80" width="150" height="150" preserveAspectRatio="xMidYMid slice" clipPath="url(#tg-b)" />
@@ -173,6 +173,7 @@ export function WebflowXTimeline() {
   useEffect(() => {
     const el = root.current;
     if (!el) return;
+    return whenGsap(({ gsap, ScrollTrigger }) => {
     const mm = gsap.matchMedia();
     mm.add(MOTION_OK, () => {
       const q = gsap.utils.selector(el);
@@ -236,6 +237,7 @@ export function WebflowXTimeline() {
       ScrollTrigger.refresh();
     });
     return () => mm.revert();
+    }, el);
   }, []);
 
   return (

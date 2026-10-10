@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import { gsap, MOTION_OK } from "./gsap";
+import { MOTION_OK, whenGsap } from "./gsap";
 
 export function Reveal({
   children,
@@ -17,6 +17,7 @@ export function Reveal({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    return whenGsap(({ gsap }) => {
     const mm = gsap.matchMedia();
     mm.add(MOTION_OK, () => {
       gsap.fromTo(
@@ -33,6 +34,7 @@ export function Reveal({
       );
     });
     return () => mm.revert();
+    }, el);
   }, [delay]);
 
   return (

@@ -1,9 +1,8 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useState } from "react"
 import Image from "next/image"
 import { CheckSquare, Sparkles } from "lucide-react"
-import { gsap } from "@/components/landing/gsap"
 import { SignInFlow } from "../../types/types"
 import { SignInCard } from "./SignInCard"
 import { SignUpCard } from "./SignUpCard"
@@ -28,22 +27,8 @@ const copy = {
 
 // Shared split layout (dark brand panel + light form) used by the auth screen and the invite page.
 export const AuthShell = ({ title, body, children }: { title: string; body: string; children: React.ReactNode }) => {
-    const root = useRef<HTMLDivElement>(null)
-    useEffect(() => {
-        const el = root.current
-        if (!el) return
-        const ctx = gsap.context(() => {
-            gsap.from(".a-in", { opacity: 0, y: 24, duration: 0.8, stagger: 0.1, ease: "power3.out" })
-            gsap.from(".a-card", { opacity: 0, y: 40, scale: 0.96, duration: 0.9, stagger: 0.15, delay: 0.3, ease: "power3.out" })
-            gsap.utils.toArray<HTMLElement>(".a-card").forEach((c, i) =>
-                gsap.to(c, { y: i % 2 ? -8 : 8, duration: 3 + i * 0.6, ease: "sine.inOut", yoyo: true, repeat: -1, delay: 1.5 })
-            )
-        }, el)
-        return () => ctx.revert()
-    }, [])
-
     return (
-        <div ref={root} className="grid min-h-dvh lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+        <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
             {/* Brand panel */}
             <aside
                 className="relative hidden flex-col justify-between overflow-hidden p-12 text-white lg:flex"

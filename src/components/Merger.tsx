@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import Image from "next/image";
-import { gsap, MOTION_OK } from "./landing/gsap";
+import { MOTION_OK, whenGsap } from "./landing/gsap";
 import { Heading, Label, Reveal } from "./landing/ui";
 import { wrap } from "./landing/tokens";
 
@@ -18,6 +18,7 @@ export function MergerSection() {
   useEffect(() => {
     const el = root.current;
     if (!el) return;
+    return whenGsap(({ gsap }) => {
     const mm = gsap.matchMedia();
     mm.add(MOTION_OK, () => {
       const q = gsap.utils.selector(el);
@@ -36,6 +37,7 @@ export function MergerSection() {
         .to(q(".mg-name"), { opacity: 1, y: 0, duration: 0.5, stagger: 0.1 }, 1.2);
     });
     return () => mm.revert();
+    }, el);
   }, []);
 
   return (

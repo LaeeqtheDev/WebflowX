@@ -3,16 +3,13 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
-import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { PublicConvexProvider } from "./PublicConvexProvider";
 import { Reveal } from "./landing/ui";
 import { wrap } from "./landing/tokens";
 
 type State = { kind: "idle" } | { kind: "sending" } | { kind: "done" } | { kind: "error"; message: string };
 
 function SubscribeForm() {
-  const subscribe = useMutation(api.newsletter.subscribe);
   const [email, setEmail] = useState("");
   const [state, setState] = useState<State>({ kind: "idle" });
 
@@ -21,7 +18,10 @@ function SubscribeForm() {
     if (state.kind === "sending") return;
     setState({ kind: "sending" });
     try {
-      const res = await subscribe({ email, source: "landing" });
+      // The Convex client loads only now, so the landing page doesn't download it just to show a form.
+      const { ConvexHttpClient } = await import("convex/browser");
+      const client = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+      const res = await client.mutation(api.newsletter.subscribe, { email, source: "landing" });
       if (res.ok) {
         setState({ kind: "done" });
         setEmail("");
@@ -105,7 +105,7 @@ export const NewsletterSignup = () => (
             Occasional emails about new WebflowX features and ways to run your team better.
           </p>
         </div>
-        <PublicConvexProvider><SubscribeForm /></PublicConvexProvider>
+        <SubscribeForm />
       </div>
     </section>
   </>

@@ -633,3 +633,17 @@ html[data-lowdata="1"] *::after {
 }
 /* loading spinners keep turning in data saver mode, so a slow screen never looks frozen */
 html[data-lowdata="1"] .animate-spin { animation-duration: 1s !important; animation-iteration-count: infinite !important; }
+
+/* Auth screen entrance: plain CSS, so the sign-in page ships no animation library. */
+@keyframes a-rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@keyframes a-card-in { from { opacity: 0; transform: translateY(40px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes a-float { 0%, 100% { translate: 0 8px; } 50% { translate: 0 -8px; } }
+.a-in { animation: a-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.a-card { animation: a-card-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both, a-float 4s ease-in-out 1.5s infinite; }
+.a-card:nth-child(2) { animation-delay: 0.45s, 1.5s; animation-duration: 0.9s, 4.6s; }
+.a-card:nth-child(3) { animation-delay: 0.6s, 1.5s; animation-duration: 0.9s, 5.2s; }
+@media (prefers-reduced-motion: reduce) { .a-in, .a-card { animation: none; } }
+:root[data-lowdata="1"] .a-in, :root[data-lowdata="1"] .a-card { animation: none; }
+
+/* Landing hero: until (or unless) the animation library runs, show the first product view only. */
+.hv:not(:first-child) { opacity: 0; }

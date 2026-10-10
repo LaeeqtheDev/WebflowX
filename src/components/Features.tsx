@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { BellRing, CalendarDays, FileText, MessagesSquare, Search, ShieldCheck, UserRoundPlus, Webhook } from "lucide-react";
-import { gsap, MOTION_OK } from "./landing/gsap";
+import { MOTION_OK, whenGsap } from "./landing/gsap";
 import { Heading, Label, Reveal } from "./landing/ui";
 import { ChatPane, DocPane, MeetingPane, PaneFrame, ScaledFrame, TasksPane } from "./landing/mock";
 import { wrap } from "./landing/tokens";
@@ -73,6 +73,7 @@ const NewFeatures = () => {
   useEffect(() => {
     const el = root.current;
     if (!el) return;
+    return whenGsap(({ gsap }) => {
     const mm = gsap.matchMedia();
     mm.add(MOTION_OK, () => {
       const q = gsap.utils.selector(el);
@@ -100,6 +101,7 @@ const NewFeatures = () => {
       });
     });
     return () => mm.revert();
+    }, el);
   }, []);
 
   return (

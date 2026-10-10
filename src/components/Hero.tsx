@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, MousePointer2 } from "lucide-react";
-import { gsap, MOTION_OK, prefersReducedMotion, ScrollTrigger } from "./landing/gsap";
+import { MOTION_OK, prefersReducedMotion, whenGsap, type ScrollTrigger } from "./landing/gsap";
 import { AppFrame, ChatPane, DocPane, MeetingPane, ScaledFrame, TasksPane } from "./landing/mock";
 
 const views = [
@@ -23,6 +23,7 @@ const Hero = () => {
   useEffect(() => {
     const el = root.current;
     if (!el) return;
+    return whenGsap(({ gsap, ScrollTrigger }) => {
     const q = gsap.utils.selector(el);
     const reduced = prefersReducedMotion();
     const refresh = () => ScrollTrigger.refresh();
@@ -117,6 +118,7 @@ const Hero = () => {
       window.removeEventListener("load", refresh);
       mm.revert();
     };
+    });
   }, []);
 
   const goTo = (i: number) => {
