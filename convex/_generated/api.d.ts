@@ -39,6 +39,7 @@ import type * as integrations from "../integrations.js";
 import type * as limits from "../limits.js";
 import type * as liveblocks from "../liveblocks.js";
 import type * as marks from "../marks.js";
+import type * as maintenance from "../maintenance.js";
 import type * as meetings from "../meetings.js";
 import type * as members from "../members.js";
 import type * as messageHelpers from "../messageHelpers.js";
@@ -106,6 +107,7 @@ declare const fullApi: ApiFromModules<{
   limits: typeof limits;
   liveblocks: typeof liveblocks;
   marks: typeof marks;
+  maintenance: typeof maintenance;
   meetings: typeof meetings;
   members: typeof members;
   messageHelpers: typeof messageHelpers;

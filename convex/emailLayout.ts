@@ -8,7 +8,7 @@ export const esc = (s: string) =>
 
 export const FONT = "-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
 
-export const siteUrl = () => (process.env.SITE_URL ?? "https://webflow-x.vercel.app").replace(/\/$/, "")
+export const siteUrl = () => (process.env.SITE_URL ?? "https://webflowx.northfoundry.co").replace(/\/$/, "")
 
 export const emailFrom = () => process.env.AUTH_EMAIL_FROM
 

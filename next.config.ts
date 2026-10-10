@@ -36,6 +36,13 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Once webflowx.northfoundry.co is live, set WFX_CANONICAL_HOST=webflowx.northfoundry.co on Vercel and the old
+  // *.vercel.app address forwards there (same path), so old links, bookmarks and invites keep working.
+  async redirects() {
+    const host = process.env.WFX_CANONICAL_HOST
+    if (!host) return []
+    return [{ source: "/:path*", has: [{ type: "host" as const, value: "webflow-x.vercel.app" }], destination: `https://${host}/:path*`, permanent: false }]
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

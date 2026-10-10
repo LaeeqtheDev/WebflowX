@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://webflow-x.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://webflowx.northfoundry.co";
 const SITE_DESCRIPTION =
   "WebflowX brings team chat, tasks, real-time docs and spreadsheets, video meetings with live transcripts and AI summaries into one workspace, with roles, permissions and data export. Built by North Foundry.";
 
