@@ -8,6 +8,7 @@ import { ArrowLeft, Check, CheckSquare, Copy, FileText, Hash, MessageSquare, Vid
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AuthShell } from "@/features/auth/components/auth-screen"
+import { signOutAndLeave } from "@/lib/sign-out"
 import { useAuthActions } from "@convex-dev/auth/react"
 import { useCreateWorkspace } from "@/features/workspaces/api/use-create-workspace"
 import { useLimitHandler } from "@/hooks/use-limit-handler"
@@ -202,7 +203,7 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
         <AuthShell title={t(stepKey(step, "title"))} body={t(stepKey(step, "body"))}>
             <div className="mb-6 flex items-center justify-between">
                 <LanguagePicker />
-                <button type="button" onClick={() => { void signOut() }} className="cursor-pointer text-sm text-ink/60 hover:text-ink">{t("wiz.signout")}</button>
+                <button type="button" onClick={() => { void signOutAndLeave(signOut) }} className="cursor-pointer text-sm text-ink/60 hover:text-ink">{t("wiz.signout")}</button>
             </div>
             <Progress step={step} />
 

@@ -28,7 +28,7 @@ const copy = {
 // Shared split layout (dark brand panel + light form) used by the auth screen and the invite page.
 export const AuthShell = ({ title, body, children }: { title: string; body: string; children: React.ReactNode }) => {
     return (
-        <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+        <div className="wfx-light grid min-h-dvh bg-background text-foreground lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
             {/* Brand panel */}
             <aside
                 className="relative hidden flex-col justify-between overflow-hidden p-12 text-white lg:flex"

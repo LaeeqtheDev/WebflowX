@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import { useConvexAuth, useMutation, useQuery } from "convex/react"
+import { signOutAndLeave } from "@/lib/sign-out"
 import { useAuthActions } from "@convex-dev/auth/react"
 import { Loader, ShieldCheck } from "lucide-react"
 import { api } from "../../../convex/_generated/api"
@@ -58,7 +59,7 @@ const Challenge = () => {
         <button type="button" className="cursor-pointer font-semibold text-orange-ink underline underline-offset-2" onClick={() => { setBackup((b) => !b); setCode(""); setError("") }}>
           {backup ? "Use my authenticator app" : "Use a backup code"}
         </button>
-        <button type="button" className="cursor-pointer underline underline-offset-2 hover:text-ink" onClick={() => void signOut()}>Sign out</button>
+        <button type="button" className="cursor-pointer underline underline-offset-2 hover:text-ink" onClick={() => void signOutAndLeave(signOut)}>Sign out</button>
       </div>
     </AuthShell>
   )
@@ -97,7 +98,7 @@ export const RequireTwoFactor = ({ workspaceName, children }: { workspaceName?: 
       <h1 className="mt-4 text-[2rem] font-semibold leading-tight tracking-[-0.03em] text-ink">Set up two-step verification</h1>
       <p className="mt-2 mb-6 text-[15px] text-ink/65">{workspaceName ?? "This workspace"} requires it. It takes about a minute.</p>
       <TwoFactorSetup onDone={() => setDone(true)} />
-      <button type="button" className="mt-6 w-fit cursor-pointer text-sm text-ink/60 underline underline-offset-2 hover:text-ink" onClick={() => void signOut()}>Sign out</button>
+      <button type="button" className="mt-6 w-fit cursor-pointer text-sm text-ink/60 underline underline-offset-2 hover:text-ink" onClick={() => void signOutAndLeave(signOut)}>Sign out</button>
     </AuthShell>
   )
 }

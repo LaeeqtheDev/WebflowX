@@ -370,7 +370,7 @@ export function OnboardingTour({ workspaceId, workspaceName, channels, initial, 
   ] as const
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-cream-soft text-ink" role="dialog" aria-modal="true" aria-label="WebflowX tour">
+    <div className="wfx-light fixed inset-0 z-50 flex flex-col bg-cream-soft text-ink" role="dialog" aria-modal="true" aria-label="WebflowX tour">
       <header className="flex flex-wrap items-center gap-3 border-b border-ink/10 bg-white px-4 py-3">
         <span className="font-semibold">WebflowX</span>
         <span className="text-xs font-semibold uppercase tracking-wider text-ink/60">{t("tour.step", { n: s.step, total: TOUR_STEPS })}</span>

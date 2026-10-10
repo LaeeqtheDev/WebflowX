@@ -64,8 +64,9 @@ body,
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* WebflowX brand tokens: plum, orange and warm sand */
-:root {
+/* WebflowX brand tokens: plum, orange and warm sand. .wfx-light re-applies them inside the dark app (sign-in and setup screens are always light). */
+:root,
+.wfx-light {
   --wfx-cream: #f7f2ee;
   --wfx-cream-soft: #fbf9f7;
   --wfx-cream-deep: #f3eeea;
