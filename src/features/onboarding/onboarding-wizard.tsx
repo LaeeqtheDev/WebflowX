@@ -17,8 +17,7 @@ import { parseLimitError } from "@/lib/plans"
 import { LanguagePicker, useT } from "@/lib/i18n"
 import type { Key } from "@/lib/i18n/en"
 import { TEMPLATES, getTemplate } from "@/lib/templates"
-import { OnboardingTour } from "./tour/tour"
-import { freshTour, loadTour, type TourState } from "./tour/state"
+import { startGuide } from "./workspace-guide"
 import { api } from "../../../convex/_generated/api"
 import { Id } from "../../../convex/_generated/dataModel"
 
@@ -87,8 +86,6 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
     const [chosen, setChosen] = useState<string[] | null>(null)
     const [busy, setBusy] = useState(false)
     const [copied, setCopied] = useState(false)
-    const [touring, setTouring] = useState<TourState | null>(null)
-    const [saved, setSaved] = useState<TourState | null>(null)
     const { mutate, isPending } = useCreateWorkspace()
     const { handleLimitError } = useLimitHandler()
     const createChannel = useMutation(api.channels.create)
@@ -113,11 +110,6 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
         if (!invalid) return
         router.replace(workspace && setupId ? `/dashboard/workspace/${setupId}` : "/dashboard")
     }, [invalid, workspace, setupId, router])
-
-    // Progress from an earlier visit to the tour (it is kept in this browser).
-    useEffect(() => {
-        if (step === 5 && setupId) setSaved(loadTour(setupId))
-    }, [step, setupId])
 
     const go = (n: number, id?: string | null) => {
         const q = new URLSearchParams()
@@ -197,7 +189,6 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
     }
 
     const stepKey = (n: number, part: "title" | "body") => `wiz.s${n}.${part}` as Key
-    const resumable = saved && !saved.finished
 
     return (
         <AuthShell title={t(stepKey(step, "title"))} body={t(stepKey(step, "body"))}>
@@ -314,22 +305,11 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
                 <>
                     <Heading title={t("wiz.s5.h")} text={workspace ? t("wiz.s5.live", { name: workspace.name }) : t("wiz.s5.ready")} />
                     <p className="mt-5 rounded-xl border border-ink/10 bg-surface p-4 text-sm text-ink/70">{t("wiz.s5.offer")}</p>
-                    <Button className={`${primary} mt-6`} size="lg" disabled={!setupId || !workspace} onClick={() => setTouring(resumable ? saved : freshTour())}>
-                        <Sparkles className="mr-2 size-4" /> {resumable ? `${t("wiz.s5.resume")} (${t("tour.step", { n: saved!.step, total: 10 })})` : t("wiz.s5.tour")}
+                    <Button className={`${primary} mt-6`} size="lg" disabled={!setupId || !workspace} onClick={() => { if (setupId) startGuide(setupId); openWorkspace() }}>
+                        <Sparkles className="mr-2 size-4" /> {t("wiz.s5.tour")}
                     </Button>
                     <button type="button" onClick={openWorkspace} className="mt-4 cursor-pointer text-sm text-ink/60 hover:text-ink">{t("wiz.s5.skip")}</button>
                 </>
-            )}
-
-            {touring && setupId && workspace && (
-                <OnboardingTour
-                    workspaceId={setupId}
-                    workspaceName={workspace.name}
-                    channels={picked}
-                    initial={touring}
-                    onSkip={() => { setTouring(null); if (setupId) setSaved(loadTour(setupId)) }}
-                    onFinish={() => { setTouring(null); openWorkspace() }}
-                />
             )}
         </AuthShell>
     )

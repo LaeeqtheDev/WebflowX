@@ -26,6 +26,7 @@ import { PresenceProvider } from "@/features/presence/presence"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace"
 import { RequireTwoFactor } from "@/features/security/two-factor-gate"
+import { WorkspaceGuide } from "@/features/onboarding/workspace-guide"
 import { preloadWorkspaceChunks } from "@/lib/preload"
 
 const Thread = dynamic(() => import("./components/threads").then((m) => m.Thread), { ssr: false })
@@ -66,6 +67,7 @@ const WorkspaceShell = ({ children }: WorkspaceIdLayoutProps) => {
     return (
       <div className="h-dvh flex flex-col" style={visibleHeight ? { height: visibleHeight } : undefined}>
         <QuickSwitcher />
+        <WorkspaceGuide />
         {/* Topbar */}
         <Toolbar onOpenMenu={() => setDrawerPath(pathname)} />
         <UsageWarning />
@@ -106,6 +108,7 @@ const WorkspaceShell = ({ children }: WorkspaceIdLayoutProps) => {
   return(
   <div className="h-dvh flex flex-col">
     <QuickSwitcher />
+        <WorkspaceGuide />
     {/* Topbar */}
     <Toolbar />
     <UsageWarning />
