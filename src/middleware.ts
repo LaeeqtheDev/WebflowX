@@ -1,7 +1,6 @@
 import { NextResponse, NextRequest, type NextFetchEvent } from "next/server";
 import {
   convexAuthNextjsMiddleware,
-  convexAuthNextjsToken,
   createRouteMatcher,
 } from "@convex-dev/auth/nextjs/server";
 import { tokenLooksValid } from "@/lib/token-check";
@@ -44,12 +43,14 @@ function appCsp(nonce: string) {
   ].join("; ")
 }
 
-const mw = convexAuthNextjsMiddleware(async (request) => {
+const mw = convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
   const isInvite = request.nextUrl.pathname.startsWith("/join/");
   if ((isLegal(request) || isHealth(request)) && !isInvite) return undefined;
 
-  // Checked locally (see lib/token-check.ts): no database call per request. The library has already refreshed an expired token.
-  const authenticated = tokenLooksValid(await convexAuthNextjsToken());
+  // Checked locally (see lib/token-check.ts): no database call per request.
+  // getToken() reads the cookies as the library has just updated them for this request (a refreshed or freshly issued token).
+  // The plain convexAuthNextjsToken() reads the browser's original cookies, which are stale right after a refresh or sign-in.
+  const authenticated = tokenLooksValid(await convexAuth.getToken());
 
   // Invite link with a code and not signed in: skip the invite page and go straight to sign-up.
   // Afterwards the visitor comes back to this link and is added to the workspace automatically.
