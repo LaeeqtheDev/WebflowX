@@ -622,9 +622,14 @@ html[data-density="compact"] .wfx-msg span[class*="size-9"] { width: 1.5rem !imp
 
 html[data-motion="reduced"] *,
 html[data-motion="reduced"] *::before,
-html[data-motion="reduced"] *::after {
+html[data-motion="reduced"] *::after,
+html[data-lowdata="1"] *,
+html[data-lowdata="1"] *::before,
+html[data-lowdata="1"] *::after {
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }
+/* loading spinners keep turning in data saver mode, so a slow screen never looks frozen */
+html[data-lowdata="1"] .animate-spin { animation-duration: 1s !important; animation-iteration-count: infinite !important; }

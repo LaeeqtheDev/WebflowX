@@ -19,6 +19,8 @@ export interface EditorProps {
     allowEveryone?: boolean;
     // called as the person types (the caller throttles it); used for the "is typing" indicator
     onTyping?: () => void;
+    // when set, what is typed is saved on this device under this key and restored after a reload or crash
+    draftKey?: string;
 }
 
 export const FORMATTING_COMMANDS = [

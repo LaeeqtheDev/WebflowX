@@ -4,6 +4,7 @@ import { useMutation } from "convex/react"
 import { api } from "../../convex/_generated/api"
 import { Id } from "../../convex/_generated/dataModel"
 import { errMsg } from "@/lib/errors"
+import { NetworkError, postFile, withRetry, type UploadProgress } from "@/lib/network"
 
 const MB = 1024 * 1024
 export const IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/avif"]
@@ -22,16 +23,19 @@ export const useUploader = () => {
   const [uploading, setUploading] = useState(false)
 
   const upload = useCallback(
-    async (file: File, kind: Kind, workspaceId?: Id<"workspaces">): Promise<Id<"_storage">> => {
+    async (file: File, kind: Kind, workspaceId?: Id<"workspaces">, onProgress?: (p: UploadProgress) => void): Promise<Id<"_storage">> => {
       if (kind !== "file" && !IMAGE_TYPES.includes(file.type)) throw new Error("Images must be PNG, JPG, GIF, WebP or AVIF")
       if (file.size > MAX[kind]) throw new Error(`That file is too large (max ${Math.round(MAX[kind] / MB)} MB)`)
       setUploading(true)
       try {
-        let url: string
-        try { url = await generateUploadUrl({ workspaceId }) } catch (e) { throw new Error(errMsg(e, "Couldn't start the upload")) }
-        const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type || "application/octet-stream" }, body: file })
-        if (!res.ok) throw new Error("Upload failed. Check your connection and try again.")
-        const { storageId } = (await res.json()) as { storageId: Id<"_storage"> }
+        // a weak connection gets two more tries (each with a fresh upload address) before the person is asked to retry
+        const { storageId } = await withRetry(async () => {
+          // asking for an upload address while offline would just wait for the connection, so say so straight away
+          if (typeof navigator !== "undefined" && !navigator.onLine) throw new NetworkError("You're offline. Try again when you're back online.")
+          let url: string
+          try { url = await generateUploadUrl({ workspaceId }) } catch (e) { throw new Error(errMsg(e, "Couldn't start the upload")) }
+          return (await postFile(url, file, { onProgress })) as { storageId: Id<"_storage"> }
+        })
         let result: Awaited<ReturnType<typeof register>>
         try { result = await register({ storageId, workspaceId, kind }) } catch (e) { throw new Error(errMsg(e, "That file couldn't be accepted")) }
         if (!result.ok) throw new Error(result.error)

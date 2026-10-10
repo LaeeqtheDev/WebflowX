@@ -19,6 +19,7 @@ import { useVisibleHeight } from "@/hooks/use-visible-height"
 import { Id } from "../../../../../convex/_generated/dataModel"
 import dynamic from "next/dynamic"
 import { UsageWarning } from "./components/usage-warning"
+import { ConnectionBanner } from "@/components/connection-banner"
 import { QuickSwitcher } from "./components/quick-switcher"
 import { BillingReturn } from "./components/billing-return"
 import { PresenceProvider } from "@/features/presence/presence"
@@ -68,6 +69,7 @@ const WorkspaceShell = ({ children }: WorkspaceIdLayoutProps) => {
         {/* Topbar */}
         <Toolbar onOpenMenu={() => setDrawerPath(pathname)} />
         <UsageWarning />
+        <ConnectionBanner />
 
         {/* Body: one pane at a time; the sidebar lives in a drawer */}
         <main className="flex-1 min-h-0 min-w-0 overflow-auto">
@@ -107,6 +109,7 @@ const WorkspaceShell = ({ children }: WorkspaceIdLayoutProps) => {
     {/* Topbar */}
     <Toolbar />
     <UsageWarning />
+        <ConnectionBanner />
 
     {/* Body */}
     <div className="flex flex-1 w-full overflow-hidden">

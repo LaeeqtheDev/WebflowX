@@ -5,6 +5,8 @@ import { toast } from "sonner"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useSetLook, useSetTheme } from "@/hooks/use-theme-pref"
 import { errMsg } from "@/lib/errors"
+import { setDataSaverPref, useDataSaverPref, useLowData } from "@/hooks/use-low-data"
+import type { DataSaverPref } from "@/lib/network"
 import {
     ACCENT_META, DEFAULT_LOOK, THEME_META, isLook, isThemePref,
     type ConcreteTheme, type Look, type ThemePref,
@@ -49,6 +51,8 @@ const AppearanceBody = ({ user }: { user: Doc<"users"> }) => {
     const setLook = useSetLook()
     const [theme, setThemeState] = useState<ThemePref>(isThemePref(user.theme) ? user.theme : "system")
     const [look, setLookState] = useState<Look>(isLook(user.look) ? user.look : DEFAULT_LOOK)
+    const saver = useDataSaverPref()
+    const lowNow = useLowData()
     const fail = (e: unknown) => toast.error(errMsg(e, "Couldn't save your appearance"))
     const pickTheme = (t: ThemePref) => { setThemeState(t); setTheme(t).catch(fail) }
     const patch = (p: Partial<Look>) => { const next = { ...look, ...p }; setLookState(next); setLook(next).catch(fail) }
@@ -131,6 +135,16 @@ const AppearanceBody = ({ user }: { user: Doc<"users"> }) => {
                             {FONT_SCALES.map((f) => (
                                 <button key={f} type="button" role="radio" aria-checked={look.fontScale === f} onClick={() => patch({ fontScale: f })} className={segment(look.fontScale === f)}>
                                     {SIZE_LABEL[f]}
+                                </button>
+                            ))}
+                        </div>
+                    </Section>
+
+                    <Section title="Data saver" hint={`Skips profile photos and waits to load images, and turns off animation. Auto follows your browser's data saver and slow connections.${saver === "auto" && lowNow ? " It is on right now." : ""}`}>
+                        <div role="radiogroup" aria-label="Data saver" className="flex gap-1 rounded-lg bg-ink/10 p-1">
+                            {(["auto", "on", "off"] as DataSaverPref[]).map((d) => (
+                                <button key={d} type="button" role="radio" aria-checked={saver === d} onClick={() => setDataSaverPref(d)} className={segment(saver === d)}>
+                                    {d === "auto" ? "Auto" : d === "on" ? "Always on" : "Off"}
                                 </button>
                             ))}
                         </div>

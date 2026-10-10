@@ -116,3 +116,15 @@ test("security headers are present", async ({ request }) => {
   expect(h["referrer-policy"]).toBe("strict-origin-when-cross-origin")
   expect(h["content-security-policy"]).toContain("frame-ancestors")
 })
+
+test("the offline page and service worker are served and the page needs no script", async ({ page, request }) => {
+  const sw = await request.get("/sw.js")
+  expect(sw.status()).toBe(200)
+  expect(await sw.text()).toContain("/offline.html")
+  const problems = watch(page)
+  const res = await page.goto("/offline.html")
+  expect(res?.status()).toBe(200)
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("not connected")
+  await expect(page.getByRole("link", { name: "Try again" })).toHaveAttribute("href", "/dashboard")
+  expect(problems).toEqual([])
+})

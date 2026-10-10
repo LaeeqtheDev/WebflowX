@@ -10,7 +10,8 @@ import dynamic from "next/dynamic";
 import Quill from "quill";
 import { useCreateMessage } from "@/features/messages/api/use-create-message";
 import { useUploader } from "@/lib/upload-photo";
-import { useLimitHandler } from "@/hooks/use-limit-handler";
+import { useSendFlow } from "@/hooks/use-send-flow";
+import { SendStatus } from "@/components/send-status";
 import { useChannelId } from "@/hooks/use-channel-id";
 import { useGetMessages } from "@/features/messages/api/use-get-messages";
 import { differenceInMinutes, format, isToday, isYesterday } from "date-fns";
@@ -50,7 +51,6 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
     const {data: currentMember} = useCurrentMember({workspaceId})
     const {mutate: createMessage} = useCreateMessage()
     const { upload } = useUploader()
-    const { handleLimitError } = useLimitHandler()
     const {results, status, loadMore} = useGetMessages({
         channelId,
         parentMessageId: messageId,
@@ -60,47 +60,22 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
     const isLoadingMore = status === "LoadingMore";
 
     const [editingId, setEditingId] = useState<Id<"messages">| null>(null)
-    const [editorKey, setEditorKey] = useState(0)
-    const [isPending, setIsPending] = useState(false)
     const editorRef = useRef<Quill | null>(null)
 
+    const { editorKey, isPending, upload: sending, submit: handleSubmit } = useSendFlow(
+        editorRef,
+        `${workspaceId}:thread:${messageId}`,
+        async ({ body, image }: { body: string; image: File | null }, onProgress) => {
+            const values: CreateMessageValues = { channelId, workspaceId, body, image: undefined, parentMessageId: messageId }
+            if (image) {
+                values.image = await upload(image, "image", workspaceId, (p) => onProgress(image.name, p))
+                values.imageName = image.name
+            }
+            await createMessage(values, { throwError: true })
+        },
+    )
 
-    const handleSubmit = async({
-        body, image
-      }:{body: string, image: File | null})=> {
-      
-        try{
-          setIsPending(true)
-          editorRef?.current?.enable(false)
-    
-          const values: CreateMessageValues = {
-              channelId,
-              workspaceId,
-              body,
-              image: undefined,
-              parentMessageId: messageId,
-          }
-    
-          if(image){
-            values.image = await upload(image, "image", workspaceId)
-            values.imageName = image.name
-          }
-    
-        await createMessage(
-          values
-        , {throwError: true})
-    
-        setEditorKey((prevKey) => prevKey +1)
-      } catch (error){
-        handleLimitError(error, "Failed to send the message")
-      }finally{
-          setIsPending(false)
-          editorRef?.current?.enable(true)
-      }
-      }
-
-
-      const groupedMessages = results?.reduce(
+    const groupedMessages = results?.reduce(
         (groups, message) => {
             const date = new Date(message._creationTime);
             const dateKey = format(date, "yyyy-MM-dd");
@@ -254,9 +229,11 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
                 />
             </div>
             <div className="px-3 md:px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                <SendStatus pending={isPending} upload={sending} />
                 <Editor
                 onSubmit={handleSubmit}
                 key={editorKey}
+                draftKey={`${workspaceId}:thread:${messageId}`}
                 innerRef={editorRef}
                 disabled={isPending}
                 placeholder="Reply..."

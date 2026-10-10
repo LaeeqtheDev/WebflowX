@@ -1,11 +1,12 @@
 import { useCreateMessage } from "@/features/messages/api/use-create-message";
 import { useUploader } from "@/lib/upload-photo";
-import { useLimitHandler } from "@/hooks/use-limit-handler";
+import { useSendFlow } from "@/hooks/use-send-flow";
+import { SendStatus } from "@/components/send-status";
 import { useChannelId } from "@/hooks/use-channel-id";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import dynamic from "next/dynamic";
 import Quill from "quill";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Id } from "../../../../../../convex/_generated/dataModel";
 import { TypingIndicator, useTypingPing } from "@/features/presence/typing";
 
@@ -28,30 +29,18 @@ type CreateMessageValues = {
 };
 
 export const ChatInput = ({ placeholder }: ChatInputProps) => {
-    const [editorKey, setEditorKey] = useState(0);
     const editorRef = useRef<Quill | null>(null);
 
     const workspaceId = useWorkspaceId();
     const channelId = useChannelId();
     const { mutate: createMessage } = useCreateMessage();
-    const [isPending, setIsPending] = useState(false);
     const { upload } = useUploader();
-    const { handleLimitError } = useLimitHandler();
     const onTyping = useTypingPing({ workspaceId, channelId });
 
-    const handleSubmit = async ({
-        body,
-        image,
-        file,
-    }: {
-        body: string;
-        image: File | null;
-        file: File | null;
-    }) => {
-        try {
-            setIsPending(true);
-            editorRef?.current?.enable(false);
-
+    const { editorKey, isPending, upload: sending, submit } = useSendFlow(
+        editorRef,
+        `${workspaceId}:${channelId}`,
+        async ({ body, image, file }: { body: string; image: File | null; file: File | null }, onProgress) => {
             const values: CreateMessageValues = {
                 channelId,
                 workspaceId,
@@ -64,37 +53,32 @@ export const ChatInput = ({ placeholder }: ChatInputProps) => {
             };
 
             if (image) {
-                values.image = await upload(image, "image", workspaceId);
+                values.image = await upload(image, "image", workspaceId, (p) => onProgress(image.name, p));
                 values.imageName = image.name;
             }
 
             if (file) {
-                values.file = await upload(file, "file", workspaceId);
+                values.file = await upload(file, "file", workspaceId, (p) => onProgress(file.name, p));
                 values.fileName = file.name;
                 values.fileType = file.type || "application/octet-stream";
                 values.fileSize = file.size;
             }
 
             await createMessage(values, { throwError: true });
-
-            setEditorKey((prevKey) => prevKey + 1);
-        } catch (error) {
-            handleLimitError(error, "Failed to send the message");
-        } finally {
-            setIsPending(false);
-            editorRef?.current?.enable(true);
-        }
-    };
+        },
+    );
 
     return (
         <div data-chat-input className="px-3 md:px-5 w-full pb-[env(safe-area-inset-bottom)]">
             <TypingIndicator channelId={channelId} />
+            <SendStatus pending={isPending} upload={sending} />
             <Editor
                 onTyping={onTyping}
                 key={editorKey}
+                draftKey={`${workspaceId}:${channelId}`}
                 placeholder={placeholder}
                 allowEveryone
-                onSubmit={handleSubmit}
+                onSubmit={submit}
                 disabled={isPending}
                 innerRef={editorRef}
             />

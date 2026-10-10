@@ -4,6 +4,7 @@ import * as React from "react"
 import * as AvatarPrimitive from "@radix-ui/react-avatar"
 
 import { cn } from "@/lib/utils"
+import { useLowData } from "@/hooks/use-low-data"
 
 function Avatar({
   className,
@@ -25,6 +26,9 @@ function AvatarImage({
   className,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+  // on a slow connection or with data saver on, show initials instead of downloading photos
+  const lowData = useLowData()
+  if (lowData) return null
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"

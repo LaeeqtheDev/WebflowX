@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>You're offline | WebflowX</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #fbf9f7; color: #1b1017; text-align: center; }
+  main { max-width: 420px; }
+  .tag { font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #c2370d; }
+  h1 { margin: 12px 0 8px; font-size: 28px; line-height: 1.2; letter-spacing: -.01em; }
+  p { margin: 0 0 8px; line-height: 1.55; color: rgba(27,16,23,.7); }
+  a { display: inline-block; margin-top: 20px; padding: 11px 22px; border-radius: 12px; background: #c2370d; color: #fff; font-weight: 600; font-size: 15px; text-decoration: none; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1a0f15; color: #f4ece7; }
+    p { color: rgba(244,236,231,.72); }
+    .tag { color: #ff8a63; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="tag">Offline</p>
+  <h1>You're not connected right now</h1>
+  <p>WebflowX needs a connection to load your workspace. Anything you were typing is saved on this device and will be there when you're back.</p>
+  <p>Check your Wi-Fi or mobile data, then try again.</p>
+  <a href="/dashboard">Try again</a>
+</main>
+</body>
+</html>

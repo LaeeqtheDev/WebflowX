@@ -261,6 +261,18 @@ export type ChangelogEntry = { date: string; title: string; points: string[] }
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-10",
+    title: "Better on a weak connection",
+    points: [
+      "A banner tells you when WebflowX can't be reached, and when it's back.",
+      "Sending shows what's happening: Sending, upload progress, and a note when your connection is the reason it's slow.",
+      "Uploads that stall are stopped and retried, with a Retry button if they still fail.",
+      "What you're typing in a channel, thread or direct message is saved on your device and comes back after a refresh or a crash. It's removed when you sign out.",
+      "A data saver option (Appearance) skips profile photos, waits to load images and turns off animation. It turns on by itself when your browser asks for less data or the connection is very slow.",
+      "If a page can't be reached, an offline page replaces the browser's error screen.",
+    ],
+  },
+  {
+    date: "2026-10-10",
     title: "More themes and an Appearance panel",
     points: [
       "Seven themes: Sand and Snow (light), Plum, Ash, Midnight, Forest and Onyx (dark), or sync with your computer.",

@@ -8,6 +8,7 @@ import {
     useState,
 } from "react";
 import Quill, { type QuillOptions } from "quill";
+import { loadDraft, saveDraft, type DraftOps } from "@/lib/network";
 import "./mention-blot";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
@@ -51,6 +52,7 @@ const Editor = ({
     variant = "create",
     allowEveryone = false,
     onTyping,
+    draftKey,
 }: EditorProps) => {
     const [text, setText] = useState("");
     const [isToolbarVisible, setIsToolbarVisible] = useState(true);
@@ -99,6 +101,8 @@ const Editor = ({
     const placeholderRef = useRef(placeholder);
     const quilRef = useRef<Quill | null>(null);
     const defaultValueRef = useRef(defaultValue);
+    const draftKeyRef = useRef(draftKey);
+    const draftTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const disabledRef = useRef(disabled);
     const imageElementRef = useRef<HTMLInputElement>(null);
     const fileElementRef = useRef<HTMLInputElement>(null);
@@ -114,6 +118,7 @@ const Editor = ({
         typingRef.current = onTyping;
         placeholderRef.current = placeholder;
         defaultValueRef.current = defaultValue;
+        draftKeyRef.current = draftKey;
         disabledRef.current = disabled;
         matchesRef.current = mentionMatches;
     });
@@ -130,6 +135,16 @@ const Editor = ({
     useEffect(() => {
         activeTabRef.current = activeTab;
     }, [activeTab]);
+
+    // Saves the draft right now and cancels the pending delayed save, so a message that has just been sent
+    // can't be written back after it was cleared.
+    const flushDraft = () => {
+        clearTimeout(draftTimer.current);
+        draftTimer.current = undefined;
+        const q = quilRef.current;
+        const k = draftKeyRef.current;
+        if (q && k) saveDraft(k, q.getContents() as { ops?: DraftOps }, q.getText().trim().length === 0);
+    };
 
     const updateMention = (m: { query: string; start: number } | null) => {
         mentionRef.current = m;
@@ -257,6 +272,7 @@ const Editor = ({
                                     text.replace(/<(.|\n)*?>/g, "").trim().length === 0;
                                 if (isEmpty) return;
                                 const body = JSON.stringify(quill.getContents());
+                                flushDraft();
                                 submitRef.current?.({
                                     body,
                                     image: addedImage,
@@ -342,13 +358,21 @@ const Editor = ({
 
         if (innerRef) innerRef.current = quill;
 
-        quill.setContents(defaultValueRef.current);
+        // unsent text from before a reload, crash or dropped connection comes back
+        const saved = draftKeyRef.current ? loadDraft(draftKeyRef.current) : null;
+        quill.setContents((saved ?? defaultValueRef.current) as Parameters<typeof quill.setContents>[0]);
+        if (saved) quill.setSelection(quill.getLength(), 0);
         setText(quill.getText());
 
         quill.on(Quill.events.TEXT_CHANGE, (_delta: unknown, _old: unknown, source: string) => {
             const fullText = quill.getText();
             setText(fullText);
             if (source === "user" && fullText.trim().length > 0) typingRef.current?.();
+            if (source === "user" && draftKeyRef.current) {
+                const key = draftKeyRef.current;
+                clearTimeout(draftTimer.current);
+                draftTimer.current = setTimeout(() => { draftTimer.current = undefined; saveDraft(key, quill.getContents() as { ops?: DraftOps }, quill.getText().trim().length === 0); }, 300);
+            }
 
             const selection = quill.getSelection();
             if (!selection) return;
@@ -386,6 +410,10 @@ const Editor = ({
         });
 
         return () => {
+            // leaving the box within a third of a second of the last keystroke must not lose it
+            if (draftTimer.current !== undefined && draftKeyRef.current) saveDraft(draftKeyRef.current, quill.getContents() as { ops?: DraftOps }, quill.getText().trim().length === 0);
+            clearTimeout(draftTimer.current);
+            draftTimer.current = undefined;
             quill.off(Quill.events.TEXT_CHANGE);
             if (container) container.innerHTML = "";
             if (quilRef.current) quilRef.current = null;
@@ -796,13 +824,14 @@ const Editor = ({
 
                         {variant === "create" && (
                             <Button
-                                onClick={() =>
+                                onClick={() => {
+                                    flushDraft();
                                     onSubmit({
                                         body: JSON.stringify(quilRef.current?.getContents()),
                                         image,
                                         file,
-                                    })
-                                }
+                                    });
+                                }}
                                 disabled={disabled || isEmpty}
                                 size={"iconSm"}
                                 aria-label="Send message"

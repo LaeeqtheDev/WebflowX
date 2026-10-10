@@ -8,6 +8,7 @@ import { Download, Loader, LogOut, Monitor, Moon, Palette, ShieldCheck, Sun, Use
 import { useSetTheme } from "@/hooks/use-theme-pref"
 import { isThemePref, type ThemePref } from "@/lib/theme"
 import { errMsg } from "@/lib/errors"
+import { clearAllDrafts } from "@/lib/network"
 import { toast } from "sonner"
 import { useDataExport } from "@/lib/export-data"
 import { useState } from "react"
@@ -101,7 +102,7 @@ export const UserButton = () => {
                     {busy ? <Loader className="size-4 mr-2 animate-spin" /> : <Download className="size-4 mr-2" />}
                     {busy ? progress || "Exporting…" : "Download my data"}
                 </DropdownMenuItem>
-                <DropdownMenuItem  onClick={()=> signOut()} className="h-10 rounded-lg cursor-pointer">
+                <DropdownMenuItem  onClick={()=> { clearAllDrafts(); void signOut() }} className="h-10 rounded-lg cursor-pointer">
                     <LogOut className="size-4 mr-2" />
                     Logout
                 </DropdownMenuItem>

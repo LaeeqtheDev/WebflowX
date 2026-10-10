@@ -1,7 +1,31 @@
-// WebflowX service worker. It only handles push notifications and makes the app installable.
-// It does not cache anything, so a deploy is never stuck behind a stale copy.
-self.addEventListener("install", () => self.skipWaiting())
-self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()))
+// WebflowX service worker. It handles push notifications, makes the app installable, and shows a plain
+// "you're offline" page when a page can't be reached. The offline page is the only thing it stores: no app code
+// or data is cached, so a deploy is never stuck behind a stale copy.
+const OFFLINE_CACHE = "wfx-offline-v1"
+const OFFLINE_URL = "/offline.html"
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(OFFLINE_CACHE).then((c) => c.add(new Request(OFFLINE_URL, { cache: "reload" }))).catch(() => {}).then(() => self.skipWaiting())
+  )
+})
+self.addEventListener("activate", (event) =>
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith("wfx-offline-") && k !== OFFLINE_CACHE).map((k) => caches.delete(k))))
+      .catch(() => {})
+      .then(() => self.clients.claim())
+  )
+)
+
+// Only page navigations are touched, and only when the network fails.
+self.addEventListener("fetch", (event) => {
+  const req = event.request
+  if (req.mode !== "navigate" || req.method !== "GET") return
+  event.respondWith(
+    fetch(req).catch(() => caches.match(OFFLINE_URL).then((r) => r || new Response("You're offline.", { status: 503, headers: { "Content-Type": "text/plain" } })))
+  )
+})
 
 self.addEventListener("push", (event) => {
   let data = {}
