@@ -51,6 +51,30 @@ for (const [path, h1] of [
   })
 }
 
+for (const [path, h1] of [
+  ["/trust", "Trust, compliance and data location"],
+  ["/dpa", "Data Processing Agreement"],
+  ["/subprocessors", "Subprocessors"],
+  ["/templates", "Start from a template"],
+] as const) {
+  test(`${path} is public and renders`, async ({ page }) => {
+    const problems = watch(page)
+    await page.goto(path)
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(h1)
+    expect(problems).toEqual([])
+  })
+}
+
+test("every sitemap URL is reachable without signing in", async ({ request }) => {
+  const xml = await (await request.get("/sitemap.xml")).text()
+  const paths = [...xml.matchAll(/<loc>https?:\/\/[^/]+(\/[^<]*)<\/loc>/g)].map((m) => m[1])
+  expect(paths.length).toBeGreaterThan(20)
+  for (const p of paths) {
+    const res = await request.get(p, { maxRedirects: 0 })
+    expect(res.status(), p).toBe(200)
+  }
+})
+
 test("unknown pages return 404", async ({ request }) => {
   expect((await request.get("/features/does-not-exist")).status()).toBe(404)
 })

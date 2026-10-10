@@ -10,7 +10,7 @@ import { connectSrc } from "@/lib/csp";
 const isPublicPage = createRouteMatcher(["/", "/auth", "/join"])
 
 // legal pages, newsletter confirm/unsubscribe links and invite links are public for everyone, signed in or not
-const isLegal = createRouteMatcher(["/terms", "/privacy", "/security", "/changelog", "/case-studies(.*)", "/features(.*)", "/use-cases(.*)", "/compare(.*)", "/join/(.*)", "/newsletter/(.*)"])
+const isLegal = createRouteMatcher(["/terms", "/privacy", "/security", "/trust", "/dpa", "/subprocessors", "/templates", "/changelog", "/case-studies(.*)", "/features(.*)", "/use-cases(.*)", "/compare(.*)", "/join/(.*)", "/newsletter/(.*)"])
 
 const isApi = createRouteMatcher(["/api/(.*)"])
 

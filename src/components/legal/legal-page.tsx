@@ -19,7 +19,7 @@ export const LegalPage = ({ title, updated, children }: { title: string; updated
     <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <h1 className="text-4xl font-semibold tracking-tight">{title}</h1>
       <p className="mt-2 text-sm text-[#1b1017]/65">Last updated {updated}</p>
-      <div className="mt-8 space-y-8 text-[15px] leading-relaxed text-[#1b1017]/80 [&_h2]:mb-2 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-[#1b1017] [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5 [&_a]:text-[#c2370d] [&_a]:underline-offset-4 hover:[&_a]:underline">
+      <div className="mt-8 space-y-8 text-[15px] leading-relaxed text-[#1b1017]/80 [&_h2]:mb-2 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-[#1b1017] [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5 [&_ol]:mt-2 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-5 [&_table]:w-full [&_table]:text-left [&_table]:text-sm [&_th]:border-b [&_th]:border-[#381d2a]/20 [&_th]:py-2 [&_th]:pr-4 [&_td]:border-b [&_td]:border-[#381d2a]/10 [&_td]:py-2.5 [&_td]:pr-4 [&_td]:align-top [&_a]:text-[#c2370d] [&_a]:underline-offset-4 hover:[&_a]:underline">
         {children}
       </div>
     </main>

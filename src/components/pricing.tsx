@@ -78,6 +78,37 @@ const PricingSection = () => (
           one and shows the next plan.
         </p>
       </Reveal>
+      <Reveal delay={120}>
+        <div className="mt-14 grid gap-10 border-t border-[#381d2a]/15 pt-12 lg:grid-cols-[1fr_2fr]">
+          <div>
+            <Label>Why meetings and AI have caps</Label>
+            <h3 className="lp-h mt-5 text-3xl">Everything else is flat. These two cost us money every time they run.</h3>
+          </div>
+          <div className="grid gap-8 sm:grid-cols-2">
+            <div>
+              <p className="font-semibold">Meetings</p>
+              <p className="mt-2 text-[15px] leading-relaxed text-[#1b1017]/70">
+                A meeting streams live audio and video through LiveKit and, with transcripts on, sends the audio to Deepgram. Both bill us by usage, so a meeting costs more the longer it runs and the more people join. A monthly count keeps that cost predictable for us, so we do not have to push it into a per-seat price.
+              </p>
+            </div>
+            <div>
+              <p className="font-semibold">AI summaries</p>
+              <p className="mt-2 text-[15px] leading-relaxed text-[#1b1017]/70">
+                Each summary runs a model over the full transcript. The provider charges for every request, so the allowance is a count per month. The writing help in the editor (improve, shorten, fix grammar) is not counted as a summary.
+              </p>
+            </div>
+            <div className="sm:col-span-2 rounded-xl bg-white p-6 text-[15px] leading-relaxed text-[#1b1017]/75 ring-1 ring-[#381d2a]/10">
+              <p className="font-semibold text-[#1b1017]">What this means in practice</p>
+              <ul className="mt-3 list-disc space-y-1.5 pl-5">
+                <li>Chat, tasks, notes, documents and databases are not metered by use. Only storage and the limits in the table apply.</li>
+                <li>Counts reset each month and are per workspace, not per person, so adding teammates does not use them up faster.</li>
+                <li>When you reach a cap, WebflowX tells you which one and what the next plan allows. Nothing is deleted and nothing is billed extra.</li>
+                <li>Even Enterprise has a cap (200 meetings and 150 summaries a month). If you need more, email us and we will work out a limit that covers our provider costs.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </Reveal>
     </div>
   </section>
 );

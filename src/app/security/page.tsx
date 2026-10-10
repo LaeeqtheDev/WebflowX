@@ -25,7 +25,7 @@ const notYet = [
   "SOC 2 or ISO 27001 certification. We have not been audited against either.",
   "A contractual uptime SLA, or a public status page with uptime history.",
   "SAML single sign-on and SCIM provisioning. Google and GitHub sign-in are available today.",
-  "Choice of data region. Hosting locations are set by our providers.",
+  "Choice of data region. Workspace data is stored in one US deployment (see Trust).",
   "Customer-managed encryption keys.",
 ]
 
@@ -67,7 +67,7 @@ export default function SecurityPage() {
 
         <h2 className="mt-12 text-2xl font-semibold">Service providers</h2>
         <p className="mt-3 text-[#1b1017]/75">
-          The processors that handle data on our behalf are listed in the <Link href="/privacy" className="text-[#c2370d] underline-offset-4 hover:underline">Privacy Policy</Link>.
+          The processors that handle data on our behalf are on the <Link href="/subprocessors" className="text-[#c2370d] underline-offset-4 hover:underline">subprocessor list</Link>. Our <Link href="/dpa" className="text-[#c2370d] underline-offset-4 hover:underline">Data Processing Agreement</Link> and SOC 2 roadmap are on the <Link href="/trust" className="text-[#c2370d] underline-offset-4 hover:underline">Trust page</Link>.
         </p>
 
         <h2 className="mt-12 text-2xl font-semibold">Report a vulnerability</h2>

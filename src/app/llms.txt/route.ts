@@ -13,6 +13,8 @@ export function GET() {
 ## Features
 ${list("features", FEATURES)}
 
+- [Templates](${SITE_URL}/templates): starter channels, tasks and notes for agencies, software teams, support, startups and remote teams.
+
 ## Use cases
 ${list("use-cases", USE_CASES)}
 
@@ -21,6 +23,9 @@ ${list("compare", COMPARISONS)}
 
 ## Company and policies
 - [Security](${SITE_URL}/security): what is in place today and what is not available yet.
+- [Trust and data location](${SITE_URL}/trust): SOC 2 status and roadmap, where data is stored.
+- [Data Processing Agreement](${SITE_URL}/dpa)
+- [Subprocessors](${SITE_URL}/subprocessors)
 - [Privacy Policy](${SITE_URL}/privacy)
 - [Terms of Service](${SITE_URL}/terms)
 - Contact: hello@northfoundry.co

@@ -261,6 +261,16 @@ export type ChangelogEntry = { date: string; title: string; points: string[] }
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-10",
+    title: "A guided tour, templates and six languages for setup",
+    points: [
+      "New workspaces get an optional practice tour: send a message, use / for AI, turn a message into a task, write a page and run a meeting. At the end you choose what to keep.",
+      "Start from a template (agency, software team, support, startup, remote team) to get its channels, starter tasks and a note.",
+      "Setup and the tour are available in English, Spanish, French, German, Portuguese and Hindi. The rest of the app is English for now.",
+      "New Trust, DPA and Subprocessors pages, and an explanation on the pricing page of why meetings and AI summaries have monthly caps.",
+    ],
+  },
+  {
+    date: "2026-10-10",
     title: "Messages stay when someone leaves",
     points: [
       "When a person leaves or is removed, their channel messages and reactions now stay, shown as a former member.",

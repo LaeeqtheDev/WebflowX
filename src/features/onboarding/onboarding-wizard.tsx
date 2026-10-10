@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useMutation, useQuery } from "convex/react"
 import { toast } from "sonner"
-import { ArrowLeft, Check, CheckSquare, Copy, FileText, Hash, MessageSquare, Search, Video, Sparkles } from "lucide-react"
+import { ArrowLeft, Check, CheckSquare, Copy, FileText, Hash, MessageSquare, Video, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AuthShell } from "@/features/auth/components/auth-screen"
@@ -13,6 +13,11 @@ import { useCreateWorkspace } from "@/features/workspaces/api/use-create-workspa
 import { useLimitHandler } from "@/hooks/use-limit-handler"
 import { errorMessage } from "@/lib/error-message"
 import { parseLimitError } from "@/lib/plans"
+import { LanguagePicker, useT } from "@/lib/i18n"
+import type { Key } from "@/lib/i18n/en"
+import { TEMPLATES, getTemplate } from "@/lib/templates"
+import { OnboardingTour } from "./tour/tour"
+import { freshTour, loadTour, type TourState } from "./tour/state"
 import { api } from "../../../convex/_generated/api"
 import { Id } from "../../../convex/_generated/dataModel"
 
@@ -20,11 +25,11 @@ const TOTAL = 5
 
 type UseCase = "chat" | "projects" | "docs" | "meetings"
 
-const USE_CASES: { key: UseCase; label: string; hint: string; icon: React.ElementType }[] = [
-    { key: "chat", label: "Team chat", hint: "Channels, DMs and threads", icon: MessageSquare },
-    { key: "projects", label: "Projects & tasks", hint: "Boards, sprints, assignments", icon: CheckSquare },
-    { key: "docs", label: "Docs & notes", hint: "Shared documents and notes", icon: FileText },
-    { key: "meetings", label: "Meetings", hint: "Calls with AI summaries", icon: Video },
+const USE_CASES: { key: UseCase; icon: React.ElementType }[] = [
+    { key: "chat", icon: MessageSquare },
+    { key: "projects", icon: CheckSquare },
+    { key: "docs", icon: FileText },
+    { key: "meetings", icon: Video },
 ]
 
 const SUGGESTED: Record<UseCase, string[]> = {
@@ -37,19 +42,13 @@ const SUGGESTED: Record<UseCase, string[]> = {
 const primary =
     "h-12 w-full cursor-pointer rounded-xl bg-[#ff5018] text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_rgba(255,80,24,0.8)] hover:bg-[#e6430f]"
 
-const STEP_COPY: Record<number, { title: string; body: string }> = {
-    1: { title: "Let's set up your team's home.", body: "Five quick steps and your workspace is ready for people." },
-    2: { title: "Give your workspace a name.", body: "Most teams use their company or team name. You can change it later." },
-    3: { title: "Start with the right channels.", body: "Channels keep conversations organised. We'll add a few to get you going." },
-    4: { title: "Bring your team in.", body: "Share the invite link. People sign up and land straight in your workspace." },
-    5: { title: "You're all set.", body: "Your workspace is live. Here's where to find the good stuff." },
-}
-
-const Progress = ({ step }: { step: number }) => (
+const Progress = ({ step }: { step: number }) => {
+    const t = useT()
+    return (
     <div className="mb-8">
         <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-ink/50">
-            <span>Step {step} of {TOTAL}</span>
-            <span>{Math.round(((step - 1) / (TOTAL - 1)) * 100)}% done</span>
+            <span>{t("wiz.step", { n: step, total: TOTAL })}</span>
+            <span>{t("wiz.pct", { p: Math.round(((step - 1) / (TOTAL - 1)) * 100) })}</span>
         </div>
         <div className="mt-2 flex gap-1.5" role="progressbar" aria-valuemin={1} aria-valuemax={TOTAL} aria-valuenow={step}>
             {Array.from({ length: TOTAL }).map((_, i) => (
@@ -57,7 +56,8 @@ const Progress = ({ step }: { step: number }) => (
             ))}
         </div>
     </div>
-)
+    )
+}
 
 const Heading = ({ title, text }: { title: string; text: string }) => (
     <>
@@ -69,6 +69,7 @@ const Heading = ({ title, text }: { title: string; text: string }) => (
 // Guided setup for someone who has no workspace yet. The step lives in the URL
 // (/dashboard?setup=<workspaceId>&step=3) so a refresh never loses your place.
 export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
+    const t = useT()
     const router = useRouter()
     const params = useSearchParams()
     const rawSetup = params.get("setup")
@@ -78,23 +79,31 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
     const step = setupId ? Math.max(urlStep, 3) : Math.min(urlStep, 2)
 
     const [uses, setUses] = useState<UseCase[]>(["chat"])
+    // chosen in step 1 (or arrives from the /templates page); kept in the URL so a refresh keeps it
+    const [tplKey, setTplKey] = useState<string | null>(() => getTemplate(params.get("template") ?? params.get("tpl"))?.key ?? null)
+    const template = getTemplate(tplKey)
     const [name, setName] = useState("")
     const [chosen, setChosen] = useState<string[] | null>(null)
     const [busy, setBusy] = useState(false)
     const [copied, setCopied] = useState(false)
+    const [touring, setTouring] = useState<TourState | null>(null)
+    const [saved, setSaved] = useState<TourState | null>(null)
     const { mutate, isPending } = useCreateWorkspace()
     const { handleLimitError } = useLimitHandler()
     const createChannel = useMutation(api.channels.create)
+    const createTask = useMutation(api.tasks.create)
+    const createNote = useMutation(api.notes.create)
     const { signOut } = useAuthActions()
     const submitted = useRef(false)
 
     const workspace = useQuery(api.workspaces.getById, setupId ? { id: setupId } : "skip")
 
     const suggestions = useMemo(() => {
+        if (template) return template.channels
         const set = new Set<string>()
         for (const u of uses) SUGGESTED[u].forEach((c) => set.add(c))
         return Array.from(set).slice(0, 4)
-    }, [uses])
+    }, [uses, template])
     const picked = chosen ?? suggestions
 
     // A stale or foreign setup link: leave the wizard instead of waiting on a workspace that will never load.
@@ -104,10 +113,16 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
         router.replace(workspace && setupId ? `/dashboard/workspace/${setupId}` : "/dashboard")
     }, [invalid, workspace, setupId, router])
 
+    // Progress from an earlier visit to the tour (it is kept in this browser).
+    useEffect(() => {
+        if (step === 5 && setupId) setSaved(loadTour(setupId))
+    }, [step, setupId])
+
     const go = (n: number, id?: string | null) => {
         const q = new URLSearchParams()
         const target = id ?? setupId
         if (target) q.set("setup", target)
+        if (tplKey) q.set("tpl", tplKey)
         q.set("step", String(n))
         router.push(`/dashboard?${q.toString()}`)
     }
@@ -116,6 +131,7 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
         setChosen(null)
         setUses((cur) => (cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k]))
     }
+    const pickTemplate = (key: string | null) => { setChosen(null); setTplKey(key) }
 
     const createWorkspace = (e: React.FormEvent) => {
         e.preventDefault()
@@ -152,6 +168,13 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
                     if (parseLimitError(msg)) break // plan limit: stop trying, the rest can wait
                 }
             }
+            // a chosen template also brings its starter tasks and note
+            if (template) {
+                for (const task of template.tasks) {
+                    try { await createTask({ workspaceId: setupId, title: task.title, status: task.status, priority: task.priority }) } catch { failed = true; break }
+                }
+                try { await createNote({ workspaceId: setupId, title: template.note.title, body: template.note.body, type: "workspace" }) } catch { failed = true }
+            }
             if (failed) toast.error("Some channels couldn't be added. You can create them later from the sidebar.")
             go(4)
         } finally {
@@ -167,20 +190,27 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
             .catch(() => toast.error("Couldn't copy. Select the link and copy it manually."))
     }
 
-    const copy = STEP_COPY[step]
+    const openWorkspace = () => {
+        try { window.sessionStorage.removeItem("wfx-setup"); window.localStorage.setItem(`wfx:get-started-dismissed:${setupId}`, "1") } catch { /* ignore */ }
+        router.replace(`/dashboard/workspace/${setupId}`)
+    }
+
+    const stepKey = (n: number, part: "title" | "body") => `wiz.s${n}.${part}` as Key
+    const resumable = saved && !saved.finished
 
     return (
-        <AuthShell title={copy.title} body={copy.body}>
-            <div className="mb-6 flex justify-end">
-                <button type="button" onClick={() => { void signOut() }} className="cursor-pointer text-sm text-ink/55 hover:text-ink">Sign out</button>
+        <AuthShell title={t(stepKey(step, "title"))} body={t(stepKey(step, "body"))}>
+            <div className="mb-6 flex items-center justify-between">
+                <LanguagePicker />
+                <button type="button" onClick={() => { void signOut() }} className="cursor-pointer text-sm text-ink/55 hover:text-ink">{t("wiz.signout")}</button>
             </div>
             <Progress step={step} />
 
             {step === 1 && (
                 <>
-                    <Heading title={`Welcome${firstName ? `, ${firstName}` : ""}!`} text="What will your team use WebflowX for? Pick any that apply." />
+                    <Heading title={firstName ? t("wiz.welcomeName", { name: firstName }) : t("wiz.welcome")} text={t("wiz.use.q")} />
                     <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                        {USE_CASES.map(({ key, label, hint, icon: Icon }) => {
+                        {USE_CASES.map(({ key, icon: Icon }) => {
                             const on = uses.includes(key)
                             return (
                                 <button
@@ -191,20 +221,33 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
                                     className={`cursor-pointer rounded-xl border p-4 text-left transition-colors ${on ? "border-[#ff5018] bg-[#ff5018]/10" : "border-ink/15 bg-surface hover:border-ink/30"}`}
                                 >
                                     <Icon className={`size-5 ${on ? "text-[#ff5018]" : "text-ink/55"}`} />
-                                    <p className="mt-3 text-sm font-semibold text-ink">{label}</p>
-                                    <p className="mt-0.5 text-xs text-ink/60">{hint}</p>
+                                    <p className="mt-3 text-sm font-semibold text-ink">{t(`wiz.use.${key}` as Key)}</p>
+                                    <p className="mt-0.5 text-xs text-ink/60">{t(`wiz.use.${key}.hint` as Key)}</p>
                                 </button>
                             )
                         })}
                     </div>
-                    <Button className={`${primary} mt-8`} size="lg" onClick={() => go(2)}>Continue</Button>
+                    <p className="mt-6 text-sm font-medium text-ink">{t("wiz.tpl.h")}</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                        {[{ key: null as string | null, label: t("wiz.tpl.none") }, ...TEMPLATES.map((x) => ({ key: x.key as string | null, label: t(`tpl.${x.key}` as Key) }))].map((o) => {
+                            const on = tplKey === o.key
+                            return (
+                                <button key={o.key ?? "none"} type="button" aria-pressed={on} onClick={() => pickTemplate(o.key)}
+                                    className={`cursor-pointer rounded-full border px-3.5 py-2 text-sm transition-colors ${on ? "border-[#ff5018] bg-[#ff5018]/10 text-ink" : "border-ink/15 bg-surface text-ink/70 hover:border-ink/30"}`}>
+                                    {o.label}
+                                </button>
+                            )
+                        })}
+                    </div>
+                    {template && <p className="mt-2 text-xs text-ink/55">{t("wiz.tpl.hint")} {template.channels.map((c) => `#${c}`).join(" ")}</p>}
+                    <Button className={`${primary} mt-8`} size="lg" onClick={() => go(2)}>{t("wiz.continue")}</Button>
                 </>
             )}
 
             {step === 2 && (
                 <form onSubmit={createWorkspace}>
-                    <Heading title="Name your workspace" text="You'll be the owner. People you invite join as members." />
-                    <label htmlFor="ws-name" className="mt-6 block text-sm font-medium text-ink">Workspace name</label>
+                    <Heading title={t("wiz.s2.h")} text={t("wiz.s2.t")} />
+                    <label htmlFor="ws-name" className="mt-6 block text-sm font-medium text-ink">{t("wiz.s2.label")}</label>
                     <Input
                         id="ws-name"
                         value={name}
@@ -212,21 +255,21 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
                         disabled={isPending}
                         autoFocus
                         maxLength={60}
-                        placeholder="e.g. Acme Design, North Foundry"
+                        placeholder={t("wiz.s2.ph")}
                         className="mt-2 h-12 rounded-xl bg-surface"
                     />
                     <Button type="submit" className={`${primary} mt-6`} size="lg" disabled={isPending || name.trim().length < 3}>
-                        {isPending ? "Creating…" : "Create workspace"}
+                        {isPending ? t("wiz.creating") : t("wiz.create")}
                     </Button>
                     <button type="button" onClick={() => go(1)} className="mt-6 inline-flex cursor-pointer items-center gap-1.5 text-sm text-ink/55 hover:text-ink">
-                        <ArrowLeft size={16} /> Back
+                        <ArrowLeft size={16} /> {t("wiz.back")}
                     </button>
                 </form>
             )}
 
             {step === 3 && (
                 <>
-                    <Heading title="Pick starter channels" text="#general is already there. Add any of these now, or create your own later." />
+                    <Heading title={t("wiz.s3.h")} text={t("wiz.s3.t")} />
                     <div className="mt-6 flex flex-wrap gap-2">
                         {Array.from(new Set([...suggestions, "announcements", "random", "engineering", "design", "support"])).map((c) => {
                             const on = picked.includes(c)
@@ -243,52 +286,49 @@ export const OnboardingWizard = ({ firstName }: { firstName?: string }) => {
                             )
                         })}
                     </div>
-                    <p className="mt-3 text-xs text-ink/55">Pick up to 4. You can add more any time.</p>
+                    <p className="mt-3 text-xs text-ink/55">{t("wiz.s3.hint")}</p>
+                    {template && <p className="mt-1 text-xs text-ink/55">{t(`tpl.${template.key}` as Key)}: {t("wiz.tpl.hint")}</p>}
                     <Button className={`${primary} mt-8`} size="lg" disabled={busy} onClick={addChannels}>
-                        {busy ? "Adding…" : picked.length ? `Add ${picked.length} channel${picked.length === 1 ? "" : "s"} and continue` : "Continue"}
+                        {busy ? t("wiz.s3.adding") : picked.length ? t("wiz.s3.add", { n: picked.length }) : t("wiz.continue")}
                     </Button>
                 </>
             )}
 
             {step === 4 && (
                 <>
-                    <Heading title="Invite your teammates" text="Anyone who opens this link can create an account and join. You can do this later from the workspace menu." />
+                    <Heading title={t("wiz.s4.h")} text={t("wiz.s4.t")} />
                     <div className="mt-6 flex items-center gap-2 rounded-xl border border-ink/15 bg-surface p-2 pl-4">
-                        <span className="min-w-0 flex-1 truncate text-sm text-ink/80">{link || "Preparing your link…"}</span>
+                        <span className="min-w-0 flex-1 truncate text-sm text-ink/80">{link || t("wiz.preparing")}</span>
                         <Button type="button" onClick={copyLink} disabled={!link} className="h-10 shrink-0 rounded-lg bg-[#ff5018] text-white hover:bg-[#e6430f]">
                             {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                            <span className="ml-2">{copied ? "Copied" : "Copy"}</span>
+                            <span className="ml-2">{copied ? t("wiz.copied") : t("wiz.copy")}</span>
                         </Button>
                     </div>
-                    <p className="mt-3 text-xs text-ink/55">
-                        The link includes your 6-character code{workspace?.joinCode ? <> (<strong className="text-ink/75">{workspace.joinCode}</strong>)</> : null}. You can switch to code-free links in the Invite dialog.
-                    </p>
-                    <Button className={`${primary} mt-8`} size="lg" onClick={() => go(5)}>Continue</Button>
-                    <button type="button" onClick={() => go(5)} className="mt-4 cursor-pointer text-sm text-ink/55 hover:text-ink">Skip for now</button>
+                    <Button className={`${primary} mt-8`} size="lg" onClick={() => go(5)}>{t("wiz.continue")}</Button>
+                    <button type="button" onClick={() => go(5)} className="mt-4 cursor-pointer text-sm text-ink/55 hover:text-ink">{t("wiz.skipNow")}</button>
                 </>
             )}
 
             {step === 5 && (
                 <>
-                    <Heading title="Your workspace is ready" text={workspace ? `${workspace.name} is live.` : "Everything is in place."} />
-                    <ul className="mt-6 space-y-3">
-                        {[
-                            { icon: MessageSquare, t: "Chat in channels", d: "Reply in threads, mention people with @, react with emoji." },
-                            { icon: CheckSquare, t: "Track tasks", d: "Turn any message into a task from its menu." },
-                            { icon: FileText, t: "Write docs and notes", d: "Shared documents with live editing." },
-                            { icon: Video, t: "Meet and summarise", d: "Start a call and get an AI summary afterwards." },
-                            { icon: Search, t: "Jump anywhere", d: "Press Ctrl or ⌘ + K to search channels and people." },
-                        ].map(({ icon: Icon, t, d }) => (
-                            <li key={t} className="flex gap-3 rounded-xl border border-ink/10 bg-surface p-3.5">
-                                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#ff5018]/10 text-[#ff5018]"><Icon className="size-[18px]" /></span>
-                                <span><span className="block text-sm font-semibold text-ink">{t}</span><span className="block text-xs text-ink/60">{d}</span></span>
-                            </li>
-                        ))}
-                    </ul>
-                    <Button className={`${primary} mt-8`} size="lg" onClick={() => { try { window.sessionStorage.removeItem("wfx-setup"); window.localStorage.setItem(`wfx:get-started-dismissed:${setupId}`, "1") } catch { /* ignore */ } router.replace(`/dashboard/workspace/${setupId}`) }}>
-                        <Sparkles className="mr-2 size-4" /> Open my workspace
+                    <Heading title={t("wiz.s5.h")} text={workspace ? t("wiz.s5.live", { name: workspace.name }) : t("wiz.s5.ready")} />
+                    <p className="mt-5 rounded-xl border border-ink/10 bg-surface p-4 text-sm text-ink/70">{t("wiz.s5.offer")}</p>
+                    <Button className={`${primary} mt-6`} size="lg" disabled={!setupId || !workspace} onClick={() => setTouring(resumable ? saved : freshTour())}>
+                        <Sparkles className="mr-2 size-4" /> {resumable ? `${t("wiz.s5.resume")} (${t("tour.step", { n: saved!.step, total: 10 })})` : t("wiz.s5.tour")}
                     </Button>
+                    <button type="button" onClick={openWorkspace} className="mt-4 cursor-pointer text-sm text-ink/60 hover:text-ink">{t("wiz.s5.skip")}</button>
                 </>
+            )}
+
+            {touring && setupId && workspace && (
+                <OnboardingTour
+                    workspaceId={setupId}
+                    workspaceName={workspace.name}
+                    channels={picked}
+                    initial={touring}
+                    onSkip={() => { setTouring(null); if (setupId) setSaved(loadTour(setupId)) }}
+                    onFinish={() => { setTouring(null); openWorkspace() }}
+                />
             )}
         </AuthShell>
     )

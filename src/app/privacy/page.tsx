@@ -49,9 +49,10 @@ export default function PrivacyPage() {
           <li>Groq &mdash; AI summaries and writing assistance;</li>
           <li>Liveblocks &mdash; real-time document collaboration;</li>
           <li>Resend &mdash; transactional and newsletter email;</li>
-          <li>Google and GitHub &mdash; if you choose to sign in with them.</li>
+          <li>Stripe &mdash; payments for paid plans;</li>
+          <li>Google, GitHub and Microsoft &mdash; if you choose to sign in with them.</li>
         </ul>
-        <p>Data may be processed in countries other than yours, with appropriate safeguards.</p>
+        <p>The full list, with what each handles, is on the <a href="/subprocessors">subprocessor page</a>. Workspace data is stored in the United States; see <a href="/trust">Trust</a>. Data may be processed in countries other than yours, with appropriate safeguards.</p>
       </section>
       <section>
         <h2>5. Retention</h2>
