@@ -7,7 +7,7 @@ import { useCurrentMember } from "@/features/members/api/use-current-member";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import Quill from "quill";
+import type Quill from "quill";
 import { useCreateMessage } from "@/features/messages/api/use-create-message";
 import { useUploader } from "@/lib/upload-photo";
 import { useSendFlow } from "@/hooks/use-send-flow";

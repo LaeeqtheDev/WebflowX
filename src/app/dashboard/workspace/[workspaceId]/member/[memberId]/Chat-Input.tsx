@@ -4,7 +4,7 @@ import { useSendFlow } from "@/hooks/use-send-flow";
 import { SendStatus } from "@/components/send-status";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import dynamic from "next/dynamic"
-import Quill from "quill"
+import type Quill from "quill"
 import { useRef } from "react"
 import { Id } from "../../../../../../../convex/_generated/dataModel";
 import { TypingIndicator, useTypingPing } from "@/features/presence/typing";

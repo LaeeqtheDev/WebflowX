@@ -118,7 +118,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
 
   const workspace = useQuery(api.workspaces.getById, { id: workspaceId })
   const members = useQuery(api.members.get, { workspaceId })
-  const rolePerms = useQuery(api.permissions.rolePermissions, { workspaceId })
+  const rolePerms = useQuery(api.permissions.rolePermissions, open ? { workspaceId } : "skip")
   const audit = useQuery(api.audit.list, perms.isAdmin && open ? { workspaceId } : "skip")
 
   const updateWorkspace = useMutation(api.workspaces.update)

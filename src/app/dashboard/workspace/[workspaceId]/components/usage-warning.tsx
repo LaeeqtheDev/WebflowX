@@ -21,7 +21,8 @@ const LABELS: Record<string, string> = {
 export const UsageWarning = () => {
     const workspaceId = useWorkspaceId()
     const perms = usePermissions()
-    const { data: usage } = useGetUsage({ workspaceId })
+    // only admins are warned, so only admins ask the server for usage
+    const { data: usage } = useGetUsage({ workspaceId, enabled: perms.isAdmin })
 
     useEffect(() => {
         if (!usage || !perms.isAdmin) return

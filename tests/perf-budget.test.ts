@@ -51,4 +51,10 @@ describe("public page weight", () => {
   it("builds the pinned/saved lookup once per result, not once per message", () => {
     expect(read(join(root, "src", "features", "marks", "use-marks.ts"))).toMatch(/WeakMap/)
   })
+
+  it("checks sign-in in the middleware without a database call", () => {
+    const m = read(join(root, "src", "middleware.ts"))
+    expect(m).not.toMatch(/isAuthenticatedNextjs\(/)
+    expect(m).toMatch(/tokenLooksValid/)
+  })
 })
