@@ -617,7 +617,7 @@ html[data-accent="slate"] { --wfx-accent: #475569; --wfx-accent-hover: #334155; 
 html.dark[data-accent="slate"] { --wfx-orange-ink: #a5b4c8; --wfx-orange-ink-hover: #c3cedd; }
 
 /* ---------- Message density, and reduced motion ---------- */
-html[data-density="compact"] .wfx-msg { padding-top: 1px; padding-bottom: 1px; gap: 0; }
+html[data-density="compact"] .wfx-msg { padding-top: 2px; padding-bottom: 2px; gap: 0.25rem; }
 html[data-density="compact"] .wfx-msg span[class*="size-9"] { width: 1.5rem !important; height: 1.5rem !important; }
 
 html[data-motion="reduced"] *,

@@ -16,7 +16,7 @@ const SIZE_LABEL: Record<number, string> = { 90: "Small", 100: "Default", 112: "
 const THEME_ORDER: ConcreteTheme[] = ["light", "snow", "dark", "ash", "midnight", "forest", "onyx"]
 
 const Section = ({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) => (
-    <section className="space-y-2.5">
+    <section className="space-y-3">
         <div>
             <h3 className="text-sm font-semibold text-ink">{title}</h3>
             {hint && <p className="text-xs text-ink/60">{hint}</p>}
@@ -26,7 +26,7 @@ const Section = ({ title, hint, children }: { title: string; hint?: string; chil
 )
 
 const segment = (active: boolean) =>
-    `flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${active ? "bg-surface text-ink shadow-sm" : "text-ink/65 hover:text-ink"}`
+    `flex-1 cursor-pointer rounded-md px-3 py-2 text-xs font-medium transition-colors ${active ? "bg-brand text-white shadow-sm" : "text-ink/70 hover:bg-ink/10 hover:text-ink"}`
 
 // Discord-style appearance: theme, accent colour, message density, text size and reduced motion.
 // Every change shows instantly, then is saved to the account so it follows the member across devices.
@@ -54,7 +54,7 @@ const AppearanceBody = ({ user }: { user: Doc<"users"> }) => {
     const patch = (p: Partial<Look>) => { const next = { ...look, ...p }; setLookState(next); setLook(next).catch(fail) }
 
     return (
-                <div className="space-y-6">
+                <div className="space-y-7 pb-1">
                     <Section title="Theme">
                         <div role="radiogroup" aria-label="Theme" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                             <button
@@ -109,25 +109,25 @@ const AppearanceBody = ({ user }: { user: Doc<"users"> }) => {
                     </Section>
 
                     <Section title="Message display" hint="Compact fits more messages on screen.">
-                        <div role="radiogroup" aria-label="Message display" className="flex gap-1 rounded-lg bg-ink/5 p-1">
+                        <div role="radiogroup" aria-label="Message display" className="flex gap-1 rounded-lg bg-ink/10 p-1">
                             {(["cozy", "compact"] as const).map((d) => (
                                 <button key={d} type="button" role="radio" aria-checked={look.density === d} onClick={() => patch({ density: d })} className={segment(look.density === d)}>
                                     {d === "cozy" ? "Cozy" : "Compact"}
                                 </button>
                             ))}
                         </div>
-                        <div className="overflow-hidden rounded-lg border border-ink/10 bg-cream-soft py-1">
+                        <div className="overflow-hidden rounded-lg border border-ink/10 bg-cream-soft py-2">
                             {[["Sam", "Standup moved to 10, recap before please."], ["Priya", "Done. I'll add it to the board."]].map(([who, text]) => (
-                                <div key={who} className="wfx-msg flex items-start gap-2 p-1.5 px-3">
-                                    <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-plum text-sm font-semibold text-surface">{who[0]}</span>
-                                    <p className="text-sm text-ink"><span className="font-semibold">{who}</span><br />{text}</p>
+                                <div key={who} className={`flex items-start gap-3 px-3 ${look.density === "compact" ? "py-0.5" : "py-2"}`}>
+                                    <span className={`flex shrink-0 items-center justify-center rounded-md bg-avatar font-semibold text-surface ${look.density === "compact" ? "size-6 text-xs" : "size-9 text-sm"}`}>{who[0]}</span>
+                                    <p className="min-w-0 text-sm leading-snug text-ink"><span className="font-semibold">{who}</span>{look.density === "compact" ? " " : <br />}{text}</p>
                                 </div>
                             ))}
                         </div>
                     </Section>
 
                     <Section title="Text size">
-                        <div role="radiogroup" aria-label="Text size" className="flex gap-1 rounded-lg bg-ink/5 p-1">
+                        <div role="radiogroup" aria-label="Text size" className="flex gap-1 rounded-lg bg-ink/10 p-1">
                             {FONT_SCALES.map((f) => (
                                 <button key={f} type="button" role="radio" aria-checked={look.fontScale === f} onClick={() => patch({ fontScale: f })} className={segment(look.fontScale === f)}>
                                     {SIZE_LABEL[f]}
