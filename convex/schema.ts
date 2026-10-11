@@ -139,6 +139,22 @@ const schema = defineSchema({
     // Stripe webhook events already handled (Stripe can deliver the same event more than once)
     stripeEvents: defineTable({ eventId: v.string() }).index("by_event_id", ["eventId"]),
 
+    // Refunds and disputes on a workspace's payments, as Stripe reports them (written only by the webhook and the
+    // refund action). Amounts are in the currency's smallest unit, so 2900 is $29.00.
+    billingAdjustments: defineTable({
+        workspaceId: v.id("workspaces"),
+        kind: v.union(v.literal("refund"), v.literal("dispute")),
+        stripeId: v.string(),
+        chargeId: v.string(),
+        amount: v.number(),
+        currency: v.string(),
+        status: v.string(),
+        reason: v.optional(v.string()),
+        createdAt: v.number(),
+    })
+        .index("by_stripe_id", ["stripeId"])
+        .index("by_workspace", ["workspaceId", "createdAt"]),
+
     members: defineTable({
         userId: v.id("users"),
         workspaceId: v.id("workspaces"),
