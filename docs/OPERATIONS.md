@@ -45,6 +45,7 @@ How it behaves:
 - **Where a refund can start.** The refund action below, the Stripe Dashboard, or Stripe's own support desk (with Managed Payments, Stripe may refund a customer without asking us, up to 60 days after the payment). All three arrive as the same webhook events and are stored the same way.
 - **What the owner sees.** Plans & billing lists each refund and dispute with its amount and status. Nobody else in the workspace sees them.
 - **A refund does not change the plan.** The subscription keeps running unless it is cancelled too (see `cancelSubscription` below, or cancel it in Stripe).
+- **Deleting a workspace** cancels its subscription in Stripe straight away (retried for up to an hour if Stripe is unreachable) and removes its refund and dispute rows.
 - **Disputes.** An open dispute shows a notice to the owner and leaves the plan alone. If the dispute is lost, the subscription is cancelled at once and the workspace moves to Free. Stripe answers disputes for us under Managed Payments.
 
 Sending a refund from here (operator only, customers cannot call this):

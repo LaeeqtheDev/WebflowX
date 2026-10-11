@@ -97,7 +97,7 @@ const schema = defineSchema({
         invitesDisabled: v.optional(v.boolean()),
         // when on, the invite link works without the 6-character code (still revoked by turning invites off)
         openInviteLink: v.optional(v.boolean()),
-        // when on, members must have two-step verification switched on to use the workspace (Business and up)
+        // when on, members must have two-step verification switched on to use the workspace (Growth and up)
         require2fa: v.optional(v.boolean()),
         // workspace profile
         image: v.optional(v.id("_storage")),

@@ -187,6 +187,10 @@ export const remove = mutation({
 
         // nobody can join or open it from here on
         await ctx.db.patch(args.id, { invitesDisabled: true })
+        // a deleted workspace must not keep being charged
+        if (ws.stripeSubscriptionId) {
+            await ctx.scheduler.runAfter(0, internal.stripe.cancelForDeletedWorkspace, { subscriptionId: ws.stripeSubscriptionId })
+        }
         // the rest of the members (if there are more than this) are removed by the purge below
         const members = await ctx.db.query("members").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.id)).take(500)
         for (const m of members) await ctx.db.delete(m._id)
@@ -268,6 +272,7 @@ export const purge = internalMutation({
             await ctx.db.query("dbCounts").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
             await ctx.db.query("docFavorites").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
             await ctx.db.query("docTemplates").withIndex("by_workspace_id", (q) => q.eq("workspaceId", wid)).take(BATCH),
+            await ctx.db.query("billingAdjustments").withIndex("by_workspace", (q) => q.eq("workspaceId", wid)).take(BATCH),
         ]
         for (const rows of simple) {
             for (const row of rows) await ctx.db.delete(row._id)
@@ -337,7 +342,7 @@ export const setRequire2fa = mutation({
         if (!isOwner(workspace, member) && member.role !== "admin") throw new ConvexError("Only the owner and admins can change this")
         const plan = getPlan(workspace.plan)
         if (args.require && plan !== "growth" && plan !== "enterprise") {
-            throw new ConvexError("Requiring two-step verification is part of the Business plan and up")
+            throw new ConvexError("Requiring two-step verification is part of the Growth plan and up")
         }
         // the person switching it on must have it on themselves, or they would lock themselves out
         if (args.require) {

@@ -36,7 +36,7 @@ const PricingSection = () => (
         <Label>Pricing</Label>
         <Heading className="mt-5 max-w-3xl">Four plans. Clear limits.</Heading>
         <p className="mt-5 max-w-lg text-[17px] leading-relaxed text-[#1b1017]/70">
-          Pick the limits that fit your team. Free keeps the last 90 days of messages visible; paid plans keep everything. Limits and storage apply per workspace (the number of workspaces is per owner); meetings and AI summaries reset each month. Upgrade, change or cancel any time from workspace settings. Payments are handled by Stripe.
+          Pick the limits that fit your team. Free keeps the last 90 days of messages visible; paid plans keep everything. Limits and storage apply per workspace (the number of workspaces is per owner); meetings and AI summaries reset each month. Upgrade, change or cancel any time from workspace settings. Payments are handled by Stripe. Prices are in US dollars and exclude tax.
         </p>
       </Reveal>
       <Reveal delay={80}>
