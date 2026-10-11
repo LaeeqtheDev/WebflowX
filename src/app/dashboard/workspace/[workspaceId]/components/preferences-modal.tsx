@@ -142,7 +142,7 @@ export const PreferencesModal = ({ open, setOpen, initialValue }: PreferencesMod
   const [saving, setSaving] = useState(false)
   const [filter, setFilter] = useState("")
 
-  const [ConfirmDialog, confirm] = useConfirm("Delete this workspace?", "This permanently deletes every channel, message, doc and file. This cannot be undone.")
+  const [ConfirmDialog, confirm] = useConfirm("Delete this workspace?", "This permanently deletes every channel, message, doc and file, and ends any paid plan on it. This cannot be undone.")
 
   const canEdit = perms.can("editWorkspace")
 

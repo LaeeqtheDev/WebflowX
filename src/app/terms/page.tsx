@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms of Service" updated="October 7, 2026">
+    <LegalPage title="Terms of Service" updated="October 11, 2026">
       <section>
         <p>These Terms govern your use of WebflowX (the &ldquo;Service&rdquo;), operated by North Foundry (&ldquo;we&rdquo;, &ldquo;us&rdquo;). By creating an account or using the Service you agree to them. If you use the Service for an organization, you confirm you can bind it to these Terms.</p>
       </section>
@@ -44,7 +44,12 @@ export default function TermsPage() {
       </section>
       <section>
         <h2>6. Plans, limits and payment</h2>
-        <p>The Service has Free, Startup, Growth and Enterprise plans with limits on workspaces, members, channels, notes, documents, meetings, AI summaries and storage, as shown on our pricing page. Paid plans are billed per workspace and are charged in advance. Prices and limits may change with notice. Online payment is not switched on yet; until it is, plan changes are made by workspace owners in workspace settings and no charge is taken. Where paid billing is enabled, fees are non-refundable except where the law requires otherwise or we state otherwise.</p>
+        <p>The Service has Free, Startup, Growth and Enterprise plans with limits on workspaces, members, channels, notes, documents, meetings, AI summaries and storage, as shown on our pricing page. Paid plans are priced per workspace, charged in advance, and renew automatically for each billing period until cancelled. Prices exclude sales tax, VAT and GST, which are added where they apply. Prices and limits may change with notice.</p>
+        <p><strong>How you pay.</strong> Card payment through Stripe is not live yet. Until it is, paid plans are invoiced by us and paid directly to North Foundry, and the checkout inside the Service is in test mode and takes no charge. Once card payment is live, payments are handled by Stripe. Stripe&rsquo;s merchant-of-record service, Link, may be the seller shown at checkout, on receipts and on your card statement, and it calculates and collects any tax. We never receive or store your card details.</p>
+        <p><strong>Free trial.</strong> The first paid plan on a workspace starts with a free trial, currently 14 days, with no card needed. If no payment method has been added when the trial ends, the workspace returns to Free.</p>
+        <p><strong>Changing or cancelling.</strong> Only the workspace owner can change or cancel a plan, from Plans &amp; billing in the workspace. A cancelled plan runs to the end of the period already paid for, then the workspace moves to Free. Deleting a workspace ends its paid plan at once. On Free your content is kept, but you cannot add more than the Free limits allow and messages older than 90 days are hidden.</p>
+        <p><strong>Failed payments.</strong> If a renewal payment fails, the plan stays active while the payment is retried and we ask the owner to update the payment method. If it remains unpaid, the subscription ends and the workspace moves to Free.</p>
+        <p><strong>Refunds and disputes.</strong> Fees are non-refundable except where the law requires otherwise or we agree otherwise. To ask for a refund, email <a href="mailto:support@northfoundry.co">support@northfoundry.co</a>. For card payments, Stripe may also handle a refund request as the seller. If a payment is disputed with your bank and the bank returns it to you, the subscription it paid for ends.</p>
       </section>
       <section>
         <h2>7. Your data, export and deletion</h2>

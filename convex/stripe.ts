@@ -262,6 +262,24 @@ const syncDispute = async (ctx: ActionCtx, event: StripeEvent): Promise<"ok"> =>
     return "ok"
 }
 
+// A deleted workspace must stop being charged. workspaces.remove schedules this; if Stripe can't be reached it tries
+// again after 1, 4, 9, 16 and 25 minutes, then gives up loudly so the failure shows in the logs.
+export const cancelForDeletedWorkspace = internalAction({
+    args: { subscriptionId: v.string(), attempt: v.optional(v.number()) },
+    handler: async (ctx, args): Promise<void> => {
+        const attempt = args.attempt ?? 1
+        try {
+            await cancelSubscription(args.subscriptionId)
+        } catch (e) {
+            if (attempt >= 6) {
+                console.error("Gave up cancelling the subscription of a deleted workspace", args.subscriptionId)
+                throw e
+            }
+            await ctx.scheduler.runAfter(attempt * attempt * 60_000, internal.stripe.cancelForDeletedWorkspace, { subscriptionId: args.subscriptionId, attempt: attempt + 1 })
+        }
+    },
+})
+
 // Refunds a workspace's payment. This is an operator tool, not something customers can call: run it from the Convex
 // dashboard or with `npx convex run stripe:refund '{"workspaceId":"..."}'`. See docs/OPERATIONS.md.
 export const refund = internalAction({

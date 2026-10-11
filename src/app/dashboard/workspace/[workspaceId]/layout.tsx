@@ -161,7 +161,7 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
       <WorkspaceShell>{children}</WorkspaceShell>
     </PresenceProvider>
   )
-  // owners and admins can require everyone to use two-step verification (Business plan and up)
+  // owners and admins can require everyone to use two-step verification (Growth plan and up)
   return workspace?.require2fa ? <RequireTwoFactor workspaceName={workspace.name}>{shell}</RequireTwoFactor> : shell
 }
 export default WorkspaceLayout

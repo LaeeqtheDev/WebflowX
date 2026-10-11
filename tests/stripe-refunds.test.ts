@@ -349,3 +349,46 @@ describe("billing screen data", () => {
     expect((await t.withIdentity({ subject: `${owner}|session` }).query(api.billing.get, { workspaceId: ws }))?.disputeOpen).toBe(false)
   })
 })
+
+describe("deleting a workspace", () => {
+  beforeEach(() => { vi.useFakeTimers() })
+  afterEach(() => { vi.useRealTimers() })
+  const asOwner = (t: T, owner: Id<"users">) => t.withIdentity({ subject: `${owner}|session` })
+
+  it("cancels the subscription so the customer is not charged for a workspace that is gone, and removes its billing rows", async () => {
+    const { t, ws, owner } = await setup()
+    await subscribe(t)
+    charges = [charge({ amount_refunded: 500 })]
+    refunds = [refundOf({ id: "re_a", amount: 500 })]
+    await post(t, "charge.refunded", { id: "ch_1" })
+    expect(await rows(t)).toHaveLength(1)
+
+    await asOwner(t, owner).mutation(api.workspaces.remove, { id: ws })
+    await t.finishAllScheduledFunctions(vi.runAllTimers)
+    expect(cancels().map((c) => c.path)).toEqual(["/v1/subscriptions/sub_1"])
+    expect(subs.sub_1.status).toBe("canceled")
+    expect(await workspace(t, ws)).toBeNull()
+    expect(await rows(t)).toHaveLength(0)
+
+    // Stripe's follow-up event for the cancelled subscription finds no workspace and is accepted quietly
+    expect((await post(t, "customer.subscription.deleted", { id: "sub_1" })).status).toBe(200)
+  })
+
+  it("keeps trying when Stripe can't be reached", async () => {
+    const { t, ws, owner } = await setup()
+    await subscribe(t)
+    failCancel = 2
+    await asOwner(t, owner).mutation(api.workspaces.remove, { id: ws })
+    await t.finishAllScheduledFunctions(vi.runAllTimers)
+    expect(cancels()).toHaveLength(3)
+    expect(subs.sub_1.status).toBe("canceled")
+  })
+
+  it("calls Stripe for nothing when the workspace was on Free", async () => {
+    const { t, ws, owner } = await setup()
+    await asOwner(t, owner).mutation(api.workspaces.remove, { id: ws })
+    await t.finishAllScheduledFunctions(vi.runAllTimers)
+    expect(calls).toHaveLength(0)
+    expect(await workspace(t, ws)).toBeNull()
+  })
+})

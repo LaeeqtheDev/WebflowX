@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy Policy" updated="October 10, 2026">
+    <LegalPage title="Privacy Policy" updated="October 11, 2026">
       <section>
         <p>This policy explains what WebflowX, operated by North Foundry (&ldquo;we&rdquo;), collects, why, and the choices you have. We do not sell your personal data.</p>
       </section>
@@ -20,6 +20,7 @@ export default function PrivacyPage() {
           <li><strong>Account data:</strong> name, email, profile photo, title and bio; your sign-in method (password, Google or GitHub). Passwords are stored hashed, never in plain text.</li>
           <li><strong>Workspace content:</strong> messages, files, tasks, notes, documents, meeting records and transcripts, reactions, and workspace settings you or your teammates create.</li>
           <li><strong>Activity data:</strong> membership and role changes, audit log entries, notifications, and usage counts used to apply plan limits.</li>
+          <li><strong>Billing data:</strong> for paid plans, Stripe collects your payment details, billing address and email at checkout. We never receive or store card numbers. We keep the workspace&rsquo;s Stripe customer and subscription references, its plan and billing status, and a record of any refund or payment dispute (amount, currency, date and status).</li>
           <li><strong>Newsletter:</strong> if you subscribe on our website, your email address, where you signed up, whether you confirmed, and the sign-up and unsubscribe times.</li>
           <li><strong>Technical data:</strong> basic logs such as IP address, device and browser type, used for security, rate limiting and troubleshooting.</li>
         </ul>
@@ -30,6 +31,7 @@ export default function PrivacyPage() {
           <li>to send product updates and tips to people who subscribed and confirmed by email. Every email links to unsubscribe;</li>
           <li>to provide and secure the Service, including real-time collaboration, search and notifications;</li>
           <li>to send account emails such as verification codes and password resets;</li>
+          <li>to bill paid plans, apply the right plan to a workspace, and record refunds and payment disputes;</li>
           <li>to provide AI summaries and meeting transcripts you request;</li>
           <li>to prevent abuse, enforce limits and fix problems.</li>
         </ul>

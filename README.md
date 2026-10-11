@@ -18,6 +18,8 @@ Built with performance, scalability, and clean architecture in mind.
 - 📋 Task management system
 - 🤖 AI-powered assistance layer
 - 🔐 Secure authentication & protected routes
+- 🎥 Video meetings with transcripts and AI summaries
+- 💳 Stripe billing: Checkout, 14-day trial, webhook-driven plans, billing portal, refunds and disputes
 - 🎨 Modular, reusable UI system
 
 ---
@@ -83,8 +85,6 @@ Built with performance, scalability, and clean architecture in mind.
 
 ## 🚧 Roadmap
 
-- 🎥 Video collaboration
-- 💳 Stripe-based billing system
 - 📈 Workspace analytics
 - 🔌 Plugin/extension architecture
 - 🧠 Advanced AI workflow automation
