@@ -58,3 +58,42 @@ describe("public page weight", () => {
     expect(m).toMatch(/tokenLooksValid/)
   })
 })
+
+describe("signed-in app weight", () => {
+  const ws = join(root, "src", "app", "dashboard", "workspace", "[workspaceId]", "components")
+  const importsStatically = (file: string, mod: RegExp) =>
+    read(file).split("\n").some((l) => /^\s*import\s/.test(l) && !/import\s+type/.test(l) && mod.test(l))
+
+  it("loads the settings, invite and account dialogs only when they are first opened", () => {
+    expect(importsStatically(join(ws, "WorkspaceHeader.tsx"), /preferences-modal|inviteModal/)).toBe(false)
+    const ub = join(root, "src", "features", "auth", "components", "user-button.tsx")
+    expect(importsStatically(ub, /edit-profile-modal|security-modal|appearance-modal/)).toBe(false)
+  })
+
+  it("keeps the search palette (cmdk) out of the app shell", () => {
+    expect(importsStatically(join(ws, "toolbar.tsx"), /ui\/command/)).toBe(false)
+    expect(importsStatically(join(ws, "quick-switcher.tsx"), /ui\/command/)).toBe(false)
+  })
+
+  it("keeps the two-step sign-in screens and QR-code library out of the gate every page loads", () => {
+    const gate = join(root, "src", "features", "security", "two-factor-gate.tsx")
+    expect(importsStatically(gate, /two-factor-setup|two-factor-screens|auth-screen|auth-ui/)).toBe(false)
+  })
+
+  it("ships only English up front; other languages are fetched on demand", () => {
+    const i = read(join(root, "src", "lib", "i18n", "index.tsx"))
+    expect(i).not.toMatch(/^import\s.*from\s+["']\.\/(es|fr|de|pt|hi)["']/m)
+    expect(i).toMatch(/import\(["']\.\/hi["']\)/)
+  })
+
+  it("does not make every message re-render when a thread or profile panel opens", () => {
+    const m = read(join(ws, "message.tsx"))
+    expect(m).not.toMatch(/usePanel\(\)/)
+    expect(m).toMatch(/usePanelActions/)
+  })
+
+  it("builds each message's hover action bar only once that message is pointed at or focused", () => {
+    expect(read(join(ws, "message.tsx"))).toMatch(/onPointerEnter=\{wake\}/)
+    expect(read(join(ws, "Toolbar2.tsx"))).toMatch(/live &&/)
+  })
+})

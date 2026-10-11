@@ -25,10 +25,14 @@ import { useGetSprints } from "@/features/tasks/use-get-sprints"
 import { useGetTasks } from "@/features/tasks/use-get-tasks"
 import { useRemoveTask } from "@/features/tasks/use-remove-task"
 import { useUpdateTask } from "@/features/tasks/use-update-task"
-import { CreateTaskModal } from "./components/create-task-modal"
 import { SprintPanel } from "./components/sprint-panel"
 import { TaskCard } from "./components/task-card"
-import { TaskDetail } from "./components/task-detail"
+import dynamic from "next/dynamic"
+import { useMountOnce } from "@/hooks/use-mount-once"
+
+// The task panel and the create dialog are only needed once a task is opened or "new task" is clicked.
+const TaskDetail = dynamic(() => import("./components/task-detail").then((m) => m.TaskDetail), { ssr: false })
+const CreateTaskModal = dynamic(() => import("./components/create-task-modal").then((m) => m.CreateTaskModal), { ssr: false })
 
 // Wall-clock read kept outside the render body; evaluated on every render exactly as before.
 const getNow = () => Date.now()
@@ -65,6 +69,8 @@ export default function TasksPage() {
             ? ((tasks as Task[] | undefined)?.find(x => x._id === targetTaskId) ?? null)
             : null
     const openTask = selectedTask ?? deepLinkedTask
+    const detailMounted = useMountOnce(!!openTask)
+    const createMounted = useMountOnce(showCreate)
 
     const handleUpdate = (id: Id<"tasks">, data: Partial<Task>) => {
         const unassign = "assigneeId" in data && data.assigneeId === undefined
@@ -294,7 +300,7 @@ export default function TasksPage() {
                 )}
             </div>
 
-            <TaskDetail
+            {detailMounted && <TaskDetail
                 task={openTask}
                 onClose={() => { setSelectedTask(null); setClosedTargetId(targetTaskId) }}
                 isAdmin={isAdmin}
@@ -305,15 +311,15 @@ export default function TasksPage() {
                 onUpdate={handleUpdate}
                 onDelete={handleDelete}
                 onAssignToMe={handleAssignToMe}
-            />
+            />}
 
-            <CreateTaskModal
+            {createMounted && <CreateTaskModal
                 open={showCreate}
                 onClose={() => setShowCreate(false)}
                 workspaceId={workspaceId}
                 members={isAdmin ? safeMembers : safeMembers.filter(m => m._id === currentMember?._id)}
                 sprints={safeSprints}
-            />
+            />}
         </div>
     )
 }

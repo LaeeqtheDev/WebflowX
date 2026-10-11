@@ -12,9 +12,13 @@ import { signOutAndLeave } from "@/lib/sign-out"
 import { toast } from "sonner"
 import { useDataExport } from "@/lib/export-data"
 import { useState } from "react"
-import { EditProfileModal } from "./edit-profile-modal"
-import { SecurityModal } from "@/features/security/security-modal"
-import { AppearanceModal } from "./appearance-modal"
+import dynamic from "next/dynamic"
+import { useMountOnce } from "@/hooks/use-mount-once"
+
+// Three settings dialogs that only matter when someone opens them: fetched on first use, not with the app shell.
+const EditProfileModal = dynamic(() => import("./edit-profile-modal").then((m) => m.EditProfileModal), { ssr: false })
+const SecurityModal = dynamic(() => import("@/features/security/security-modal").then((m) => m.SecurityModal), { ssr: false })
+const AppearanceModal = dynamic(() => import("./appearance-modal").then((m) => m.AppearanceModal), { ssr: false })
 
 export const UserButton = () => {
     const {data, isLoading} = useCurrentUser();
@@ -22,6 +26,9 @@ export const UserButton = () => {
     const [editOpen, setEditOpen] = useState(false)
     const [securityOpen, setSecurityOpen] = useState(false)
     const [appearanceOpen, setAppearanceOpen] = useState(false)
+    const editMounted = useMountOnce(editOpen)
+    const securityMounted = useMountOnce(securityOpen)
+    const appearanceMounted = useMountOnce(appearanceOpen)
     const { exportMine, busy, progress } = useDataExport()
     const setTheme = useSetTheme()
 
@@ -38,9 +45,9 @@ export const UserButton = () => {
 
     return(
         <>
-        <EditProfileModal open={editOpen} setOpen={setEditOpen} user={data} />
-        <SecurityModal open={securityOpen} setOpen={setSecurityOpen} />
-        <AppearanceModal open={appearanceOpen} setOpen={setAppearanceOpen} user={data} />
+        {editMounted && <EditProfileModal open={editOpen} setOpen={setEditOpen} user={data} />}
+        {securityMounted && <SecurityModal open={securityOpen} setOpen={setSecurityOpen} />}
+        {appearanceMounted && <AppearanceModal open={appearanceOpen} setOpen={setAppearanceOpen} user={data} />}
         <DropdownMenu modal={false}>
             <DropdownMenuTrigger className="outline-none relative">
                 <Avatar className=" rounded-lg size-10 hover:opacity-80 transition ring-1 ring-white/15">

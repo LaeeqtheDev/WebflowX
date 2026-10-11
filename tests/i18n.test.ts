@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { DICTS, LOCALES, translate } from "../src/lib/i18n"
+import { LOCALES, loadLocale, translate } from "../src/lib/i18n"
+import { DICTS } from "../src/lib/i18n/all"
 import { en } from "../src/lib/i18n/en"
 
 const ph = (s: string) => (s.match(/\{[a-zA-Z]+\}/g) ?? []).sort().join(",")
@@ -15,8 +16,11 @@ describe("i18n", () => {
       expect(Object.keys(d).sort()).toEqual(Object.keys(en).sort())
     })
   }
-  it("fills placeholders and falls back to English", () => {
+  it("fills placeholders and falls back to English", async () => {
     expect(translate("en", "wiz.step", { n: 2, total: 5 })).toBe("Step 2 of 5")
+    // not loaded yet: English
+    expect(translate("fr", "wiz.step", { n: 2, total: 5 })).toBe("Step 2 of 5")
+    await loadLocale("es")
     expect(translate("es", "wiz.step", { n: 2, total: 5 })).toBe("Paso 2 de 5")
   })
 })

@@ -2,8 +2,7 @@
 import { useEffect, useState } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { useRouter } from "next/navigation"
-import { FaChevronDown } from "react-icons/fa"
-import { Lock, TrashIcon, UserPlus, X } from "lucide-react"
+import { ChevronDown, Lock, TrashIcon, UserPlus, X } from "lucide-react"
 import { toast } from "sonner"
 import { DialogClose } from "@radix-ui/react-dialog"
 import { api } from "../../../../../../convex/_generated/api"
@@ -104,7 +103,7 @@ export const Header = ({ title }: HeaderProps) => {
                         <span className="flex items-center gap-2 truncate font-semibold tracking-tight">
                             {channel?.isPrivate ? <Lock className="size-5 shrink-0 text-brand" /> : <ChannelIcon name={title} className="size-5 shrink-0 text-brand" />}{cleanChannelName(title)}
                         </span>
-                        <FaChevronDown className="text-brand size-2.5 ml-2" />
+                        <ChevronDown className="text-brand size-3 ml-2" strokeWidth={3} aria-hidden />
                     </Button>
                 </DialogTrigger>
 

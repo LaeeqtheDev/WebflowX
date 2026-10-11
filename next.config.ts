@@ -48,6 +48,13 @@ const nextConfig: NextConfig = {
       { source: "/:path*", headers: securityHeaders },
       // The signed-in app, sign-in and invite pages get a stricter per-request (nonce) policy from middleware.ts instead.
       { source: "/((?!(?:dashboard|auth|join)(?:/|$)).*)", headers: [{ key: "Content-Security-Policy", value: csp }] },
+      // The theme script blocks the first paint, so it must never wait on a network check: serve it from the browser
+      // cache and refresh it in the background.
+      { source: "/theme-boot.js", headers: [{ key: "Cache-Control", value: "public, max-age=3600, stale-while-revalidate=86400" }] },
+      // Images, icons and the PWA manifest in /public are not content-hashed, so Next sends them as "always
+      // revalidate". A week in the cache (refreshed in the background) removes a round trip per image on every visit.
+      { source: "/:path*.(png|jpg|jpeg|webp|avif|svg|ico|gif|woff2)", headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=2592000" }] },
+      { source: "/icons/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=2592000" }] },
       // the service worker must always be fetched fresh so updates roll out
       { source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }, { key: "Service-Worker-Allowed", value: "/" }] },
     ];

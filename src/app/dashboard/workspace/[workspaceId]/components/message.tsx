@@ -17,7 +17,7 @@ import { useRemoveMessage } from "@/features/messages/api/use-remove-message";
 import { useConfirm } from "../../hooks/use-confirm";
 import { useToggleReaction } from "@/features/reactions/api/use-toggle-reaction";
 import { Reactions } from "./reactions";
-import { usePanel } from "@/hooks/use-panel";
+import { usePanelActions } from "@/hooks/panel-actions";
 import { ThreadBar } from "./theadBar";
 import { FileAttachment } from "./File-attachment";
 import { useMessageMarks } from "@/features/marks/use-marks";
@@ -97,8 +97,11 @@ const MessageImpl = ({
     threadTimestamp,
     threadName,
 }: MessageProps) => {
-    const { parentMessageId, onOpenMessage, onOpenProfile, onClose } = usePanel();
+    const { openMessage: onOpenMessage, openProfile: onOpenProfile, closeIfOpen } = usePanelActions();
     const [showTaskModal, setShowTaskModal] = useState(false);
+    // The hover action bar is built the first time this message is pointed at or focused, not for every message up front.
+    const [actionsLive, setActionsLive] = useState(false);
+    const wake = actionsLive ? undefined : () => setActionsLive(true);
     const marks = useMessageMarks(id);
 
     const [ConfirmDialog, confirm] = useConfirm(
@@ -133,9 +136,7 @@ const MessageImpl = ({
             {
                 onSuccess: () => {
                     toast.success("Message deleted successfully");
-                    if (parentMessageId === id) {
-                        onClose();
-                    }
+                    closeIfOpen(id);
                 },
                 onError: () => {
                     toast.error("Failed to delete the message");
@@ -176,6 +177,8 @@ const MessageImpl = ({
                 )}
                 <div
                     id={`msg-${id}`}
+                    onPointerEnter={wake}
+                    onFocusCapture={wake}
                     className={cn(
                         "wfx-msg flex flex-col gap-2 p-1.5 px-5 max-md:pl-3 max-md:pr-11 max-md:min-h-10 hover:bg-cream/70 group relative",
                         isEditing && "bg-brand/10 hover:bg-brand/10",
@@ -246,6 +249,7 @@ const MessageImpl = ({
                             handleSave={marks.save}
                             isPinned={marks.isPinned}
                             isSaved={marks.isSaved}
+                            live={actionsLive}
                         />
                     )}
                 </div>
@@ -268,6 +272,8 @@ const MessageImpl = ({
                 )}
             <div
                 id={`msg-${id}`}
+                onPointerEnter={wake}
+                onFocusCapture={wake}
                 className={cn(
                     "wfx-msg flex flex-col gap-2 p-1.5 px-5 max-md:pl-3 max-md:pr-11 max-md:min-h-10 hover:bg-cream/70 group relative",
                     isEditing && "bg-brand/10 hover:bg-brand/10",
@@ -361,6 +367,7 @@ const MessageImpl = ({
                         handleSave={marks.save}
                         isPinned={marks.isPinned}
                         isSaved={marks.isSaved}
+                        live={actionsLive}
                     />
                 )}
             </div>

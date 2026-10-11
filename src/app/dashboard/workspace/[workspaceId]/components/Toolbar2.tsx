@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMountOnce } from "@/hooks/use-mount-once";
 import { Button } from "@/components/ui/button";
 import { Bookmark, ListChecks, MessageSquareTextIcon, MoreHorizontal, Pencil, Pin, Smile, TrashIcon } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
@@ -20,6 +21,11 @@ interface ToolbarProps{
     handleSave?: () => void;
     isPinned?: boolean;
     isSaved?: boolean;
+    /**
+     * Whether to draw the hover action bar. A long channel has dozens of messages and each bar is a reaction picker, six
+     * tooltips and a row of buttons, so the message turns this on the first time it is hovered or focused.
+     */
+    live?: boolean;
 }
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👀", "🙏"];
@@ -40,8 +46,11 @@ export const Toolbar2 =({
     handleSave,
     isPinned,
     isSaved,
+    live = true,
 }: ToolbarProps) =>{
     const [sheetOpen, setSheetOpen] = useState(false)
+    // The phone sheet is only built once the "…" button has been tapped
+    const sheetMounted = useMountOnce(sheetOpen)
     const canDelete = isAuthor || !!canModerate
 
     // Close the sheet first, then run the action (some actions open their own dialog)
@@ -65,7 +74,7 @@ export const Toolbar2 =({
             </button>
         </div>
 
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        {sheetMounted && <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetContent side="bottom" closeLabel="Close message actions" className="bg-surface p-4 pt-5">
                 <SheetTitle className="text-ink">Message actions</SheetTitle>
                 <SheetDescription className="sr-only">React, reply in a thread, edit or delete this message.</SheetDescription>
@@ -116,10 +125,10 @@ export const Toolbar2 =({
                     )}
                 </div>
             </SheetContent>
-        </Sheet>
+        </Sheet>}
 
         <div className="absolute top-0 right-5 max-md:hidden">
-          <div className="group-hover:opacity-100 focus-within:opacity-100 opacity-0 transition-opacity border border-plum/12 bg-surface rounded-lg shadow-sm p-0.5 flex items-center">
+          {live && <div className="group-hover:opacity-100 focus-within:opacity-100 opacity-0 transition-opacity border border-plum/12 bg-surface rounded-lg shadow-sm p-0.5 flex items-center">
         <EmojiPopover
         hint="Add Reaction"
         onEmojiSelect={(emoji)=> handleReaction(emoji.native)} 
@@ -176,7 +185,7 @@ export const Toolbar2 =({
              </Button>
              </Hint>
            )}
-          </div>
+          </div>}
         </div>
         </>
     )

@@ -3,73 +3,17 @@ import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { Info, Menu, Search } from "lucide-react"
 
-import {
-    Command,
-    CommandDialog,
-    CommandSeparator,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList
-} from "@/components/ui/command"
 import { useState } from "react"
-import { useGetChannels } from "@/features/channels/api/use-get-channels"
-import { useGetMembers } from "@/features/members/api/use-get-members"
-import { useRouter } from "next/navigation"
-import { useSearchMessages } from "@/features/messages/api/use-search-messages"
-import { quillToText } from "@/features/messages/lib/quill-to-text"
-import { messageLink } from "@/features/messages/lib/message-link"
-import { useGetConversations } from "@/features/conversations/api/use-get-conversations"
-import { VisuallyHidden } from "radix-ui"
-import { DialogTitle } from "@/components/ui/dialog"
+import dynamic from "next/dynamic"
+import { useMountOnce } from "@/hooks/use-mount-once"
+
+const ToolbarSearch = dynamic(() => import("./toolbar-search").then((m) => m.ToolbarSearch), { ssr: false })
 
 export const Toolbar = ({ onOpenMenu }: { onOpenMenu?: () => void }) => {
-  const router = useRouter()
   const workspaceId = useWorkspaceId()
   const { data } = useGetWorkspace({ id: workspaceId })
-
   const [open, setOpen] = useState(false)
-  const [query, setQuery] = useState("")
-
-  const { data: channels } = useGetChannels({ workspaceId })
-  const { data: members } = useGetMembers({ workspaceId })
-  const { data: messageResults } = useSearchMessages({ workspaceId, query })
-  const { data: conversations } = useGetConversations({ workspaceId })
-
-  const onChannelClick = (channelId: string) => {
-    setOpen(false)
-    router.push(`/dashboard/workspace/${workspaceId}/channel/${channelId}`)
-  }
-
-  const onMemberClick = (memberId: string) => {
-    setOpen(false)
-    router.push(`/dashboard/workspace/${workspaceId}/member/${memberId}`)
-  }
-
-  const onMessageClick = (message: {
-    _id: string
-    channelId?: string
-    conversationId?: string
-    parentMessagesId?: string
-  }) => {
-    setOpen(false)
-    // DM results carry a conversation id; the route needs the other member's id
-    const memberId = message.conversationId
-      ? conversations?.find((c) => c._id === message.conversationId)?.otherMember?._id
-      : undefined
-    if (!message.channelId && !memberId) return
-
-    router.push(
-      messageLink({
-        workspaceId,
-        channelId: message.channelId,
-        memberId,
-        messageId: message._id,
-        parentMessageId: message.parentMessagesId,
-      })
-    )
-  }
+  const searchMounted = useMountOnce(open)
 
   return (
     <nav className="relative z-10 flex h-14 shrink-0 items-center gap-1 border-b border-white/[0.07] bg-chrome px-2 md:gap-0 md:px-4">
@@ -109,59 +53,7 @@ export const Toolbar = ({ onOpenMenu }: { onOpenMenu?: () => void }) => {
           </span>
         </button>
 
-        <CommandDialog   open={open} onOpenChange={setOpen}>
-          <CommandInput
-            className="text-sm"
-            placeholder="Search messages, channels, members..."
-            onValueChange={setQuery}
-          />
-          <CommandList>
-            <CommandEmpty>No results found.</CommandEmpty>
-
-            <CommandGroup heading="Channels" className="[&_[cmdk-group-heading]]:text-ink/60 [&_[cmdk-group-heading]]:font-semibold">
-              {channels?.map((channel) => (
-                <CommandItem
-                  className="rounded-lg data-[selected=true]:bg-cream data-[selected=true]:text-ink"
-                  key={channel._id}
-                  onSelect={() => onChannelClick(channel._id)}
-                >
-                  # {channel.name}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-
-            <CommandSeparator />
-
-            <CommandGroup heading="Members" className="[&_[cmdk-group-heading]]:text-ink/60 [&_[cmdk-group-heading]]:font-semibold">
-              {members?.map((member) => (
-                <CommandItem
-                  className="rounded-lg data-[selected=true]:bg-cream data-[selected=true]:text-ink"
-                  key={member._id}
-                  onSelect={() => onMemberClick(member._id)}
-                >
-                  {member.user.name}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-
-            {messageResults && messageResults.length > 0 && (
-              <>
-                <CommandSeparator />
-                <CommandGroup heading="Messages" className="[&_[cmdk-group-heading]]:text-ink/60 [&_[cmdk-group-heading]]:font-semibold">
-                  {messageResults.map((message) => (
-                    <CommandItem
-                      className="rounded-lg data-[selected=true]:bg-cream data-[selected=true]:text-ink"
-                      key={message._id}
-                      onSelect={() => onMessageClick(message)}
-                    >
-                      <span className="truncate"><span className="font-semibold">{message.authorName}:</span> {quillToText(message.body)}</span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </>
-            )}
-          </CommandList>
-        </CommandDialog>
+        {searchMounted && <ToolbarSearch open={open} setOpen={setOpen} />}
       </div>
 
       {/* RIGHT: Help */}

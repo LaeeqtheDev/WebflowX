@@ -28,6 +28,7 @@ import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace"
 import { RequireTwoFactor } from "@/features/security/two-factor-gate"
 import { WorkspaceGuide } from "@/features/onboarding/workspace-guide"
 import { preloadWorkspaceChunks } from "@/lib/preload"
+import { PanelActionsProvider } from "@/hooks/panel-actions"
 
 const Thread = dynamic(() => import("./components/threads").then((m) => m.Thread), { ssr: false })
 const Profile = dynamic(() => import("@/features/members/components/profile").then((m) => m.Profile), { ssr: false })
@@ -158,7 +159,9 @@ const WorkspaceLayout = ({ children }: WorkspaceIdLayoutProps) => {
   const shell = (
     <PresenceProvider workspaceId={workspaceId}>
       <Suspense fallback={null}><BillingReturn /></Suspense>
-      <WorkspaceShell>{children}</WorkspaceShell>
+      <PanelActionsProvider>
+        <WorkspaceShell>{children}</WorkspaceShell>
+      </PanelActionsProvider>
     </PresenceProvider>
   )
   // owners and admins can require everyone to use two-step verification (Growth plan and up)

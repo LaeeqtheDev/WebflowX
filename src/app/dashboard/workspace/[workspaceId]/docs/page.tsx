@@ -17,7 +17,11 @@ import { formatDistanceToNow } from "date-fns"
 import {
     FileText, Plus, Loader, Trash2, Pencil, MoreHorizontal, FileSpreadsheet, Search, Table2
 } from "lucide-react"
-import { NewPageDialog } from "@/features/pages/new-page-dialog"
+import dynamic from "next/dynamic"
+import { useMountOnce } from "@/hooks/use-mount-once"
+
+// The "new page" dialog (and the template catalogue behind it) is fetched the first time it opens.
+const NewPageDialog = dynamic(() => import("@/features/pages/new-page-dialog").then((m) => m.NewPageDialog), { ssr: false })
 import { TrashDialog } from "@/features/pages/trash-dialog"
 import { RenderIcon } from "@/features/pages/page-icons"
 import { useMutation } from "convex/react"
@@ -38,6 +42,7 @@ export default function DocsPage() {
     const { mutate: renameDoc } = useRenameDoc()
 
     const [showCreate, setShowCreate] = useState(false)
+    const createMounted = useMountOnce(showCreate)
     const [renamingId, setRenamingId] = useState<Id<"docs"> | null>(null)
     const [renameTitle, setRenameTitle] = useState("")
     const [search, setSearch] = useState("")
@@ -235,7 +240,7 @@ export default function DocsPage() {
                 </DialogContent>
             </Dialog>
 
-            <NewPageDialog open={showCreate} onOpenChange={setShowCreate} />
+            {createMounted && <NewPageDialog open={showCreate} onOpenChange={setShowCreate} />}
             <TrashDialog open={trashOpen} onOpenChange={setTrashOpen} />
         </div>
     )

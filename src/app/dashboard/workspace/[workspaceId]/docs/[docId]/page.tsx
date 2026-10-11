@@ -15,7 +15,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { usePageTree, ancestorsOf } from "@/features/pages/use-page-tree"
 import { PageIcon } from "@/features/pages/page-tree"
 import { IconPicker } from "@/features/pages/page-icons"
-import { NewPageDialog } from "@/features/pages/new-page-dialog"
+import { useMountOnce } from "@/hooks/use-mount-once"
+
+// The "new page" dialog (and the template catalogue behind it) is fetched the first time it opens.
+const NewPageDialog = dynamic(() => import("@/features/pages/new-page-dialog").then((m) => m.NewPageDialog), { ssr: false })
 import { friendlyError } from "@/hooks/use-limit-handler"
 import {
     Select, SelectContent, SelectItem,
@@ -69,6 +72,7 @@ export default function DocPage() {
     const setIcon = useMutation(api.docs.setIcon)
     const saveTemplate = useMutation(api.docs.saveTemplate)
     const [subOpen, setSubOpen] = useState(false)
+    const subMounted = useMountOnce(subOpen)
     const [tplOpen, setTplOpen] = useState(false)
     const [tplName, setTplName] = useState("")
     const { mutate: renameDoc } = useRenameDoc()
@@ -368,7 +372,7 @@ export default function DocPage() {
                 )}
             </div>
 
-            <NewPageDialog open={subOpen} onOpenChange={setSubOpen} parentId={doc._id} />
+            {subMounted && <NewPageDialog open={subOpen} onOpenChange={setSubOpen} parentId={doc._id} />}
 
             <Dialog open={tplOpen} onOpenChange={setTplOpen}>
                 <DialogContent className="mx-4 max-w-sm rounded-2xl border-plum/12">

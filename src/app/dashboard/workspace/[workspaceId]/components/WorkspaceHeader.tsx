@@ -11,9 +11,13 @@ import { Doc } from "../../../../../../convex/_generated/dataModel"
 import { ChevronDown, Search, SquarePen } from "lucide-react"
 import { useQuickSwitcher } from "@/features/workspaces/store/use-quick-switcher"
 import { Hint } from "./hints"
-import { PreferencesModal } from "./preferences-modal"
 import { useState } from "react"
-import { InviteModal } from "./inviteModal"
+import dynamic from "next/dynamic"
+import { useMountOnce } from "@/hooks/use-mount-once"
+
+// Settings and invite dialogs (the settings one pulls in integrations, import and Slack-unzip code) load on first use.
+const PreferencesModal = dynamic(() => import("./preferences-modal").then((m) => m.PreferencesModal), { ssr: false })
+const InviteModal = dynamic(() => import("./inviteModal").then((m) => m.InviteModal), { ssr: false })
 
 interface WorkspaceHeaderProps {
   workspace: Doc<"workspaces"> & { imageUrl?: string | null }
@@ -26,16 +30,18 @@ export const WorkspaceHeader = ({ workspace, isAdmin, canInvite, canEdit }: Work
   const [preferencesOpen, setPreferencesOpen] =useState(false)
   const [inviteOpen, setInviteOpen] = useState(false)
   const [, setSwitcher] = useQuickSwitcher()
+  const inviteMounted = useMountOnce(inviteOpen)
+  const preferencesMounted = useMountOnce(preferencesOpen)
   return (
    <>
-   <InviteModal open={inviteOpen} setOpen={setInviteOpen}
+   {inviteMounted && <InviteModal open={inviteOpen} setOpen={setInviteOpen}
    name={workspace.name} joinCode={workspace.joinCode}
    joinCodeExpiresAt={workspace.joinCodeExpiresAt}
    invitesDisabled={workspace.invitesDisabled}
    openInviteLink={workspace.openInviteLink}
    isAdmin={canInvite}
-   />
-   <PreferencesModal open={preferencesOpen} setOpen={setPreferencesOpen}  initialValue={workspace.name}/>
+   />}
+   {preferencesMounted && <PreferencesModal open={preferencesOpen} setOpen={setPreferencesOpen}  initialValue={workspace.name}/>}
     <div className="flex items-center justify-between px-3 h-14 gap-2 w-full border-b border-white/10">
       
       {/* Workspace Name Dropdown */}

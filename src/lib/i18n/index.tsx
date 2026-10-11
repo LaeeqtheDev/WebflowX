@@ -1,12 +1,7 @@
 "use client"
 
-import { useCallback, useSyncExternalStore } from "react"
+import { useCallback, useEffect, useSyncExternalStore } from "react"
 import { en, type Key } from "./en"
-import { es } from "./es"
-import { fr } from "./fr"
-import { de } from "./de"
-import { pt } from "./pt"
-import { hi } from "./hi"
 
 export const LOCALES = [
   { code: "en", label: "English" },
@@ -18,13 +13,32 @@ export const LOCALES = [
 ] as const
 export type Locale = (typeof LOCALES)[number]["code"]
 
-export const DICTS: Record<Locale, Record<Key, string>> = { en, es, fr, de, pt, hi }
+type Dict = Record<Key, string>
+// Only English ships with the app. The other languages are separate chunks, fetched when that language is in use, so
+// nobody downloads five dictionaries they will never read.
+const loaded: Partial<Record<Locale, Dict>> = { en }
+const loaders: Record<Exclude<Locale, "en">, () => Promise<Dict>> = {
+  es: () => import("./es").then((m) => m.es),
+  fr: () => import("./fr").then((m) => m.fr),
+  de: () => import("./de").then((m) => m.de),
+  pt: () => import("./pt").then((m) => m.pt),
+  hi: () => import("./hi").then((m) => m.hi),
+}
+let dictVersion = 0
+export function loadLocale(locale: Locale): Promise<void> {
+  if (loaded[locale] || locale === "en") return Promise.resolve()
+  return loaders[locale]().then((d) => {
+    loaded[locale] = d
+    dictVersion++
+    listeners.forEach((l) => l())
+  })
+}
 const STORAGE_KEY = "wfx:lang"
 const isLocale = (v: unknown): v is Locale => LOCALES.some((l) => l.code === v)
 
 /** Look up a string and fill {placeholders}. Falls back to English, then to the key. */
 export function translate(locale: Locale, key: Key, vars?: Record<string, string | number>): string {
-  let s = DICTS[locale]?.[key] ?? en[key] ?? key
+  let s = loaded[locale]?.[key] ?? en[key] ?? key
   if (vars) for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(String(v))
   return s
 }
@@ -48,7 +62,8 @@ function subscribe(cb: () => void) {
 export function setLocale(next: Locale) {
   try { window.localStorage.setItem(STORAGE_KEY, next) } catch { /* ignore */ }
   document.documentElement.lang = next
-  listeners.forEach((l) => l())
+  // switch once the new language has arrived, so the screen never flashes English in between
+  void loadLocale(next).catch(() => {}).then(() => listeners.forEach((l) => l()))
 }
 
 export function useLocale(): Locale {
@@ -57,7 +72,10 @@ export function useLocale(): Locale {
 
 export function useT() {
   const locale = useLocale()
-  return useCallback((key: Key, vars?: Record<string, string | number>) => translate(locale, key, vars), [locale])
+  const version = useSyncExternalStore(subscribe, () => dictVersion, () => 0)
+  useEffect(() => { void loadLocale(locale).catch(() => {}) }, [locale])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useCallback((key: Key, vars?: Record<string, string | number>) => translate(locale, key, vars), [locale, version])
 }
 
 export function LanguagePicker({ className = "" }: { className?: string }) {
