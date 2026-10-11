@@ -16,6 +16,9 @@ const planForPrice = (priceId: string): { plan: PaidPlan; interval: "month" | "y
     return null
 }
 
+// Stripe dispute statuses that are still being decided.
+const DISPUTE_OPEN = ["needs_response", "under_review", "warning_needs_response", "warning_under_review"]
+
 // What the Plans & billing screen needs. Never returns keys or price ids.
 export const get = query({
     args: { workspaceId: v.id("workspaces") },
@@ -30,7 +33,15 @@ export const get = query({
         const w = await ctx.db.get(args.workspaceId)
         if (!w) return null
         const configured = !!process.env.STRIPE_SECRET_KEY && PAID.every((p) => !!priceEnv(p, "month"))
+        // refunds and disputes are shown to the owner only
+        const adjustments = w.userId !== userId ? [] : await ctx.db
+            .query("billingAdjustments")
+            .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
+            .order("desc")
+            .take(20)
         return {
+            adjustments: adjustments.map((a) => ({ id: a._id, kind: a.kind, amount: a.amount, currency: a.currency, status: a.status, createdAt: a.createdAt })),
+            disputeOpen: adjustments.some((a) => a.kind === "dispute" && DISPUTE_OPEN.includes(a.status)),
             isOwner: w.userId === userId,
             configured,
             annualAvailable: configured && PAID.every((p) => !!priceEnv(p, "year")),
@@ -125,6 +136,64 @@ export const applySubscription = internalMutation({
         }
         await ctx.db.patch(w._id, patch)
         await ctx.db.insert("stripeEvents", { eventId: args.eventId })
+        return "ok"
+    },
+})
+
+// ---- refunds and disputes ----
+
+// Used by the refund action, which only the operator can run, so there is no ownership check here.
+export const stripeIds = internalQuery({
+    args: { workspaceId: v.id("workspaces") },
+    handler: async (ctx, args) => {
+        const w = await ctx.db.get(args.workspaceId)
+        if (!w) throw new ConvexError("Workspace not found")
+        return { customerId: w.stripeCustomerId ?? null, subscriptionId: w.stripeSubscriptionId ?? null }
+    },
+})
+
+// Before a lost dispute ends a subscription: what we already hold for that dispute and which subscription is live.
+export const disputeContext = internalQuery({
+    args: { customerId: v.string(), disputeId: v.string() },
+    handler: async (ctx, args) => {
+        const known = await ctx.db.query("billingAdjustments").withIndex("by_stripe_id", (q) => q.eq("stripeId", args.disputeId)).first()
+        const w = await ctx.db.query("workspaces").withIndex("by_stripe_customer", (q) => q.eq("stripeCustomerId", args.customerId)).first()
+        return { status: known?.status ?? null, subscriptionId: w?.stripeSubscriptionId ?? null }
+    },
+})
+
+// Stores the current state of refunds or disputes on one customer's payments. Like applySubscription it is given
+// freshly fetched objects, so repeated or out-of-order events only ever bring a row up to date.
+export const applyAdjustments = internalMutation({
+    args: {
+        eventId: v.optional(v.string()),
+        customerId: v.string(),
+        items: v.array(v.object({
+            kind: v.union(v.literal("refund"), v.literal("dispute")),
+            stripeId: v.string(),
+            chargeId: v.string(),
+            amount: v.number(),
+            currency: v.string(),
+            status: v.string(),
+            reason: v.optional(v.string()),
+            createdAt: v.number(),
+        })),
+    },
+    handler: async (ctx, args) => {
+        const eventId = args.eventId
+        if (eventId) {
+            const seen = await ctx.db.query("stripeEvents").withIndex("by_event_id", (q) => q.eq("eventId", eventId)).first()
+            if (seen) return "duplicate"
+        }
+        const w = await ctx.db.query("workspaces").withIndex("by_stripe_customer", (q) => q.eq("stripeCustomerId", args.customerId)).first()
+        if (!w) return "no-workspace"
+
+        for (const item of args.items) {
+            const known = await ctx.db.query("billingAdjustments").withIndex("by_stripe_id", (q) => q.eq("stripeId", item.stripeId)).first()
+            if (known) await ctx.db.patch(known._id, { amount: item.amount, status: item.status, reason: item.reason })
+            else await ctx.db.insert("billingAdjustments", { workspaceId: w._id, ...item })
+        }
+        if (eventId) await ctx.db.insert("stripeEvents", { eventId })
         return "ok"
     },
 })

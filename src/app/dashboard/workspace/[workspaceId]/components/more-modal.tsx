@@ -27,6 +27,7 @@ import { api } from "../../../../../../convex/_generated/api"
 import { friendlyError } from "@/hooks/use-limit-handler"
 import { Id } from "../../../../../../convex/_generated/dataModel"
 import { useGetUsage } from "@/features/workspaces/api/use-get-usage"
+import { BillingHistory } from "./billing-history"
 
 interface MoreModalProps {
     open: boolean
@@ -265,6 +266,12 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                 </div>
                             )}
 
+                            {billing?.disputeOpen && (
+                                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+                                    A payment for this workspace is being disputed with the card issuer. Your plan stays as it is while the bank reviews it. If the bank returns the payment, the subscription ends and this workspace moves to Free.
+                                </div>
+                            )}
+
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                                 {PLANS.map((plan) => {
                                     const isCurrent = currentPlan === plan.key
@@ -355,6 +362,8 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                     )
                                 })}
                             </div>
+
+                            <BillingHistory items={billing?.adjustments ?? []} />
 
                             <p className="text-center text-[11px] text-plum/50">
                                 {billing && !billing.isOwner

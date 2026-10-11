@@ -33,3 +33,34 @@ Settings, Import (owners and admins). Slack: public channels from a standard exp
 
 ## Leaving a workspace
 A person's channel messages and reactions stay, shown as "Name (former member)". Free plan: erased 90 days after they left (daily job). Paid plans keep them, matching full history. Direct messages are removed on leaving. Rules live in `removedContentDays` (`convex/limits.ts`).
+
+## Billing: refunds and disputes
+Code is in `convex/stripe.ts` and `convex/billing.ts`, tests in `tests/stripe-refunds.test.ts`.
+
+After pulling this change:
+1. Run `npx convex dev --once` (or `npx convex deploy`): a table, `billingAdjustments`, and two indexes were added.
+2. In Stripe, open the webhook that points at `/stripe/webhook` and add these events to it: `charge.refunded`, `refund.created`, `refund.updated`, `refund.failed`, `charge.dispute.created`, `charge.dispute.updated`, `charge.dispute.closed`. Without them refunds and disputes still happen in Stripe, but WebflowX never hears about them.
+
+How it behaves:
+- **Where a refund can start.** The refund action below, the Stripe Dashboard, or Stripe's own support desk (with Managed Payments, Stripe may refund a customer without asking us, up to 60 days after the payment). All three arrive as the same webhook events and are stored the same way.
+- **What the owner sees.** Plans & billing lists each refund and dispute with its amount and status. Nobody else in the workspace sees them.
+- **A refund does not change the plan.** The subscription keeps running unless it is cancelled too (see `cancelSubscription` below, or cancel it in Stripe).
+- **Disputes.** An open dispute shows a notice to the owner and leaves the plan alone. If the dispute is lost, the subscription is cancelled at once and the workspace moves to Free. Stripe answers disputes for us under Managed Payments.
+
+Sending a refund from here (operator only, customers cannot call this):
+
+```
+npx convex run stripe:refund '{"workspaceId":"<workspace id>"}'
+```
+
+That refunds the latest payment in full. Optional fields:
+
+| Field | Meaning |
+| --- | --- |
+| `amount` | Part refund, in the currency's smallest unit (`1000` is $10.00). |
+| `chargeId` | Refund a specific payment (`ch_...`) instead of the latest one. |
+| `reason` | `requested_by_customer` (default), `duplicate` or `fraudulent`. |
+| `cancelSubscription` | `true` also ends the subscription now. |
+| `requestId` | Any text. Only needed for a second refund of the same amount on the same payment within 24 hours. |
+
+Running the same command twice sends the money once: Stripe gets the same idempotency key and returns the first refund.
