@@ -583,7 +583,8 @@ const schema = defineSchema({
     })
         .index("by_recipient", ["recipientId"])
         .index("by_workspace_recipient", ["workspaceId", "recipientId"])
-        .index("by_recipient_read", ["recipientId", "read"]),
+        .index("by_recipient_read", ["recipientId", "read"])
+        .index("by_recipient_read_type", ["recipientId", "read", "type"]),
 });
 
 export default schema;

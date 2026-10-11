@@ -87,10 +87,18 @@ export const get = query({
             .order("desc")
             .take(500)
 
+        // a few people wrote most pages: look each creator up once, not once per page
+        const creators = new Map<string, Promise<{ creator: Doc<"members">; user: Doc<"users"> | null } | null>>()
+        const creatorOf = (id: Id<"members">) => {
+            if (!creators.has(id)) creators.set(id, (async () => {
+                const creator = await ctx.db.get(id)
+                return creator ? { creator, user: await ctx.db.get(creator.userId) } : null
+            })())
+            return creators.get(id)!
+        }
         return await Promise.all(docs.filter((d) => !d.deletedAt).map(async (doc) => {
-            const creator = await ctx.db.get(doc.createdBy)
-            const creatorUser = creator ? await ctx.db.get(creator.userId) : null
-            return { ...doc, creator: creator ? { ...creator, user: creatorUser } : null }
+            const found = await creatorOf(doc.createdBy)
+            return { ...doc, creator: found ? { ...found.creator, user: found.user } : null }
         }))
     }
 })

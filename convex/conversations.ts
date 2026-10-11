@@ -94,8 +94,8 @@ export const getAll = query({
         // unread DM counts in one query, grouped here (instead of one query per conversation)
         const unreadDms = await ctx.db
             .query("notifications")
-            .withIndex("by_recipient_read", (q) => q.eq("recipientId", member._id).eq("read", false))
-            .take(1000)
+            .withIndex("by_recipient_read_type", (q) => q.eq("recipientId", member._id).eq("read", false).eq("type", "dm_received"))
+            .take(500)
         const unreadByConversation = new Map<string, number>()
         for (const n of unreadDms) {
             if (n.type === "dm_received" && n.conversationId) {
