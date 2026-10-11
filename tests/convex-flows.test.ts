@@ -209,3 +209,50 @@ describe("plan limits", () => {
     expect(await t.run((c) => c.db.query("channels").collect())).toHaveLength(6)
   })
 })
+
+describe("thread summaries", () => {
+  const post = (t: ReturnType<typeof convexTest>, u: Id<"users">, ids: Ids, text: string, parentMessageId?: Id<"messages">) =>
+    asUser(t, u).mutation(api.messages.create, { workspaceId: ids.ws, channelId: parentMessageId ? undefined : ids.general, parentMessageId, body: delta(text) })
+  const top = async (t: ReturnType<typeof convexTest>, ids: Ids) => (await list(t, ids.bob, ids.general)).page[0]
+
+  it("keeps count and last replier on the parent as replies come and go", async () => {
+    const { t, ids } = await setup()
+    const parent = await post(t, ids.alice, ids, "question")
+    expect((await top(t, ids)).threadCount).toBe(0)
+    await post(t, ids.bob, ids, "r1", parent)
+    const r2 = await post(t, ids.owner, ids, "r2", parent)
+    let m = await top(t, ids)
+    expect(m.threadCount).toBe(2)
+    expect(m.threadName).toBe("Olivia Owner")
+    await asUser(t, ids.owner).mutation(api.messages.remove, { id: r2 })
+    m = await top(t, ids)
+    expect(m.threadCount).toBe(1)
+    expect(m.threadName).toBe("Bob Member")
+  })
+
+  it("counts a thread from before summaries existed, then keeps it right", async () => {
+    const { t, ids } = await setup()
+    const parent = await post(t, ids.alice, ids, "old")
+    await t.run(async (c) => {
+      for (let i = 0; i < 3; i++) await c.db.insert("messages", { memberId: ids.bobM, body: delta("x"), workspaceId: ids.ws, parentMessagesId: parent })
+    })
+    expect((await top(t, ids)).threadCount).toBe(3) // slow path
+    await t.mutation(internal.maintenance.backfillThreads, {})
+    expect((await t.run((c) => c.db.get(parent)))?.threadCount).toBe(3)
+    await post(t, ids.owner, ids, "new", parent)
+    expect((await top(t, ids)).threadCount).toBe(4)
+  })
+
+  it("groups reactions per emoji", async () => {
+    const { t, ids } = await setup()
+    const id = await post(t, ids.alice, ids, "hi")
+    await t.run(async (c) => {
+      await c.db.insert("reactions", { workspaceId: ids.ws, messageId: id, memberId: ids.aliceM, value: "👍" })
+      await c.db.insert("reactions", { workspaceId: ids.ws, messageId: id, memberId: ids.bobM, value: "👍" })
+      await c.db.insert("reactions", { workspaceId: ids.ws, messageId: id, memberId: ids.bobM, value: "🎉" })
+    })
+    const r = (await top(t, ids)).reactions
+    expect(r.find((x) => x.value === "👍")?.count).toBe(2)
+    expect(r).toHaveLength(2)
+  })
+})

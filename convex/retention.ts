@@ -1,6 +1,7 @@
 import { internalMutation } from "./_generated/server"
 import { internal } from "./_generated/api"
 import { release } from "./files"
+import { noteReplyRemoved } from "./messageHelpers"
 
 const BATCH = 200
 
@@ -18,6 +19,7 @@ export const purgeExpired = internalMutation({
             const reactions = await ctx.db.query("reactions").withIndex("by_message_id", (q) => q.eq("messageId", m._id)).take(500)
             for (const r of reactions) await ctx.db.delete(r._id)
             await ctx.db.delete(m._id)
+            await noteReplyRemoved(ctx, m)
         }
         if (messages.length === BATCH) more = true
 

@@ -209,6 +209,12 @@ const schema = defineSchema({
         removedAuthor: v.optional(v.object({ name: v.string(), image: v.optional(v.string()) })),
         // when a removed author's message is erased (Free plan: 90 days after they left). Unset on paid plans, which keep full history.
         retainUntil: v.optional(v.number()),
+        // Summary of this message's thread, kept up to date as replies come and go, so listing a channel reads one
+        // document per message instead of up to 200 replies. Unset on messages with no thread and on threads created
+        // before this existed (those are counted the old way until maintenance.backfillThreads has run).
+        threadCount: v.optional(v.number()),
+        threadLastAt: v.optional(v.number()),
+        threadLastMemberId: v.optional(v.id("members")),
     })
         .index("byWorkspaceId", ["workspaceId"])
         .index("by_member_id", ["memberId"])
@@ -491,6 +497,8 @@ const schema = defineSchema({
         .index("by_workspace_id", ["workspaceId"])
         .index("by_room_id", ["liveblocksRoomId"])
         .index("by_parent_id", ["parentId"])
+        // top-level pages of a workspace, found directly instead of by scanning every page and filtering
+        .index("by_workspace_parent", ["workspaceId", "parentId"])
         .index("by_deleted_at", ["deletedAt"]),
 
     // pages a member starred

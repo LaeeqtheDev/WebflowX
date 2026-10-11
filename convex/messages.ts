@@ -13,7 +13,7 @@ import { emit } from "./integrations";
 import { historyCutoff } from "./limits";
 
 import {
-  extractMentionIds, notifyMentions, populateUser, populateMember, populateReactions, populateThread, getMember, deleteMessageCascade, formerAuthor, authorLabel,
+  extractMentionIds, notifyMentions, populateUser, populateMember, populateReactions, groupReactions, noteReplyAdded, populateThread, getMember, deleteMessageCascade, formerAuthor, authorLabel,
 } from "./messageHelpers";
 
 export { getMember, deleteMessageCascade };
@@ -84,16 +84,17 @@ export const get = query({
         // Free workspaces only see the last 90 days
         const cutoff = allowed && ownerWorkspaceId ? historyCutoff((await ctx.db.get(ownerWorkspaceId))?.plan) : null;
 
-        let listing = ctx.db
+        // the cutoff is part of the index range, so old messages are never read (a .filter would still read them)
+        const listing = ctx.db
             .query("messages")
-            .withIndex("by_channel_id_parent_message_id_conversation_id", (q) =>
-                q
+            .withIndex("by_channel_id_parent_message_id_conversation_id", (q) => {
+                const base = q
                     .eq("channelId", args.channelId)
                     .eq("parentMessagesId", args.parentMessageId)
-                    .eq("conversationId", _conversationId)
-            )
+                    .eq("conversationId", _conversationId);
+                return cutoff !== null ? base.gte("_creationTime", cutoff) : base;
+            })
             .order("desc");
-        if (cutoff !== null) listing = listing.filter((q) => q.gte(q.field("_creationTime"), cutoff));
 
         const results: PaginationResult<Doc<"messages">> = allowed
             ? await listing.paginate(args.paginationOpts)
@@ -117,7 +118,7 @@ export const get = query({
                         if (!member || !user) return null;
 
                         const reactions = await populateReactions(ctx, message._id);
-                        const thread = await populateThread(ctx, message._id);
+                        const thread = await populateThread(ctx, message._id, message);
                         const image = message.image
                             ? await ctx.storage.getUrl(message.image)
                             : undefined;
@@ -126,35 +127,6 @@ export const get = query({
                         const fileUrl = message.file
                             ? await ctx.storage.getUrl(message.file)
                             : undefined;
-
-                        const reactionsWithCount = reactions.map((reaction) => ({
-                            ...reaction,
-                            count: reactions.filter((r) => r.value === reaction.value)
-                                .length,
-                        }));
-
-                        const dedupedReactions = reactionsWithCount.reduce(
-                            (acc, reaction) => {
-                                const existingReaction = acc.find(
-                                    (r) => r.value === reaction.value
-                                );
-                                if (existingReaction) {
-                                    existingReaction.memberIds = Array.from(
-                                        new Set([
-                                            ...existingReaction.memberIds,
-                                            reaction.memberId,
-                                        ])
-                                    );
-                                } else {
-                                    acc.push({ ...reaction, memberIds: [reaction.memberId] });
-                                }
-                                return acc;
-                            },
-                            [] as (Doc<"reactions"> & {
-                                count: number;
-                                memberIds: Id<"members">[];
-                            })[]
-                        );
 
                         return {
                             ...message,
@@ -166,9 +138,7 @@ export const get = query({
                             member,
                             // integrations post under their own name
                             user: message.integrationName ? { ...user, name: message.integrationName, image: undefined } : user,
-                            reactions: dedupedReactions.map(
-                                ({ memberId, ...rest }) => rest
-                            ),
+                            reactions: groupReactions(reactions),
                             threadCount: thread.count,
                             threadImage: thread.image,
                             threadName: thread.name,
@@ -272,6 +242,10 @@ export const create = mutation({
             conversationId: _conversationId,
             parentMessagesId: args.parentMessageId,
         });
+        if (args.parentMessageId) {
+            const created = await ctx.db.get(messageId);
+            if (created) await noteReplyAdded(ctx, args.parentMessageId, created);
+        }
 
         // the Files page lists these
         if (args.image) {
@@ -454,28 +428,6 @@ export const getById = query({
             ? await ctx.storage.getUrl(message.file)
             : undefined;
 
-        const reactionsWithCount = reactions.map((reaction) => ({
-            ...reaction,
-            count: reactions.filter((r) => r.value === reaction.value).length,
-        }));
-
-        const dedupedReactions = reactionsWithCount.reduce(
-            (acc, reaction) => {
-                const existingReaction = acc.find(
-                    (r) => r.value === reaction.value
-                );
-                if (existingReaction) {
-                    existingReaction.memberIds = Array.from(
-                        new Set([...existingReaction.memberIds, reaction.memberId])
-                    );
-                } else {
-                    acc.push({ ...reaction, memberIds: [reaction.memberId] });
-                }
-                return acc;
-            },
-            [] as (Doc<"reactions"> & { count: number; memberIds: Id<"members">[] })[]
-        );
-
         return {
             ...message,
             image: message.image
@@ -487,7 +439,7 @@ export const getById = query({
             fileSize: message.fileSize,
             user,
             member,
-            reactions: dedupedReactions.map(({ memberId, ...rest }) => rest),
+            reactions: groupReactions(reactions),
         };
     },
 });

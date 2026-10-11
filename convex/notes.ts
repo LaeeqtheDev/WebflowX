@@ -28,10 +28,8 @@ export const get = query({
         if (args.type === "personal") {
             return await ctx.db
                 .query("notes")
-                .withIndex("by_workspace_id_type", (q) =>
-                    q.eq("workspaceId", args.workspaceId).eq("type", "personal")
-                )
-                .filter((q) => q.eq(q.field("authorId"), member._id))
+                .withIndex("by_author_id_type", (q) => q.eq("authorId", member._id).eq("type", "personal"))
+                .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
                 .take(500)
         }
 

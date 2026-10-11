@@ -55,7 +55,7 @@ const depthOf = async (ctx: QueryCtx, id: Id<"docs"> | undefined): Promise<numbe
 const siblingsOf = async (ctx: QueryCtx, workspaceId: Id<"workspaces">, parentId: Id<"docs"> | undefined) => {
     const rows = parentId
         ? await ctx.db.query("docs").withIndex("by_parent_id", (q) => q.eq("parentId", parentId)).take(500)
-        : await ctx.db.query("docs").withIndex("by_workspace_id", (q) => q.eq("workspaceId", workspaceId)).filter((q) => q.eq(q.field("parentId"), undefined)).take(MAX_TREE)
+        : await ctx.db.query("docs").withIndex("by_workspace_parent", (q) => q.eq("workspaceId", workspaceId).eq("parentId", undefined)).take(MAX_TREE)
     return rows.filter((d) => !d.deletedAt).sort((a, b) => effPos(a) - effPos(b))
 }
 

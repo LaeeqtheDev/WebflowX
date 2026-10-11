@@ -100,11 +100,100 @@ export const populateReactions = (ctx: QueryCtx, messageId: Id<"messages">) => {
     return ctx.db
         .query("reactions")
         .withIndex("by_message_id", (q) => q.eq("messageId", messageId))
-        .collect();
+        .take(500);
 };
 
-export const populateThread = async (ctx: QueryCtx, messageId: Id<"messages">) => {
-    // newest reply first; the count is capped so a huge thread can't make every list load slow
+// One entry per emoji with how many reacted and who (the shape the UI expects), in one pass.
+export const groupReactions = (reactions: Doc<"reactions">[]) => {
+    const byValue = new Map<string, Doc<"reactions"> & { count: number; memberIds: Id<"members">[] }>();
+    for (const r of reactions) {
+        const { memberId: _m, ...rest } = r;
+        const hit = byValue.get(r.value);
+        if (hit) {
+            hit.count += 1;
+            if (!hit.memberIds.includes(r.memberId)) hit.memberIds.push(r.memberId);
+        } else {
+            byValue.set(r.value, { ...rest, memberId: r.memberId, count: 1, memberIds: [r.memberId] } as never);
+        }
+    }
+    return Array.from(byValue.values()).map(({ memberId: _x, ...rest }) => rest);
+};
+
+// Most replies counted when a thread has to be counted the slow way (threads without a stored summary).
+const THREAD_COUNT_CAP = 2000;
+
+// Call after a reply has been inserted: keeps the thread summary on its parent message current.
+export const noteReplyAdded = async (
+    ctx: MutationCtx,
+    parentId: Id<"messages">,
+    reply: Pick<Doc<"messages">, "memberId" | "_creationTime">
+) => {
+    const parent = await ctx.db.get(parentId);
+    if (!parent) return;
+    let count: number;
+    if (parent.threadCount === undefined) {
+        // a thread from before summaries existed (or its first reply): count what is there, including this reply
+        const rows = await ctx.db
+            .query("messages")
+            .withIndex("by_parent_message_id", (q) => q.eq("parentMessagesId", parentId))
+            .take(THREAD_COUNT_CAP);
+        count = rows.length;
+    } else {
+        count = parent.threadCount + 1;
+    }
+    await ctx.db.patch(parentId, { threadCount: count, threadLastAt: reply._creationTime, threadLastMemberId: reply.memberId });
+};
+
+// Call after a reply has been deleted (on its own, not because its parent went too).
+export const noteReplyRemoved = async (ctx: MutationCtx, reply: Doc<"messages">) => {
+    if (!reply.parentMessagesId) return;
+    const parent = await ctx.db.get(reply.parentMessagesId);
+    if (!parent || parent.threadCount === undefined) return; // no summary to keep right
+    const count = Math.max(0, parent.threadCount - 1);
+    if (count === 0) {
+        await ctx.db.patch(parent._id, { threadCount: 0, threadLastAt: undefined, threadLastMemberId: undefined });
+        return;
+    }
+    if (parent.threadLastAt !== undefined && reply._creationTime < parent.threadLastAt) {
+        await ctx.db.patch(parent._id, { threadCount: count });
+        return;
+    }
+    // the newest reply is the one that went: find the new newest
+    const last = await ctx.db
+        .query("messages")
+        .withIndex("by_parent_message_id", (q) => q.eq("parentMessagesId", parent._id))
+        .order("desc")
+        .first();
+    await ctx.db.patch(parent._id, { threadCount: count, threadLastAt: last?._creationTime, threadLastMemberId: last?.memberId });
+};
+
+const NO_THREAD = { count: 0, image: undefined, timestamp: 0, name: "" };
+
+export const populateThread = async (ctx: QueryCtx, messageId: Id<"messages">, parent?: Doc<"messages">) => {
+    const message = parent ?? (await ctx.db.get(messageId));
+
+    // Fast path: the parent carries its own summary, so this is the parent plus the last replier (two small reads),
+    // not up to 200 whole replies.
+    if (message && message.threadCount !== undefined) {
+        if (message.threadCount === 0 || message.threadLastAt === undefined) return NO_THREAD;
+        const replier = message.threadLastMemberId ? await populateMember(ctx, message.threadLastMemberId) : null;
+        const replierUser = replier ? await populateUser(ctx, replier.userId) : null;
+        if (replierUser) {
+            return { count: message.threadCount, image: replierUser.image, timestamp: message.threadLastAt, name: replierUser.name };
+        }
+        // the last person to reply has since left: their messages carry the name they had
+        const lastReply = await ctx.db
+            .query("messages")
+            .withIndex("by_parent_message_id", (q) => q.eq("parentMessagesId", messageId))
+            .order("desc")
+            .first();
+        const former = lastReply ? formerAuthor(lastReply) : null;
+        if (!lastReply || !former) return NO_THREAD;
+        return { count: message.threadCount, image: former.user.image, timestamp: lastReply._creationTime, name: former.user.name };
+    }
+
+    // Slow path (threads without a summary): newest reply first; the count is capped so a huge thread can't make
+    // every list load slow
     const recent = await ctx.db
         .query("messages")
         .withIndex("by_parent_message_id", (q) =>
@@ -114,7 +203,7 @@ export const populateThread = async (ctx: QueryCtx, messageId: Id<"messages">) =
         .take(200);
 
     if (recent.length === 0) {
-        return { count: 0, image: undefined, timestamp: 0, name: "" };
+        return NO_THREAD;
     }
 
     const lastMessage = recent[0];
@@ -122,7 +211,7 @@ export const populateThread = async (ctx: QueryCtx, messageId: Id<"messages">) =
 
     if (!lastMessageMember) {
         const former = formerAuthor(lastMessage);
-        if (!former) return { count: 0, image: undefined, timestamp: 0, name: "" };
+        if (!former) return NO_THREAD;
         return { count: recent.length, image: former.user.image, timestamp: lastMessage._creationTime, name: former.user.name };
     }
 
@@ -154,7 +243,9 @@ export const getMember = async (
 // Deletes a message together with its reactions, thread replies and stored files.
 export const deleteMessageCascade = async (
     ctx: MutationCtx,
-    message: Doc<"messages">
+    message: Doc<"messages">,
+    // true when this is a reply being removed because its parent is being removed: nothing to keep right on the parent
+    parentGoing = false
 ) => {
     const replies = await ctx.db
         .query("messages")
@@ -163,7 +254,7 @@ export const deleteMessageCascade = async (
         )
         .take(500);
     for (const reply of replies) {
-        await deleteMessageCascade(ctx, reply);
+        await deleteMessageCascade(ctx, reply, true);
     }
 
     const reactions = await ctx.db
@@ -185,6 +276,7 @@ export const deleteMessageCascade = async (
     }
 
     await ctx.db.delete(message._id);
+    if (!parentGoing) await noteReplyRemoved(ctx, message);
 };
 
 // A message whose author has left: show it under the name and photo they had, marked as a former member.
