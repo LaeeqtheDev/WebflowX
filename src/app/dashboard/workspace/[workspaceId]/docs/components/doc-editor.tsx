@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useEditor, EditorContent, Extension } from "@tiptap/react"
-import { yCursorPlugin } from "@tiptap/y-tiptap"
+import { yCursorPlugin, ySyncPluginKey } from "@tiptap/y-tiptap"
 import type { Awareness } from "y-protocols/awareness"
 import { useDocImageUpload } from "./use-doc-image-upload"
 import StarterKit from "@tiptap/starter-kit"
@@ -25,14 +25,10 @@ import { templateHtml } from "./templates"
 import { DocToolbar } from "./doc-toolbar"
 import { SlashMenu } from "./slash-menu"
 import { Callout } from "./callout"
+import { DocHero, HeroChip, type DocHeroProps } from "./doc-hero"
+import { PresenceAvatars, foldPeople, initialsOf, inkOn, jumpToPerson, safeColor, typingLabel, type ClientInfo, type DocPerson } from "./presence"
 import type { LiveblocksYjsProvider } from "@liveblocks/yjs"
 import type * as Y from "yjs"
-
-interface DocOther {
-    name: string
-    color: string
-    avatar: string
-}
 
 type ConnStatus = "initial" | "connecting" | "connected" | "reconnecting" | "disconnected"
 
@@ -49,26 +45,84 @@ interface DocEditorProps {
     userName: string
     userColor: string
     userAvatar?: string
-    onOthersChange?: (others: DocOther[]) => void
+    // cover, icon and the big title above the page body (full pages only)
+    hero?: DocHeroProps & { notes?: string[] }
+    // everyone with the page open, you last; the page header shows them as a stack of faces
+    onPresenceChange?: (people: DocPerson[]) => void
 }
 
-// Shows other people's carets and selections (name label in their colour)
-const cursorBuilder = (user: { name?: string; color?: string }) => {
-    const caret = document.createElement("span")
-    caret.className = "collab-caret"
-    caret.style.borderColor = user.color ?? "#ff5018"
-    const label = document.createElement("div")
-    label.className = "collab-caret__label"
-    label.style.backgroundColor = user.color ?? "#ff5018"
-    label.textContent = user.name ?? "Someone"
-    caret.append(label)
-    return caret
+// A name tag opens while its owner is moving or typing, then folds down to just their face so it
+// stays out of the way of the text. Kept here (not on the element) because the editor may redraw a caret.
+const TAG_OPEN_MS = 3500
+const openUntil = new Map<number, number>()
+const closeTimers = new Map<number, ReturnType<typeof setTimeout>>()
+const caretOf = (root: ParentNode, clientId: number) => root.querySelector<HTMLElement>(`.collab-caret[data-client="${clientId}"]`)
+// near the right edge the tag hangs to the left of the caret instead, so it never runs off the page
+const placeTag = (caret: HTMLElement) => {
+    const page = caret.closest(".ProseMirror")
+    if (page) caret.classList.toggle("collab-caret--flip", page.getBoundingClientRect().right - caret.getBoundingClientRect().left < 190)
 }
-const makeCaretExtension = (awareness: Awareness) =>
+const wakeCaret = (root: ParentNode, clientId: number) => {
+    openUntil.set(clientId, Date.now() + TAG_OPEN_MS)
+    const caret = caretOf(root, clientId)
+    if (caret) { caret.classList.add("is-active"); placeTag(caret) }
+    clearTimeout(closeTimers.get(clientId))
+    closeTimers.set(clientId, setTimeout(() => {
+        closeTimers.delete(clientId)
+        openUntil.delete(clientId)
+        caretOf(root, clientId)?.classList.remove("is-active")
+    }, TAG_OPEN_MS))
+}
+
+// Other people's carets: a line in their colour with a name tag (face + name) hanging off it.
+const makeCursorBuilder = (lookup: (clientId: number) => ClientInfo | undefined) =>
+    (user: { name?: string; color?: string }, clientId: number) => {
+        const color = safeColor(user.color)
+        const who = lookup(clientId)
+        const name = who?.name || user.name || "Someone"
+
+        const caret = document.createElement("span")
+        caret.className = (openUntil.get(clientId) ?? 0) > Date.now() ? "collab-caret is-active" : "collab-caret"
+        caret.dataset.client = String(clientId)
+        caret.style.setProperty("--who", color)
+        caret.style.setProperty("--who-ink", inkOn(color))
+
+        const label = document.createElement("span")
+        label.className = "collab-caret__label"
+
+        const face = document.createElement("span")
+        face.className = "collab-caret__face"
+        face.textContent = initialsOf(name).slice(0, 1)
+        // data saver shows the initial instead of downloading the photo
+        if (who?.avatar && document.documentElement.dataset.lowdata !== "1") {
+            const img = document.createElement("img")
+            img.alt = ""
+            img.draggable = false
+            img.referrerPolicy = "no-referrer"
+            img.onerror = () => img.remove()
+            img.src = who.avatar
+            face.append(img)
+        }
+
+        const text = document.createElement("span")
+        text.className = "collab-caret__name"
+        text.textContent = name
+
+        label.append(face, text)
+        caret.append(label)
+        // it can only be measured once the editor has put it on the page
+        requestAnimationFrame(() => placeTag(caret))
+        return caret
+    }
+const selectionBuilder = (user: { color?: string }) => ({
+    class: "collab-selection",
+    style: `background-color: color-mix(in srgb, ${safeColor(user.color)} 24%, transparent)`,
+})
+const makeCaretExtension = (awareness: Awareness, lookup: (clientId: number) => ClientInfo | undefined) =>
     Extension.create({
         name: "collabCaret",
         addProseMirrorPlugins() {
-            return [yCursorPlugin(awareness, { cursorBuilder })]
+            return [yCursorPlugin(awareness, { cursorBuilder: makeCursorBuilder(lookup), selectionBuilder })]
         },
     })
 
@@ -77,7 +131,7 @@ const makeCaretExtension = (awareness: Awareness) =>
 let openDocs = 0
 const removeBadge = () => { if (openDocs === 0) document.getElementById("liveblocks-badge")?.remove() }
 
-const EditorInner = ({
+export const EditorInner = ({
     ydoc,
     awareness,
     userName,
@@ -89,6 +143,9 @@ const EditorInner = ({
     template,
     onTemplateUsed,
     status,
+    lookup,
+    hero,
+    people,
 }: {
     ydoc: Y.Doc
     awareness: Awareness
@@ -101,6 +158,9 @@ const EditorInner = ({
     template?: string | null
     onTemplateUsed?: () => void
     status: ConnStatus
+    lookup: (clientId: number) => ClientInfo | undefined
+    hero?: DocHeroProps & { notes?: string[] }
+    people: DocPerson[]
 }) => {
     const touch = useMutation(api.docs.touch)
     const touchRow = useMutation(api.databases.touchRow)
@@ -115,6 +175,36 @@ const EditorInner = ({
     useEffect(() => {
         awareness.setLocalStateField("user", { name: userName, color: userColor })
     }, [awareness, userName, userColor])
+
+    // open someone's name tag whenever they move or type
+    useEffect(() => {
+        const onChange = ({ added, updated }: { added: number[]; updated: number[] }) => {
+            const ids = [...added, ...updated].filter((id) => id !== awareness.doc.clientID)
+            if (!ids.length) return
+            // wait for the editor to draw the carets for this change
+            requestAnimationFrame(() => {
+                const root = editorRef.current?.view.dom
+                if (root) ids.forEach((id) => wakeCaret(root, id))
+            })
+        }
+        awareness.on("change", onChange)
+        return () => { awareness.off("change", onChange) }
+    }, [awareness])
+
+    // "typing" goes out once when you start and once when you pause, not on every key
+    const typing = useRef(false)
+    const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const markTyping = () => {
+        if (!typing.current) {
+            typing.current = true
+            awareness.setLocalStateField("activity", { typing: true })
+        }
+        if (typingTimer.current) clearTimeout(typingTimer.current)
+        typingTimer.current = setTimeout(() => {
+            typing.current = false
+            awareness.setLocalStateField("activity", { typing: false })
+        }, 1600)
+    }
 
     const insertImages = (files: File[]) => {
         files.forEach(async (file) => {
@@ -141,7 +231,7 @@ const EditorInner = ({
                 },
             }),
             Collaboration.configure({ document: ydoc }),
-            makeCaretExtension(awareness),
+            makeCaretExtension(awareness, lookup),
             Image,
             Table.configure({ resizable: false }),
             TableRow,
@@ -155,8 +245,12 @@ const EditorInner = ({
             Color,
             Callout,
         ],
-        onUpdate: ({ editor: ed }) => {
+        onUpdate: ({ editor: ed, transaction }) => {
             setWords(ed.getText().trim().split(/\s+/).filter(Boolean).length)
+            // someone else's edit arriving is not you typing, and must not mark the page as edited by you
+            const sync = transaction.getMeta(ySyncPluginKey) as { isChangeOrigin?: boolean; isUndoRedoOperation?: boolean } | undefined
+            if (sync?.isChangeOrigin && !sync.isUndoRedoOperation) return
+            markTyping()
             if (touchTimer.current) clearTimeout(touchTimer.current)
             touchTimer.current = setTimeout(() => { (rowId ? touchRow({ rowId }) : docId ? touch({ id: docId }) : Promise.resolve()).catch(() => undefined) }, 4000)
         },
@@ -179,23 +273,31 @@ const EditorInner = ({
                 return true
             },
             attributes: {
-                class: compact ? "wfx-doc outline-none min-h-[240px] px-6 py-5 max-w-none focus:outline-none" : "wfx-doc outline-none min-h-[calc(100vh-200px)] px-6 py-10 sm:px-16 sm:py-14 max-w-none focus:outline-none"
+                class: compact ? "wfx-doc outline-none min-h-[240px] px-6 py-5 max-w-none focus:outline-none" : "wfx-doc wfx-doc--page outline-none min-h-[50vh] pt-6 pb-40 max-w-none focus:outline-none"
             }
         }
     })
 
     useEffect(() => { editorRef.current = editor }, [editor])
 
-    useEffect(() => () => { if (touchTimer.current) clearTimeout(touchTimer.current) }, [])
+    useEffect(() => () => {
+        if (touchTimer.current) clearTimeout(touchTimer.current)
+        if (typingTimer.current) clearTimeout(typingTimer.current)
+    }, [])
 
     // New doc from a template: fill it once, only if nobody has written anything yet
     useEffect(() => {
         if (!editor || !template || templateApplied.current) return
         templateApplied.current = true
-        const html = template === "custom" ? (customHtml ?? "") : templateHtml(template)
+        let html = template === "custom" ? (customHtml ?? "") : templateHtml(template)
+        // the page title already sits above the body, so the built-in templates don't repeat it as a heading
+        if (hero && template !== "custom") html = html.replace(/^<h1>[^<]*<\/h1>/, "")
         if (html && editor.isEmpty) editor.commands.setContent(html)
         onTemplateUsed?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [editor, template, customHtml, onTemplateUsed])
+
+    const minutes = Math.max(1, Math.ceil(words / 200))
 
     return (
         <div className="flex flex-col flex-1 min-h-0">
@@ -204,15 +306,46 @@ const EditorInner = ({
                     <DocToolbar editor={editor} />
                 </div>
             )}
-            <div className={compact ? "flex-1 overflow-y-auto bg-cream-soft p-3" : "flex-1 overflow-y-auto bg-cream-soft py-6 sm:py-10 px-3 sm:px-6"}>
-                <div className={compact ? "bg-surface rounded-xl border border-plum/12" : "max-w-[52rem] mx-auto bg-surface rounded-2xl shadow-[0_1px_2px_rgba(56,29,42,0.05),0_8px_32px_-12px_rgba(56,29,42,0.12)] border border-plum/10 min-h-[calc(100vh-200px)]"}>
-                    <EditorContent editor={editor} />
-                    {editor && <SlashMenu editor={editor} onImages={insertImages} />}
+            {compact ? (
+                <div className="flex-1 overflow-y-auto bg-cream-soft p-3">
+                    <div className="bg-surface rounded-xl border border-plum/12">
+                        <EditorContent editor={editor} />
+                        {editor && <SlashMenu editor={editor} onImages={insertImages} />}
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <div className="flex-1 overflow-y-auto bg-surface">
+                    {hero && (
+                        <DocHero
+                            ydoc={ydoc}
+                            title={hero.title}
+                            icon={hero.icon}
+                            onRename={hero.onRename}
+                            onIconChange={hero.onIconChange}
+                            onLeaveTitle={() => editor?.commands.focus("start")}
+                            chips={
+                                <>
+                                    {people.length > 1 && (
+                                        <HeroChip live>
+                                            <span className="wfx-live-dot" aria-hidden="true" />
+                                            {people.length} people here
+                                        </HeroChip>
+                                    )}
+                                    {hero.notes?.map((n) => <HeroChip key={n}>{n}</HeroChip>)}
+                                    {words > 0 && <HeroChip>{words.toLocaleString()} word{words === 1 ? "" : "s"} · {minutes} min read</HeroChip>}
+                                </>
+                            }
+                        />
+                    )}
+                    <div className="mx-auto w-full max-w-[46rem] px-5 sm:px-10">
+                        <EditorContent editor={editor} />
+                        {editor && <SlashMenu editor={editor} onImages={insertImages} />}
+                    </div>
+                </div>
+            )}
             <div className="flex items-center justify-between gap-3 border-t border-plum/12 bg-surface px-4 py-1.5 text-[11px] text-ink/60 shrink-0">
-                <span>{words} word{words === 1 ? "" : "s"} · {Math.max(1, Math.ceil(words / 200))} min read</span>
-                <span className="flex items-center gap-1.5">
+                <span className="truncate">{hero ? "Type / to add a block" : `${words} word${words === 1 ? "" : "s"} · ${minutes} min read`}</span>
+                <span className="flex shrink-0 items-center gap-1.5">
                     {status === "connected" ? (
                         <><Cloud className="size-3.5 text-emerald-600 dark:text-emerald-400" /> Saved</>
                     ) : status === "disconnected" ? (
@@ -227,11 +360,15 @@ const EditorInner = ({
 }
 
 export const DocEditor = ({
-    docId, rowId, compact, customHtml, template, onTemplateUsed, roomId, userId, userName, userColor, userAvatar, onOthersChange
+    docId, rowId, compact, customHtml, template, onTemplateUsed, roomId, userName, userColor, userAvatar, hero, onPresenceChange
 }: DocEditorProps) => {
     const [provider, setProvider] = useState<LiveblocksYjsProvider | null>(null)
     const [ydoc, setYdoc] = useState<Y.Doc | null>(null)
-    const [others, setOthers] = useState<DocOther[]>([])
+    const [others, setOthers] = useState<DocPerson[]>([])
+    const [selfId, setSelfId] = useState("self")
+    // open tab -> who it is, read by the caret labels
+    const clients = useRef(new Map<number, ClientInfo>())
+    const lookup = useCallback((clientId: number) => clients.current.get(clientId), [])
     const [status, setStatus] = useState<ConnStatus>("connecting")
     const [failed, setFailed] = useState(false)
     const [attempt, setAttempt] = useState(0)
@@ -263,17 +400,20 @@ export const DocEditor = ({
 
                 const { room, leave } = client.enterRoom(roomId)
                 leaveRoom = leave
-                room.subscribe("status", (st) => { if (mounted) setStatus(st as ConnStatus) })
-
-                room.subscribe("others", (roomOthers) => {
-                    const activeOthers: DocOther[] = roomOthers.map((o) => ({
-                        name: ((o.presence as Record<string, unknown> | undefined)?.name ?? (o.info as Record<string, unknown> | undefined)?.name ?? "Anonymous") as string,
-                        color: ((o.presence as Record<string, unknown> | undefined)?.color ?? (o.info as Record<string, unknown> | undefined)?.color ?? "#ff5018") as string,
-                        avatar: ((o.info as Record<string, unknown> | undefined)?.avatar ?? "") as string,
-                    }))
-                    setOthers(activeOthers)
-                    onOthersChange?.(activeOthers)
-                })
+                // carets move constantly; only re-render when who is here (or who is typing) changes
+                let seen = ""
+                const readPeople = () => {
+                    const me = room.getSelf()?.id ?? null
+                    const next = foldPeople(room.getOthers(), me, clients.current)
+                    const sig = `${me}|` + next.map((p) => `${p.id}:${p.name}:${p.color}:${p.avatar}:${p.typing}:${p.clientIds.join(",")}`).join("|")
+                    if (sig === seen || !mounted) return
+                    seen = sig
+                    setOthers(next)
+                    if (me) setSelfId(me)
+                }
+                room.subscribe("others", readPeople)
+                // who "you" are is only known once connected
+                room.subscribe("status", (st) => { if (mounted) setStatus(st as ConnStatus); readPeople() })
 
                 const doc = new Y.Doc()
                 const createdProvider = new LiveblocksYjsProvider(room, doc)
@@ -308,8 +448,17 @@ export const DocEditor = ({
             // the badge can be injected a moment after connecting, so check again shortly after leaving
             setTimeout(removeBadge, 1500)
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [roomId, attempt])
+
+    const people = useMemo<DocPerson[]>(
+        () => [...others, { id: selfId, name: userName, avatar: userAvatar ?? "", color: safeColor(userColor), typing: false, self: true, clientIds: [] }],
+        [others, selfId, userName, userAvatar, userColor],
+    )
+    const notify = useRef(onPresenceChange)
+    useEffect(() => { notify.current = onPresenceChange }, [onPresenceChange])
+    useEffect(() => { notify.current?.(people) }, [people])
+    // leaving the page clears the faces in the header
+    useEffect(() => () => { notify.current?.([]) }, [])
 
     if (failed) {
         return (
@@ -350,22 +499,13 @@ export const DocEditor = ({
                         : "You're offline. Changes stay on this device and will sync when the connection returns."}
                 </div>
             )}
-            {/* Also editing bar */}
-            {others.length > 0 && (
-                <div className="flex items-center gap-2 px-4 py-1.5 bg-surface border-b border-plum/12 text-xs shrink-0">
-                    <div className="flex items-center gap-1.5">
-                        <div className="size-1.5 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-ink/60 font-medium">Also editing:</span>
-                    </div>
-                    {others.map((o, i) => (
-                        <div
-                            key={i}
-                            className="flex items-center gap-1 px-2 py-0.5 rounded-md text-white text-[11px] font-medium"
-                            style={{ backgroundColor: o.color }}
-                        >
-                            {o.name}
-                        </div>
-                    ))}
+            {/* Row notes have no page header, so the people on them sit in a slim bar here */}
+            {compact && others.length > 0 && (
+                <div className="flex shrink-0 items-center gap-2.5 border-b border-plum/12 bg-surface px-4 py-1.5 text-xs">
+                    <PresenceAvatars people={others} size="sm" onJump={jumpToPerson} />
+                    <span role="status" className="truncate font-medium text-ink/60">
+                        {typingLabel(others) ?? (others.length === 1 ? `${others[0].name} is here too` : `${others.length} others are here too`)}
+                    </span>
                 </div>
             )}
             <EditorInner
@@ -380,6 +520,9 @@ export const DocEditor = ({
                 template={template}
                 onTemplateUsed={onTemplateUsed}
                 status={status}
+                lookup={lookup}
+                hero={compact ? undefined : hero}
+                people={people}
             />
         </div>
     )

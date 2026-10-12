@@ -16,6 +16,7 @@ import { usePageTree, ancestorsOf } from "@/features/pages/use-page-tree"
 import { PageIcon } from "@/features/pages/page-tree"
 import { IconPicker } from "@/features/pages/page-icons"
 import { useMountOnce } from "@/hooks/use-mount-once"
+import { useIsMobile } from "@/hooks/use-is-mobile"
 
 // The "new page" dialog (and the template catalogue behind it) is fetched the first time it opens.
 const NewPageDialog = dynamic(() => import("@/features/pages/new-page-dialog").then((m) => m.NewPageDialog), { ssr: false })
@@ -29,7 +30,8 @@ import { FileText, Download, Share2, ArrowLeft, Loader, Star, Plus, MoreHorizont
 import { useMutation, useQuery } from "convex/react"
 import { api } from "../../../../../../../convex/_generated/api"
 import { Id } from "../../../../../../../convex/_generated/dataModel"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { PresenceAvatars, jumpToPerson, typingLabel, type DocPerson } from "../components/presence"
 import { Input } from "@/components/ui/input"
 import { useRenameDoc } from "@/features/docs/use-rename-doc"
 import { useGetDocs } from "@/features/docs/use-get-docs"
@@ -50,6 +52,15 @@ const USER_COLORS = [
     "#ff5018", "#3b82f6", "#10b981", "#f59e0b",
     "#8b5cf6", "#ef4444", "#06b6d4", "#ec4899"
 ]
+
+// "just now", "4m ago", "3h ago", then the date
+const editedLabel = (at: number, now: number) => {
+    const mins = Math.floor((now - at) / 60_000)
+    if (mins < 1) return "just now"
+    if (mins < 60) return `${mins}m ago`
+    if (mins < 60 * 24) return `${Math.floor(mins / 60)}h ago`
+    return new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+}
 
 export default function DocPage() {
     const params = useParams()
@@ -82,6 +93,16 @@ export default function DocPage() {
         router.replace(`/dashboard/workspace/${workspaceId}/docs/${docId}`)
     }, [router, workspaceId, docId])
 
+    const isMobile = useIsMobile()
+    // everyone with this page open (you last), reported by the editor
+    const [people, setPeople] = useState<DocPerson[]>([])
+    // keeps "Edited 2m ago" moving while the page sits open
+    const [now, setNow] = useState(() => Date.now())
+    useEffect(() => {
+        const t = setInterval(() => setNow(Date.now()), 30_000)
+        return () => clearInterval(t)
+    }, [])
+
     const [showShareDialog, setShowShareDialog] = useState(false)
     const [shareChannelId, setShareChannelId] = useState("")
 
@@ -98,6 +119,13 @@ export default function DocPage() {
 
     const crumbs = ancestorsOf(byId, doc?._id)
 
+    const renameFromPage = (title: string) => new Promise<boolean>((resolve) => {
+        void renameDoc({ id: docId as Id<"docs">, title }, {
+            onSuccess: () => resolve(true),
+            onError: (e) => { toast.error(friendlyError(e, "Couldn't rename the page")); resolve(false) },
+        })
+    })
+
     const saveTitle = () => {
         const t = titleDraft.trim()
         setEditingTitle(false)
@@ -109,8 +137,11 @@ export default function DocPage() {
         str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 
     const handleDownloadPdf = () => {
-        const content = document.querySelector(".ProseMirror")
-        if (!content) return toast.error("Nothing to download")
+        const live = document.querySelector(".ProseMirror")
+        if (!live) return toast.error("Nothing to download")
+        // other people's carets and name tags are part of the live page, not of the document
+        const content = live.cloneNode(true) as HTMLElement
+        content.querySelectorAll(".collab-caret, .ProseMirror-gapcursor").forEach((n) => n.remove())
 
         const printWindow = window.open("", "_blank")
         if (!printWindow) return
@@ -193,6 +224,8 @@ export default function DocPage() {
         }
     }
 
+    const typing = typingLabel(people)
+
     if (isLoading || !currentMember) {
         return (
             <div className="h-full flex items-center justify-center bg-cream-soft">
@@ -268,8 +301,16 @@ export default function DocPage() {
                             </button>
                         )}
                     </nav>
+                    {doc.type !== "database" && (
+                        <span role="status" className="hidden shrink-0 truncate text-xs text-ink/60 lg:block">
+                            {typing ?? `Edited ${editedLabel(doc.updatedAt ?? doc._creationTime, now)}`}
+                        </span>
+                    )}
                 </div>
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                    {doc.type !== "database" && people.length > 0 && (
+                        <PresenceAvatars people={people} max={isMobile ? 3 : 4} onJump={jumpToPerson} className="mr-1 sm:mr-2" />
+                    )}
                     <Button variant="ghost" size="sm" aria-label={favoriteSet.has(doc._id) ? "Remove from favorites" : "Add to favorites"} aria-pressed={favoriteSet.has(doc._id)}
                         className="h-8 w-8 rounded-lg p-0 hover:bg-cream-deep"
                         onClick={() => toggleFavorite({ id: doc._id }).catch((e) => toast.error(friendlyError(e, "Couldn't update favorites")))}>
@@ -288,6 +329,9 @@ export default function DocPage() {
                                     <LayoutTemplate className="mr-2 size-3.5" /> Save as template
                                 </DropdownMenuItem>
                             )}
+                            {doc.type !== "database" && (
+                                <DropdownMenuItem onClick={handleDownloadPdf}><Download className="mr-2 size-3.5" /> Download as PDF</DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}>
                                 <ArrowLeft className="mr-2 size-3.5" /> All pages
@@ -296,9 +340,9 @@ export default function DocPage() {
                     </DropdownMenu>
                     <DropdownMenu open={showShareDialog} onOpenChange={setShowShareDialog}>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 px-3 rounded-lg border-plum/15 hover:bg-cream-deep">
-                                <Share2 className="size-3 sm:size-3.5" /> 
-                                <span className="hidden xs:inline">Share</span>
+                            <Button size="sm" aria-label="Share to a channel" className="h-8 gap-1.5 rounded-lg bg-brand px-2.5 text-xs font-semibold text-white hover:bg-brand-hover sm:px-3.5">
+                                <Share2 className="size-3.5" />
+                                <span className="hidden sm:inline">Share</span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-52 sm:w-56 p-3 rounded-xl border-plum/12">
@@ -324,16 +368,6 @@ export default function DocPage() {
                             </Button>
                         </DropdownMenuContent>
                     </DropdownMenu>
-
-                    {doc.type !== "database" && <Button
-                        onClick={handleDownloadPdf}
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-xs gap-1.5 px-3 rounded-lg border-plum/15 hover:bg-cream-deep"
-                    >
-                        <Download className="size-3 sm:size-3.5" /> 
-                        <span className="hidden xs:inline">PDF</span>
-                    </Button>}
                 </div>
             </div>
 
@@ -368,6 +402,14 @@ export default function DocPage() {
                         userName={currentUserName}
                         userColor={userColor}
                         userAvatar={currentUserAvatar}
+                        onPresenceChange={setPeople}
+                        hero={{
+                            title: doc.title,
+                            icon: doc.icon ?? null,
+                            onRename: renameFromPage,
+                            onIconChange: (icon) => void setIcon({ id: doc._id, icon }),
+                            notes: doc.creator?.user?.name ? [`Created by ${doc.creator.user.name}`] : undefined,
+                        }}
                     />
                 )}
             </div>

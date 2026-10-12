@@ -329,8 +329,34 @@ body,
 .ProseMirror ul[data-type="taskList"] li > label input { accent-color: var(--wfx-accent); width: 1rem; height: 1rem; cursor: pointer; }
 .ProseMirror ul[data-type="taskList"] li > div { flex: 1; }
 .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div { text-decoration: line-through; color: rgba(27, 16, 23, 0.45); }
-.ProseMirror .collab-caret { position: relative; margin-left: -1px; margin-right: -1px; border-left: 2px solid; border-right: 0; word-break: normal; pointer-events: none; }
-.ProseMirror .collab-caret__label { position: absolute; top: -1.35em; left: -2px; font-size: 11px; font-weight: 600; line-height: 1; white-space: nowrap; color: #fff; padding: 2px 6px; border-radius: 4px 4px 4px 0; user-select: none; }
+/* Live carets: a line in the person's colour with their face and name on a tag above it.
+   --who and --who-ink are set per caret by the editor. */
+.ProseMirror .collab-caret { position: relative; margin-left: -1px; margin-right: -1px; border-left: 2px solid var(--who, var(--wfx-accent)); border-right: 0; word-break: normal; pointer-events: none; }
+.ProseMirror .collab-caret .collab-caret__label { position: absolute; left: -2px; bottom: 100%; z-index: 5; display: inline-flex; align-items: center; height: 22px; padding: 0 3px; border-radius: 999px 999px 999px 3px; background: var(--who, var(--wfx-accent)); color: var(--who-ink, #fff); font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif; font-size: 11.5px; font-weight: 600; font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none; text-decoration: none; white-space: nowrap; user-select: none; box-shadow: 0 0 0 1.5px var(--wfx-surface), 0 4px 10px -3px color-mix(in srgb, var(--who, var(--wfx-accent)) 60%, transparent); transform-origin: 0 100%; }
+.ProseMirror .collab-caret__face { position: relative; display: grid; place-items: center; width: 16px; height: 16px; flex-shrink: 0; overflow: hidden; border-radius: 9999px; background: color-mix(in srgb, var(--who-ink, #fff) 24%, transparent); font-size: 9px; font-weight: 700; }
+.ProseMirror .collab-caret__face img { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; border-radius: 0; object-fit: cover; }
+/* the name shows while its owner is moving or typing (.is-active), then the tag folds down to the face */
+.ProseMirror .collab-caret__name { max-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0; transition: max-width 0.22s ease, margin 0.22s ease, opacity 0.18s ease; }
+.ProseMirror .collab-caret.is-active .collab-caret__name { max-width: 9rem; margin: 0 6px 0 5px; opacity: 1; }
+/* near the right edge the tag hangs to the left of the caret */
+.ProseMirror .collab-caret--flip .collab-caret__label { left: auto; right: -2px; flex-direction: row-reverse; border-radius: 999px 999px 3px 999px; transform-origin: 100% 100%; }
+.ProseMirror .collab-caret--flip.is-active .collab-caret__name { margin: 0 5px 0 6px; }
+.ProseMirror .collab-caret--ping .collab-caret__label { animation: wfx-caret-ping 0.9s ease-out; }
+@keyframes wfx-caret-ping {
+  0% { transform: scale(1); box-shadow: 0 0 0 1.5px var(--wfx-surface), 0 0 0 2px color-mix(in srgb, var(--who, var(--wfx-accent)) 70%, transparent); }
+  35% { transform: scale(1.18); }
+  100% { transform: scale(1); box-shadow: 0 0 0 1.5px var(--wfx-surface), 0 0 0 14px transparent; }
+}
+/* "people here" dot and the typing badge on a face */
+.wfx-live-dot { position: relative; width: 6px; height: 6px; flex-shrink: 0; border-radius: 9999px; background: currentColor; }
+.wfx-live-dot::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: currentColor; animation: wfx-live 1.8s ease-out infinite; }
+.wfx-typing-dot { animation: wfx-typing 1s ease-in-out infinite; }
+@keyframes wfx-live { 0% { opacity: 0.55; transform: scale(1); } 100% { opacity: 0; transform: scale(3); } }
+@keyframes wfx-typing { 0%, 100% { transform: scale(0.8); } 50% { transform: scale(1.15); } }
+@media (prefers-reduced-motion: reduce) {
+  .ProseMirror .collab-caret--ping .collab-caret__label, .wfx-live-dot::after, .wfx-typing-dot { animation: none; }
+  .ProseMirror .collab-caret__name { transition: none; }
+}
 .ql-editor span.mention, .ql-renderer span.mention, .ql-container .ql-editor span.mention { background: color-mix(in srgb, var(--wfx-accent) 14%, transparent); color: var(--wfx-orange-ink) !important; font-weight: 600; border-radius: 5px; padding: 0 3px; }
 .ql-renderer span.mention { cursor: pointer; }
 .ql-renderer span.mention:hover { background: color-mix(in srgb, var(--wfx-accent) 26%, transparent); text-decoration: underline; }
@@ -480,7 +506,10 @@ select, select option { background-color: var(--wfx-surface); color: var(--wfx-i
 /* ---- Document editor polish (page body) ---- */
 .wfx-doc.ProseMirror { font-size: 16.5px; line-height: 1.75; font-feature-settings: "ss01", "cv11"; }
 .wfx-doc.ProseMirror > * + * { margin-top: 0.15rem; }
-.wfx-doc.ProseMirror h1 { font-size: 2.6rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin: 0 0 0.9rem; }
+/* the page title sits above the body (see .wfx-hero-title), so headings inside it step down from there */
+.wfx-hero-title { font-size: clamp(2rem, 1.45rem + 2.4vw, 2.75rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.035em; caret-color: var(--wfx-accent); }
+.wfx-doc.ProseMirror h1 { font-size: 2rem; font-weight: 750; line-height: 1.15; letter-spacing: -0.025em; margin: 2.2rem 0 0.7rem; }
+.wfx-doc--page.ProseMirror > :first-child { margin-top: 0; }
 .wfx-doc.ProseMirror h2 { font-size: 1.55rem; font-weight: 700; line-height: 1.25; letter-spacing: -0.02em; margin: 2.2rem 0 0.6rem; padding-bottom: 0.35rem; border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent); }
 .wfx-doc.ProseMirror h3 { font-size: 1.2rem; font-weight: 650; line-height: 1.35; margin: 1.6rem 0 0.4rem; }
 .wfx-doc.ProseMirror > h1:first-child, .wfx-doc.ProseMirror > h2:first-child { margin-top: 0; }
@@ -498,7 +527,9 @@ select, select option { background-color: var(--wfx-surface); color: var(--wfx-i
 /* checkboxes */
 .wfx-doc.ProseMirror ul[data-type="taskList"] { padding-left: 0; }
 .wfx-doc.ProseMirror ul[data-type="taskList"] li { gap: 0.7rem; align-items: flex-start; }
-.wfx-doc.ProseMirror ul[data-type="taskList"] li > label { margin-top: 0.42rem; display: inline-flex; }
+.wfx-doc.ProseMirror ul[data-type="taskList"] li > label { margin-top: 0.36rem; display: inline-flex; }
+.wfx-doc.ProseMirror ul[data-type="taskList"] li > div > p { margin: 0; }
+.wfx-doc.ProseMirror ul[data-type="taskList"] > li { margin: 0.45rem 0; }
 .wfx-doc.ProseMirror ul[data-type="taskList"] li > label input { appearance: none; -webkit-appearance: none; width: 1.1rem; height: 1.1rem; border-radius: 6px; border: 1.75px solid color-mix(in srgb, currentColor 35%, transparent); background: transparent; display: grid; place-content: center; transition: background 0.12s, border-color 0.12s; margin: 0; }
 .wfx-doc.ProseMirror ul[data-type="taskList"] li > label input:hover { border-color: var(--wfx-accent); }
 .wfx-doc.ProseMirror ul[data-type="taskList"] li > label input::after { content: ""; width: 0.28rem; height: 0.55rem; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px) scale(0); transition: transform 0.12s; }
