@@ -9,6 +9,9 @@ const PROOF = [
   { n: "Selected", l: "to pitch at the University of Lahore Innovation Launchpad" },
 ];
 
+// Teams using WebflowX, as named by the WebflowX team (Nov 2026). Text only: we don't use anyone's logo without their files and OK.
+const TEAMS = ["Arvex", "Robert and Co Trucking", "Routelane LLC", "North Foundry", "H2O Logistics"];
+
 export default function Proof() {
   return (
     <section aria-label="WebflowX in numbers" className="w-full border-y border-white/10 bg-[#1b0d15] py-8 text-white">
@@ -20,6 +23,15 @@ export default function Proof() {
           </li>
         ))}
       </ul>
+      <div className={`${wrap} mt-8 flex flex-col gap-4 border-t border-white/10 pt-7 md:flex-row md:items-center md:gap-10`}>
+        <p className="shrink-0 text-xs font-semibold uppercase tracking-wide text-white/60">Teams working in WebflowX</p>
+        <ul className="flex flex-wrap items-center gap-x-8 gap-y-3">
+          {TEAMS.map((t) => (
+            <li key={t} className="lp-h text-lg text-white/80 sm:text-xl">{t}</li>
+          ))}
+          <li className="text-sm text-white/60">and many more</li>
+        </ul>
+      </div>
     </section>
   );
 }
