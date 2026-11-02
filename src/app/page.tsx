@@ -1,21 +1,17 @@
 import dynamic from 'next/dynamic'
 import Hero from '@/components/Hero'
 import Navbar from '@/components/Navbar'
-const TimelineDemo = dynamic(() => import('@/components/Timeline'))
 import WhyChooseUs from '@/components/WhyChooseus'
-const AppleCardsCarouselDemo = dynamic(() => import('@/components/Team').then(m => m.AppleCardsCarouselDemo))
-const TestimonialSection16 = dynamic(() => import('@/components/Testimonials'))
 import FeaturesSection from '@/components/Features'
 import Footer from '@/components/Footer'
 import SecuritySection from '@/components/landing/Security'
-import PagesDatabases from '@/components/landing/PagesDatabases'
 import AgentsSection from '@/components/landing/Agents'
 import FinalCta from '@/components/landing/FinalCta'
+import HowItWorks from '@/components/landing/HowItWorks'
 const StackCompare = dynamic(() => import('@/components/landing/StackCompare'))
 const FAQSection = dynamic(() => import('@/components/FAQ').then(m => m.FAQSection))
 const NewsletterSignup = dynamic(() => import('@/components/newslettersignup').then(m => m.NewsletterSignup))
 const PricingSection = dynamic(() => import('@/components/pricing'))
-const MergerSection = dynamic(() => import('@/components/Merger').then(m => m.MergerSection))
 
 import { SITE_URL, SITE_LOGO } from '@/lib/site'
 import { PLANS, SITE_FAQS } from '@/lib/marketing-content'
@@ -63,16 +59,12 @@ const page = () => {
       />
       <Navbar />
       <Hero />
-      <FeaturesSection />
       <AgentsSection />
-      <StackCompare />
       <WhyChooseUs />
-      <PagesDatabases />
+      <StackCompare />
+      <HowItWorks />
+      <FeaturesSection />
       <SecuritySection />
-      <MergerSection />
-      <TimelineDemo />
-      <AppleCardsCarouselDemo />
-      <TestimonialSection16 />
       <PricingSection />
       <FAQSection />
       <FinalCta />

@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { Check, ChevronDown } from "lucide-react";
 import { Heading, Label, Reveal } from "./landing/ui";
 import { wrap } from "./landing/tokens";
 
@@ -30,57 +31,95 @@ const plans = [
   { name: "Enterprise", price: "$249", v: ["Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "200", "150", "1,000", "1 TB", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited"] },
 ];
 
+// what each plan is for, in the words a buyer uses; the full limits table sits below for anyone checking details
+const cards = [
+  { name: "Free", price: "$0", for: "Try it with a small team", cta: "Start free", points: ["Up to 10 people", "Chat, docs, tasks and meetings", "5 meetings and 2 AI summaries a month", "5 agent runs a month", "90 days of message history"] },
+  { name: "Startup", price: "$29", for: "Small teams moving off four apps", cta: "Start with Startup", popular: true, points: ["Up to 25 people", "Unlimited message history", "20 meetings and 10 AI summaries a month", "50 agent runs a month", "Guests, API keys and webhooks"] },
+  { name: "Growth", price: "$79", for: "Growing teams that run on meetings", cta: "Start with Growth", points: ["Up to 100 people", "50 meetings and 30 AI summaries a month", "200 agent runs a month", "GitHub and outgoing webhooks", "Require two-step verification"] },
+  { name: "Enterprise", price: "$249", for: "Whole companies", cta: "Start with Enterprise", points: ["Unlimited people and workspaces", "200 meetings and 150 AI summaries a month", "1,000 agent runs a month", "1 TB of storage", "Everything in Growth"] },
+];
+
 const PricingSection = () => (
   <section id="pricing" className="w-full bg-[#f7f2ee] py-24 md:py-32">
     <div className={wrap}>
       <Reveal>
         <Label>Pricing</Label>
-        <Heading className="mt-5 max-w-3xl">Four plans. Clear limits.</Heading>
-        <p className="mt-5 max-w-lg text-[17px] leading-relaxed text-[#1b1017]/70">
-          Pick the limits that fit your team. Free keeps the last 90 days of messages visible; paid plans keep everything. Limits and storage apply per workspace (the number of workspaces is per owner); meetings, AI summaries and agent runs reset each month. Upgrade, change or cancel any time from workspace settings. Payments are handled by Stripe. Prices are in US dollars and exclude tax.
+        <Heading className="mt-5 max-w-3xl">One flat price for the whole team. Not per seat.</Heading>
+        <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-[#1b1017]/70">
+          Add people without the bill going up. Start free, upgrade when you need more, and change or cancel any time from workspace settings.
         </p>
       </Reveal>
       <Reveal delay={80}>
-        <div className="mt-14 grid gap-px overflow-hidden rounded-xl border border-[#381d2a]/15 bg-[#381d2a]/15 sm:grid-cols-2 lg:grid-cols-4">
-          {plans.map((p) => {
-            const dark = p.name === "Enterprise";
+        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {cards.map((p) => {
+            const hot = !!p.popular;
             return (
-              <div key={p.name} className={`flex flex-col p-7 ${dark ? "bg-[#381d2a] text-white" : "bg-white text-[#1b1017]"}`}>
-                <p className={`lp-label ${dark ? "text-white/60" : "text-[#381d2a]/60"}`}>{p.name}</p>
+              <div key={p.name} className={`relative flex flex-col rounded-3xl p-7 ${hot ? "bg-[#381d2a] text-white shadow-2xl shadow-[#381d2a]/25 lg:-my-3 lg:py-10" : "border border-[#381d2a]/12 bg-white text-[#1b1017]"}`}>
+                {hot && <span className="absolute -top-3 left-7 rounded-full bg-[#ff5018] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">Most popular</span>}
+                <p className={`lp-label ${hot ? "text-white/65" : "text-[#381d2a]/60"}`}>{p.name}</p>
                 <p className="mt-4 flex items-baseline gap-1.5">
                   <span className="lp-h text-5xl">{p.price}</span>
-                  <span className={`text-sm ${dark ? "text-white/60" : "text-[#1b1017]/65"}`}>/ month</span>
+                  <span className={`text-sm ${hot ? "text-white/65" : "text-[#1b1017]/65"}`}>/ month, whole team</span>
                 </p>
-                <dl className="mt-7 flex-1 text-sm">
-                  {rows.map((r, i) => (
-                    <div
-                      key={r}
-                      className={`flex items-center justify-between border-t py-3 ${dark ? "border-white/15" : "border-[#381d2a]/10"}`}
-                    >
-                      <dt className={dark ? "text-white/65" : "text-[#1b1017]/65"}>{r}</dt>
-                      <dd className="font-semibold">{p.v[i]}</dd>
-                    </div>
+                <p className={`mt-2 text-sm ${hot ? "text-white/75" : "text-[#1b1017]/70"}`}>{p.for}</p>
+                <ul className="mt-6 flex-1 space-y-2.5 text-[14.5px]">
+                  {p.points.map((x) => (
+                    <li key={x} className="flex items-start gap-2.5">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#ff5018]" aria-hidden="true" />
+                      <span className={hot ? "text-white/90" : "text-[#1b1017]/80"}>{x}</span>
+                    </li>
                   ))}
-                </dl>
+                </ul>
                 <Link
-                  href="/auth"
-                  className={`mt-7 rounded-md px-5 py-3 text-center text-sm font-semibold transition-colors ${
-                    dark ? "bg-[#ff5018] text-white hover:bg-[#e6430f]" : "bg-[#381d2a] text-white hover:bg-[#ff5018]"
+                  href="/auth?mode=signup"
+                  className={`mt-8 rounded-lg px-5 py-3 text-center text-sm font-semibold transition-colors ${
+                    hot ? "bg-[#ff5018] text-white hover:bg-[#ff6a3a]" : "bg-[#381d2a] text-white hover:bg-[#ff5018]"
                   }`}
                 >
-                  {p.price === "$0" ? "Start free" : "Get started"}
+                  {p.cta}
                 </Link>
               </div>
             );
           })}
         </div>
-        <p className="mt-6 max-w-2xl text-sm leading-relaxed text-[#1b1017]/70">
-          Enterprise storage is 1 TB under fair use. When a workspace reaches a limit, WebflowX tells you which
-          one and shows the next plan.
-        </p>
+        <p className="mt-6 text-sm text-[#1b1017]/65">Prices in US dollars, excluding tax. Payments by Stripe. Limits apply per workspace; meetings, AI summaries and agent runs reset monthly.</p>
       </Reveal>
-      <Reveal delay={120}>
-        <div className="mt-14 grid gap-10 border-t border-[#381d2a]/15 pt-12 lg:grid-cols-[1fr_2fr]">
+
+      <details className="group mt-10 rounded-2xl border border-[#381d2a]/12 bg-white">
+        <summary className="flex cursor-pointer list-none items-center justify-between px-6 py-5 text-[15px] font-semibold text-[#1b1017]">
+          See every limit, plan by plan
+          <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden="true" />
+        </summary>
+        <div className="overflow-x-auto border-t border-[#381d2a]/10 px-6 pb-6">
+          <table className="mt-4 w-full min-w-[640px] text-left text-sm">
+            <thead>
+              <tr className="text-[#381d2a]/60">
+                <th className="py-3 font-medium">Limit</th>
+                {plans.map((p) => <th key={p.name} className="py-3 font-semibold text-[#1b1017]">{p.name} <span className="font-normal text-[#1b1017]/60">{p.price}</span></th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={r} className="border-t border-[#381d2a]/10">
+                  <td className="py-3 text-[#1b1017]/65">{r}</td>
+                  {plans.map((p) => <td key={p.name} className="py-3 font-semibold text-[#1b1017]">{p.v[i]}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="mt-5 max-w-2xl text-sm leading-relaxed text-[#1b1017]/70">
+            Free keeps the last 90 days of messages visible; paid plans keep everything. The number of workspaces is per owner. Enterprise
+            storage is 1 TB under fair use. When a workspace reaches a limit, WebflowX tells you which one and shows the next plan.
+          </p>
+        </div>
+      </details>
+
+      <details className="group mt-4 rounded-2xl border border-[#381d2a]/12 bg-white">
+        <summary className="flex cursor-pointer list-none items-center justify-between px-6 py-5 text-[15px] font-semibold text-[#1b1017]">
+          Why meetings, AI summaries and agent runs have caps
+          <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden="true" />
+        </summary>
+        <div className="grid gap-10 border-t border-[#381d2a]/10 px-6 py-8 lg:grid-cols-[1fr_2fr]">
           <div>
             <Label>Why meetings and AI have caps</Label>
             <h3 className="lp-h mt-5 text-3xl">Everything else is flat. These two cost us money every time they run.</h3>
@@ -115,7 +154,7 @@ const PricingSection = () => (
             </div>
           </div>
         </div>
-      </Reveal>
+      </details>
     </div>
   </section>
 );

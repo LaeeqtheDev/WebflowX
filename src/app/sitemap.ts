@@ -21,6 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/templates`, lastModified: CONTENT_UPDATED, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/changelog`, lastModified: CONTENT_UPDATED, changeFrequency: "weekly", priority: 0.5 },
     ...(CASE_STUDIES.length ? [{ url: `${SITE_URL}/case-studies`, lastModified: CONTENT_UPDATED, changeFrequency: "monthly" as const, priority: 0.7 }, ...group("case-studies", CASE_STUDIES)] : []),
+    { url: `${SITE_URL}/about`, lastModified: CONTENT_UPDATED, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/security`, lastModified: CONTENT_UPDATED, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/trust`, lastModified: CONTENT_UPDATED, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/dpa`, lastModified: CONTENT_UPDATED, changeFrequency: "yearly", priority: 0.3 },

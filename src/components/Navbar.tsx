@@ -9,11 +9,10 @@ import { COMPARISONS, FEATURES, USE_CASES } from "@/lib/marketing-content";
 const menuItems = [
   { label: "Agents", href: "#agents" },
   { label: "Compare", href: "#compare" },
-  { label: "Merger", href: "#merger" },
-  { label: "Journey", href: "#timeline" },
-  { label: "Team", href: "#team" },
+  { label: "How it works", href: "#how" },
   { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
+  { label: "About", href: "/about" },
 ];
 
 const productGroups = [
@@ -55,10 +54,14 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // "#section" scrolls on the homepage; from any other page (or for real pages like /about) it navigates
   const go = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
     setIsOpen(false);
-    document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!href.startsWith("#")) return;
+    const target = document.querySelector(href);
+    if (!target) { e.preventDefault(); window.location.assign(`/${href}`); return; }
+    e.preventDefault();
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const solid = scrolled || isOpen;

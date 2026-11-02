@@ -6,6 +6,21 @@ import { Heading, Label, Reveal } from "./landing/ui";
 
 const faqData = [
   {
+    id: "agents",
+    question: "What do the AI agents actually do?",
+    answer: "Four things, each switched on by an admin in Settings › Agents. The follow-up agent turns a meeting's action items into tasks for the right people. The triage agent turns requests in the channels you pick into tasks and replies in the thread. The standup agent posts what got done, what's due and what's overdue each morning. And anyone can type @agent in chat to ask a question about your workspace, summarise a thread or make tasks.",
+  },
+  {
+    id: "agents-access",
+    question: "Can the agents see everything in my workspace?",
+    answer: "No. @agent only searches the channels, tasks and meetings the person asking can open, and never direct messages. Agents act with the permissions of the person asking or of the admin who switched them on, and they can be set to suggest work for someone to approve instead of acting on their own. Every agent message carries an Agent badge.",
+  },
+  {
+    id: "switch",
+    question: "We already use Slack and Notion. How hard is it to switch?",
+    answer: "Owners and admins can import channels from a Slack export and pages from a Notion export (Settings › Import). Start on the free plan with a small group, invite the rest of the team when you're ready, and export your data any time.",
+  },
+  {
     id: "getting-started",
     question: "How do I get started with WebflowX?",
     answer: "Sign up, create your workspace and invite your team. You can start chatting, creating tasks and organizing projects right away.",
@@ -87,8 +102,13 @@ const faqData = [
   },
 ];
 
+// the questions people ask before signing up come first; the rest are one click away
+const FIRST = 8
+
 export const FAQSection = () => {
-  const [open, setOpen] = useState<string | null>("pricing");
+  const [open, setOpen] = useState<string | null>("agents");
+  const [all, setAll] = useState(false);
+  const shown = all ? faqData : faqData.slice(0, FIRST);
 
   return (
     <section id="faq" className="w-full bg-[#efe8e3] py-24 md:py-32">
@@ -98,7 +118,7 @@ export const FAQSection = () => {
           <Heading className="mt-5">Questions, answered.</Heading>
         </Reveal>
         <div className="mt-12 border-t border-[#381d2a]/20">
-          {faqData.map((item) => {
+          {shown.map((item) => {
             const isOpen = open === item.id;
             return (
               <div key={item.id} className="border-b border-[#381d2a]/20">
@@ -121,6 +141,11 @@ export const FAQSection = () => {
             );
           })}
         </div>
+        {!all && faqData.length > FIRST && (
+          <button type="button" onClick={() => setAll(true)} className="mt-8 rounded-lg border border-[#381d2a]/20 px-5 py-3 text-sm font-semibold text-[#381d2a] transition-colors hover:bg-white">
+            Show all {faqData.length} questions
+          </button>
+        )}
       </div>
     </section>
   );
