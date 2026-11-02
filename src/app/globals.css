@@ -279,9 +279,16 @@ body,
 .lp-lift { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease; }
 @media (hover: hover) { .lp-lift:hover { transform: translate3d(0, -4px, 0); box-shadow: 0 24px 50px -28px rgba(56, 29, 42, 0.45); } }
 
+/* Branded range slider: orange fill up to the value, white thumb with an orange ring */
+.lp-range { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 999px; background: linear-gradient(90deg, #ff5018 var(--fill, 0%), rgba(56, 29, 42, 0.12) var(--fill, 0%)); cursor: pointer; }
+.lp-range::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 3px solid #ff5018; box-shadow: 0 4px 12px -2px rgba(255, 80, 24, 0.5); transition: transform 0.15s ease; }
+.lp-range::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid #ff5018; box-shadow: 0 4px 12px -2px rgba(255, 80, 24, 0.5); }
+.lp-range:active::-webkit-slider-thumb { transform: scale(1.12); }
+.lp-range:focus-visible { outline: 2px solid #ff5018; outline-offset: 4px; }
+
 /* Endless logo strip */
 .lp-marquee { mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
-.lp-marquee-track { display: flex; width: max-content; animation: lp-marquee 40s linear infinite; }
+.lp-marquee-track { display: flex; width: max-content; animation: lp-marquee 60s linear infinite; backface-visibility: hidden; }
 .lp-marquee:hover .lp-marquee-track { animation-play-state: paused; }
 @keyframes lp-marquee { to { transform: translate3d(-50%, 0, 0); } }
 
