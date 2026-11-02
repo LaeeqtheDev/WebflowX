@@ -7,7 +7,6 @@ const PROOF = [
   { n: "100+", l: "teams onboarded" },
   { n: "68", l: "teams active every week" },
   { n: "Apr 2025", l: "live and shipping since" },
-  { n: "Selected", l: "to pitch at the University of Lahore Innovation Launchpad" },
 ];
 
 // Teams using WebflowX, as named by the WebflowX team (Nov 2026). We draw a simple monogram for each instead of
@@ -33,7 +32,7 @@ const Team = ({ t, hidden }: { t: (typeof TEAMS)[number]; hidden?: boolean }) =>
 export default function Proof() {
   return (
     <section aria-label="WebflowX in numbers" className="relative w-full overflow-hidden border-y border-white/10 bg-[#1b0d15] py-10 text-white">
-      <ul className={`${wrap} grid grid-cols-2 gap-x-6 gap-y-7 md:grid-cols-4`}>
+      <ul className={`${wrap} grid grid-cols-3 gap-x-6 gap-y-7`}>
         {PROOF.map((p) => (
           <li key={p.l} className="md:border-l md:border-white/10 md:pl-6 md:first:border-l-0 md:first:pl-0">
             <p className="lp-h bg-gradient-to-br from-white to-[#ffb699] bg-clip-text text-3xl text-transparent sm:text-[2.6rem]">
