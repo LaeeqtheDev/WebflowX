@@ -205,6 +205,8 @@ const schema = defineSchema({
         updatedAt: v.optional(v.number()),
         // set when an API key, webhook or GitHub hook posted this; shown in place of the author's name
         integrationName: v.optional(v.string()),
+        // posted by one of the workspace's AI agents (shown with an "Agent" badge)
+        agent: v.optional(v.boolean()),
         // set when the author left or was removed: their name and photo as they were, so the message still reads properly
         removedAuthor: v.optional(v.object({ name: v.string(), image: v.optional(v.string()) })),
         // when a removed author's message is erased (Free plan: 90 days after they left). Unset on paid plans, which keep full history.
@@ -353,6 +355,59 @@ const schema = defineSchema({
     }).index("by_meeting_id", ["meetingId"]),
 
     // One row per AI summary generated, used to enforce plan limits
+    // AI agents a workspace has switched on. They act for the admin who set them up.
+    agents: defineTable({
+        workspaceId: v.id("workspaces"),
+        kind: v.literal("meetingFollowUp"),
+        enabled: v.boolean(),
+        // "suggest": proposals wait for someone to approve them; "act": they are carried out straight away
+        mode: v.union(v.literal("suggest"), v.literal("act")),
+        // where the agent posts its recap (none = no recap)
+        channelId: v.optional(v.id("channels")),
+        createdBy: v.id("members"),
+        updatedAt: v.number(),
+    }).index("by_workspace_kind", ["workspaceId", "kind"]),
+
+    // One piece of work an agent did. Counted against the plan's monthly agent runs.
+    agentRuns: defineTable({
+        workspaceId: v.id("workspaces"),
+        agentId: v.id("agents"),
+        meetingId: v.optional(v.id("meetings")),
+        // who set it off (the person whose summary triggered it, or who pressed "run")
+        startedBy: v.id("members"),
+        status: v.union(
+            v.literal("queued"), v.literal("running"), v.literal("review"),
+            v.literal("done"), v.literal("failed"), v.literal("dismissed"),
+        ),
+        actions: v.array(v.union(
+            v.object({
+                id: v.string(),
+                type: v.literal("task"),
+                title: v.string(),
+                assigneeId: v.optional(v.id("members")),
+                dueDate: v.optional(v.number()),
+                priority: v.union(v.literal("urgent"), v.literal("high"), v.literal("medium"), v.literal("low")),
+                // set once carried out
+                taskId: v.optional(v.id("tasks")),
+            }),
+            v.object({
+                id: v.string(),
+                type: v.literal("recap"),
+                channelId: v.id("channels"),
+                text: v.string(),
+                messageId: v.optional(v.id("messages")),
+            }),
+        )),
+        // the agent's own one-line note on what it did
+        note: v.optional(v.string()),
+        error: v.optional(v.string()),
+        steps: v.optional(v.number()),
+        decidedBy: v.optional(v.id("members")),
+        finishedAt: v.optional(v.number()),
+    })
+        .index("by_workspace_id", ["workspaceId"])
+        .index("by_meeting_id", ["meetingId"]),
+
     aiSummaryLog: defineTable({
         workspaceId: v.id("workspaces"),
         meetingId: v.id("meetings"),

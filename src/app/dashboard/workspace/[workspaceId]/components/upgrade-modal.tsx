@@ -20,6 +20,7 @@ const FEATURE_LABELS: Record<string, string> = {
     docs: "documents",
     meetings: "meetings",
     aiSummaries: "AI summaries",
+    agentRuns: "Agent runs",
 }
 
 const NEXT_PLAN: Record<string, string> = {
