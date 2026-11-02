@@ -48,7 +48,7 @@ const Switch = ({ on, onChange, label, disabled }: { on: boolean; onChange: (v: 
 )
 
 // Settings › Agents: switch agents on, choose how much they may do on their own, and see what they did.
-export const AgentsPanel = ({ workspaceId, onSampleReady }: { workspaceId: Id<"workspaces">; onSampleReady?: (meetingId: Id<"meetings">) => void }) => {
+export const AgentsPanel = ({ workspaceId, onSampleReady, wide }: { workspaceId: Id<"workspaces">; onSampleReady?: (meetingId: Id<"meetings">) => void; wide?: boolean }) => {
     const data = useQuery(api.agents.overview, { workspaceId })
     const channels = useQuery(api.channels.get, { workspaceId })
     const configure = useMutation(api.agents.configure)
@@ -57,7 +57,7 @@ export const AgentsPanel = ({ workspaceId, onSampleReady }: { workspaceId: Id<"w
     if (data === undefined) return <div className="flex justify-center py-10"><Loader2 className="size-5 animate-spin text-brand" /></div>
     if (data === null) return <p className="text-sm text-ink/60">You don&apos;t have access to agents in this workspace.</p>
     return <AgentsPanelView data={data as unknown as OverviewData} channels={channels ?? []} onSave={(next) => configure({ workspaceId, ...next })} onPostStandup={() => postNow({ workspaceId })}
-        onTrySample={async () => { const id = await trySample({ workspaceId }); onSampleReady?.(id) }} />
+        onTrySample={async () => { const id = await trySample({ workspaceId }); onSampleReady?.(id) }} wide={wide} />
 }
 
 const ModePicker = ({ value, disabled, onChange }: { value: "suggest" | "act"; disabled: boolean; onChange: (m: "suggest" | "act") => void }) => (
@@ -100,9 +100,34 @@ const AgentCard = ({ icon: Icon, title, blurb, settings, canManage, saving, onTo
 const localTz = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" } catch { return "UTC" } }
 const hourLabel = (h: number) => new Date(Date.UTC(2026, 0, 1, h)).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" })
 
-export const AgentsPanelView = ({ data, channels, onSave, onPostStandup, onTrySample }: {
+// The strip at the top of the Agents screen: how many agents are on, runs this month, work done, waiting for review.
+const AgentStats = ({ data }: { data: OverviewData }) => {
+    const on = Object.values(data.agents).filter((a) => a?.enabled).length
+    const tasks = data.runs.reduce((n, r) => n + r.actions.filter((a) => a.type === "task" && a.taskId).length, 0)
+    const waiting = data.runs.filter((r) => r.status === "review").length
+    const stats = [
+        { label: "Agents on", value: `${on} of 4` },
+        { label: "Runs this month", value: data.usage.limit > 0 ? `${data.usage.used} / ${data.usage.limit}` : String(data.usage.used) },
+        { label: "Tasks created (recent)", value: String(tasks) },
+        { label: "Waiting for review", value: String(waiting), hot: waiting > 0 },
+    ]
+    return (
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {stats.map((s) => (
+                <div key={s.label} className={cn("rounded-xl border bg-surface px-4 py-3", s.hot ? "border-brand/40" : "border-plum/12")}>
+                    <p className="text-[11px] font-medium text-ink/60">{s.label}</p>
+                    <p className={cn("mt-1 text-2xl font-semibold tracking-tight", s.hot ? "text-orange-ink" : "text-ink")}>{s.value}</p>
+                </div>
+            ))}
+        </div>
+    )
+}
+
+export const AgentsPanelView = ({ data, channels, onSave, onPostStandup, onTrySample, wide = false }: {
     data: OverviewData; channels: Channel[]; onSave: (next: SaveArgs) => Promise<unknown>; onPostStandup?: () => Promise<unknown>
     onTrySample?: () => Promise<unknown>
+    // the full Agents screen: two columns and a stats strip (Settings › Agents stays one column)
+    wide?: boolean
 }) => {
     const [trying, setTrying] = useState(false)
     const runSample = async () => {
@@ -158,7 +183,8 @@ export const AgentsPanelView = ({ data, channels, onSave, onPostStandup, onTrySa
 
     return (
         <div className="flex flex-col gap-5">
-            <div>
+            {wide && <AgentStats data={data} />}
+            <div className={wide ? "hidden" : undefined}>
                 <h3 className="text-[15px] font-semibold tracking-tight text-ink">Agents</h3>
                 <p className="mt-1 text-sm text-ink/60">AI teammates that do the follow-up work for you. They act with the permissions of the admin who turns them on, and every action is logged.</p>
             </div>
@@ -177,6 +203,8 @@ export const AgentsPanelView = ({ data, channels, onSave, onPostStandup, onTrySa
                 </div>
             )}
 
+            <div className={wide ? "grid gap-5 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start" : "contents"}>
+            <div className={wide ? "flex min-w-0 flex-col gap-5" : "contents"}>
             <AgentCard icon={AtSign} title="Ask the agent in chat" settings={assistant} canManage={data.canManage} saving={saving === "assistant"}
                 blurb="Anyone can type @agent in a channel or thread: “@agent what did we decide about pricing?”, “@agent summarise this thread”, “@agent make tasks from this”. It answers in the thread."
                 onToggle={(on) => save("assistant", { enabled: on }, on ? "@agent is on" : "@agent is off")}>
@@ -299,6 +327,8 @@ export const AgentsPanelView = ({ data, channels, onSave, onPostStandup, onTrySa
 
             {!data.canManage && <p className="-mt-2 text-xs text-ink/60">Only the owner and admins can change agents.</p>}
 
+            </div>
+            <div className={wide ? "flex flex-col gap-5 lg:sticky lg:top-4" : "contents"}>
             <div className="rounded-xl border border-plum/12 bg-surface p-4">
                 <div className="flex items-center justify-between text-xs">
                     <span className="font-semibold text-ink/75">Agent runs this month</span>
@@ -353,6 +383,7 @@ export const AgentsPanelView = ({ data, channels, onSave, onPostStandup, onTrySa
                     </ul>
                 )}
             </div>
+            </div></div>
         </div>
     )
 }

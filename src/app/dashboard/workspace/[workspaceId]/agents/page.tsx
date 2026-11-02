@@ -14,8 +14,8 @@ const AgentsPage = () => {
         <div className="flex h-full min-h-0 flex-col bg-cream-soft">
             <PageHeader icon={Sparkles} title="Agents" subtitle="AI teammates that turn meetings and requests into tasks" />
             <div className="min-h-0 flex-1 overflow-y-auto">
-                <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-6">
-                    <AgentsPanel workspaceId={workspaceId} onSampleReady={(id) => router.push(`/dashboard/workspace/${workspaceId}/meeting?meeting=${id}`)} />
+                <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-6">
+                    <AgentsPanel wide workspaceId={workspaceId} onSampleReady={(id) => router.push(`/dashboard/workspace/${workspaceId}/meeting?meeting=${id}`)} />
                 </div>
             </div>
         </div>

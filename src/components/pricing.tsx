@@ -58,12 +58,12 @@ const PricingSection = () => (
             const hot = !!p.popular;
             return (
               <Reveal key={p.name} delay={i * 110} variant="scale" className={`h-full ${hot ? "order-first sm:order-none" : ""}`}>
-              <div className={`relative flex h-full flex-col rounded-3xl p-7 ${hot ? "lp-shine " : "lp-lift "}${hot ? "bg-[#381d2a] text-white shadow-2xl shadow-[#381d2a]/25 lg:-my-3 lg:py-10" : "border border-[#381d2a]/12 bg-white text-[#1b1017]"}`}>
+              <div className={`relative flex h-full flex-col rounded-3xl p-7 ${hot ? "lp-shine " : "lp-lift "}${hot ? "bg-[#381d2a] text-white shadow-2xl shadow-[#381d2a]/30" : "border border-[#381d2a]/12 bg-white text-[#1b1017]"}`}>
                 {hot && <span className="absolute -top-3 left-7 rounded-full bg-[#ff5018] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">Most popular</span>}
                 <p className={`lp-label ${hot ? "text-white/65" : "text-[#381d2a]/60"}`}>{p.name}</p>
                 <p className="lp-h mt-4 text-5xl">{p.price}</p>
                 <p className={`mt-1 text-sm ${hot ? "text-white/65" : "text-[#1b1017]/65"}`}>per month, for the whole team</p>
-                <p className={`mt-2 text-sm ${hot ? "text-white/75" : "text-[#1b1017]/70"}`}>{p.for}</p>
+                <p className={`mt-2 min-h-[2.5rem] text-sm ${hot ? "text-white/75" : "text-[#1b1017]/70"}`}>{p.for}</p>
                 <ul className="mt-6 flex-1 space-y-2.5 text-[14.5px]">
                   {p.points.map((x) => (
                     <li key={x} className="flex items-start gap-2.5">
@@ -72,20 +72,23 @@ const PricingSection = () => (
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href={p.key === "free" ? "/auth?mode=signup" : `/auth?mode=signup&plan=${p.key}`}
-                  className={`mt-8 rounded-lg px-5 py-3 text-center text-sm font-semibold transition-colors ${
-                    hot ? "bg-[#ff5018] text-white hover:bg-[#ff6a3a]" : "bg-[#381d2a] text-white hover:bg-[#ff5018]"
-                  }`}
-                >
-                  {p.cta}
-                </Link>
-                {p.key !== "free" && <p className={`mt-2 text-center text-xs ${hot ? "text-white/70" : "text-[#1b1017]/60"}`}>{TRIAL_DAYS}-day free trial, no card</p>}
-                {p.key === "enterprise" && (
-                  <a href="mailto:support@northfoundry.co?subject=WebflowX%20Enterprise" className="mt-2 rounded-lg border border-[#381d2a]/15 px-5 py-3 text-center text-sm font-semibold text-[#381d2a] transition-colors hover:bg-[#f7f2ee]">
-                    Talk to us first
-                  </a>
-                )}
+                {/* the same footer on every card, so the buttons line up */}
+                <div className="mt-8">
+                  <Link
+                    href={p.key === "free" ? "/auth?mode=signup" : `/auth?mode=signup&plan=${p.key}`}
+                    className={`block rounded-lg px-5 py-3 text-center text-sm font-semibold transition-colors ${
+                      hot ? "bg-[#ff5018] text-white hover:bg-[#ff6a3a]" : "bg-[#381d2a] text-white hover:bg-[#ff5018]"
+                    }`}
+                  >
+                    {p.cta}
+                  </Link>
+                  <p className={`mt-2.5 text-center text-xs ${hot ? "text-white/70" : "text-[#1b1017]/60"}`}>
+                    {p.key === "free" ? "Free forever, no card needed" : `${TRIAL_DAYS}-day free trial, no card`}
+                    {p.key === "enterprise" && (
+                      <> · <a href="mailto:support@northfoundry.co?subject=WebflowX%20Enterprise" className="font-semibold text-[#a82d0a] underline-offset-2 hover:underline">talk to us</a></>
+                    )}
+                  </p>
+                </div>
               </div>
               </Reveal>
             );
