@@ -134,6 +134,19 @@ const Hero = () => {
             "radial-gradient(ellipse 70% 55% at 50% -5%, rgba(255,80,24,0.22) 0%, rgba(255,80,24,0) 60%), radial-gradient(ellipse 80% 60% at 50% 110%, #4a2638 0%, rgba(34,16,26,0) 70%)",
         }}
       />
+      {/* dotted grid that fades out toward the edges, and slow purple and orange light */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.35]"
+        style={{
+          backgroundImage: "radial-gradient(rgba(255,255,255,0.18) 1px, transparent 1px)",
+          backgroundSize: "26px 26px",
+          maskImage: "radial-gradient(ellipse 60% 55% at 50% 30%, #000 30%, transparent 75%)",
+          WebkitMaskImage: "radial-gradient(ellipse 60% 55% at 50% 30%, #000 30%, transparent 75%)",
+        }}
+      />
+      <div aria-hidden="true" className="lp-orb pointer-events-none absolute -left-40 top-24 h-[28rem] w-[28rem] rounded-full bg-[#7c3aed]/25 blur-[110px]" />
+      <div aria-hidden="true" className="lp-orb lp-orb-b pointer-events-none absolute -right-32 top-10 h-[24rem] w-[24rem] rounded-full bg-[#ff5018]/25 blur-[110px]" />
 
       <div className="relative mx-auto flex max-w-[1240px] flex-col items-center px-5 pt-28 sm:px-8 lg:pt-24">
         <div className="h-head flex flex-col items-center text-center">

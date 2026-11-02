@@ -289,6 +289,11 @@ body,
 .lp-glow { position: absolute; inset: -20%; pointer-events: none; background: radial-gradient(40% 40% at 30% 30%, rgba(255, 80, 24, 0.22), transparent 70%), radial-gradient(35% 35% at 75% 70%, rgba(255, 138, 99, 0.16), transparent 70%); animation: lp-drift 18s ease-in-out infinite alternate; will-change: transform; }
 @keyframes lp-drift { from { transform: translate3d(-4%, -3%, 0) scale(1); } to { transform: translate3d(4%, 3%, 0) scale(1.08); } }
 
+/* Hero light: two soft orbs that drift slowly */
+.lp-orb { animation: lp-orb 16s ease-in-out infinite alternate; will-change: transform; }
+.lp-orb-b { animation-duration: 20s; animation-direction: alternate-reverse; }
+@keyframes lp-orb { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(60px, 40px, 0) scale(1.12); } }
+
 /* Shine running round the most popular plan */
 .lp-shine { position: relative; isolation: isolate; }
 .lp-shine::before { content: ""; position: absolute; inset: -2px; padding: 2px; border-radius: calc(1.5rem + 2px); pointer-events: none; -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; background: conic-gradient(from var(--lp-a, 0deg), #ff5018, #ff8a63 25%, #381d2a 50%, #ff8a63 75%, #ff5018); animation: lp-spin 6s linear infinite; }
@@ -298,7 +303,7 @@ body,
 @media (prefers-reduced-motion: reduce) {
   .lp-rv-wait { opacity: 1 !important; transform: none !important; filter: none !important; }
   .lp-rv-wait .lp-seq > * { opacity: 1; transform: none; animation: none !important; }
-  .lp-marquee-track, .lp-glow, .lp-shine::before { animation: none; }
+  .lp-marquee-track, .lp-glow, .lp-shine::before, .lp-orb { animation: none; }
   .lp-lift:hover { transform: none; }
 }
 

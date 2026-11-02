@@ -3,12 +3,14 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { COMPARISONS, FEATURES, USE_CASES } from "@/lib/marketing-content";
 
 const menuItems = [
   { label: "Agents", href: "#agents" },
   { label: "Compare", href: "#compare" },
+  { label: "Journey", href: "#timeline" },
   { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
 ];
@@ -25,6 +27,7 @@ const productExtras = [
 
 const Navbar: React.FC = () => {
   const [productOpen, setProductOpen] = useState(false);
+  const pathname = usePathname();
   const [mobileProduct, setMobileProduct] = useState(false);
   const productRef = React.useRef<HTMLDivElement>(null);
 
@@ -75,15 +78,20 @@ const Navbar: React.FC = () => {
       }`}
     >
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8">
-        <button
-          type="button"
-          aria-label="Back to top"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        {/* home from any page; on the homepage itself it scrolls back to the top */}
+        <Link
+          href="/"
+          aria-label="WebflowX home"
+          onClick={(e) => {
+            setIsOpen(false);
+            setProductOpen(false);
+            if (pathname === "/") { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+          }}
           className="flex items-center gap-2.5"
         >
           <Image src="/logo.png" alt="" width={30} height={30} className="h-[30px] w-[30px]" />
           <span className={`text-[17px] font-semibold tracking-tight ${ink}`}>WebflowX</span>
-        </button>
+        </Link>
 
         <div className="hidden items-center gap-8 md:flex">
           <div
@@ -163,6 +171,11 @@ const Navbar: React.FC = () => {
 
       {isOpen && (
         <div className="border-t border-[#381d2a]/10 px-5 pb-5 md:hidden">
+          {pathname !== "/" && (
+            <Link href="/" onClick={() => setIsOpen(false)} className="block border-b border-[#381d2a]/10 py-3.5 font-medium text-[#1b1017]">
+              Home
+            </Link>
+          )}
           <button
             type="button"
             aria-expanded={mobileProduct}

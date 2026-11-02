@@ -114,30 +114,46 @@ export const FAQSection = () => {
   const shown = all ? ranked : ranked.slice(0, FIRST);
 
   return (
-    <section id="faq" className="w-full bg-[#efe8e3] py-24 md:py-32">
-      <div className="mx-auto w-full max-w-4xl px-5 sm:px-8">
-        <Reveal>
+    <section id="faq" className="w-full bg-[#f7f2ee] py-24 md:py-32">
+      <div className="mx-auto grid w-full max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+        <div className="lg:sticky lg:top-28 lg:self-start">
+        <Reveal variant="blur">
           <Label>FAQ</Label>
           <Heading className="mt-5">Questions, answered.</Heading>
+          <p className="mt-5 max-w-sm text-[17px] leading-relaxed text-[#1b1017]/70">The things teams ask before they move their chat, docs and meetings over.</p>
         </Reveal>
-        <div className="mt-12 border-t border-[#381d2a]/20">
+        <Reveal delay={120}>
+          <div className="relative mt-8 overflow-hidden rounded-3xl bg-[#381d2a] p-6 text-white">
+            <div aria-hidden="true" className="lp-glow opacity-70" />
+            <div className="relative">
+              <p className="text-lg font-semibold tracking-tight">Still have a question?</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-white/70">Write to us and a person from the team answers, usually within a day.</p>
+              <a href="mailto:support@northfoundry.co?subject=WebflowX%20question" className="mt-4 inline-flex rounded-lg bg-[#ff5018] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#ff6a3a]">Email support</a>
+            </div>
+          </div>
+        </Reveal>
+        </div>
+        <div>
+        <div className="flex flex-col gap-3">
           {shown.map((item) => {
             const isOpen = open === item.id;
             return (
-              <div key={item.id} className="border-b border-[#381d2a]/20">
+              <div key={item.id} className={`rounded-2xl border bg-white px-5 transition-colors sm:px-6 ${isOpen ? "border-[#ff5018]/40 shadow-[0_18px_40px_-28px_rgba(56,29,42,0.45)]" : "border-[#381d2a]/10 hover:border-[#381d2a]/25"}`}>
                 <button
                   type="button"
                   aria-expanded={isOpen}
                   aria-controls={`faq-${item.id}`}
                   onClick={() => setOpen(isOpen ? null : item.id)}
-                  className="flex w-full items-center justify-between gap-4 py-6 text-left"
+                  className="flex w-full items-center justify-between gap-4 py-5 text-left"
                 >
-                  <span className="text-lg font-semibold tracking-tight text-[#1b1017]">{item.question}</span>
-                  <Plus aria-hidden="true" className={`h-5 w-5 shrink-0 text-[#ff5018] transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`} />
+                  <span className="text-[17px] font-semibold tracking-tight text-[#1b1017]">{item.question}</span>
+                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors ${isOpen ? "bg-[#ff5018] text-white" : "bg-[#f7f2ee] text-[#ff5018]"}`}>
+                    <Plus aria-hidden="true" className={`h-4 w-4 transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`} />
+                  </span>
                 </button>
                 <div id={`faq-${item.id}`} role="region" className={`grid transition-all duration-300 ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
                   <div className="overflow-hidden">
-                    <p className="pb-6 pr-10 text-sm leading-relaxed text-neutral-600 sm:text-base">{item.answer}</p>
+                    <p className="pb-5 pr-10 text-[15px] leading-relaxed text-[#1b1017]/70">{item.answer}</p>
                   </div>
                 </div>
               </div>
@@ -145,10 +161,11 @@ export const FAQSection = () => {
           })}
         </div>
         {!all && faqData.length > FIRST && (
-          <button type="button" onClick={() => setAll(true)} className="mt-8 rounded-lg border border-[#381d2a]/20 px-5 py-3 text-sm font-semibold text-[#381d2a] transition-colors hover:bg-white">
+          <button type="button" onClick={() => setAll(true)} className="mt-6 rounded-lg border border-[#381d2a]/20 px-5 py-3 text-sm font-semibold text-[#381d2a] transition-colors hover:bg-white">
             Show all {faqData.length} questions
           </button>
         )}
+        </div>
       </div>
     </section>
   );
