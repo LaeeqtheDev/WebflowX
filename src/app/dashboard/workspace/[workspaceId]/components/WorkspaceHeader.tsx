@@ -70,7 +70,7 @@ export const WorkspaceHeader = ({ workspace, isAdmin, canInvite, canEdit }: Work
             </div>
             <div className="flex flex-col items-start">
               <p className="font-semibold tracking-tight">{workspace.name}</p>
-              <p className="text-xs text-muted-foreground">Active Workspace</p>
+              <p className="text-xs text-muted-foreground">Active workspace</p>
             </div>
           </DropdownMenuItem>
 

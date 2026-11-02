@@ -73,13 +73,13 @@ export const SprintPanel = ({
                 onClick={() => onSprintFilter("all")}
                 className={cn("text-[13px] text-left px-2.5 py-1.5 rounded-lg transition-colors", sprintFilter === "all" ? "bg-brand/10 text-orange-ink font-semibold" : "text-ink/70 hover:bg-cream-deep")}
             >
-                All Tasks
+                All tasks
             </button>
             <button
                 onClick={() => onSprintFilter("none")}
                 className={cn("text-[13px] text-left px-2.5 py-1.5 rounded-lg transition-colors", sprintFilter === "none" ? "bg-brand/10 text-orange-ink font-semibold" : "text-ink/70 hover:bg-cream-deep")}
             >
-                No Sprint
+                No sprint
             </button>
 
             {sprints.map(sprint => {

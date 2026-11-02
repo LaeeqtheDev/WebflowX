@@ -1,7 +1,6 @@
 import dynamic from 'next/dynamic'
 import Hero from '@/components/Hero'
 import Navbar from '@/components/Navbar'
-import WhyChooseUs from '@/components/WhyChooseus'
 import FeaturesSection from '@/components/Features'
 import Footer from '@/components/Footer'
 import SecuritySection from '@/components/landing/Security'
@@ -65,7 +64,6 @@ const page = () => {
       <StackCompare />
       <HowItWorks />
       <FeaturesSection />
-      <WhyChooseUs />
       <SecuritySection />
       <PricingSection />
       <FAQSection />

@@ -33,7 +33,7 @@ export default function DraftsPage() {
                     <SendHorizonal className="size-4 text-brand" />
                 </div>
                 <div>
-                    <h1 className="tracking-tight text-[17px] font-semibold leading-none text-ink">Sent</h1>
+                    <h1 className="tracking-tight text-[17px] font-semibold leading-none text-ink">Drafts and sent</h1>
                     <p className="text-[11px] text-ink/60 mt-1">
                         {messages?.length ?? 0} message{messages?.length !== 1 ? "s" : ""} sent across channels
                     </p>

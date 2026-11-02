@@ -19,15 +19,19 @@ const EARLY_JOIN_MS = 10 * 60_000
 
 // One-to-one calls are private to the two people in them; deleted meetings are gone for everyone.
 const visibleTo = (meeting: Doc<"meetings">, member: Doc<"members">) =>
-    !meeting.deletedAt && (meeting.kind !== "oneToOne" || meeting.createdBy === member._id || meeting.inviteeId === member._id)
+    !meeting.deletedAt && (member.role === "guest"
+        // guests only see meetings they were invited to, never one-to-one calls
+        ? meeting.kind !== "oneToOne" && (meeting.guestIds ?? []).includes(member._id)
+        : meeting.kind !== "oneToOne" || meeting.createdBy === member._id || meeting.inviteeId === member._id)
 
-const requireMeetingMember = async (ctx: MutationCtx, meetingId: Id<"meetings">) => {
+// `guests: true` lets an invited guest through (joining, leaving, saving their part of the transcript); everything else is staff only.
+const requireMeetingMember = async (ctx: MutationCtx, meetingId: Id<"meetings">, opts: { guests?: boolean } = {}) => {
     const userId = await auth.getUserId(ctx)
     if (!userId) throw new Error("Unauthorized")
     const meeting = await ctx.db.get(meetingId)
     if (!meeting) throw new Error("Meeting not found")
     const member = await findMember(ctx, meeting.workspaceId, userId)
-    if (!member || member.role === "guest") throw new Error("Unauthorized")
+    if (!member || (member.role === "guest" && !opts.guests)) throw new Error("Unauthorized")
     if (!visibleTo(meeting, member)) throw new Error("Meeting not found")
     return { meeting, member }
 }
@@ -45,7 +49,7 @@ export const get = query({
             ).unique()
         if (member) await assert2fa(ctx, member)
 
-        if (!member || member.role === "guest") return []
+        if (!member) return []
 
         const meetings = await ctx.db
             .query("meetings")
@@ -70,7 +74,7 @@ export const get = query({
 export const join = mutation({
     args: { id: v.id("meetings") },
     handler: async (ctx, args) => {
-        const { meeting, member } = await requireMeetingMember(ctx, args.id)
+        const { meeting, member } = await requireMeetingMember(ctx, args.id, { guests: true })
         if (meeting.endedAt) throw new ConvexError("This meeting has already ended")
         if (meeting.scheduledFor && Date.now() < meeting.scheduledFor - EARLY_JOIN_MS) {
             throw new ConvexError("This meeting hasn't started yet. You can join 10 minutes before it begins.")
@@ -102,7 +106,7 @@ export const leave = mutation({
         transcript: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const { meeting, member } = await requireMeetingMember(ctx, args.id)
+        const { meeting, member } = await requireMeetingMember(ctx, args.id, { guests: true })
 
         const body = (args.transcript ?? "").slice(0, 400_000)
         if (body.trim().length > 0) {
@@ -147,7 +151,7 @@ export const getTranscript = query({
         const meeting = await ctx.db.get(args.id)
         if (!meeting) return ""
         const member = await findMember(ctx, meeting.workspaceId, userId)
-        if (!member || member.role === "guest" || !visibleTo(meeting, member)) return ""
+        if (!member || !visibleTo(meeting, member)) return ""
 
         const rows = await ctx.db
             .query("meetingTranscripts")
@@ -273,7 +277,7 @@ export const create = mutation({
             const existingMeetings = await ctx.db
                 .query("meetings")
                 .withIndex("by_workspace_started", (q) => q.eq("workspaceId", args.workspaceId).gte("startedAt", startOfMonth))
-                .filter((q) => q.neq(q.field("kind"), "oneToOne"))
+                .filter((q) => q.and(q.neq(q.field("kind"), "oneToOne"), q.neq(q.field("sample"), true)))
                 .take(2000)
             const { allowed, limit, plan } = await checkLimit(ctx, args.workspaceId, "meetings", existingMeetings.length)
             if (!allowed) throw new ConvexError(`LIMIT_REACHED:meetings:${limit}:${plan}`)
@@ -392,7 +396,7 @@ export const authorizeRoom = query({
             .first()
         if (!meeting || meeting.endedAt) return null
         const member = await findMember(ctx, meeting.workspaceId, userId)
-        if (!member || member.role === "guest" || !visibleTo(meeting, member)) return null
+        if (!member || !visibleTo(meeting, member)) return null
         if ((meeting.kicked ?? []).includes(member._id)) return null
         if (meeting.scheduledFor && Date.now() < meeting.scheduledFor - EARLY_JOIN_MS) return null
         const user = await ctx.db.get(userId)
@@ -404,6 +408,31 @@ export const authorizeRoom = query({
             identity: member._id as string,
             name: user?.name ?? user?.email ?? "Member",
         }
+    },
+})
+
+// The host (or a meeting moderator) chooses which workspace guests, e.g. clients, can see and join this meeting.
+export const setGuests = mutation({
+    args: { id: v.id("meetings"), guestIds: v.array(v.id("members")) },
+    handler: async (ctx, args) => {
+        const { meeting, member } = await requireMeetingMember(ctx, args.id)
+        if (meeting.kind === "oneToOne") throw new ConvexError("Guests can't join one-to-one calls")
+        if (meeting.createdBy !== member._id && !(await can(ctx, member, "moderateMeetings"))) throw new ConvexError("Only the host can invite guests")
+        const ids = [...new Set(args.guestIds)]
+        if (ids.length > 25) throw new ConvexError("A meeting can have up to 25 guests")
+        for (const id of ids) {
+            const g = await ctx.db.get(id)
+            if (!g || g.workspaceId !== meeting.workspaceId || g.role !== "guest") throw new ConvexError("Only guests of this workspace can be invited")
+        }
+        const before = new Set(meeting.guestIds ?? [])
+        await ctx.db.patch(meeting._id, { guestIds: ids })
+        for (const id of ids.filter((x) => !before.has(x))) {
+            await notify(ctx, {
+                workspaceId: meeting.workspaceId, recipientId: id, senderId: member._id,
+                type: "meeting_invite", read: false, body: meeting.title, meetingId: meeting._id,
+            }, { email: false })
+        }
+        return null
     },
 })
 

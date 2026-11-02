@@ -120,7 +120,7 @@ export const Header = ({ title }: HeaderProps) => {
                             <DialogTrigger asChild>
                                 <div className="px-5 py-4 bg-surface rounded-xl border border-plum/12 cursor-pointer hover:bg-cream/60">
                                     <div className="flex items-center justify-between">
-                                        <p className="text-sm font-semibold">Channel Name</p>
+                                        <p className="text-sm font-semibold">Channel name</p>
                                         {canManage && <p className="text-sm text-brand hover:underline hover:underline-offset-4 font-semibold">Edit</p>}
                                     </div>
                                     <p className="text-sm">{cleanChannelName(title)}</p>
@@ -234,7 +234,7 @@ export const Header = ({ title }: HeaderProps) => {
                         {canManage && (
                             <button className="flex items-center gap-x-2 px-5 py-4 bg-surface rounded-xl cursor-pointer border border-plum/12 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-rose-600 dark:text-rose-400" onClick={handleDelete}>
                                 <TrashIcon className="size-4" />
-                                <p className="text-sm font-semibold">Delete Channel</p>
+                                <p className="text-sm font-semibold">Delete channel</p>
                             </button>
                         )}
                     </div>

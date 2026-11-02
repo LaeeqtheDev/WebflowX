@@ -3,7 +3,7 @@ import { notify } from "./notifications"
 import { mutation, query, QueryCtx } from "./_generated/server"
 import { Id } from "./_generated/dataModel"
 import { auth } from "./auth"
-import { can, assert2fa } from "./permissions"
+import { can, assert2fa, canViewChannel } from "./permissions"
 import { ConvexError } from "convex/values"
 import { MAX, text, cleanLabels } from "./validate"
 import { throttle } from "./rateLimit"
@@ -98,6 +98,8 @@ export const create = mutation({
         labels: v.optional(v.array(v.string())),
         storyPoints: v.optional(v.number()),
         sprintId: v.optional(v.id("sprints")),
+        sourceMeetingId: v.optional(v.id("meetings")),
+        sourceMessageId: v.optional(v.id("messages")),
     },
     handler: async (ctx, args) => {
         const userId = await auth.getUserId(ctx)
@@ -123,6 +125,10 @@ export const create = mutation({
         }
 
         await assertSameWorkspace(ctx, args.workspaceId, args.assigneeId, args.sprintId)
+        for (const id of [args.sourceMeetingId, args.sourceMessageId]) {
+            const row = id ? await ctx.db.get(id) : null
+            if (id && (!row || row.workspaceId !== args.workspaceId)) throw new ConvexError("Source not found")
+        }
 
         const taskId = await ctx.db.insert("tasks", {
             ...args,
@@ -297,4 +303,32 @@ export const assignToMe = mutation({
         await ctx.db.patch(args.id, { assigneeId: member._id, updatedAt: Date.now() })
         return args.id
     }
+})
+// Where a task came from (a meeting or a message), for the "Came from" link on the task. Only returns what the
+// person asking could open anyway.
+export const sourceOf = query({
+    args: { id: v.id("tasks") },
+    handler: async (ctx, args) => {
+        const userId = await auth.getUserId(ctx)
+        if (!userId) return null
+        const task = await ctx.db.get(args.id)
+        if (!task) return null
+        const member = await ctx.db.query("members")
+            .withIndex("byWorkspaceId_user_id", (q) => q.eq("workspaceId", task.workspaceId).eq("userId", userId)).unique()
+        if (!member || member.role === "guest") return null
+        if (task.sourceMeetingId) {
+            const m = await ctx.db.get(task.sourceMeetingId)
+            if (!m || m.deletedAt) return null
+            if (m.kind === "oneToOne" && m.createdBy !== member._id && m.inviteeId !== member._id) return null
+            return { kind: "meeting" as const, meetingId: m._id, title: m.title }
+        }
+        if (task.sourceMessageId) {
+            const msg = await ctx.db.get(task.sourceMessageId)
+            if (!msg || !msg.channelId) return null
+            if (!(await canViewChannel(ctx, msg.channelId, userId))) return null
+            const channel = await ctx.db.get(msg.channelId)
+            return { kind: "message" as const, channelId: msg.channelId, messageId: msg._id, channelName: channel?.name ?? "channel" }
+        }
+        return null
+    },
 })

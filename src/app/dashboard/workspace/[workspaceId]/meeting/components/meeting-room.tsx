@@ -103,7 +103,9 @@ async function startTranscription(h: Hooks) {
         const mime = MIME_CHOICES.find((m) => typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(m))
         if (!mime) return fail("This browser can't record audio for live captions. Try Chrome, Edge or Safari 14.1+.")
 
-        const params = new URLSearchParams({ model: "nova-2", language: "en-US", smart_format: "true", punctuate: "true" })
+        // nova-3 with language=multi detects the language as people speak and follows them when they switch mid-sentence
+        // (e.g. English with Hindi or Urdu), instead of forcing everything through US English
+        const params = new URLSearchParams({ model: "nova-3", language: "multi", smart_format: "true", punctuate: "true" })
         const ws = new WebSocket(`wss://api.deepgram.com/v1/listen?${params.toString()}`, [data.type === "bearer" ? "bearer" : "token", data.key])
         globalWebSocket = ws
 
@@ -209,14 +211,11 @@ const MeetingRoomInner = ({ onDisconnect, roomName, title, startedAt, endsAt }: 
     // Handle room disconnect - the ONLY place we stop recording
     useEffect(() => {
         const handleDisconnected = (disconnectReason?: DisconnectReason) => {
-            console.log("📴 ROOM DISCONNECTED - STOPPING ALL RECORDING")
             
             cleanupGlobals()
 
             setTimeout(() => {
                 const finalTranscript = globalTranscript.trim()
-                console.log("📄 Final transcript:", finalTranscript.length, "chars")
-                console.log("📄 Content:", finalTranscript.substring(0, 200))
                 
                 // hand the segments over through a shared slot the page reads in onDisconnect
                 setLastSegments(globalSegments)

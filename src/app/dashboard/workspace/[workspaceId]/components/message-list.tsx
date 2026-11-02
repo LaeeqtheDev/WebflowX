@@ -7,7 +7,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Id } from "../../../../../../convex/_generated/dataModel";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useCurrentMember } from "@/features/members/api/use-current-member";
-import { Loader } from "lucide-react";
+import { ArrowDown, Loader } from "lucide-react";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useSearchParams } from "next/navigation";
 import { ConversationHero } from "./conversation-hero";
@@ -54,6 +54,8 @@ export const MessageList = ({
 
     // The list is flex-col-reverse, so scrollTop 0 is the newest message.
     const stickToBottom = useRef(true);
+    // shows a "Jump to latest" button once the reader has scrolled well up into history
+    const [scrolledUp, setScrolledUp] = useState(false);
     const jumpToBottom = () => {
         const el = listRef.current;
         if (el) el.scrollTop = 0;
@@ -80,7 +82,10 @@ export const MessageList = ({
     useEffect(() => {
         const el = listRef.current;
         if (!el) return;
-        const onScroll = () => { stickToBottom.current = Math.abs(el.scrollTop) < 80; };
+        const onScroll = () => {
+            stickToBottom.current = Math.abs(el.scrollTop) < 80;
+            setScrolledUp(Math.abs(el.scrollTop) > 600);
+        };
         const onResize = () => { if (stickToBottom.current) { jumpToBottom(); requestAnimationFrame(jumpToBottom); } };
         el.addEventListener("scroll", onScroll, { passive: true });
         const vv = window.visualViewport;
@@ -164,6 +169,13 @@ export const MessageList = ({
     }, []);
 
     return (
+        <div className="relative flex min-h-0 flex-1 flex-col">
+        {scrolledUp && (
+            <button type="button" onClick={() => { const el = listRef.current; el?.scrollTo({ top: 0, behavior: "smooth" }); }}
+                className="absolute bottom-3 left-1/2 z-10 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-plum px-3.5 py-1.5 text-xs font-semibold text-white shadow-lg transition-colors hover:bg-brand">
+                <ArrowDown className="size-3.5" /> Jump to latest
+            </button>
+        )}
         <div ref={listRef} className="flex-1 flex flex-col-reverse pb-4 overflow-y-auto messages-scrollbar">
             {/* Add this anchor div at the very top (which is visual bottom due to flex-col-reverse) */}
             <div ref={bottomRef} />
@@ -250,6 +262,7 @@ export const MessageList = ({
             {variant === "conversation" && (
                 <ConversationHero name={memberName} image={memberImage} />
             )}
+        </div>
         </div>
     );
 };

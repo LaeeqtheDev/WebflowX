@@ -171,7 +171,7 @@ export const Toolbar2 =({
         )}
 
             {isAuthor && (
-                <Hint label="Edit Message">
+                <Hint label="Edit message">
                 <Button variant={"ghost"} size={"iconSm"} aria-label="Edit message" className="rounded-md hover:bg-cream" disabled={isPending} onClick={handleEdit}>
                     <Pencil className="size-4 text-brand" />
                 </Button>
@@ -179,7 +179,7 @@ export const Toolbar2 =({
     
             )}
            {canDelete && (
-             <Hint label="Delete Message">
+             <Hint label="Delete message">
              <Button variant={"ghost"} size={"iconSm"} aria-label="Delete message" className="rounded-md hover:bg-cream" disabled={isPending} onClick={handleDelete}>
                  <TrashIcon className="size-4 text-brand"/>
              </Button>

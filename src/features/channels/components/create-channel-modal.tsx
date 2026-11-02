@@ -39,7 +39,7 @@ export const CreateChannelModal = () => {
             { name, workspaceId, isPrivate, readOnly, memberIds: isPrivate ? picked : undefined },
             {
                 onSuccess: (id) => {
-                    toast.success("Channel created successfully!")
+                    toast.success("Channel created")
                     // use replace to update the page for same route with different param
                     router.replace(`/dashboard/workspace/${workspaceId}/channel/${id}`) 
                     handleClose()

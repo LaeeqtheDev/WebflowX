@@ -1,3 +1,4 @@
+import "./editor.css"
 import { headers } from "next/headers"
 import { preconnect } from "react-dom"
 import { AppProviders } from "@/components/AppProviders"

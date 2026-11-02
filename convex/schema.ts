@@ -291,6 +291,9 @@ const schema = defineSchema({
         sprintId: v.optional(v.id("sprints")),
         // the due date a reminder was already sent for, so each deadline reminds once
         reminderSentFor: v.optional(v.number()),
+        // where the task came from, so people (and agents' work) can be traced back
+        sourceMeetingId: v.optional(v.id("meetings")),
+        sourceMessageId: v.optional(v.id("messages")),
     })
         .index("by_workspace_id", ["workspaceId"])
         .index("by_workspace_due", ["workspaceId", "dueDate"])
@@ -339,6 +342,10 @@ const schema = defineSchema({
         scheduledFor: v.optional(v.number()),
         // soft delete: the row stays so plan usage still counts it, but its content is gone and it is hidden
         deletedAt: v.optional(v.number()),
+        // a made-up meeting created by "Try it on a sample meeting"; never counted against the plan
+        sample: v.optional(v.boolean()),
+        // workspace guests (e.g. clients) the host invited to this meeting; guests see and join only these
+        guestIds: v.optional(v.array(v.id("members"))),
     })
         .index("by_workspace_id", ["workspaceId"])
         .index("by_workspace_started", ["workspaceId", "startedAt"])

@@ -8,7 +8,8 @@ import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { Id } from "../../../../../../convex/_generated/dataModel"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Pin, PinOff, Pencil, Trash2, Plus, Loader, FileText, Users, ArrowLeft } from "lucide-react"
+import { Pin, PinOff, Pencil, Trash2, Plus, Loader, FileText, Users, ArrowLeft, NotebookPen } from "lucide-react"
+import { PageHeader } from "@/components/app/page-header"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { quillToText } from "@/features/messages/lib/quill-to-text"
@@ -155,7 +156,9 @@ export default function NotesPage() {
     }
 
     return (
-        <div className="h-full flex">
+        <div className="flex h-full min-h-0 flex-col">
+        <PageHeader icon={NotebookPen} title="Notes" subtitle="Quick notes, private or shared with the team. For longer shared pages, use Docs." />
+        <div className="flex min-h-0 flex-1">
             {/* LEFT: Notes list - Hidden on mobile when editor is shown */}
             <div className={cn(
                 "w-full md:w-80 border-r border-plum/12 bg-cream-soft flex flex-col h-full",
@@ -166,26 +169,26 @@ export default function NotesPage() {
                     <button
                         onClick={() => { setTab("personal"); setSelectedNote(null); setIsCreating(false); setShowMobileEditor(false) }}
                         className={cn(
-                            "flex-1 flex items-center justify-center gap-1.5 h-14 text-sm font-semibold tracking-tight border-b-2 transition-colors",
+                            "flex-1 flex items-center justify-center gap-1.5 h-11 text-sm font-semibold tracking-tight border-b-2 transition-colors",
                             tab === "personal"
                                 ? "border-brand text-orange-ink"
                                 : "border-transparent text-ink/60 hover:text-ink"
                         )}
                     >
                         <FileText className="size-4" /> 
-                        <span className="hidden sm:inline">Personal</span>
+                        <span>Personal</span>
                     </button>
                     <button
                         onClick={() => { setTab("workspace"); setSelectedNote(null); setIsCreating(false); setShowMobileEditor(false) }}
                         className={cn(
-                            "flex-1 flex items-center justify-center gap-1.5 h-14 text-sm font-semibold tracking-tight border-b-2 transition-colors",
+                            "flex-1 flex items-center justify-center gap-1.5 h-11 text-sm font-semibold tracking-tight border-b-2 transition-colors",
                             tab === "workspace"
                                 ? "border-brand text-orange-ink"
                                 : "border-transparent text-ink/60 hover:text-ink"
                         )}
                     >
                         <Users className="size-4" /> 
-                        <span className="hidden sm:inline">Workspace</span>
+                        <span>Workspace</span>
                     </button>
                 </div>
 
@@ -196,7 +199,7 @@ export default function NotesPage() {
                         className="w-full bg-brand hover:bg-brand-hover text-white rounded-lg font-semibold"
                         size="sm"
                     >
-                        <Plus className="size-4 mr-1" /> New Note
+                        <Plus className="size-4 mr-1" /> New note
                     </Button>
                 </div>
 
@@ -212,6 +215,7 @@ export default function NotesPage() {
                                 <FileText className="size-6" />
                             </div>
                             <p className="text-sm font-semibold tracking-tight text-ink">No notes yet</p>
+                            <p className="text-center text-xs text-ink/60">{tab === "personal" ? "Only you can see personal notes." : "Everyone in the workspace can read these."}</p>
                         </div>
                     ) : (
                         sortedNotes.map((note) => (
@@ -376,11 +380,12 @@ export default function NotesPage() {
                             size="sm"
                             className="bg-brand hover:bg-brand-hover text-white rounded-lg font-semibold"
                         >
-                            <Plus className="size-4 mr-1" /> New Note
+                            <Plus className="size-4 mr-1" /> New note
                         </Button>
                     </div>
                 )}
             </div>
+        </div>
         </div>
     )
 }

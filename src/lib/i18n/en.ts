@@ -88,6 +88,8 @@ export const en = {
   "guide.s8.b": "Start a call right from the workspace, with live transcription and an AI summary.",
   "guide.s11.t": "Search, invite, done",
   "guide.s11.b": "Press Ctrl or ⌘ + K anywhere to search messages, tasks and pages. Then invite your team from the workspace menu, and you're set.",
+  "guide.sagents.t": "Let agents do the follow-up",
+  "guide.sagents.b": "Agents turn meetings and chat requests into tasks, post a daily standup and answer @agent questions. Try one on a sample meeting here.",
 
   // interactive tour
 

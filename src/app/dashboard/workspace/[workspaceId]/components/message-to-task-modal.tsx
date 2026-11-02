@@ -65,6 +65,7 @@ export const MessageToTaskModal = ({ open, onClose, messageId, body, authorName 
             status: "todo",
             priority,
             assigneeId: assigneeId !== "unassigned" ? (assigneeId as Id<"members">) : undefined,
+            sourceMessageId: messageId as Id<"messages">,
         }, {
             onSuccess: () => {
                 toast.success("Task created")

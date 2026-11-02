@@ -419,6 +419,74 @@ export const runForMeeting = mutation({
     },
 })
 
+// "Try it on a sample meeting": an admin sees the follow-up agent work without holding a real call first.
+// Creates a finished, made-up meeting whose action items name real people in the workspace, switches the
+// follow-up agent on in "suggest" mode if it was off, and queues one run. The meeting never counts against the
+// plan; the run is a normal agent run and does.
+export const trySample = mutation({
+    args: { workspaceId: v.id("workspaces") },
+    handler: async (ctx, args) => {
+        const userId = await auth.getUserId(ctx)
+        if (!userId) throw new ConvexError("Please sign in")
+        const member = await signedInMember(ctx, args.workspaceId)
+        if (!member || !(await isAdmin(ctx, member))) throw new ConvexError("Only the owner and admins can set up agents")
+        await throttle(ctx, userId, "agent-sample", 3, 60 * 60_000, "sample meetings")
+        const { allowed, limit, plan } = await monthlyCheck(ctx, args.workspaceId)
+        if (!allowed) throw new ConvexError(`LIMIT_REACHED:agentRuns:${limit}:${plan}`)
+
+        const people = (await ctx.db.query("members").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId)).take(50))
+            .filter((m) => m.role !== "guest")
+        const nameOf = async (m: Doc<"members">) => ((await ctx.db.get(m.userId))?.name ?? "").split(" ")[0] || "Someone"
+        const me = await nameOf(member)
+        const others = await Promise.all(people.filter((m) => m._id !== member._id).slice(0, 2).map(nameOf))
+        const [a, b] = [others[0] ?? me, others[1] ?? others[0] ?? me]
+        const summary = [
+            "## Key points",
+            "- The launch stays on the 18th.",
+            "- The checkout bug on mobile is the top priority this week.",
+            "- Beta users get a short onboarding survey.",
+            "",
+            "## Action items",
+            `- ${a}: fix the checkout bug on mobile by Friday`,
+            `- ${b}: send the onboarding survey to beta users by Monday`,
+            `- ${me}: book the design review for next week`,
+        ].join("\n")
+        const transcript = [
+            `${me}: Quick sync. Launch is still the 18th, agreed?`,
+            `${a}: Agreed. The checkout bug on mobile has to go first, I'll have it fixed by Friday.`,
+            `${b}: I'll send the onboarding survey to the beta users on Monday.`,
+            `${me}: Great. I'll book the design review for next week.`,
+        ].join("\n")
+        const now = Date.now()
+        const meetingId = await ctx.db.insert("meetings", {
+            workspaceId: args.workspaceId,
+            title: "Sample: Weekly product sync",
+            roomName: `sample-${args.workspaceId}-${now}`,
+            createdBy: member._id,
+            startedAt: now - 20 * 60_000,
+            endedAt: now,
+            transcript,
+            summary,
+            participants: [me, a, b].filter((x, i, all) => all.indexOf(x) === i),
+            activeMembers: [],
+            kind: "workspace",
+            sample: true,
+        })
+
+        let agent = await agentFor(ctx, args.workspaceId, "meetingFollowUp")
+        if (!agent?.enabled) {
+            const fields = { enabled: true, mode: (agent?.mode ?? "suggest") as "suggest" | "act", updatedAt: now, createdBy: member._id }
+            if (agent) await ctx.db.patch(agent._id, fields)
+            else await ctx.db.insert("agents", { workspaceId: args.workspaceId, kind: "meetingFollowUp", ...fields })
+            await logAudit(ctx, args.workspaceId, member._id, "agent.enabled", `${AGENT_NAMES.meetingFollowUp}: suggests, people approve`)
+            agent = await agentFor(ctx, args.workspaceId, "meetingFollowUp")
+        }
+        const meeting = await ctx.db.get(meetingId)
+        await enqueue(ctx, agent!, meeting!, member._id)
+        return meetingId
+    },
+})
+
 // ---------- the daily standup ----------
 
 export const validTz = (tz: string) => {
@@ -581,6 +649,8 @@ const apply = async (ctx: MutationCtx, run: Doc<"agentRuns">, agent: Doc<"agents
                 dueDate: a.dueDate,
                 labels: ["agent"],
                 updatedAt: Date.now(),
+                sourceMeetingId: meeting?._id,
+                sourceMessageId: source?._id,
             })
             if (assigneeId && assigneeId !== actorId) {
                 await notify(ctx, { workspaceId: run.workspaceId, recipientId: assigneeId, senderId: actorId, type: "task_assigned", taskId, body: a.title, read: false })

@@ -19,7 +19,7 @@ function watch(page: import("@playwright/test").Page) {
 test("landing page renders its headline and a working Product menu", async ({ page }) => {
   const problems = watch(page)
   await page.goto("/")
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Where teams talk")
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Your team talks")
   await page.getByRole("button", { name: /^Product/ }).hover()
   await expect(page.getByRole("link", { name: "WebflowX vs Slack" })).toBeVisible()
   await page.getByRole("link", { name: "Tasks", exact: true }).click()
@@ -29,7 +29,7 @@ test("landing page renders its headline and a working Product menu", async ({ pa
 
 test("landing page HTML contains the content before any script runs", async ({ request }) => {
   const html = await (await request.get("/")).text()
-  expect(html).toContain("Where teams talk")
+  expect(html).toContain("Your team talks")
   expect(html).toContain("application/ld+json")
 })
 

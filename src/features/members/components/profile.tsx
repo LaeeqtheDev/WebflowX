@@ -277,14 +277,14 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
                 <Separator />
 
                 <div className="flex flex-col p-6">
-                    <p className="text-sm font-semibold tracking-tight text-ink mb-4">Contact Information</p>
+                    <p className="text-sm font-semibold tracking-tight text-ink mb-4">Contact information</p>
                     <div className="flex items-center gap-2">
                         <div className="size-9 rounded-lg bg-brand/10 flex items-center justify-center">
                             <MailIcon className="size-4 text-brand" />
                         </div>
                         <div className="flex flex-col">
                             <p className="text-[13px] font-semibold text-ink/60">
-                                Email Address
+                                Email address
                             </p>
                             <Link
                                 href={`mailto:${member.user.email}`}

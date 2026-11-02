@@ -14,6 +14,8 @@ type RequestType = {
     labels?: string[]
     storyPoints?: number
     sprintId?: Id<"sprints">
+    sourceMeetingId?: Id<"meetings">
+    sourceMessageId?: Id<"messages">
 }
 
 export const useCreateTask = () => {
