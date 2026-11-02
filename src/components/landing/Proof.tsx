@@ -12,20 +12,23 @@ const PROOF = [
 // Teams using WebflowX, as named by the WebflowX team (Nov 2026). We draw a simple monogram for each instead of
 // using anyone's real logo; swap in their logo files only with their OK.
 const TEAMS = [
-  { name: "Arvex Fleet Solutions", mark: "AF", shape: "rounded-lg", bg: "#ff5018" },
-  { name: "Robert and Co Trucking", mark: "R&", shape: "rounded-full", bg: "#8b5cf6" },
-  { name: "Routelane LLC", mark: "RL", shape: "rounded-md rotate-45", bg: "#10b981" },
-  { name: "North Foundry", mark: "NF", shape: "rounded-lg", bg: "#f59e0b" },
-  { name: "H2O Logistics", mark: "H₂O", shape: "rounded-full", bg: "#0ea5e9" },
+  { name: "Arvex Fleet Solutions", what: "Fleet management", mark: "AF", from: "#ff5018", to: "#ff8a63" },
+  { name: "Robert and Co Trucking", what: "Trucking", mark: "R&", from: "#7c3aed", to: "#a78bfa" },
+  { name: "Routelane LLC", what: "Truck dispatch", mark: "RL", from: "#ff5018", to: "#7c3aed" },
+  { name: "North Foundry", what: "Digital studio", mark: "NF", from: "#381d2a", to: "#7c3aed" },
+  { name: "H2O Logistics", what: "Logistics", mark: "H₂O", from: "#7c3aed", to: "#ff5018" },
 ];
 
 const Team = ({ t, hidden }: { t: (typeof TEAMS)[number]; hidden?: boolean }) => (
-  <li aria-hidden={hidden || undefined} className="flex shrink-0 items-center gap-3 px-8">
-    <span className="relative flex h-9 w-9 items-center justify-center">
-      <span className={`absolute inset-1 ${t.shape}`} style={{ background: t.bg }} />
-      <span className="relative text-[11px] font-bold tracking-tight text-white">{t.mark}</span>
-    </span>
-    <span className="whitespace-nowrap text-lg font-semibold tracking-tight text-white/85 sm:text-xl">{t.name}</span>
+  <li aria-hidden={hidden || undefined} className="shrink-0 px-2">
+    <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] py-3 pl-3 pr-6 transition-colors hover:border-white/25 hover:bg-white/[0.07]">
+      <span className="flex h-10 w-10 items-center justify-center rounded-xl text-[12px] font-bold tracking-tight text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]"
+        style={{ background: `linear-gradient(135deg, ${t.from}, ${t.to})` }}>{t.mark}</span>
+      <span>
+        <span className="block whitespace-nowrap text-[15px] font-semibold tracking-tight text-white">{t.name}</span>
+        <span className="block whitespace-nowrap text-[12px] text-white/60">{t.what}</span>
+      </span>
+    </div>
   </li>
 );
 
@@ -44,7 +47,7 @@ export default function Proof() {
       </ul>
       <div className="mt-9 border-t border-white/10 pt-7">
         <p className={`${wrap} text-center text-xs font-semibold uppercase tracking-[0.14em] text-white/60`}>Teams already working in WebflowX</p>
-        <div className="lp-marquee mt-5 overflow-hidden">
+        <div className="lp-marquee mt-6 overflow-hidden py-1">
           <ul className="lp-marquee-track">
             {TEAMS.map((t) => <Team key={t.name} t={t} />)}
             {/* second copy makes the loop seamless */}

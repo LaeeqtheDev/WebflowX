@@ -66,10 +66,11 @@ export default function StackCompare() {
             <div className="h-full rounded-3xl border border-[#381d2a]/12 bg-[#f7f2ee] p-6 sm:p-8">
               <label htmlFor="stack-people" className="flex items-baseline justify-between text-sm text-[#1b1017]/70">
                 <span>People on your team</span>
-                <span className="lp-h text-4xl text-[#1b1017] tabular-nums">{people}</span>
+                <span className="lp-h text-5xl text-[#1b1017] tabular-nums">{people}</span>
               </label>
               <input id="stack-people" type="range" min={1} max={150} value={people} onChange={(e) => setPeople(Number(e.target.value))}
-                className="mt-4 w-full accent-[#ff5018]" />
+                className="lp-range mt-5 w-full" style={{ "--fill": `${((people - 1) / 149) * 100}%` } as React.CSSProperties} />
+              <div className="mt-2 flex justify-between text-[11px] font-medium text-[#1b1017]/60"><span>1</span><span>50</span><span>100</span><span>150</span></div>
 
               <p className="mt-7 text-xs font-semibold uppercase tracking-wide text-[#1b1017]/55">What you pay today (untick what you don&apos;t use, edit any price)</p>
               <ul className="mt-3 divide-y divide-[#381d2a]/10 rounded-2xl border border-[#381d2a]/10 bg-white">
@@ -94,10 +95,25 @@ export default function StackCompare() {
                 ))}
               </ul>
 
-              <div className="mt-5 flex items-baseline justify-between border-t border-[#381d2a]/15 pt-5">
+              {stack > 0 && (
+                <div className="mt-6" aria-hidden="true">
+                  <div className="flex h-3 overflow-hidden rounded-full bg-[#381d2a]/10">
+                    {chosen.map((t, i) => (
+                      <span key={t.key} className="h-full transition-[width] duration-500 ease-out" style={{ width: `${((parseFloat(prices[t.key]) || 0) * people / stack) * 100}%`, background: ["#381d2a", "#7c3aed", "#ff5018", "#ff8a63"][i % 4] }} />
+                    ))}
+                  </div>
+                  <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[#1b1017]/65">
+                    {chosen.map((t, i) => (
+                      <span key={t.key} className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ background: ["#381d2a", "#7c3aed", "#ff5018", "#ff8a63"][i % 4] }} />{t.name}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-6 flex items-baseline justify-between border-t border-[#381d2a]/15 pt-5">
                 <span className="text-[15px] font-semibold text-[#1b1017]">{chosen.length} apps for {people} {people === 1 ? "person" : "people"}</span>
                 <span className="text-right">
-                  <span className="lp-h block text-3xl text-[#1b1017] tabular-nums">{whole(stack)}<span className="text-base font-medium text-[#1b1017]/55"> /month</span></span>
+                  <span className="block text-3xl font-semibold tracking-tight text-[#1b1017] tabular-nums">{whole(stack)}<span className="ml-1 text-base font-medium tracking-normal text-[#1b1017]/60">/month</span></span>
                   <span className="text-[13px] text-[#1b1017]/55">{money(perSeat)} per person</span>
                 </span>
               </div>
@@ -106,11 +122,10 @@ export default function StackCompare() {
 
           {/* WebflowX */}
           <Reveal delay={150} variant="scale" className="h-full">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-3xl bg-[#381d2a] p-6 text-white sm:p-8">
-              <div aria-hidden="true" className="lp-glow opacity-60" />
+            <div className="relative flex h-full flex-col overflow-hidden rounded-3xl bg-[#381d2a] p-6 text-white sm:p-8" style={{ backgroundImage: "radial-gradient(120% 70% at 100% 0%, rgba(255,80,24,0.22), transparent 60%), radial-gradient(90% 60% at 0% 100%, rgba(124,58,237,0.22), transparent 60%)" }}>
               <div className="relative flex h-full flex-col">
               <p className="text-xs font-semibold uppercase tracking-wide text-white/55">WebflowX {plan.name}</p>
-              <p className="lp-h mt-2 text-5xl tabular-nums">{plan.price === 0 ? "$0" : whole(plan.price)}<span className="text-base font-medium text-white/55"> /month in total</span></p>
+              <p className="mt-2 flex items-baseline gap-2"><span className="text-5xl font-semibold tracking-tight tabular-nums">{plan.price === 0 ? "$0" : whole(plan.price)}</span><span className="text-base font-medium text-white/65">a month, whole team</span></p>
               <p className="mt-1 text-sm text-white/65">
                 {plan.price === 0 ? "Free for up to 10 people." : `${money(plan.price / people)} per person, for the whole workspace.`}
               </p>
@@ -118,7 +133,7 @@ export default function StackCompare() {
               {saved > 0 && (
                 <div className="mt-6 rounded-2xl bg-[#ff5018] p-5" aria-live="polite">
                   <p className="text-sm text-white/85">You&apos;d keep</p>
-                  <p className="lp-h text-4xl tabular-nums">{whole(saved * 12)}<span className="text-base font-medium text-white/85"> a year</span></p>
+                  <p className="flex items-baseline gap-2"><span className="text-4xl font-semibold tracking-tight tabular-nums">{whole(saved * 12)}</span><span className="text-base font-medium text-white/90">a year</span></p>
                   <p className="mt-1 text-sm text-white/85">{whole(saved)} less every month, with AI agents included.</p>
                 </div>
               )}
