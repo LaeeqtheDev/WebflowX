@@ -63,7 +63,9 @@ const monthRuns = (ctx: Ctx, workspaceId: Id<"workspaces">) =>
     ctx.db.query("agentRuns")
         .withIndex("by_workspace_id", (q) => q.eq("workspaceId", workspaceId).gte("_creationTime", startOfMonth()))
         .take(1_200)
-const runsThisMonth = async (ctx: Ctx, workspaceId: Id<"workspaces">) => (await monthRuns(ctx, workspaceId)).length
+// sample-meeting tries are free, so they never use up the allowance
+const runsThisMonth = async (ctx: Ctx, workspaceId: Id<"workspaces">) => (await monthRuns(ctx, workspaceId)).filter((r) => !r.sample).length
+const FREE_SAMPLES_PER_MONTH = 3
 
 // Runs used this month against the plan allowance (all agents share it).
 const monthlyCheck = async (ctx: Ctx, workspaceId: Id<"workspaces">) =>
@@ -73,6 +75,7 @@ const enqueue = async (ctx: MutationCtx, agent: Doc<"agents">, meeting: Doc<"mee
     const runId = await ctx.db.insert("agentRuns", {
         workspaceId: agent.workspaceId,
         agentId: agent._id,
+        ...(meeting.sample ? { sample: true } : {}),
         meetingId: meeting._id,
         startedBy,
         status: "queued",
@@ -395,7 +398,7 @@ export const overview = query({
                 assistant: settingsOf(await agentFor(ctx, args.workspaceId, "assistant")) ?? { enabled: true, mode: "act" as const, channelId: null, channelIds: [], postHour: 9, postTz: "UTC", weekdaysOnly: true },
             },
             usage: {
-                used: month.length, limit, plan,
+                used: month.filter((r) => !r.sample).length, limit, plan,
                 // what the AI cost this month (admins only): an estimate from the tokens each run used
                 ...(admin ? {
                     costUsd: Math.round(month.reduce((sum, r) => sum + (r.costUsd ?? 0), 0) * 100) / 100,
@@ -517,8 +520,9 @@ export const trySample = mutation({
         const member = await signedInMember(ctx, args.workspaceId)
         if (!member || !(await isAdmin(ctx, member))) throw new ConvexError("Only the owner and admins can set up agents")
         await throttle(ctx, userId, "agent-sample", 3, 60 * 60_000, "sample meetings")
-        const { allowed, limit, plan } = await monthlyCheck(ctx, args.workspaceId)
-        if (!allowed) throw new ConvexError(`LIMIT_REACHED:agentRuns:${limit}:${plan}`)
+        // samples are free, but a few a month is plenty to see it work
+        const samples = (await monthRuns(ctx, args.workspaceId)).filter((r) => r.sample).length
+        if (samples >= FREE_SAMPLES_PER_MONTH) throw new ConvexError(`You've tried the sample ${FREE_SAMPLES_PER_MONTH} times this month. Run the agent on a real meeting next.`)
 
         const people = (await ctx.db.query("members").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", args.workspaceId)).take(50))
             .filter((m) => m.role !== "guest")

@@ -125,7 +125,7 @@ const guardrails = [
 
 export default function AgentsSection() {
   return (
-    <section id="agents" className="relative w-full overflow-hidden bg-[#2a1420] py-24 text-white md:py-32">
+    <section id="agents" className="relative w-full overflow-hidden bg-[#2a1420] py-16 text-white md:py-32">
       <div aria-hidden="true" className="lp-glow" />
       <div className={`${wrap} relative`}>
         <div className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end">
@@ -141,7 +141,7 @@ export default function AgentsSection() {
           </Reveal>
         </div>
 
-        <div className="mt-14 grid gap-4 md:grid-cols-2">
+        <div className="mt-10 grid md:mt-14 gap-4 md:grid-cols-2">
           {agents.map(({ icon: Icon, t, b, pane }, i) => (
             <Reveal key={t} delay={(i % 2) * 120} variant="scale" className="h-full">
               <div className="lp-lift flex h-full flex-col rounded-3xl border border-white/10 bg-[#381d2a]/90 p-6 backdrop-blur-sm hover:border-[#ff5018]/40 sm:p-7">

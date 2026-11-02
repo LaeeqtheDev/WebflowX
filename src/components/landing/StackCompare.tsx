@@ -49,7 +49,7 @@ export default function StackCompare() {
   const saved = stack - plan.price
 
   return (
-    <section id="compare" className="w-full bg-white py-24 md:py-32">
+    <section id="compare" className="w-full bg-white py-16 md:py-32">
       <div className={wrap}>
         <Reveal variant="blur">
           <Label>WebflowX vs. the usual stack</Label>
@@ -60,7 +60,7 @@ export default function StackCompare() {
           </p>
         </Reveal>
 
-        <div className="mt-14 grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+        <div className="mt-10 grid md:mt-14 gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           {/* the stack */}
           <Reveal variant="left" className="h-full">
             <div className="h-full rounded-3xl border border-[#381d2a]/12 bg-[#f7f2ee] p-6 sm:p-8">

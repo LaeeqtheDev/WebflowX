@@ -43,7 +43,7 @@ const cards = [
 ];
 
 const PricingSection = () => (
-  <section id="pricing" className="w-full bg-[#f7f2ee] py-24 md:py-32">
+  <section id="pricing" className="w-full bg-[#f7f2ee] py-16 md:py-32">
     <div className={wrap}>
       <Reveal variant="blur">
         <Label>Pricing</Label>
@@ -53,7 +53,7 @@ const PricingSection = () => (
         </p>
       </Reveal>
       <Reveal delay={80}>
-        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid md:mt-14 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {cards.map((p, i) => {
             const hot = !!p.popular;
             return (

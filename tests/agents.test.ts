@@ -110,7 +110,9 @@ describe("follow-up agent", () => {
     expect(view?.run?.status).toBe("review")
     const after = await asUser(t, ids.owner).query(api.usage.get, { workspaceId: ids.ws })
     expect(after?.usage.meetings.current).toBe(before?.usage.meetings.current)
-    expect(after?.usage.agentRuns.current).toBe((before?.usage.agentRuns.current ?? 0) + 1)
+    // the sample is free: it doesn't use up the plan's agent runs either
+    expect(after?.usage.agentRuns.current).toBe(before?.usage.agentRuns.current)
+    expect((await asUser(t, ids.owner).query(api.agents.overview, { workspaceId: ids.ws }))?.usage.used).toBe(0)
   })
 
   it("does nothing after a summary when the workspace hasn't switched it on", async () => {
