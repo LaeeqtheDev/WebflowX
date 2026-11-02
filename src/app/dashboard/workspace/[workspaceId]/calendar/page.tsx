@@ -143,7 +143,7 @@ const CalendarPage = () => {
             <SubscribeDialog open={subscribeOpen} setOpen={setSubscribeOpen} />
             <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-plum/12 px-4 py-2.5">
                 <CalendarDays className="size-5 text-brand" />
-                <h1 className="mr-2 text-lg font-semibold tracking-tight text-ink">Calendar</h1>
+                <h1 className="mr-2 text-[17px] font-semibold leading-none tracking-tight text-ink">Calendar</h1>
                 <div className="flex items-center gap-1">
                     <Button type="button" variant="outline" size="icon" className="size-9" aria-label="Previous month" onClick={() => setMonth((m) => addMonths(m, -1))}><ChevronLeft className="size-4" /></Button>
                     <Button type="button" variant="outline" size="sm" className="h-9" onClick={() => { setMonth(startOfMonth(new Date())); setSelected(todayKey) }}>Today</Button>

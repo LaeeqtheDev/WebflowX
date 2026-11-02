@@ -77,6 +77,7 @@ const ChannelView = ({ channelId }: { channelId: Id<"channels"> }) => {
         <div className="flex flex-col h-full min-h-0">
             <Header title={channel.name}/>
             <MessageList
+            channelId={channel._id}
             channelName={channel.name}
             channelCreationTime={channel._creationTime}
             data={results}

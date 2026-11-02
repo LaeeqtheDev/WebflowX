@@ -334,7 +334,7 @@ export const DocToolbar = ({ editor }: DocToolbarProps) => {
                 <DropdownMenuContent align="start" className="text-xs w-48 rounded-xl border-plum/12">
                     <DropdownMenuLabel className="text-[11px] font-medium text-ink/65">Insert</DropdownMenuLabel>
                     <DropdownMenuItem onClick={addTable}>
-                        <Plus className="size-3.5 mr-2" /> Insert Table
+                        <Plus className="size-3.5 mr-2" /> Insert table
                     </DropdownMenuItem>
 
                     <DropdownMenuSeparator />

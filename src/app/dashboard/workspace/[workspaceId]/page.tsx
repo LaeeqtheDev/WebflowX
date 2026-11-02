@@ -73,7 +73,7 @@ const WorkspaceIdPage = () => {
         <div className="size-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
           <TriangleAlert className="size-6 text-brand" />
         </div>
-        <span className="font-semibold tracking-tight text-ink">Workspace Not Found</span>
+        <span className="font-semibold tracking-tight text-ink">Workspace not found</span>
       </CenteredContainer>
     );
   }

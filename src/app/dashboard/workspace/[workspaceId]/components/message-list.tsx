@@ -3,11 +3,13 @@ import { differenceInMinutes } from "date-fns";
 import { dayKey, formatDayLabel } from "@/lib/date-label";
 import { Message } from "./message";
 import { ChannelHero } from "./channel-hero";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { Fragment, useState, useEffect, useRef, useMemo } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../../../../../../convex/_generated/api";
 import { Id } from "../../../../../../convex/_generated/dataModel";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useCurrentMember } from "@/features/members/api/use-current-member";
-import { Loader } from "lucide-react";
+import { ArrowDown, Loader } from "lucide-react";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useSearchParams } from "next/navigation";
 import { ConversationHero } from "./conversation-hero";
@@ -17,6 +19,7 @@ const TIME_THRESHOLD = 5;
 interface MessageListProps {
     memberName?: string;
     memberImage?: string;
+    channelId?: Id<"channels">;
     channelName?: string;
     channelCreationTime?: number;
     variant?: "channel" | "thread" | "conversation";
@@ -33,6 +36,7 @@ interface MessageListProps {
 export const MessageList = ({
     memberName,
     memberImage,
+    channelId,
     channelName,
     channelCreationTime,
     data,
@@ -54,6 +58,25 @@ export const MessageList = ({
 
     // The list is flex-col-reverse, so scrollTop 0 is the newest message.
     const stickToBottom = useRef(true);
+    // "New messages" line: where the reader left off last time. The first value is kept for this visit,
+    // so the line doesn't jump while they read; the marker itself moves to "now" as messages are seen.
+    const lastReadLive = useQuery(api.docExtras.lastRead, channelId ? { channelId } : "skip");
+    const [firstRead, setFirstRead] = useState<{ channelId?: string; at?: number | null }>({ channelId });
+    if (firstRead.channelId !== channelId) setFirstRead({ channelId });
+    else if (firstRead.at === undefined && lastReadLive !== undefined) setFirstRead({ channelId, at: lastReadLive });
+    const lastReadAt = firstRead.at;
+    const markRead = useMutation(api.docExtras.markRead);
+    const newest = data?.[0]?._creationTime;
+    useEffect(() => { if (channelId) void markRead({ channelId }).catch(() => {}); }, [channelId, newest, markRead]);
+    const firstUnreadId = useMemo(() => {
+        if (!lastReadAt || !data) return null;
+        let first: (typeof data)[number] | null = null;
+        for (const m of data) if (m._creationTime > lastReadAt && m.memberId !== currentMember?._id && (!first || m._creationTime < first._creationTime)) first = m;
+        return first?._id ?? null;
+    }, [data, lastReadAt, currentMember?._id]);
+
+    // shows a "Jump to latest" button once the reader has scrolled well up into history
+    const [scrolledUp, setScrolledUp] = useState(false);
     const jumpToBottom = () => {
         const el = listRef.current;
         if (el) el.scrollTop = 0;
@@ -80,7 +103,10 @@ export const MessageList = ({
     useEffect(() => {
         const el = listRef.current;
         if (!el) return;
-        const onScroll = () => { stickToBottom.current = Math.abs(el.scrollTop) < 80; };
+        const onScroll = () => {
+            stickToBottom.current = Math.abs(el.scrollTop) < 80;
+            setScrolledUp(Math.abs(el.scrollTop) > 600);
+        };
         const onResize = () => { if (stickToBottom.current) { jumpToBottom(); requestAnimationFrame(jumpToBottom); } };
         el.addEventListener("scroll", onScroll, { passive: true });
         const vv = window.visualViewport;
@@ -164,6 +190,13 @@ export const MessageList = ({
     }, []);
 
     return (
+        <div className="relative flex min-h-0 flex-1 flex-col">
+        {scrolledUp && (
+            <button type="button" onClick={() => { const el = listRef.current; el?.scrollTo({ top: 0, behavior: "smooth" }); }}
+                className="absolute bottom-3 left-1/2 z-10 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-plum px-3.5 py-1.5 text-xs font-semibold text-white shadow-lg transition-colors hover:bg-brand">
+                <ArrowDown className="size-3.5" /> Jump to latest
+            </button>
+        )}
         <div ref={listRef} className="flex-1 flex flex-col-reverse pb-4 overflow-y-auto messages-scrollbar">
             {/* Add this anchor div at the very top (which is visual bottom due to flex-col-reverse) */}
             <div ref={bottomRef} />
@@ -188,8 +221,14 @@ export const MessageList = ({
                                 )
                             ) < TIME_THRESHOLD;
                         return (
+                            <Fragment key={message._id}>
+                            {message._id === firstUnreadId && (
+                                <div role="separator" aria-label="New messages" className="relative mx-5 my-2 flex items-center gap-2">
+                                    <span className="h-px flex-1 bg-brand/60" />
+                                    <span className="text-[11px] font-semibold uppercase tracking-wide text-orange-ink">New messages</span>
+                                </div>
+                            )}
                             <Message
-                                key={message._id}
                                 id={message._id}
                                 memberId={message.memberId}
                                 authorImage={message.user.image}
@@ -216,6 +255,7 @@ export const MessageList = ({
                                 isCompact={isCompact}
                                 hideThreadButton={variant === "thread"}
                             />
+                            </Fragment>
                         );
                     })}
                 </div>
@@ -250,6 +290,7 @@ export const MessageList = ({
             {variant === "conversation" && (
                 <ConversationHero name={memberName} image={memberImage} />
             )}
+        </div>
         </div>
     );
 };

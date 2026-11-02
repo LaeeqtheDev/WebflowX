@@ -26,7 +26,9 @@ import {
     SelectTrigger, SelectValue
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { FileText, Download, Share2, ArrowLeft, Loader, Star, Plus, MoreHorizontal, ChevronRight, LayoutTemplate } from "lucide-react"
+import { FileText, Download, Share2, ArrowLeft, Loader, Star, Plus, MoreHorizontal, ChevronRight, LayoutTemplate, MessageSquare, History } from "lucide-react"
+import type { Editor } from "@tiptap/react"
+import { DocSidePanel, type SidePanel } from "../components/doc-side-panel"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "../../../../../../../convex/_generated/api"
 import { Id } from "../../../../../../../convex/_generated/dataModel"
@@ -83,6 +85,11 @@ export default function DocPage() {
     const setIcon = useMutation(api.docs.setIcon)
     const saveTemplate = useMutation(api.docs.saveTemplate)
     const [subOpen, setSubOpen] = useState(false)
+    // comments and version history panel
+    const [panel, setPanel] = useState<SidePanel | null>(null)
+    const [editor, setEditor] = useState<Editor | null>(null)
+    const commentRows = useQuery(api.docExtras.comments, docId ? { docId: docId as Id<"docs"> } : "skip")
+    const openComments = (commentRows ?? []).filter((c) => !c.parentId && !c.resolved).length
     const subMounted = useMountOnce(subOpen)
     const [tplOpen, setTplOpen] = useState(false)
     const [tplName, setTplName] = useState("")
@@ -135,6 +142,34 @@ export default function DocPage() {
 
     const esc = (str: string) =>
         str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+
+    // Markdown or HTML copy of the page, built from what's on screen (minus other people's carets)
+    const handleDownload = async (kind: "md" | "html") => {
+        const live = document.querySelector(".ProseMirror")
+        if (!live) return toast.error("Nothing to download")
+        const content = live.cloneNode(true) as HTMLElement
+        content.querySelectorAll(".collab-caret, .ProseMirror-gapcursor, .ProseMirror-trailingBreak").forEach((n) => n.remove())
+        const title = doc?.title?.trim() || "Untitled"
+        let body: string
+        if (kind === "md") {
+            const { default: TurndownService } = await import("turndown")
+            const td = new TurndownService({ headingStyle: "atx", bulletListMarker: "-", codeBlockStyle: "fenced" })
+            // checklists keep their ticks
+            td.addRule("taskItem", {
+                filter: (node) => node.nodeName === "LI" && node.getAttribute("data-type") === "taskItem",
+                replacement: (text, node) => `- [${(node as HTMLElement).getAttribute("data-checked") === "true" ? "x" : " "}] ${text.trim()}\n`,
+            })
+            body = `# ${title}\n\n${td.turndown(content.innerHTML)}\n`
+        } else {
+            body = `<!doctype html>\n<html><head><meta charset="utf-8"><title>${esc(title)}</title></head><body>\n<h1>${esc(title)}</h1>\n${content.innerHTML}\n</body></html>\n`
+        }
+        const blob = new Blob([body], { type: kind === "md" ? "text/markdown" : "text/html" })
+        const a = document.createElement("a")
+        a.href = URL.createObjectURL(blob)
+        a.download = `${title.replace(/[\\/:*?"<>|]+/g, "-").slice(0, 80)}.${kind}`
+        a.click()
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+    }
 
     const handleDownloadPdf = () => {
         const live = document.querySelector(".ProseMirror")
@@ -216,7 +251,7 @@ export default function DocPage() {
                 channelId: shareChannelId as Id<"channels">,
                 body,
             })
-            toast.success("Shared to channel!")
+            toast.success("Shared to the channel")
             setShowShareDialog(false)
             setShareChannelId("")
         } catch (e) {
@@ -246,7 +281,7 @@ export default function DocPage() {
                     className="bg-brand hover:bg-brand-hover text-white rounded-lg font-semibold"
                     onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}
                 >
-                    <ArrowLeft className="size-4 mr-1" /> Back to Docs
+                    <ArrowLeft className="size-4 mr-1" /> Back to docs
                 </Button>
             </div>
         )
@@ -330,14 +365,30 @@ export default function DocPage() {
                                 </DropdownMenuItem>
                             )}
                             {doc.type !== "database" && (
-                                <DropdownMenuItem onClick={handleDownloadPdf}><Download className="mr-2 size-3.5" /> Download as PDF</DropdownMenuItem>
+                                <>
+                                    <DropdownMenuItem onClick={handleDownloadPdf}><Download className="mr-2 size-3.5" /> Download as PDF</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => void handleDownload("md")}><Download className="mr-2 size-3.5" /> Download as Markdown</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => void handleDownload("html")}><Download className="mr-2 size-3.5" /> Download as HTML</DropdownMenuItem>
+                                </>
                             )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}>
-                                <ArrowLeft className="mr-2 size-3.5" /> All pages
+                                <ArrowLeft className="mr-2 size-3.5" /> All docs
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
+                    {doc.type !== "database" && (
+                        <>
+                            <Button variant="ghost" size="sm" aria-pressed={panel === "comments"} onClick={() => setPanel(panel === "comments" ? null : "comments")}
+                                className={`h-8 gap-1.5 rounded-lg px-2 text-xs font-semibold sm:px-2.5 ${panel === "comments" ? "bg-brand/10 text-orange-ink" : "text-ink/70 hover:bg-cream-deep"}`}>
+                                <MessageSquare className="size-3.5" /><span className="hidden sm:inline">Comments{openComments ? ` (${openComments})` : ""}</span>
+                            </Button>
+                            <Button variant="ghost" size="sm" aria-label="Version history" aria-pressed={panel === "history"} onClick={() => setPanel(panel === "history" ? null : "history")}
+                                className={`h-8 w-8 rounded-lg p-0 ${panel === "history" ? "bg-brand/10 text-orange-ink" : "text-ink/70 hover:bg-cream-deep"}`}>
+                                <History className="size-4" />
+                            </Button>
+                        </>
+                    )}
                     <DropdownMenu open={showShareDialog} onOpenChange={setShowShareDialog}>
                         <DropdownMenuTrigger asChild>
                             <Button size="sm" aria-label="Share to a channel" className="h-8 gap-1.5 rounded-lg bg-brand px-2.5 text-xs font-semibold text-white hover:bg-brand-hover sm:px-3.5">
@@ -385,7 +436,8 @@ export default function DocPage() {
             )}
 
             {/* Body */}
-            <div className="flex-1 overflow-hidden">
+            <div className="relative flex min-h-0 flex-1 overflow-hidden">
+            <div className="min-w-0 flex-1 overflow-hidden">
                 {doc.type === "database" ? (
                     <DatabaseView docId={doc._id} />
                 ) : tplId && tplHtml === undefined ? (
@@ -403,6 +455,7 @@ export default function DocPage() {
                         userColor={userColor}
                         userAvatar={currentUserAvatar}
                         onPresenceChange={setPeople}
+                        onEditor={setEditor}
                         hero={{
                             title: doc.title,
                             icon: doc.icon ?? null,
@@ -412,6 +465,12 @@ export default function DocPage() {
                         }}
                     />
                 )}
+            </div>
+            {panel && doc.type !== "database" && (
+                <div className="absolute inset-0 z-20 md:static md:inset-auto">
+                    <DocSidePanel docId={doc._id} editor={editor} tab={panel} onTab={setPanel} onClose={() => setPanel(null)} />
+                </div>
+            )}
             </div>
 
             {subMounted && <NewPageDialog open={subOpen} onOpenChange={setSubOpen} parentId={doc._id} />}

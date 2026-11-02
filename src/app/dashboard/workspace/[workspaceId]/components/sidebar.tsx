@@ -10,6 +10,7 @@ import {
     Notebook24Regular, Notebook24Filled,
     DocumentText24Regular, DocumentText24Filled,
     Video24Regular, Video24Filled,
+    Sparkle24Regular, Sparkle24Filled,
     MoreHorizontal24Regular,
 } from "@fluentui/react-icons"
 import { usePathname, useRouter } from "next/navigation"
@@ -112,13 +113,23 @@ export const Sidebar = () => {
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}
             />
             )}
-            {!isGuest && (
+            {/* guests see the meetings they were invited to */}
+            {(
             <SidebarButton
                 icon={Video24Regular}
                 activeIcon={Video24Filled}
                 label="Meetings"
                 isActive={pathname.includes("/meeting")}
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}/meeting`)}
+            />
+            )}
+            {!isGuest && (
+            <SidebarButton
+                icon={Sparkle24Regular}
+                activeIcon={Sparkle24Filled}
+                label="Agents"
+                isActive={pathname.includes("/agents")}
+                onClick={() => router.push(`/dashboard/workspace/${workspaceId}/agents`)}
             />
             )}
             <Divider />

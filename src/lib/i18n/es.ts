@@ -86,4 +86,6 @@ export const es: Record<Key, string> = {
   "guide.s8.b": "Inicia una llamada desde el espacio de trabajo, con transcripción en vivo y resumen con IA.",
   "guide.s11.t": "Busca, invita y listo",
   "guide.s11.b": "Pulsa Ctrl o ⌘ + K en cualquier lugar para buscar mensajes, tareas y páginas. Luego invita a tu equipo desde el menú del espacio y listo.",
+  "guide.sagents.t": "Deja que los agentes hagan el seguimiento",
+  "guide.sagents.b": "Los agentes convierten reuniones y peticiones del chat en tareas, publican un resumen diario y responden a @agent. Pruébalos aquí con una reunión de ejemplo.",
 }

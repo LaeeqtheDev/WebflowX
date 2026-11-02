@@ -48,7 +48,7 @@ export const WorkSpaceSidebar = () => {
         return (
             <div className="flex flex-col bg-sidebar h-full items-center justify-center">
                 <AlertTriangle className="size-7 text-brand" />
-                <p className="text-white text-sm">Workspace Not Found</p>
+                <p className="text-white text-sm">Workspace not found</p>
             </div>
         )
     }
@@ -69,7 +69,7 @@ export const WorkSpaceSidebar = () => {
                 )}
                 {!perms.isGuest && (
                 <SidebarItem
-                    label="Drafts & Sent"
+                    label="Drafts and sent"
                     icon={Send20Regular}
                     id="drafts"
                     variant={pathname.endsWith("/drafts") ? "active" : "default"}
@@ -105,7 +105,7 @@ export const WorkSpaceSidebar = () => {
 
             <WorkspaceSection
                 label="Channels"
-                hint="New Channel"
+                hint="New channel"
                 onNew={perms.can("createChannels") ? () => setIsOpen(true) : undefined}
             >
                 {channels?.map((item) => (
@@ -120,7 +120,7 @@ export const WorkSpaceSidebar = () => {
             </WorkspaceSection>
 
             {!perms.isGuest && <WorkspaceSection
-                label="Direct Messages"
+                label="Direct messages"
                 hint="New Direct Message"
                 onNew={() => setSwitcher({ open: true, mode: "dm" })}
             >

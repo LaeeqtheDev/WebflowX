@@ -34,6 +34,8 @@ const MeetingRoom = dynamic(() => import("./components/meeting-room").then((m) =
     ssr: false,
     loading: () => <div className="flex h-full items-center justify-center"><Loader className="size-6 animate-spin text-brand" /></div>,
 })
+import { GuestInvite } from "./components/guest-invite"
+import { JoinLink } from "./components/join-link"
 const MeetingSummary = dynamic(() => import("./components/meeting-summary").then((m) => m.MeetingSummary), { ssr: false })
 
 export default function MeetingPage() {
@@ -161,7 +163,7 @@ export default function MeetingPage() {
                         ops: [
                             { insert: headline },
                             { insert: scheduledFor ? "Open the meetings page to join when it starts:\n" : "Click below to join:\n" },
-                            { attributes: { link: meetingUrl }, insert: scheduledFor ? "🔗 Meetings" : "🔗 Join Meeting" },
+                            { attributes: { link: meetingUrl }, insert: scheduledFor ? "🔗 Meetings" : "🔗 Join meeting" },
                             { insert: "\n" }
                         ]
                     })
@@ -233,7 +235,7 @@ export default function MeetingPage() {
             if (data.error) throw new Error(data.error)
 
             await saveSummary({ id: meetingId, summary: data.summary, transcript })
-            toast.success("AI summary generated!")
+            toast.success("AI summary ready")
         } catch (e: unknown) {
             const message = errorMessage(e)
             if (message.startsWith("LIMIT_REACHED:aiSummaries")) {
@@ -371,7 +373,7 @@ export default function MeetingPage() {
                             className="bg-brand hover:bg-brand-hover text-white h-8 rounded-lg font-semibold text-xs px-2.5 sm:px-3"
                         >
                             <Plus className="size-3.5 sm:size-4 sm:mr-1" />
-                            <span className="hidden sm:inline">New Meeting</span>
+                            <span className="hidden sm:inline">New meeting</span>
                         </Button>
                     )}
                 </div>
@@ -414,7 +416,7 @@ export default function MeetingPage() {
                         <p className="text-sm text-center">{canStartWorkspace ? "Start or schedule a meeting with your team" : "Moderators start team meetings. To talk with one person, open your direct message with them and press Call."}</p>
                         {canStartWorkspace && (
                             <Button onClick={openCreate} size="sm" className="bg-brand hover:bg-brand-hover text-white rounded-lg font-semibold">
-                                <Plus className="size-4 mr-1" /> Start a Meeting
+                                <Plus className="size-4 mr-1" /> Start a meeting
                             </Button>
                         )}
                     </div>
@@ -512,10 +514,16 @@ export default function MeetingPage() {
                                                         title={early ? "You can join 10 minutes before it starts" : undefined}
                                                         className="bg-brand hover:bg-brand-hover text-white h-8 rounded-lg font-semibold text-xs w-full sm:w-auto"
                                                     >
-                                                        <Video className="size-3.5 mr-1" /> {early ? "Not open yet" : "Join Meeting"}
+                                                        <Video className="size-3.5 mr-1" /> {early ? "Not open yet" : "Join meeting"}
                                                     </Button>
                                                 )
                                             })()}
+                                            {!selectedMeeting.endedAt && selectedMeeting.kind !== "oneToOne" && (perms.can("moderateMeetings") || selectedMeeting.createdBy === currentMember?._id) && (
+                                                <>
+                                                    <JoinLink meeting={selectedMeeting} />
+                                                    <GuestInvite meeting={selectedMeeting} />
+                                                </>
+                                            )}
                                             {!selectedMeeting.endedAt && !isUpcoming(selectedMeeting) && (perms.can("moderateMeetings") || selectedMeeting.createdBy === currentMember?._id) && (
                                                 <Button
                                                     variant="outline"
@@ -544,7 +552,7 @@ export default function MeetingPage() {
                                             <CalendarClock className="size-5 text-brand shrink-0 mt-0.5" />
                                             <div>
                                                 <p className="font-semibold text-ink">Scheduled for {format(selectedMeeting.scheduledFor!, "EEEE d MMMM, h:mm a")}</p>
-                                                <p className="mt-1">Everyone in the workspace can join from 10 minutes before the start. The transcript and summary appear here afterwards.</p>
+                                                <p className="mt-1">Everyone in the workspace, and any guests you invite, can join from 10 minutes before the start. The transcript and summary appear here afterwards.</p>
                                             </div>
                                         </div>
                                     ) : (
@@ -570,7 +578,7 @@ export default function MeetingPage() {
                 <DialogContent className="max-w-md mx-4 max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-[17px] font-semibold tracking-tight">
-                            {scheduleOn ? "Schedule a Meeting" : "Start a Meeting"}
+                            {scheduleOn ? "Schedule a meeting" : "Start a meeting"}
                         </DialogTitle>
                     </DialogHeader>
                     <div className="flex flex-col gap-3 mt-2">

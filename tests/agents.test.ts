@@ -91,6 +91,28 @@ describe("follow-up agent", () => {
     expect(o?.agents.triage).toBeNull()
   })
 
+  it("tries itself on a sample meeting: admins only, switches on in suggest mode, never counts as a meeting", async () => {
+    const { t, ids } = ctx
+    await expect(asUser(t, ids.dev).mutation(api.agents.trySample, { workspaceId: ids.ws })).rejects.toThrow(/owner and admins/)
+    const { seen } = fakeModel(...standardReplies())
+    const before = await asUser(t, ids.owner).query(api.usage.get, { workspaceId: ids.ws })
+    const meetingId = await asUser(t, ids.owner).mutation(api.agents.trySample, { workspaceId: ids.ws })
+    await t.finishAllScheduledFunctions(vi.runAllTimers)
+
+    const meeting = await t.run((c) => c.db.get(meetingId))
+    expect(meeting).toMatchObject({ sample: true, title: "Sample: Weekly product sync" })
+    // the made-up action items name real people in the workspace
+    expect(meeting?.summary).toMatch(/Dev|Ava/)
+    expect(JSON.stringify(seen[0])).toContain("checkout bug")
+    const o = await asUser(t, ids.owner).query(api.agents.overview, { workspaceId: ids.ws })
+    expect(o?.agents.meetingFollowUp).toMatchObject({ enabled: true, mode: "suggest" })
+    const view = await asUser(t, ids.owner).query(api.agents.forMeeting, { meetingId })
+    expect(view?.run?.status).toBe("review")
+    const after = await asUser(t, ids.owner).query(api.usage.get, { workspaceId: ids.ws })
+    expect(after?.usage.meetings.current).toBe(before?.usage.meetings.current)
+    expect(after?.usage.agentRuns.current).toBe((before?.usage.agentRuns.current ?? 0) + 1)
+  })
+
   it("does nothing after a summary when the workspace hasn't switched it on", async () => {
     const { fetchMock } = fakeModel(...standardReplies())
     await saveSummary()
@@ -122,6 +144,10 @@ describe("follow-up agent", () => {
     const tasks = await t.run((c) => c.db.query("tasks").collect())
     expect(tasks.map((x) => [x.title, x.assigneeId, x.status, x.labels])).toEqual([["Send the launch email", ids.devM, "todo", ["agent"]]])
     expect(tasks[0].dueDate).toBe(parseDue(nextFriday()))
+    // the task links back to the meeting, and the link only opens for people who can see it
+    expect(tasks[0].sourceMeetingId).toBe(ids.meeting)
+    expect(await asUser(t, ids.ava).query(api.tasks.sourceOf, { id: tasks[0]._id })).toMatchObject({ kind: "meeting", title: "Weekly launch sync" })
+    expect(await asUser(t, ids.outsider).query(api.tasks.sourceOf, { id: tasks[0]._id })).toBeNull()
     const notes = await t.run((c) => c.db.query("notifications").collect())
     expect(notes.map((n) => [n.type, n.recipientId])).toEqual([["task_assigned", ids.devM]])
     const msgs = await t.run((c) => c.db.query("messages").collect())
@@ -489,12 +515,23 @@ describe("@agent in chat", () => {
     expect(mentionsAgent("our @agents page")).toBe(false)
   })
 
-  it("does nothing until an admin switches it on", async () => {
+  it("is on by default and stops when an admin switches it off", async () => {
+    const { t, ids } = ctx
+    expect(await asUser(t, ids.dev).query(api.agents.chatAgentOn, { workspaceId: ids.ws })).toBe(true)
+    await asUser(t, ids.owner).mutation(api.agents.configure, { workspaceId: ids.ws, kind: "assistant", enabled: false, mode: "act" })
+    expect(await asUser(t, ids.dev).query(api.agents.chatAgentOn, { workspaceId: ids.ws })).toBe(false)
     const { fetchMock } = fakeModel([call("answer", { text: "hi" })])
     await post(ctx.ids.dev, "@agent hello?")
     await settle()
     expect(fetchMock).not.toHaveBeenCalled()
     expect(await agentReplies()).toHaveLength(0)
+  })
+
+  it("answers out of the box, before anyone has opened the agent settings", async () => {
+    fakeModel([call("answer", { text: "Hello from the agent" })])
+    await post(ctx.ids.dev, "@agent hello?")
+    await settle()
+    expect(await agentReplies()).toHaveLength(1)
   })
 
   it("answers in the thread under the question, using what it found", async () => {

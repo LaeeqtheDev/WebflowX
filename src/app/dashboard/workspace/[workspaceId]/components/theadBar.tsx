@@ -36,7 +36,7 @@ export const ThreadBar = ({count, image, timestamp, onClick,name="Member"}: Thre
                     </span>
 
                     <span className="text-xs text-ink/60 truncate group-hover/thread-bar:block hidden">
-                        View Thread
+                        View thread
                     </span>
         </div>
 

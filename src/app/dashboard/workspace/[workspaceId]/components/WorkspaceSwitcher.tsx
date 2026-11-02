@@ -44,7 +44,7 @@ export const WorkspaceSwitcher = () => {
                 onClick={() => router.push(`/dashboard/workspace/${workspaceId}`)}
                  className="cursor-pointer flex-col justify-start items-start capitalize rounded-lg font-semibold">
                     {workspace?.name}
-                    <span className="text-xs text-muted-foreground">Active Workspace</span>
+                    <span className="text-xs text-muted-foreground">Active workspace</span>
                 </DropdownMenuItem>
                 {filteredWorkspaces?.map((workspace)=>(
                     <DropdownMenuItem key={workspace._id}

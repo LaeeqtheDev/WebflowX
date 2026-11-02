@@ -31,6 +31,9 @@ const plans = [
   { key: "enterprise", name: "Enterprise", price: "$249", v: ["Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "200", "150", "1,000", "1 TB", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited"] },
 ];
 
+// Matches STRIPE_TRIAL_DAYS on the Convex deployment (default 14). Checkout gives a no-card trial to workspaces that never subscribed.
+const TRIAL_DAYS = 14
+
 // what each plan is for, in the words a buyer uses; the full limits table sits below for anyone checking details
 const cards = [
   { key: "free", name: "Free", price: "$0", for: "Try it with a small team", cta: "Start free", points: ["Up to 10 people", "Chat, docs, tasks and meetings", "5 meetings and 2 AI summaries a month", "5 agent runs a month", "90 days of message history"] },
@@ -46,7 +49,7 @@ const PricingSection = () => (
         <Label>Pricing</Label>
         <Heading className="mt-5 max-w-3xl">One flat price for the whole team. Not per seat.</Heading>
         <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-[#1b1017]/70">
-          Add people without the bill going up. Start free, upgrade when you need more, and change or cancel any time from workspace settings.
+          Add people without the bill going up. Every paid plan starts with a {TRIAL_DAYS}-day free trial, no card needed, and you can change or cancel any time.
         </p>
       </Reveal>
       <Reveal delay={80}>
@@ -57,10 +60,8 @@ const PricingSection = () => (
               <div key={p.name} className={`relative flex flex-col rounded-3xl p-7 ${hot ? "order-first sm:order-none " : ""}${hot ? "bg-[#381d2a] text-white shadow-2xl shadow-[#381d2a]/25 lg:-my-3 lg:py-10" : "border border-[#381d2a]/12 bg-white text-[#1b1017]"}`}>
                 {hot && <span className="absolute -top-3 left-7 rounded-full bg-[#ff5018] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">Most popular</span>}
                 <p className={`lp-label ${hot ? "text-white/65" : "text-[#381d2a]/60"}`}>{p.name}</p>
-                <p className="mt-4 flex items-baseline gap-1.5">
-                  <span className="lp-h text-5xl">{p.price}</span>
-                  <span className={`text-sm ${hot ? "text-white/65" : "text-[#1b1017]/65"}`}>/ month, whole team</span>
-                </p>
+                <p className="lp-h mt-4 text-5xl">{p.price}</p>
+                <p className={`mt-1 text-sm ${hot ? "text-white/65" : "text-[#1b1017]/65"}`}>per month, for the whole team</p>
                 <p className={`mt-2 text-sm ${hot ? "text-white/75" : "text-[#1b1017]/70"}`}>{p.for}</p>
                 <ul className="mt-6 flex-1 space-y-2.5 text-[14.5px]">
                   {p.points.map((x) => (
@@ -78,6 +79,7 @@ const PricingSection = () => (
                 >
                   {p.cta}
                 </Link>
+                {p.key !== "free" && <p className={`mt-2 text-center text-xs ${hot ? "text-white/70" : "text-[#1b1017]/60"}`}>{TRIAL_DAYS}-day free trial, no card</p>}
                 {p.key === "enterprise" && (
                   <a href="mailto:support@northfoundry.co?subject=WebflowX%20Enterprise" className="mt-2 rounded-lg border border-[#381d2a]/15 px-5 py-3 text-center text-sm font-semibold text-[#381d2a] transition-colors hover:bg-[#f7f2ee]">
                     Talk to us first
@@ -114,7 +116,7 @@ const PricingSection = () => (
           </table>
           <p className="mt-5 max-w-2xl text-sm leading-relaxed text-[#1b1017]/70">
             Free keeps the last 90 days of messages visible; paid plans keep everything. The number of workspaces is per owner. Enterprise
-            storage is 1 TB under fair use. When a workspace reaches a limit, WebflowX tells you which one and shows the next plan.
+            storage is 1 TB under fair use. Quick one-to-one calls from a direct message end after 15 minutes on every plan and don&apos;t count as meetings. When a workspace reaches a limit, WebflowX tells you which one and shows the next plan.
           </p>
         </div>
       </details>

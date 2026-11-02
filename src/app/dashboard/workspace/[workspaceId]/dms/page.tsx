@@ -33,7 +33,7 @@ export default function DmsPage() {
                         <MessageSquare className="size-4 text-brand" />
                     </div>
                     <div>
-                        <h1 className="tracking-tight text-[17px] font-semibold leading-none text-ink">Direct Messages</h1>
+                        <h1 className="tracking-tight text-[17px] font-semibold leading-none text-ink">Direct messages</h1>
                         <p className="text-[11px] text-ink/60 mt-1">
                             {conversations?.length ?? 0} conversation{conversations?.length !== 1 ? "s" : ""}
                             {totalUnread > 0 && (

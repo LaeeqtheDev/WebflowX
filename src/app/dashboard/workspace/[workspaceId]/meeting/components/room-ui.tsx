@@ -18,7 +18,7 @@ import {
 } from "@livekit/components-react"
 import {
     Mic, MicOff, Video, VideoOff, MonitorUp, MonitorOff, MessageSquare, Users, PhoneOff,
-    MoreVertical, Pin, PinOff, Crown, Send, X, UserMinus, VolumeX, AlertCircle, Loader2, ChevronDown,
+    MoreVertical, Pin, PinOff, Crown, Send, X, UserMinus, VolumeX, AlertCircle, Loader2, ChevronDown, Circle,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useQuery } from "convex/react"
@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { colorFor, initials, isHostParticipant, pad, moderateRequest } from "./room-helpers"
 import { CtrlButton, SplitCtrl } from "./room-controls"
+import { useCallRecorder } from "./recorder"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 type Status = "starting" | "recording" | "error"
@@ -398,9 +399,41 @@ function SidePanel({
 
 // ---------------------------------------------------------------------------------------------
 
+// Host-only: record the call to a file on the host's computer. Everyone is told in the call chat.
+function RecordButton({ title }: { title: string }) {
+    const room = useRoomContext()
+    const { send } = useChat()
+    const getMic = useCallback(() => room.localParticipant.getTrackPublication(Track.Source.Microphone)?.track?.mediaStreamTrack, [room])
+    const fileName = `${title.replace(/[\\/:*?"<>|]+/g, "-").slice(0, 60) || "Meeting"} ${new Date().toISOString().slice(0, 10)}`
+    const { recording, start, stop } = useCallRecorder(fileName, getMic)
+    const wasRecording = useRef(false)
+    useEffect(() => {
+        if (recording !== wasRecording.current) {
+            wasRecording.current = recording
+            void send(recording ? "🔴 Started recording this call" : "⏹ Stopped recording").catch(() => {})
+        }
+    }, [recording, send])
+    const toggle = async () => {
+        if (recording) return stop()
+        try {
+            await start()
+            toast.info("Recording. It's saved to your computer when you stop or leave.")
+        } catch (e) {
+            if (e instanceof Error && e.name !== "NotAllowedError") toast.error(e.message)
+        }
+    }
+    return (
+        <CtrlButton label={recording ? "Stop recording" : "Record call"} active={!recording} onClick={() => void toggle()}
+            className={recording ? "!bg-red-600 hover:!bg-red-500" : undefined}>
+            <Circle className={recording ? "size-4 fill-white animate-pulse" : "size-5"} />
+        </CtrlButton>
+    )
+}
+
 function ControlBar({
-    amHost, panel, togglePanel, unread, onEndAll,
+    amHost, panel, togglePanel, unread, onEndAll, title,
 }: {
+    title: string
     amHost: boolean
     panel: "people" | "chat" | null
     togglePanel: (t: "people" | "chat") => void
@@ -427,6 +460,7 @@ function ControlBar({
                 <CtrlButton label={screen.enabled ? "Stop sharing" : "Share screen"} active={!screen.enabled} onClick={() => screen.toggle()} disabled={screen.pending} className={screen.enabled ? on : undefined}>
                     {screen.enabled ? <MonitorOff className="size-5" /> : <MonitorUp className="size-5" />}
                 </CtrlButton>
+                {amHost && <RecordButton title={title} />}
                 {divider}
                 <CtrlButton label="People" active={panel !== "people"} onClick={() => togglePanel("people")} className={panel === "people" ? on : undefined}>
                     <Users className="size-5" />
@@ -617,6 +651,7 @@ export function MeetingStage({ roomName, title, startedAt, status, errorMessage,
             </div>
 
             <ControlBar
+                title={title}
                 amHost={amHost}
                 panel={panel}
                 togglePanel={togglePanel}

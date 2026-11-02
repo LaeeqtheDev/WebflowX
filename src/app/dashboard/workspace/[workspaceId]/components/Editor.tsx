@@ -645,7 +645,7 @@ const Editor = ({
                     {!!image && (
                         <div className="p-2">
                             <div className="relative size-15.5 flex items-center justify-center group/image">
-                                <Hint label="Remove Image">
+                                <Hint label="Remove image">
                                     <button
                                         onClick={() => {
                                             setImage(null);
@@ -672,7 +672,7 @@ const Editor = ({
                     {!!file && (
                         <div className="p-2">
                             <div className="relative flex items-center gap-3 p-3 bg-cream rounded-xl border border-plum/12 group/file max-w-xs">
-                                <Hint label="Remove File">
+                                <Hint label="Remove file">
                                     <button
                                         onClick={() => {
                                             setFile(null);
@@ -761,7 +761,7 @@ const Editor = ({
                         )}
 
                         {variant === "create" && (
-                            <Hint label="Attach File">
+                            <Hint label="Attach file">
                                 <Button
                                     disabled={disabled}
                                     size={"iconSm"}

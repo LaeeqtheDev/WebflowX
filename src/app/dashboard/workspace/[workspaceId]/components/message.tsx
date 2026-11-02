@@ -108,7 +108,7 @@ const MessageImpl = ({
     const marks = useMessageMarks(id);
 
     const [ConfirmDialog, confirm] = useConfirm(
-        "Delete Message",
+        "Delete message",
         "Are you sure you want to delete this message? This cannot be undone"
     );
     const { mutate: updateMessage, isPending: isUpdatingMessage } =
@@ -155,7 +155,7 @@ const MessageImpl = ({
             { id, body },
             {
                 onSuccess: () => {
-                    toast.success("Message Updated");
+                    toast.success("Message updated");
                     setEditingId(null);
                 },
                 onError: () => {

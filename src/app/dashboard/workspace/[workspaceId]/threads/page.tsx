@@ -111,7 +111,7 @@ export default function ThreadsPage() {
                         <div>
                             <div className="px-4 py-2 bg-cream border-b">
                                 <p className="text-[11px] font-semibold text-ink/60 uppercase tracking-wider">
-                                    My Threads
+                                    My threads
                                     {(data?.myThreads?.length ?? 0) > 0 && (
                                         <span className="ml-1.5 text-orange-ink">
                                             {data?.myThreads?.length}
@@ -129,7 +129,7 @@ export default function ThreadsPage() {
                         <div>
                             <div className="px-4 py-2 bg-cream border-b border-t">
                                 <p className="text-[11px] font-semibold text-ink/60 uppercase tracking-wider">
-                                    Participated In
+                                    Participated in
                                     {(data?.participatedThreads?.length ?? 0) > 0 && (
                                         <span className="ml-1.5 text-orange-ink">
                                             {data?.participatedThreads?.length}

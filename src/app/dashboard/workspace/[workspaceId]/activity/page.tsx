@@ -55,6 +55,18 @@ const TYPE_CONFIG = {
         bg: "bg-brand/10",
         label: "a task assigned to you is due soon"
     },
+    doc_comment: {
+        icon: MessageSquare,
+        color: "text-plum",
+        bg: "bg-cream-deep2",
+        label: "commented on a doc"
+    },
+    doc_mention: {
+        icon: FileText,
+        color: "text-orange-ink",
+        bg: "bg-brand/10",
+        label: "mentioned you in a doc"
+    },
     task_comment: {
         icon: MessageSquare,
         color: "text-plum",
@@ -172,6 +184,10 @@ export default function ActivityPage() {
                 break
             case "meeting_invite":
                 router.push(`${base}/meeting${notification.meetingId ? `?join=${notification.meetingId}` : ""}`)
+                break
+            case "doc_comment":
+            case "doc_mention":
+                router.push(`${base}/docs${notification.docId ? `/${notification.docId}` : ""}`)
                 break
             case "note_added":
                 router.push(`${base}/notes${notification.noteId ? `?note=${notification.noteId}` : ""}`)

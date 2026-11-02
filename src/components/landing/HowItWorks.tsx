@@ -22,7 +22,13 @@ export default function HowItWorks() {
         <ol className="mt-14 grid gap-4 md:grid-cols-3">
           {steps.map(({ icon: Icon, n, t, b }, i) => (
             <Reveal key={n} delay={i * 80}>
-              <li className="h-full rounded-3xl border border-[#381d2a]/12 bg-white p-7">
+              <li className="relative h-full rounded-3xl border border-[#381d2a]/12 bg-white p-7">
+                {/* arrow to the next step on wide screens */}
+                {i < steps.length - 1 && (
+                  <span aria-hidden="true" className="absolute -right-[13px] top-1/2 z-10 hidden h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-[#381d2a]/12 bg-[#f7f2ee] text-[#ff5018] md:flex">
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
+                )}
                 <div className="flex items-center justify-between">
                   <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#ff5018]/10 text-[#ff5018]"><Icon className="h-5 w-5" aria-hidden="true" /></span>
                   <span className="lp-h text-3xl text-[#381d2a]/25">{n}</span>

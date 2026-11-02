@@ -48,14 +48,16 @@ const Switch = ({ on, onChange, label, disabled }: { on: boolean; onChange: (v: 
 )
 
 // Settings › Agents: switch agents on, choose how much they may do on their own, and see what they did.
-export const AgentsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces"> }) => {
+export const AgentsPanel = ({ workspaceId, onSampleReady }: { workspaceId: Id<"workspaces">; onSampleReady?: (meetingId: Id<"meetings">) => void }) => {
     const data = useQuery(api.agents.overview, { workspaceId })
     const channels = useQuery(api.channels.get, { workspaceId })
     const configure = useMutation(api.agents.configure)
     const postNow = useMutation(api.agents.runStandupNow)
+    const trySample = useMutation(api.agents.trySample)
     if (data === undefined) return <div className="flex justify-center py-10"><Loader2 className="size-5 animate-spin text-brand" /></div>
     if (data === null) return <p className="text-sm text-ink/60">You don&apos;t have access to agents in this workspace.</p>
-    return <AgentsPanelView data={data as unknown as OverviewData} channels={channels ?? []} onSave={(next) => configure({ workspaceId, ...next })} onPostStandup={() => postNow({ workspaceId })} />
+    return <AgentsPanelView data={data as unknown as OverviewData} channels={channels ?? []} onSave={(next) => configure({ workspaceId, ...next })} onPostStandup={() => postNow({ workspaceId })}
+        onTrySample={async () => { const id = await trySample({ workspaceId }); onSampleReady?.(id) }} />
 }
 
 const ModePicker = ({ value, disabled, onChange }: { value: "suggest" | "act"; disabled: boolean; onChange: (m: "suggest" | "act") => void }) => (
@@ -98,9 +100,18 @@ const AgentCard = ({ icon: Icon, title, blurb, settings, canManage, saving, onTo
 const localTz = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" } catch { return "UTC" } }
 const hourLabel = (h: number) => new Date(Date.UTC(2026, 0, 1, h)).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" })
 
-export const AgentsPanelView = ({ data, channels, onSave, onPostStandup }: {
+export const AgentsPanelView = ({ data, channels, onSave, onPostStandup, onTrySample }: {
     data: OverviewData; channels: Channel[]; onSave: (next: SaveArgs) => Promise<unknown>; onPostStandup?: () => Promise<unknown>
+    onTrySample?: () => Promise<unknown>
 }) => {
+    const [trying, setTrying] = useState(false)
+    const runSample = async () => {
+        if (!onTrySample) return
+        setTrying(true)
+        try { await onTrySample(); toast.success("The follow-up agent is reading a sample meeting") }
+        catch (e) { toast.error(friendlyError(e, "Couldn't start the sample")) }
+        finally { setTrying(false) }
+    }
     const [saving, setSaving] = useState<Kind | null>(null)
     const [open, setOpen] = useState<string | null>(null)
     // triage can be switched on only once channels are picked, so the picks are held here first
@@ -151,6 +162,20 @@ export const AgentsPanelView = ({ data, channels, onSave, onPostStandup }: {
                 <h3 className="text-[15px] font-semibold tracking-tight text-ink">Agents</h3>
                 <p className="mt-1 text-sm text-ink/60">AI teammates that do the follow-up work for you. They act with the permissions of the admin who turns them on, and every action is logged.</p>
             </div>
+
+            {data.canManage && onTrySample && (
+                <div className="flex flex-col gap-3 rounded-xl border border-brand/30 bg-brand/[0.06] p-4 sm:flex-row sm:items-center">
+                    <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand text-white"><Zap className="size-5" /></span>
+                    <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold tracking-tight text-ink">See an agent work in 30 seconds</p>
+                        <p className="mt-0.5 text-[13px] text-ink/65">Run the follow-up agent on a made-up meeting. It suggests tasks for people in this workspace, and nothing is created until you approve. Uses one agent run; the sample doesn&apos;t count as a meeting.</p>
+                    </div>
+                    <button type="button" onClick={runSample} disabled={trying}
+                        className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-brand px-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:opacity-60">
+                        {trying ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />} Try it on a sample meeting
+                    </button>
+                </div>
+            )}
 
             <AgentCard icon={AtSign} title="Ask the agent in chat" settings={assistant} canManage={data.canManage} saving={saving === "assistant"}
                 blurb="Anyone can type @agent in a channel or thread: “@agent what did we decide about pricing?”, “@agent summarise this thread”, “@agent make tasks from this”. It answers in the thread."
