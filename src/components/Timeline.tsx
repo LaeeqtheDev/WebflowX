@@ -241,7 +241,7 @@ export function WebflowXTimeline() {
   }, []);
 
   return (
-    <section ref={root} id="timeline" className="w-full bg-[#efe8e3] py-24 md:py-32">
+    <section ref={root} id="timeline" className="w-full bg-[#efe8e3] py-16 md:py-32">
       <div className={wrap}>
         <Reveal>
           <Label>Our journey</Label>
@@ -274,7 +274,7 @@ export function WebflowXTimeline() {
                       </li>
                     ))}
                   </ul>
-                  <dl className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-[#381d2a]/15 bg-[#381d2a]/15 text-sm">
+                  <dl className="mt-7 hidden grid-cols-2 sm:grid gap-px overflow-hidden rounded-lg border border-[#381d2a]/15 bg-[#381d2a]/15 text-sm">
                     <div className="bg-[#f7f2ee] p-4">
                       <dt className="lp-label text-[#c2370d]">Focus</dt>
                       <dd className="mt-2 leading-snug text-[#1b1017]">{s.focus}</dd>
@@ -285,7 +285,7 @@ export function WebflowXTimeline() {
                     </div>
                   </dl>
                 </div>
-                <div className="tl-visual self-start rounded-xl bg-[#f7f2ee] p-5">{s.visual}</div>
+                <div className="tl-visual hidden self-start rounded-xl bg-[#f7f2ee] p-5 sm:block">{s.visual}</div>
               </div>
             </div>
           ))}

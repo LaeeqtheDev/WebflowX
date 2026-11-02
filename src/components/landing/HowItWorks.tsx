@@ -13,13 +13,13 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section id="how" className="w-full bg-[#f7f2ee] py-24 md:py-32">
+    <section id="how" className="w-full bg-[#f7f2ee] py-16 md:py-32">
       <div className={wrap}>
         <Reveal variant="blur">
           <Label>How it works</Label>
           <Heading className="mt-5 max-w-3xl">Running by this afternoon.</Heading>
         </Reveal>
-        <ol className="mt-14 grid gap-4 md:grid-cols-3">
+        <ol className="mt-10 grid md:mt-14 gap-4 md:grid-cols-3">
           {steps.map(({ icon: Icon, n, t, b }, i) => (
             <Reveal key={n} delay={i * 140} variant="scale" className="h-full">
               <li className="lp-lift relative h-full rounded-3xl border border-[#381d2a]/12 bg-white p-7">

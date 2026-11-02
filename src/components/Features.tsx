@@ -34,7 +34,7 @@ function Cell({
 }) {
   const t = tones[tone];
   return (
-    <Reveal variant="scale" delay={delay} className={`h-full ${className}`}><div className={`lp-lift flex h-full flex-col overflow-hidden rounded-3xl p-7 ${t.box}`}>
+    <Reveal variant="scale" delay={delay} className={`h-full min-w-0 ${className}`}><div className={`lp-lift flex h-full flex-col overflow-hidden rounded-3xl p-7 ${t.box}`}>
       <h3 className={`lp-h text-2xl ${t.title}`}>{title}</h3>
       <p className={`mt-2 max-w-sm text-[15px] leading-relaxed ${t.body}`}>{body}</p>
       {children && (
@@ -58,7 +58,7 @@ const small = [
 const NewFeatures = () => {
 
   return (
-    <section id="features" className="w-full bg-[#efe8e3] py-24 md:py-32">
+    <section id="features" className="w-full bg-[#efe8e3] py-16 md:py-32">
       <div className={wrap}>
         <Reveal variant="blur">
           <Label>Product</Label>
@@ -69,7 +69,7 @@ const NewFeatures = () => {
         </Reveal>
 
         {/* the meeting and agent screens are in the hero; these are the three places a team spends the rest of its day */}
-        <div className="mt-14 grid gap-4 lg:grid-cols-3">
+        <div className="mt-10 grid md:mt-14 gap-4 lg:grid-cols-3">
           <Cell tone="white" title="Channels and threads" body="Channels, DMs and threads with reactions, mentions and files, like the chat you use now." visualH="h-[190px] sm:h-[240px]">
             <ScaledFrame w={680} h={440}>
               <PaneFrame>

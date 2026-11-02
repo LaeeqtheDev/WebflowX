@@ -394,6 +394,8 @@ const schema = defineSchema({
     agentRuns: defineTable({
         workspaceId: v.id("workspaces"),
         agentId: v.id("agents"),
+        // a "Try it on a sample meeting" run: free, never counted against the plan
+        sample: v.optional(v.boolean()),
         meetingId: v.optional(v.id("meetings")),
         // triage: the channel and the messages it was asked to look at (gathered for a minute, then read together)
         channelId: v.optional(v.id("channels")),
