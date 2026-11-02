@@ -2,15 +2,15 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, MousePointer2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { MOTION_OK, prefersReducedMotion, whenGsap, type ScrollTrigger } from "./landing/gsap";
-import { AppFrame, ChatPane, DocPane, MeetingPane, ScaledFrame, TasksPane } from "./landing/mock";
+import { AgentChatPane, AgentReviewPane, AppFrame, MeetingPane, ScaledFrame } from "./landing/mock";
 
+// the hero tells one story: a call ends, the agent turns it into tasks, the team gets the recap
 const views = [
-  { key: "Chat", rail: "Home" },
-  { key: "Tasks", rail: "Tasks" },
-  { key: "Docs", rail: "Docs" },
-  { key: "Meetings", rail: "Meetings" },
+  { key: "1. The call ends" },
+  { key: "2. The agent assigns tasks" },
+  { key: "3. The team gets the recap" },
 ] as const;
 
 const Hero = () => {
@@ -58,17 +58,6 @@ const Hero = () => {
         .to(q(".h-line > span"), { yPercent: 0, duration: 1, stagger: 0.1 }, 0.1)
         .to(q(".h-fade:not(.h-pill)"), { opacity: 1, y: 0, duration: 0.7, stagger: 0.1 }, 0.7)
         .to(q(".h-stage"), { opacity: 1, yPercent: 0, duration: 1.2 }, 0.5);
-
-      // collaborator cursor drifting over the product
-      if (!reduced) {
-        gsap.set(q(".h-cursor"), { x: 380, y: 260 });
-        gsap
-          .timeline({ repeat: -1, delay: 2, defaults: { duration: 2.2, ease: "power2.inOut" } })
-          .to(q(".h-cursor"), { x: 620, y: 190 })
-          .to(q(".h-cursor"), { x: 860, y: 340 })
-          .to(q(".h-cursor"), { x: 560, y: 470 })
-          .to(q(".h-cursor"), { x: 380, y: 260 });
-      }
     });
 
     // desktop: pinned, scroll-driven product tour
@@ -79,7 +68,7 @@ const Hero = () => {
         scrollTrigger: {
           trigger: el,
           start: "top top",
-          end: "+=2200",
+          end: "+=1300",
           pin: true,
           pinSpacing: true,
           scrub: 0.6,
@@ -87,7 +76,7 @@ const Hero = () => {
           invalidateOnRefresh: true,
           onUpdate: (self) => {
             const p = self.progress;
-            const idx = p < 0.32 ? 0 : p < 0.55 ? 1 : p < 0.78 ? 2 : 3;
+            const idx = p < 0.38 ? 0 : p < 0.7 ? 1 : 2;
             show(idx);
           },
         },
@@ -110,7 +99,7 @@ const Hero = () => {
       timer = window.setInterval(() => {
         i = (i + 1) % views.length;
         show(i);
-      }, 4200);
+      }, 4800);
       return () => window.clearInterval(timer);
     });
 
@@ -124,7 +113,7 @@ const Hero = () => {
   const goTo = (i: number) => {
     const st = stRef.current;
     if (st) {
-      const marks = [0.12, 0.43, 0.67, 0.9];
+      const marks = [0.15, 0.55, 0.9];
       window.scrollTo({ top: st.start + marks[i] * (st.end - st.start), behavior: "smooth" });
     } else {
       showRef.current(i);
@@ -173,9 +162,7 @@ const Hero = () => {
           </h1>
 
           <p className="h-fade mt-5 max-w-xl text-lg leading-relaxed text-white/65">
-            Chat, tasks, live docs and video meetings in one workspace, with AI agents that turn meetings and
-            chat requests into assigned tasks, post your standup and answer &ldquo;@agent, what did we decide?&rdquo;
-            One flat price per workspace, not per seat.
+            Chat, docs, tasks and meetings in one workspace, with AI agents that turn every call and request into assigned work.
           </p>
 
           <div className="h-fade mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -196,19 +183,19 @@ const Hero = () => {
               See the agents
             </a>
           </div>
-          <p className="h-fade mt-5 text-sm text-white/45">Free plan, no card needed. Set up in a minute. Built by North Foundry.</p>
+          <p className="h-fade mt-5 text-sm text-white/60">One flat price for the whole team, not per seat. Free plan, no card needed.</p>
         </div>
 
         <div className="h-stage relative mt-10 w-full max-w-[1120px] lg:mt-12" style={{ perspective: 1800 }}>
           {/* view tabs */}
           <div className="mb-4 flex justify-center">
-            <div className="inline-flex gap-1 rounded-lg border border-white/10 bg-white/5 p-1 backdrop-blur">
+            <div className="inline-flex flex-wrap justify-center gap-1 rounded-lg border border-white/10 bg-white/5 p-1 backdrop-blur">
               {views.map((v, i) => (
                 <button
                   key={v.key}
                   type="button"
                   onClick={() => goTo(i)}
-                  className={`rounded-md px-4 py-1.5 text-[13px] font-medium transition-colors ${
+                  className={`rounded-md px-3 py-1.5 text-[12px] font-medium sm:px-4 sm:text-[13px] transition-colors ${
                     active === i ? "bg-[#ff5018] text-white" : "text-white/65 hover:text-white"
                   }`}
                 >
@@ -228,30 +215,19 @@ const Hero = () => {
             <ScaledFrame w={1120} h={640} className="rounded-2xl">
               <div className="relative h-full w-full">
                 <div className="hv absolute inset-0">
-                  <AppFrame active="Home">
-                    <ChatPane channel="general" />
-                  </AppFrame>
-                </div>
-                <div className="hv absolute inset-0">
-                  <AppFrame active="Tasks">
-                    <TasksPane />
-                  </AppFrame>
-                </div>
-                <div className="hv absolute inset-0">
-                  <AppFrame active="Docs">
-                    <DocPane />
-                  </AppFrame>
-                </div>
-                <div className="hv absolute inset-0">
-                  <AppFrame active="Meetings">
+                  <AppFrame active="Meetings" channel="product-launch">
                     <MeetingPane />
                   </AppFrame>
                 </div>
-                <div className="h-cursor pointer-events-none absolute left-0 top-0 z-10">
-                  <MousePointer2 className="h-6 w-6 fill-[#ff5018] text-[#ff5018]" />
-                  <span className="ml-4 -mt-1 inline-block rounded-md rounded-tl-none bg-[#ff5018] px-2 py-1 text-xs font-semibold text-white">
-                    Sofia
-                  </span>
+                <div className="hv absolute inset-0">
+                  <AppFrame active="Meetings" channel="product-launch">
+                    <AgentReviewPane />
+                  </AppFrame>
+                </div>
+                <div className="hv absolute inset-0">
+                  <AppFrame active="Home" channel="product-launch">
+                    <AgentChatPane />
+                  </AppFrame>
                 </div>
               </div>
             </ScaledFrame>

@@ -251,6 +251,8 @@ export const COMPARISONS: Compare[] = [
 export const SITE_FAQS: Faq[] = [
   { q: "How much does WebflowX cost?", a: "There are four plans per workspace per month: Free ($0), Startup ($29), Growth ($79) and Enterprise ($249)." },
   { q: "Is pricing per seat?", a: "No. Plans are priced per workspace, with member limits that rise with the plan." },
+  { q: "Is there a WebflowX mobile app?", a: "Not in the app stores yet. WebflowX works in a phone's browser and can be installed to the home screen as an app with push notifications." },
+  { q: "Where is WebflowX data stored?", a: "In one deployment in the United States (US East). Choosing a region isn't available yet." },
   { q: "Does WebflowX support video calls?", a: "Yes. Host meetings in your workspace, follow a live transcript and get an AI summary with action items afterwards." },
   { q: "Can I export my data?", a: "Yes. Anyone can download their own data, and owners and admins can export the workspace." },
   { q: "What can WebflowX's AI agents do?", a: "Four things, each switched on by an admin: turn a meeting's action items into tasks, turn requests in chosen channels into tasks, post a daily standup, and answer @agent questions in chat from your workspace's messages, tasks and meetings." },

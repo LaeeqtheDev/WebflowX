@@ -48,11 +48,11 @@ const agents = [
     pane: (
       <Pane>
         <div className="space-y-3">
-          <Line face={<Face c="#10b981" l="A" />} name="Ava"><span className="font-semibold text-[#ff8a63]">@agent</span> what did we decide about pricing?</Line>
+          <Line face={<Face c="#10b981" l="A" />} name="Ava"><span className="font-semibold text-[#ff8a63]">@agent</span> what did we decide about the launch date?</Line>
           <div className="ml-4 border-l border-white/10 pl-4">
             <Line face={<AgentFace />} name="WebflowX Agent" agent>
-              Startup stays at $29 and Growth moves to $79 from December.
-              <span className="mt-1 block text-[11px] text-white/45">From: Pricing review (meeting, Oct 28)</span>
+              The 18th. The team agreed to keep it and ship the checkout fix first.
+              <span className="mt-1 block text-[11px] text-white/45">From: Weekly product sync (meeting, Oct 28)</span>
             </Line>
           </div>
         </div>
@@ -149,13 +149,13 @@ export default function AgentsSection() {
           ))}
         </div>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {guardrails.map(({ icon: Icon, t, b }, i) => (
             <Reveal key={t} delay={i * 60}>
-              <div className="h-full rounded-2xl border border-white/10 p-5">
+              <div className="h-full rounded-2xl border border-white/10 p-4 sm:p-5">
                 <Icon className="h-5 w-5 text-[#ff5018]" aria-hidden="true" />
                 <p className="mt-3 text-[15px] font-semibold tracking-tight">{t}</p>
-                <p className="mt-1 text-[13.5px] leading-relaxed text-white/65">{b}</p>
+                <p className="mt-1 text-[12.5px] leading-relaxed text-white/65 sm:text-[13.5px]">{b}</p>
               </div>
             </Reveal>
           ))}

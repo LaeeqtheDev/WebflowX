@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { AuthScreen } from "@/features/auth/components/auth-screen"
+import { PlanIntent } from "./plan-intent"
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -8,10 +9,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 }
 
-const AuthPage = async ({ searchParams }: { searchParams: Promise<{ mode?: string; next?: string }> }) => {
-  const { mode, next } = await searchParams
+const AuthPage = async ({ searchParams }: { searchParams: Promise<{ mode?: string; next?: string; plan?: string }> }) => {
+  const { mode, next, plan } = await searchParams
   return(
     <div >
+      <PlanIntent plan={plan} />
       <AuthScreen initialState={mode === "signup" ? "signUp" : "signIn"} invited={!!next?.startsWith("/join/")} />
     </div>
   )
