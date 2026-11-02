@@ -1,10 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
-import { ArrowRight, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { api } from "../../convex/_generated/api";
-import { Reveal } from "./landing/ui";
 import { wrap } from "./landing/tokens";
 
 type State = { kind: "idle" } | { kind: "sending" } | { kind: "done" } | { kind: "error"; message: string };
@@ -75,27 +73,10 @@ function SubscribeForm() {
   );
 }
 
+// sits right under the closing call to action, so it's only the "not ready yet" option
 export const NewsletterSignup = () => (
   <>
-    <section className="w-full bg-[#381d2a] py-20 md:py-28">
-      <div className={`${wrap} flex flex-col items-start justify-between gap-10 md:flex-row md:items-end`}>
-        <Reveal>
-          <h2 className="lp-h max-w-2xl text-4xl text-white sm:text-5xl md:text-6xl">
-            Bring your team into one workspace.
-          </h2>
-          <p className="mt-5 max-w-md text-lg text-white/75">
-            Start on the free plan and upgrade when your team needs more room.
-          </p>
-        </Reveal>
-        <Link
-          href="/auth?mode=signup"
-          className="inline-flex items-center gap-2 rounded-md bg-[#ff5018] px-8 py-4 text-[15px] font-semibold text-white transition-colors hover:bg-[#ff6a3a]"
-        >
-          Start free <ArrowRight className="h-4 w-4" />
-        </Link>
-      </div>
-    </section>
-    <section aria-labelledby="newsletter-heading" className="w-full bg-[#f7f2ee] py-14 md:py-16">
+    <section aria-labelledby="newsletter-heading" className="w-full bg-[#f7f2ee] pb-16 pt-2 md:pb-20">
       <div className={`${wrap} flex flex-col items-start justify-between gap-8 md:flex-row md:items-center`}>
         <div className="max-w-md">
           <h3 id="newsletter-heading" className="lp-h text-2xl text-[#381d2a] sm:text-3xl">

@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
   Bell,
+  Check,
   CheckSquare,
   FileText,
   Hash,
@@ -13,6 +14,7 @@ import {
   NotebookPen,
   Search,
   Send,
+  Sparkles,
   Video,
 } from "lucide-react";
 
@@ -407,5 +409,115 @@ export function PaneFrame({ children }: { children: React.ReactNode }) {
     >
       {children}
     </div>
+  );
+}
+
+function AgentBadge() {
+  return <span className="ml-1.5 rounded bg-[#ff5018]/12 px-1.5 py-0.5 align-middle text-[9px] font-bold uppercase tracking-wide text-[#c2370d]">Agent</span>;
+}
+
+function AgentAvatar({ size = 36 }: { size?: number }) {
+  return (
+    <span className="flex shrink-0 items-center justify-center rounded-md bg-[#ff5018] text-white" style={{ width: size, height: size }}>
+      <Sparkles style={{ width: size * 0.45, height: size * 0.45 }} />
+    </span>
+  );
+}
+
+const followUps = [
+  { t: "Deploy the checkout fix", who: "Dev Patel", c: "#2f7d6b", due: "Today" },
+  { t: "Finish the Q4 campaign brief", who: "Sofia Alvarez", c: "#c0561f", due: "Fri" },
+  { t: "Send onboarding survey to beta users", who: "Liam Reed", c: "#3b5a9a", due: "Mon" },
+  { t: "Book the design review", who: "Maya Chen", c: "#7b3f61", due: "" },
+];
+
+/** The meeting page after a call: the follow-up agent's proposed tasks, waiting for approval. */
+export function AgentReviewPane() {
+  return (
+    <>
+      <div className="flex h-12 items-center justify-between border-b border-neutral-200 px-5 text-[15px] font-bold text-[#1b1017]">
+        Weekly product sync
+        <span className="text-xs font-medium text-neutral-600">Ended 2 min ago · 32 min</span>
+      </div>
+      <div className="grid flex-1 grid-cols-5 gap-5 bg-[#f8f6f7] p-5">
+        <div className="col-span-2 rounded-lg border border-neutral-200 bg-white p-4">
+          <p className="text-xs font-semibold text-[#c2370d]">AI summary</p>
+          <p className="mt-2 text-[13px] font-semibold text-[#1b1017]">Decisions</p>
+          <ul className="mt-1.5 space-y-1.5 text-[12px] leading-snug text-neutral-700">
+            <li>Checkout fix ships today.</li>
+            <li>Beta users get the onboarding survey Monday.</li>
+            <li>Launch date stays on the 18th.</li>
+          </ul>
+          <p className="mt-4 text-[13px] font-semibold text-[#1b1017]">Action items</p>
+          <ul className="mt-1.5 space-y-1.5 text-[12px] text-neutral-700">
+            <li>Dev: deploy the checkout fix today</li>
+            <li>Sofia: campaign brief by Friday</li>
+            <li>Liam: survey to beta users Monday</li>
+            <li>Maya: book the design review</li>
+          </ul>
+        </div>
+        <div className="m-card col-span-3 rounded-lg border-2 border-[#ff5018]/60 bg-white p-4 shadow-[0_12px_40px_-16px_rgba(255,80,24,0.45)]">
+          <div className="flex items-center gap-2.5">
+            <AgentAvatar size={28} />
+            <p className="text-[13px] font-bold text-[#1b1017]">Follow-up agent<AgentBadge /></p>
+            <span className="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">Needs your review</span>
+          </div>
+          <p className="mt-2 text-[12px] text-neutral-700">I found 4 action items. Approve and I&apos;ll create the tasks and post a recap in #product-launch.</p>
+          <ul className="mt-3 space-y-2">
+            {followUps.map((x) => (
+              <li key={x.t} className="m-card flex items-center gap-2.5 rounded-lg border border-neutral-200 px-3 py-2.5">
+                <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded bg-[#ff5018]"><Check className="h-3 w-3 text-white" strokeWidth={3} /></span>
+                <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-[#1b1017]">{x.t}</span>
+                <Avatar name={x.who} color={x.c} size={18} />
+                <span className="w-24 truncate text-[11px] text-neutral-600">{x.who}</span>
+                <span className="w-10 text-right text-[11px] font-semibold text-neutral-700">{x.due}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4 flex gap-2">
+            <span className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#ff5018] px-3.5 text-[12px] font-semibold text-white"><Check className="h-3.5 w-3.5" /> Approve 4 tasks</span>
+            <span className="inline-flex h-8 items-center rounded-lg border border-neutral-200 px-3.5 text-[12px] font-semibold text-neutral-700">Edit</span>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** The channel after approval: the agent's recap, then someone asking @agent a question. */
+export function AgentChatPane() {
+  return (
+    <>
+      <div className="flex h-12 items-center border-b border-neutral-200 px-5 text-[15px] font-bold text-[#1b1017]"># product-launch</div>
+      <div className="flex flex-1 flex-col justify-end gap-4 overflow-hidden px-5 pb-4">
+        <Msg name="Maya Chen" color="#7b3f61" time="11:02 AM">Good sync everyone, thanks!</Msg>
+        <div className="m-msg flex gap-3">
+          <AgentAvatar />
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px]"><span className="font-bold text-[#1b1017]">Follow-up agent</span><AgentBadge /> <span className="text-xs text-neutral-600">11:04 AM</span></p>
+            <div className="mt-1 rounded-lg border border-neutral-200 bg-[#f8f6f7] p-3 text-[13px] leading-relaxed text-neutral-800">
+              <p className="font-semibold text-[#1b1017]">Recap: Weekly product sync</p>
+              <p className="mt-1">Checkout fix ships today. Survey goes to beta users Monday. Launch stays on the 18th.</p>
+              <p className="mt-1.5">4 tasks added to the board: <span className="text-[#c2370d]">@Dev</span> checkout fix (today), <span className="text-[#c2370d]">@Sofia</span> campaign brief (Fri), <span className="text-[#c2370d]">@Liam</span> survey (Mon), <span className="text-[#c2370d]">@Maya</span> design review.</p>
+            </div>
+          </div>
+        </div>
+        <Msg name="Liam Reed" color="#3b5a9a" time="11:20 AM" late>
+          <span className="font-semibold text-[#c2370d]">@agent</span> when did we say the launch is?
+        </Msg>
+        <div className="m-msg m-late ml-12 flex gap-3 border-l-2 border-neutral-200 pl-3">
+          <AgentAvatar size={28} />
+          <div>
+            <p className="text-[13px]"><span className="font-bold text-[#1b1017]">WebflowX Agent</span><AgentBadge /></p>
+            <p className="mt-0.5 text-[13px] text-neutral-800">The 18th. It was confirmed in today&apos;s Weekly product sync.</p>
+            <p className="mt-0.5 text-[11px] text-neutral-600">From: Weekly product sync (meeting, today)</p>
+          </div>
+        </div>
+      </div>
+      <div className="mx-5 mb-4 flex items-center justify-between rounded-lg border border-neutral-200 bg-[#f8f8f8] px-3 py-3 text-[13px] text-neutral-600">
+        Message # product-launch
+        <Send className="h-4 w-4" />
+      </div>
+    </>
   );
 }

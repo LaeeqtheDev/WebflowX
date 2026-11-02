@@ -8,6 +8,7 @@ import SecuritySection from '@/components/landing/Security'
 import AgentsSection from '@/components/landing/Agents'
 import FinalCta from '@/components/landing/FinalCta'
 import HowItWorks from '@/components/landing/HowItWorks'
+import Proof from '@/components/landing/Proof'
 const StackCompare = dynamic(() => import('@/components/landing/StackCompare'))
 const FAQSection = dynamic(() => import('@/components/FAQ').then(m => m.FAQSection))
 const NewsletterSignup = dynamic(() => import('@/components/newslettersignup').then(m => m.NewsletterSignup))
@@ -59,11 +60,12 @@ const page = () => {
       />
       <Navbar />
       <Hero />
+      <Proof />
       <AgentsSection />
-      <WhyChooseUs />
       <StackCompare />
       <HowItWorks />
       <FeaturesSection />
+      <WhyChooseUs />
       <SecuritySection />
       <PricingSection />
       <FAQSection />

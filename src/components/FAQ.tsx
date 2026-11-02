@@ -23,12 +23,12 @@ const faqData = [
   {
     id: "getting-started",
     question: "How do I get started with WebflowX?",
-    answer: "Sign up, create your workspace and invite your team. You can start chatting, creating tasks and organizing projects right away.",
+    answer: "Sign up free with email, Google or GitHub, create a workspace and invite your team with a link. Then switch on the agents in Settings › Agents, and your next meeting turns its action items into tasks.",
   },
   {
     id: "pricing",
-    question: "What is WebflowX's pricing model?",
-    answer: "There are four plans: Free ($0), Startup ($29), Growth ($79) and Enterprise ($249) per month, with limits applied per workspace. Higher plans raise limits on workspaces, members, channels, notes, pages and database rows, meetings per month, AI summaries per month, file storage (250 MB, 5 GB, 50 GB and 1 TB under fair use), guests, and integrations such as API keys and webhooks. The Free plan shows the last 90 days of messages; paid plans keep full history. Enterprise has no limit on workspaces, members, channels, pages or database rows, and generous monthly allowances for meetings (200) and AI summaries (150).",
+    question: "Is it really one price for the whole team?",
+    answer: "Yes. Each plan is a flat monthly price for the workspace, not per person: Free for up to 10 people, Startup $29 for up to 25, Growth $79 for up to 100 and Enterprise $249 with no member limit. Every limit is listed under Pricing.",
   },
   {
     id: "file-sharing",
@@ -57,8 +57,8 @@ const faqData = [
   },
   {
     id: "security",
-    question: "Is my data safe?",
-    answer: "Permissions are enforced on the server, not just hidden in the interface. Uploads are checked against an allowed-type list and size caps, rate limits and size limits guard against spam and abuse, and the site sends strict security headers. Read our Terms and Privacy Policy for the details of how data is handled.",
+    question: "Is my data safe, and where is it stored?",
+    answer: "Permissions are enforced on the server, not just hidden in the interface, and two-step verification and an audit log are built in. Workspace data is stored in one deployment in the United States (US East); choosing a region isn't available yet. We don't hold SOC 2 or ISO 27001 certification. The Security and Trust pages have the details.",
   },
   {
     id: "permissions",
@@ -77,8 +77,8 @@ const faqData = [
   },
   {
     id: "export",
-    question: "Can I export my data?",
-    answer: "Yes. Anyone can download their own data, and owners and admins can export the workspace (direct messages, channels they cannot open and other people's personal notes are left out).",
+    question: "What happens to our data if we leave?",
+    answer: "It's yours. Owners and admins can export the workspace and anyone can download their own data, at any time (direct messages, channels you can't open and other people's personal notes are left out of a workspace export). A cancelled plan runs to the end of the paid period, then moves to Free with your content kept. Owners can delete the workspace, which removes its content.",
   },
   {
     id: "dark-mode",
@@ -87,8 +87,8 @@ const faqData = [
   },
   {
     id: "mobile",
-    question: "Does it work on mobile?",
-    answer: "Yes. WebflowX has a mobile layout with drawer navigation, and you can install it to your home screen or desktop as an app to get push notifications. On iPhone, add it to the Home Screen first. Native mobile apps are not available yet.",
+    question: "Is there a mobile app?",
+    answer: "Not in the App Store or Google Play yet. WebflowX works in your phone's browser, and you can install it to your home screen as an app to get push notifications. On iPhone, add it to the Home Screen first.",
   },
   {
     id: "limits",
@@ -105,10 +105,13 @@ const faqData = [
 // the questions people ask before signing up come first; the rest are one click away
 const FIRST = 8
 
+const ORDER = ["agents", "agents-access", "switch", "pricing", "mobile", "security", "export", "getting-started"]
+const ranked = [...faqData].sort((a, b) => (ORDER.indexOf(a.id) + 1 || 99) - (ORDER.indexOf(b.id) + 1 || 99))
+
 export const FAQSection = () => {
   const [open, setOpen] = useState<string | null>("agents");
   const [all, setAll] = useState(false);
-  const shown = all ? faqData : faqData.slice(0, FIRST);
+  const shown = all ? ranked : ranked.slice(0, FIRST);
 
   return (
     <section id="faq" className="w-full bg-[#efe8e3] py-24 md:py-32">

@@ -9,10 +9,8 @@ import { COMPARISONS, FEATURES, USE_CASES } from "@/lib/marketing-content";
 const menuItems = [
   { label: "Agents", href: "#agents" },
   { label: "Compare", href: "#compare" },
-  { label: "How it works", href: "#how" },
   { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
-  { label: "About", href: "/about" },
 ];
 
 const productGroups = [

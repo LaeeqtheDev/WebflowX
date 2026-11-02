@@ -1,141 +1,44 @@
 import React from "react";
-import {
-  Download,
-  Gauge,
-  KeyRound,
-  Link2,
-  Lock,
-  Megaphone,
-  ScrollText,
-  ShieldCheck,
-  UserCog,
-} from "lucide-react";
-import { Heading, Label, Reveal } from "./ui";
+import Link from "next/link";
+import { ArrowRight, Download, KeyRound, Lock, ScrollText, ShieldCheck, UserCog } from "lucide-react";
+import { Label, Reveal } from "./ui";
 import { wrap } from "./tokens";
 
-const roles = ["Owner", "Admin", "Moderator", "Member", "Custom roles"];
-
-const permissions = [
-  "Create channels",
-  "Manage channels",
-  "View locked channels",
-  "Delete messages",
-  "Manage members",
-  "Invite people",
-  "Edit workspace",
-  "Moderate meetings",
-  "Manage content",
-  "Post in read-only channels",
-  "Mention everyone",
-  "Upload files",
-  "Start meetings",
-  "Create docs",
-];
-
-const cards = [
-  {
-    icon: Lock,
-    t: "Private and read-only channels",
-    b: "Lock a channel to the members you choose, or make it read-only for announcements.",
-  },
-  {
-    icon: ShieldCheck,
-    t: "Enforced on the server",
-    b: "Permissions are checked on the server, not just hidden in the interface.",
-  },
-  {
-    icon: ScrollText,
-    t: "Audit log",
-    b: "Role, channel, invite, member and ownership changes are recorded for owners and admins.",
-  },
-  {
-    icon: Link2,
-    t: "Invite links you control",
-    b: "Invite links can expire, and you can switch them off at any time. Owners can transfer ownership.",
-  },
-  {
-    icon: Gauge,
-    t: "Guardrails against abuse",
-    b: "Rate limits and size limits protect against spam. Uploads are checked against an allowed-type list and size caps, and each workspace has a storage cap. The site sends strict security headers.",
-  },
-  {
-    icon: KeyRound,
-    t: "Verified accounts",
-    b: "New accounts confirm their email with an 8-digit code that expires in 15 minutes. Passwords can be reset by emailed code, and you can sign in with Google or GitHub.",
-  },
-  {
-    icon: Download,
-    t: "Your data, exportable",
-    b: "Anyone can download their own data. Owners and admins can export the workspace; direct messages and personal notes are left out. Our Terms and Privacy Policy are public.",
-  },
+// Short reassurance for buyers; the full detail (and what isn't offered yet) is on /security.
+const points = [
+  { icon: UserCog, t: "Roles and custom permissions", b: "Four built-in roles, or build your own from 14 permissions." },
+  { icon: ShieldCheck, t: "Checked on the server", b: "Permissions are enforced in the backend, not just hidden in the interface." },
+  { icon: Lock, t: "Private and read-only channels", b: "Lock a channel to chosen members, or make it announcements-only." },
+  { icon: KeyRound, t: "Two-step verification", b: "For anyone, and required for everyone on Growth and Enterprise." },
+  { icon: ScrollText, t: "Audit log", b: "Role, channel, invite, member and ownership changes are on record." },
+  { icon: Download, t: "Your data, exportable", b: "Export the workspace any time. No lock-in." },
 ];
 
 export default function SecuritySection() {
   return (
-    <section id="security" className="w-full bg-[#efe8e3] py-24 md:py-32">
+    <section id="security" className="w-full bg-white py-20 md:py-24">
       <div className={wrap}>
-        <Reveal>
-          <Label>Security and control</Label>
-          <Heading className="mt-5 max-w-3xl">You decide who can see and do what.</Heading>
-          <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-[#1b1017]/70">
-            Roles, private channels and an audit trail, with permissions enforced by the server and sensible
-            limits to keep spam and abuse out.
-          </p>
-        </Reveal>
-
-        <div className="mt-14 grid gap-4 lg:grid-cols-3">
-          <Reveal className="lg:col-span-3">
-            <div className="rounded-3xl bg-[#381d2a] p-7 text-white sm:p-9">
-              <div className="grid gap-8 lg:grid-cols-5">
-                <div className="lg:col-span-2">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2a1420] text-[#ff5018]">
-                    <UserCog className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  <h3 className="lp-h mt-6 text-2xl sm:text-3xl">Roles and 14 granular permissions</h3>
-                  <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-white/70">
-                    Start with the built-in roles, or build custom roles from the permissions you need. Give a
-                    role exactly the access it should have, and nothing more.
-                  </p>
-                  <ul className="mt-5 flex flex-wrap gap-2" aria-label="Roles">
-                    {roles.map((r) => (
-                      <li key={r} className="rounded-full bg-[#ff5018] px-3 py-1 text-xs font-semibold text-white">
-                        {r}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="lg:col-span-3">
-                  <p className="lp-label text-white/60">Permissions</p>
-                  <ul className="mt-4 flex flex-wrap gap-2">
-                    {permissions.map((p) => (
-                      <li
-                        key={p}
-                        className="rounded-md border border-white/15 bg-white/5 px-3 py-1.5 text-[13px] text-white/85"
-                      >
-                        {p}
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="mt-5 flex items-start gap-2 text-sm text-white/65">
-                    <Megaphone className="mt-0.5 h-4 w-4 shrink-0 text-[#ff5018]" aria-hidden="true" />
-                    <span>@everyone and @channel only work for people who hold the permission.</span>
-                  </p>
-                </div>
-              </div>
-            </div>
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+          <Reveal>
+            <Label>Security and control</Label>
+            <h2 className="lp-h mt-5 text-3xl text-[#1b1017] sm:text-4xl">You decide who sees and does what.</h2>
+            <Link href="/security" className="mt-6 inline-flex items-center gap-1.5 text-[15px] font-semibold text-[#a82d0a] hover:text-[#ff5018]">
+              How we protect your workspace <ArrowRight className="h-4 w-4" />
+            </Link>
           </Reveal>
-
-          {cards.map(({ icon: Icon, t, b }, i) => (
-            <Reveal key={t} delay={(i % 3) * 80} className={i === cards.length - 1 ? "lg:col-span-3" : ""}>
-              <div className="h-full rounded-3xl border border-[#381d2a]/10 bg-white p-7">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#381d2a] text-[#ff5018]">
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <h3 className="mt-6 text-lg font-semibold tracking-tight text-[#1b1017]">{t}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-[#1b1017]/70">{b}</p>
-              </div>
-            </Reveal>
-          ))}
+          <ul className="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+            {points.map(({ icon: Icon, t, b }, i) => (
+              <li key={t}>
+                <Reveal delay={(i % 3) * 60} className="flex gap-3">
+                  <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[#ff5018]" aria-hidden="true" />
+                  <span>
+                    <span className="block text-[15px] font-semibold text-[#1b1017]">{t}</span>
+                    <span className="mt-1 block text-[14px] leading-relaxed text-[#1b1017]/65">{b}</span>
+                  </span>
+                </Reveal>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>

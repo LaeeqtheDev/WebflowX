@@ -3,7 +3,7 @@ import Link from "next/link";
 import { wrap } from "./landing/tokens";
 
 const cols = [
-  { title: "Product", links: [["Features", "/features"], ["Use cases", "/use-cases"], ["Compare", "/compare"], ["Templates", "/templates"], ["Pricing", "#pricing"], ["FAQ", "#faq"]] },
+  { title: "Product", links: [["Features", "/features"], ["Use cases", "/use-cases"], ["Compare", "/compare"], ["Templates", "/templates"], ["How it works", "/#how"], ["Pricing", "/#pricing"], ["FAQ", "/#faq"]] },
   { title: "Company", links: [["About", "/about"], ["Merger", "/about#merger"], ["Team", "/about#team"]] },
   { title: "Legal", links: [["Security", "/security"], ["Trust", "/trust"], ["DPA", "/dpa"], ["Subprocessors", "/subprocessors"], ["Terms of Service", "/terms"], ["Privacy Policy", "/privacy"]] },
   { title: "Account", links: [["Log in", "/auth"], ["Start free", "/auth"]] },

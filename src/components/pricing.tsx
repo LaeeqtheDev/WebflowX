@@ -26,17 +26,17 @@ const rows = [
 
 const plans = [
   { name: "Free", price: "$0", v: ["1", "10", "5", "10", "20", "20", "500", "5", "2", "5", "250 MB", "90 days", "None", "None", "None", "None", "None"] },
-  { name: "Startup", price: "$29", v: ["3", "25", "20", "50", "100", "100", "5,000", "20", "10", "50", "5 GB", "Unlimited", "5", "3", "5", "None", "None"] },
-  { name: "Growth", price: "$79", v: ["10", "100", "50", "Unlimited", "Unlimited", "500", "50,000", "50", "30", "200", "50 GB", "Unlimited", "25", "10", "20", "10", "5"] },
-  { name: "Enterprise", price: "$249", v: ["Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "200", "150", "1,000", "1 TB", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited"] },
+  { key: "startup", name: "Startup", price: "$29", v: ["3", "25", "20", "50", "100", "100", "5,000", "20", "10", "50", "5 GB", "Unlimited", "5", "3", "5", "None", "None"] },
+  { key: "growth", name: "Growth", price: "$79", v: ["10", "100", "50", "Unlimited", "Unlimited", "500", "50,000", "50", "30", "200", "50 GB", "Unlimited", "25", "10", "20", "10", "5"] },
+  { key: "enterprise", name: "Enterprise", price: "$249", v: ["Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "200", "150", "1,000", "1 TB", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited"] },
 ];
 
 // what each plan is for, in the words a buyer uses; the full limits table sits below for anyone checking details
 const cards = [
-  { name: "Free", price: "$0", for: "Try it with a small team", cta: "Start free", points: ["Up to 10 people", "Chat, docs, tasks and meetings", "5 meetings and 2 AI summaries a month", "5 agent runs a month", "90 days of message history"] },
-  { name: "Startup", price: "$29", for: "Small teams moving off four apps", cta: "Start with Startup", popular: true, points: ["Up to 25 people", "Unlimited message history", "20 meetings and 10 AI summaries a month", "50 agent runs a month", "Guests, API keys and webhooks"] },
-  { name: "Growth", price: "$79", for: "Growing teams that run on meetings", cta: "Start with Growth", points: ["Up to 100 people", "50 meetings and 30 AI summaries a month", "200 agent runs a month", "GitHub and outgoing webhooks", "Require two-step verification"] },
-  { name: "Enterprise", price: "$249", for: "Whole companies", cta: "Start with Enterprise", points: ["Unlimited people and workspaces", "200 meetings and 150 AI summaries a month", "1,000 agent runs a month", "1 TB of storage", "Everything in Growth"] },
+  { key: "free", name: "Free", price: "$0", for: "Try it with a small team", cta: "Start free", points: ["Up to 10 people", "Chat, docs, tasks and meetings", "5 meetings and 2 AI summaries a month", "5 agent runs a month", "90 days of message history"] },
+  { key: "startup", name: "Startup", price: "$29", for: "Small teams moving off four apps", cta: "Start with Startup", popular: true, points: ["Up to 25 people", "Unlimited message history", "20 meetings and 10 AI summaries a month", "50 agent runs a month", "Guests, API keys and webhooks"] },
+  { key: "growth", name: "Growth", price: "$79", for: "Growing teams that run on meetings", cta: "Start with Growth", points: ["Up to 100 people", "50 meetings and 30 AI summaries a month", "200 agent runs a month", "GitHub and outgoing webhooks", "Require two-step verification"] },
+  { key: "enterprise", name: "Enterprise", price: "$249", for: "Whole companies", cta: "Start with Enterprise", points: ["Unlimited people and workspaces", "200 meetings and 150 AI summaries a month", "1,000 agent runs a month", "1 TB of storage", "Everything in Growth"] },
 ];
 
 const PricingSection = () => (
@@ -54,7 +54,7 @@ const PricingSection = () => (
           {cards.map((p) => {
             const hot = !!p.popular;
             return (
-              <div key={p.name} className={`relative flex flex-col rounded-3xl p-7 ${hot ? "bg-[#381d2a] text-white shadow-2xl shadow-[#381d2a]/25 lg:-my-3 lg:py-10" : "border border-[#381d2a]/12 bg-white text-[#1b1017]"}`}>
+              <div key={p.name} className={`relative flex flex-col rounded-3xl p-7 ${hot ? "order-first sm:order-none " : ""}${hot ? "bg-[#381d2a] text-white shadow-2xl shadow-[#381d2a]/25 lg:-my-3 lg:py-10" : "border border-[#381d2a]/12 bg-white text-[#1b1017]"}`}>
                 {hot && <span className="absolute -top-3 left-7 rounded-full bg-[#ff5018] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">Most popular</span>}
                 <p className={`lp-label ${hot ? "text-white/65" : "text-[#381d2a]/60"}`}>{p.name}</p>
                 <p className="mt-4 flex items-baseline gap-1.5">
@@ -71,13 +71,18 @@ const PricingSection = () => (
                   ))}
                 </ul>
                 <Link
-                  href="/auth?mode=signup"
+                  href={p.key === "free" ? "/auth?mode=signup" : `/auth?mode=signup&plan=${p.key}`}
                   className={`mt-8 rounded-lg px-5 py-3 text-center text-sm font-semibold transition-colors ${
                     hot ? "bg-[#ff5018] text-white hover:bg-[#ff6a3a]" : "bg-[#381d2a] text-white hover:bg-[#ff5018]"
                   }`}
                 >
                   {p.cta}
                 </Link>
+                {p.key === "enterprise" && (
+                  <a href="mailto:support@northfoundry.co?subject=WebflowX%20Enterprise" className="mt-2 rounded-lg border border-[#381d2a]/15 px-5 py-3 text-center text-sm font-semibold text-[#381d2a] transition-colors hover:bg-[#f7f2ee]">
+                    Talk to us first
+                  </a>
+                )}
               </div>
             );
           })}
