@@ -8,6 +8,7 @@ import { COMPARISONS, FEATURES, USE_CASES } from "@/lib/marketing-content";
 
 const menuItems = [
   { label: "Agents", href: "#agents" },
+  { label: "Compare", href: "#compare" },
   { label: "Merger", href: "#merger" },
   { label: "Journey", href: "#timeline" },
   { label: "Team", href: "#team" },

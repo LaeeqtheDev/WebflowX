@@ -196,10 +196,10 @@ export const COMPARISONS: Compare[] = [
       ["Ecosystem", "Large app directory", "API keys, webhooks, GitHub connection; Zapier and Make via API"],
     ],
     sections: [
-      { title: "Where WebflowX fits", body: "Choose WebflowX if you want fewer tools and a flat price per workspace. Choose Slack if you depend on its large app directory or are already deeply invested in it. WebflowX does not yet have importers from Slack." },
+      { title: "Where WebflowX fits", body: "Choose WebflowX if you want fewer tools and a flat price per workspace. Choose Slack if you depend on its large app directory or are already deeply invested in it. Owners and admins can import channels from a Slack export (Settings › Import)." },
       { title: "A note on accuracy", body: note },
     ],
-    faqs: [{ q: "Can I import my Slack history?", a: "Not yet. Importers are on our roadmap but not available today." }],
+    faqs: [{ q: "Can I import my Slack history?", a: "Yes. Owners and admins can import channels from a Slack export (Settings › Import). Imported messages are posted by the person running the import, with the original author and time shown at the top of each message." }],
     related: ["notion-alternative", "clickup-alternative"],
   },
   {
@@ -221,7 +221,7 @@ export const COMPARISONS: Compare[] = [
       { title: "Where WebflowX fits", body: "Choose WebflowX if conversation and meetings are as important to your team as documents. Choose Notion if long-form documentation and wikis are your main need. WebflowX does not yet have importers from Notion." },
       { title: "A note on accuracy", body: note },
     ],
-    faqs: [{ q: "Can I import from Notion?", a: "Not yet. Importers are not available today." }],
+    faqs: [{ q: "Can I import from Notion?", a: "Yes. Owners and admins can import pages from a Notion export (Settings › Import)." }],
     related: ["slack-alternative", "clickup-alternative"],
   },
   {
