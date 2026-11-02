@@ -11,6 +11,7 @@ import { throttle } from "./rateLimit";
 import { notify } from "./notifications";
 import { emit } from "./integrations";
 import { historyCutoff } from "./limits";
+import { maybeQueueTriage } from "./agents";
 
 import {
   extractMentionIds, notifyMentions, populateUser, populateMember, populateReactions, groupReactions, noteReplyAdded, populateThread, getMember, deleteMessageCascade, formerAuthor, authorLabel,
@@ -322,6 +323,12 @@ export const create = mutation({
             body: args.body,
             alreadyNotified,
         });
+
+        // requests in channels the triage agent watches become tasks (gathered for a minute first)
+        if (channelId && !args.parentMessageId) {
+            const created = await ctx.db.get(messageId);
+            if (created) await maybeQueueTriage(ctx, created);
+        }
 
         // outgoing webhooks (locked channels only reach hooks an admin opted in)
         if (channelId) {

@@ -5,7 +5,7 @@ import { convexTest } from "convex-test"
 import schema from "../convex/schema"
 import { api } from "../convex/_generated/api"
 import type { Id } from "../convex/_generated/dataModel"
-import { parseDue } from "../convex/agents"
+import { parseDue, looksLikeRequest, TRIAGE_DELAY_MS } from "../convex/agents"
 
 const modules = import.meta.glob("../convex/**/*.ts")
 const asUser = (t: ReturnType<typeof convexTest>, id: Id<"users">) => t.withIdentity({ subject: `${id}|session` })
@@ -86,7 +86,8 @@ describe("follow-up agent", () => {
     await expect(asUser(t, ids.owner).mutation(api.agents.configure, { workspaceId: ids.ws, enabled: true, mode: "suggest", channelId: ids.locked })).rejects.toThrow(/public channel/)
     await turnOn("suggest")
     const o = await asUser(t, ids.owner).query(api.agents.overview, { workspaceId: ids.ws })
-    expect(o?.agent).toEqual({ enabled: true, mode: "suggest", channelId: ids.general })
+    expect(o?.agents.meetingFollowUp).toEqual({ enabled: true, mode: "suggest", channelId: ids.general, channelIds: [] })
+    expect(o?.agents.triage).toBeNull()
   })
 
   it("does nothing after a summary when the workspace hasn't switched it on", async () => {
@@ -230,6 +231,129 @@ describe("follow-up agent", () => {
     const run = (await ctx.t.run((c) => c.db.query("agentRuns").collect()))[0]
     expect(run.status).toBe("done")
     expect(run.note).toBe("Nothing to follow up on.")
+  })
+})
+
+const delta = (text: string) => JSON.stringify({ ops: [{ insert: text + "\n" }] })
+
+describe("chat triage agent", () => {
+  let ctx: Awaited<ReturnType<typeof setup>>
+  beforeEach(async () => {
+    vi.useFakeTimers()
+    vi.stubEnv("GROQ_API_KEY", "test-key")
+    ctx = await setup()
+  })
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.unstubAllEnvs() })
+
+  const watchGeneral = (mode: "suggest" | "act") =>
+    asUser(ctx.t, ctx.ids.owner).mutation(api.agents.configure, { workspaceId: ctx.ids.ws, kind: "triage", enabled: true, mode, channelIds: [ctx.ids.general] })
+  const post = (user: Id<"users">, text: string, channelId = ctx.ids.general) =>
+    asUser(ctx.t, user).mutation(api.messages.create, { workspaceId: ctx.ids.ws, channelId, body: delta(text) })
+  const runs = () => ctx.t.run((c) => c.db.query("agentRuns").collect())
+
+  it("needs channels to watch, public ones only, and only admins can set it", async () => {
+    const { t, ids } = ctx
+    await expect(asUser(t, ids.owner).mutation(api.agents.configure, { workspaceId: ids.ws, kind: "triage", enabled: true, mode: "suggest", channelIds: [] })).rejects.toThrow(/at least one channel/)
+    await expect(asUser(t, ids.owner).mutation(api.agents.configure, { workspaceId: ids.ws, kind: "triage", enabled: true, mode: "suggest", channelIds: [ids.locked] })).rejects.toThrow(/public channels/)
+    await expect(asUser(t, ids.dev).mutation(api.agents.configure, { workspaceId: ids.ws, kind: "triage", enabled: true, mode: "suggest", channelIds: [ids.general] })).rejects.toThrow(/owner and admins/)
+    await watchGeneral("suggest")
+    const o = await asUser(t, ids.owner).query(api.agents.overview, { workspaceId: ids.ws })
+    expect(o?.agents.triage).toMatchObject({ enabled: true, channelIds: [ids.general] })
+  })
+
+  it("only wakes up for requests in watched channels, and reads a burst of them as one run", async () => {
+    const { ids } = ctx
+    await watchGeneral("suggest")
+    const other = await ctx.t.run((c) => c.db.insert("channels", { name: "random", workspaceId: ids.ws }))
+    await post(ids.ava, "good morning everyone!")
+    await post(ids.ava, "Can someone fix the checkout button on mobile?", other)
+    expect(await runs()).toHaveLength(0)
+
+    await post(ids.ava, "Can someone fix the checkout button on mobile? It's broken for customers")
+    await post(ids.owner, "Dev, please update the pricing page by Friday")
+    await post(ids.dev, "thanks!")
+    const queued = await runs()
+    expect(queued).toHaveLength(1)
+    expect(queued[0].messageIds).toHaveLength(2)
+    expect(queued[0].status).toBe("queued")
+  })
+
+  it("proposes one task per request, linked to its message, and replies in the thread once approved", async () => {
+    const { t, ids } = ctx
+    await watchGeneral("suggest")
+    const m1 = await post(ids.ava, "Can someone fix the checkout button on mobile? It's broken for customers")
+    const m2 = await post(ids.owner, "Dev, please update the pricing page by Friday")
+    const { seen } = fakeModel(
+      [call("propose_task", { title: "Fix the checkout button on mobile", source_message_id: m1, priority: "urgent" }),
+       call("propose_task", { title: "Update the pricing page", source_message_id: m2, assignee_member_id: ids.devM, due_date: nextFriday() }, 1),
+       // a second task from the same message, and one from a message it was never shown: both dropped
+       call("propose_task", { title: "Also fix checkout on desktop", source_message_id: m1 }, 2),
+       call("propose_task", { title: "Invented work", source_message_id: "not-a-message" }, 3)],
+      [call("finish", { note: "2 requests turned into tasks." })],
+    )
+    await t.finishAllScheduledFunctions(vi.runAllTimers)
+    // the model saw the messages with their ids
+    expect(JSON.stringify(seen[0])).toContain(String(m1))
+
+    const o = await asUser(t, ids.owner).query(api.agents.overview, { workspaceId: ids.ws })
+    const run = o!.runs[0]
+    expect(run.kind).toBe("triage")
+    expect(run.channelName).toBe("general")
+    expect(run.status).toBe("review")
+    expect(run.actions.map((a) => a.type === "task" && a.title)).toEqual(["Fix the checkout button on mobile", "Update the pricing page"])
+    const first = run.actions[0]
+    expect(first.type === "task" && first.source?.author).toBe("Ava Chen")
+    expect(await t.run((c) => c.db.query("tasks").collect())).toHaveLength(0)
+
+    await asUser(t, ids.owner).mutation(api.agents.decide, { runId: run._id, approve: true })
+    const tasks = await t.run((c) => c.db.query("tasks").collect())
+    expect(tasks.map((x) => [x.title, x.priority, x.assigneeId ?? null])).toEqual([
+      ["Fix the checkout button on mobile", "urgent", null],
+      ["Update the pricing page", "medium", ids.devM],
+    ])
+    expect(tasks[0].description).toContain("#general")
+    const replies = await t.run((c) => c.db.query("messages").withIndex("by_parent_message_id", (q) => q.eq("parentMessagesId", m2)).collect())
+    expect(replies).toHaveLength(1)
+    expect(replies[0]).toMatchObject({ integrationName: "Triage agent", agent: true, channelId: ids.general })
+    expect(replies[0].body).toContain("Update the pricing page → Dev Patel")
+    expect((await t.run((c) => c.db.get(m2)))?.threadCount).toBe(1)
+  })
+
+  it("in act mode adds the tasks straight away, and ignores its own replies", async () => {
+    const { t, ids } = ctx
+    await watchGeneral("act")
+    const m1 = await post(ids.ava, "Could you send the invoice to Bright Cafe please?")
+    fakeModel([call("propose_task", { title: "Send the invoice to Bright Cafe", source_message_id: m1 })], [call("finish", { note: "ok" })])
+    await t.finishAllScheduledFunctions(vi.runAllTimers)
+    expect(await t.run((c) => c.db.query("tasks").collect())).toHaveLength(1)
+    // the agent's thread reply says "Added to the board…" but must not start another run
+    expect(await runs()).toHaveLength(1)
+  })
+
+  it("stays quiet when the month's runs are used up", async () => {
+    const free = await setup("free")
+    await asUser(free.t, free.ids.owner).mutation(api.agents.configure, { workspaceId: free.ids.ws, kind: "triage", enabled: true, mode: "suggest", channelIds: [free.ids.general] })
+    await free.t.run(async (c) => {
+      const agent = (await c.db.query("agents").collect())[0]
+      for (let i = 0; i < 5; i++) await c.db.insert("agentRuns", { workspaceId: free.ids.ws, agentId: agent._id, startedBy: free.ids.ownerM, status: "done", actions: [] })
+    })
+    await asUser(free.t, free.ids.ava).mutation(api.messages.create, { workspaceId: free.ids.ws, channelId: free.ids.general, body: delta("Can someone fix the login page please?") })
+    expect(await free.t.run((c) => c.db.query("agentRuns").collect())).toHaveLength(5)
+  })
+
+  it("waits a minute before reading", () => {
+    expect(TRIAGE_DELAY_MS).toBe(60_000)
+  })
+})
+
+describe("looksLikeRequest", () => {
+  it("picks out asks, commitments and broken things, and skips chit-chat", () => {
+    for (const s of ["Can someone fix the checkout button?", "Dev, please update the pricing page", "I'll send the deck by Friday", "The login page is down", "Need someone to call the client back"]) {
+      expect(looksLikeRequest(s), s).toBe(true)
+    }
+    for (const s of ["good morning!", "thanks team", "lol", "Great work on the launch everyone"]) {
+      expect(looksLikeRequest(s), s).toBe(false)
+    }
   })
 })
 

@@ -10,12 +10,14 @@ import { useLimitHandler, friendlyError } from "@/hooks/use-limit-handler"
 import { cn } from "@/lib/utils"
 
 type RunAction =
-    | { id: string; type: "task"; title: string; assigneeName: string | null; dueDate?: number; priority: string; taskId?: string }
+    | { id: string; type: "task"; title: string; assigneeName: string | null; dueDate?: number; priority: string; taskId?: string; source?: { text: string; author: string } | null }
     | { id: string; type: "recap"; text: string; channelName: string; messageId?: string }
 
 export type AgentRunView = {
     _id: Id<"agentRuns">
     _creationTime: number
+    kind: "meetingFollowUp" | "triage"
+    channelName: string | null
     status: "queued" | "running" | "review" | "done" | "failed" | "dismissed"
     note: string | null
     error: string | null
@@ -98,6 +100,11 @@ export const AgentRunCard = ({ run, canDecide, compact }: { run: AgentRunView; c
                                         {due(a.dueDate) && <span>· due {due(a.dueDate)}</span>}
                                         <span className={cn("rounded px-1.5 py-px font-semibold capitalize", PRIORITY[a.priority])}>{a.priority}</span>
                                     </span>
+                                    {a.source && (
+                                        <span className="mt-1.5 block border-l-2 border-plum/15 pl-2 text-[11px] leading-relaxed text-ink/60">
+                                            <span className="font-semibold text-ink/70">{a.source.author}:</span> {a.source.text}
+                                        </span>
+                                    )}
                                 </span>
                             </>
                         ) : (

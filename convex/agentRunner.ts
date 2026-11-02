@@ -2,8 +2,8 @@ import { v } from "convex/values"
 import { internalAction } from "./_generated/server"
 import { internal } from "./_generated/api"
 
-// The follow-up agent's loop: the model reads the meeting, looks people up, and proposes tasks and a recap
-// through tool calls. Nothing it proposes touches the workspace here; agents.finishRun checks every
+// The agents' loop: the model reads a meeting (follow-up agent) or new channel messages (triage agent),
+// looks people up, and proposes tasks (and a recap) through tool calls. Nothing it proposes touches the workspace here; agents.finishRun checks every
 // proposal again and either carries it out or holds it for approval.
 
 const MAX_STEPS = 8
@@ -14,17 +14,22 @@ type Msg =
     | { role: "assistant"; content: string | null; tool_calls?: ToolCall[] }
     | { role: "tool"; tool_call_id: string; content: string }
 type ToolCall = { id: string; type: "function"; function: { name: string; arguments: string } }
-type Context = {
-    meeting: { title: string; startedAt: number; summary: string; transcript: string; participants: string[] }
-    people: { id: string; name: string }[]
-    openTasks: string[]
-    recapChannel: string | null
-}
+type Person = { id: string; name: string }
+type Line = { id: string; at: number; name: string; memberId: string; text: string }
+type Context =
+    | {
+        kind: "meetingFollowUp"
+        meeting: { title: string; startedAt: number; summary: string; transcript: string; participants: string[] }
+        people: Person[]
+        openTasks: string[]
+        recapChannel: string | null
+    }
+    | { kind: "triage"; channel: string; earlier: Line[]; messages: Line[]; people: Person[]; openTasks: string[] }
 type Proposal =
-    | { type: "task"; title: string; assigneeId?: string; dueDate?: string; priority?: string }
+    | { type: "task"; title: string; assigneeId?: string; dueDate?: string; priority?: string; sourceMessageId?: string }
     | { type: "recap"; text: string }
 
-const tools = (hasRecap: boolean) => [
+const tools = (hasRecap: boolean, triage = false) => [
     {
         type: "function",
         function: {
@@ -37,16 +42,19 @@ const tools = (hasRecap: boolean) => [
         type: "function",
         function: {
             name: "propose_task",
-            description: "Propose one task for a concrete action item agreed in the meeting. One call per task.",
+            description: triage
+                ? "Propose one task for a message that asks for something to be done. One call per message."
+                : "Propose one task for a concrete action item agreed in the meeting. One call per task.",
             parameters: {
                 type: "object",
                 properties: {
+                    ...(triage ? { source_message_id: { type: "string", description: "The id of the message the request came from" } } : {}),
                     title: { type: "string", description: "Short imperative title, e.g. 'Send the launch email'" },
                     assignee_member_id: { type: "string", description: "The member id of the owner, only if the meeting made the owner clear" },
                     due_date: { type: "string", description: "YYYY-MM-DD, only if a date or day was said" },
                     priority: { type: "string", enum: ["urgent", "high", "medium", "low"] },
                 },
-                required: ["title"],
+                required: triage ? ["title", "source_message_id"] : ["title"],
             },
         },
     },
@@ -94,6 +102,67 @@ const chat = async (key: string, messages: Msg[], toolList: unknown[]) => {
     throw new Error(last.startsWith("401") ? "The AI key was refused" : last.startsWith("429") ? "The AI service is busy, try again in a minute" : `The AI service answered ${last}`)
 }
 
+const clock = (ms: number) => new Date(ms).toISOString().slice(11, 16)
+
+// What the model is told, per agent.
+const prompt = (c: Context, now: number): Msg[] => {
+    const people = c.people.slice(0, 60).map((p) => `- ${p.name} (member id: ${p.id})`).join("\n") || "- (none)"
+    const open = c.openTasks.map((t) => `- ${t}`).join("\n") || "- (none)"
+    if (c.kind === "triage") {
+        return [
+            {
+                role: "system",
+                content: [
+                    "You are the triage agent inside WebflowX, a team workspace. You read new messages in a team channel and turn real requests into tasks so nothing asked for in chat gets lost.",
+                    "Rules:",
+                    "- Only propose a task when a message asks for something to be done, reports something broken that needs fixing, or someone commits to doing something ('I'll send it Friday').",
+                    "- Ignore chit-chat, thanks, questions that just need an answer, and things already in the open tasks list.",
+                    "- One task per message at most, linked with its source_message_id. Write the title as a short instruction ('Fix the checkout button on mobile').",
+                    "- Owner: the person the request is addressed to (named or @mentioned), or whoever said they'd do it. Use their member id. If nobody is clear, leave it unassigned.",
+                    "- Due date only when a date or day was said; work it out from today's date. Priority 'urgent' or 'high' only when the message says it's urgent, blocking or broken for customers.",
+                    "- Use the tools, then call finish with one short sentence.",
+                ].join("\n"),
+            },
+            {
+                role: "user",
+                content: [
+                    `Today is ${weekday(now)} ${day(now)} (UTC). Channel: #${c.channel}.`,
+                    `Workspace members:\n${people}`,
+                    `Open tasks already on the board:\n${open}`,
+                    c.earlier.length ? `Said just before (context only, don't make tasks from these):\n${c.earlier.map((m) => `[${clock(m.at)}] ${m.name}: ${m.text}`).join("\n")}` : "",
+                    `New messages to triage:\n${c.messages.map((m) => `[message id: ${m.id}] [${clock(m.at)}] ${m.name} (member id: ${m.memberId}): ${m.text}`).join("\n")}`,
+                ].filter(Boolean).join("\n\n"),
+            },
+        ]
+    }
+    return [
+        {
+            role: "system",
+            content: [
+                "You are the follow-up agent inside WebflowX, a team workspace. After a meeting you turn what was agreed into tasks so nothing gets lost.",
+                "Rules:",
+                "- Only propose tasks for action items people actually agreed to. No invented work, no vague tasks like 'Follow up'.",
+                "- Assign an owner only when the meeting makes it clear who owns it, using their member id. Otherwise leave it unassigned.",
+                "- Add a due date only when a date or day was said. Work out the date from today's date.",
+                "- Skip anything that is already in the open tasks list.",
+                c.recapChannel ? `- Post one short recap for #${c.recapChannel}: decisions, then who owns what. Plain text, no markdown headings.` : "- There is no recap channel, so don't write a recap.",
+                "- Use the tools, then call finish. Keep everything short and in plain words.",
+            ].join("\n"),
+        },
+        {
+            role: "user",
+            content: [
+                `Today is ${weekday(now)} ${day(now)}. The meeting "${c.meeting.title}" was on ${weekday(c.meeting.startedAt)} ${day(c.meeting.startedAt)}.`,
+                c.meeting.participants.length ? `People in the call: ${c.meeting.participants.join(", ")}` : "",
+                `Workspace members:\n${people}`,
+                `Open tasks already on the board:\n${open}`,
+                `AI summary of the meeting:\n${c.meeting.summary || "(none)"}`,
+                c.meeting.transcript ? `Transcript (may be cut short):\n${c.meeting.transcript}` : "",
+            ].filter(Boolean).join("\n\n"),
+        },
+    ]
+}
+
 export const run = internalAction({
     args: { runId: v.id("agentRuns") },
     // annotated: the function refers to itself through `internal`, which TypeScript can't infer on its own
@@ -105,37 +174,10 @@ export const run = internalAction({
             const key = process.env.GROQ_API_KEY
             if (!key) return await fail("The AI key isn't set up for agents yet (GROQ_API_KEY on the Convex deployment).")
             const c: Context | null = await ctx.runQuery(internal.agents.context, { runId: args.runId })
-            if (!c) return await fail("The meeting is gone.")
-
-            const now = Date.now()
-            const people = c.people.slice(0, 60).map((p) => `- ${p.name} (member id: ${p.id})`).join("\n")
-            const messages: Msg[] = [
-                {
-                    role: "system",
-                    content: [
-                        "You are the follow-up agent inside WebflowX, a team workspace. After a meeting you turn what was agreed into tasks so nothing gets lost.",
-                        "Rules:",
-                        "- Only propose tasks for action items people actually agreed to. No invented work, no vague tasks like 'Follow up'.",
-                        "- Assign an owner only when the meeting makes it clear who owns it, using their member id. Otherwise leave it unassigned.",
-                        "- Add a due date only when a date or day was said. Work out the date from today's date.",
-                        "- Skip anything that is already in the open tasks list.",
-                        c.recapChannel ? `- Post one short recap for #${c.recapChannel}: decisions, then who owns what. Plain text, no markdown headings.` : "- There is no recap channel, so don't write a recap.",
-                        "- Use the tools, then call finish. Keep everything short and in plain words.",
-                    ].join("\n"),
-                },
-                {
-                    role: "user",
-                    content: [
-                        `Today is ${weekday(now)} ${day(now)}. The meeting "${c.meeting.title}" was on ${weekday(c.meeting.startedAt)} ${day(c.meeting.startedAt)}.`,
-                        c.meeting.participants.length ? `People in the call: ${c.meeting.participants.join(", ")}` : "",
-                        `Workspace members:\n${people || "- (none)"}`,
-                        `Open tasks already on the board:\n${c.openTasks.map((t) => `- ${t}`).join("\n") || "- (none)"}`,
-                        `AI summary of the meeting:\n${c.meeting.summary || "(none)"}`,
-                        c.meeting.transcript ? `Transcript (may be cut short):\n${c.meeting.transcript}` : "",
-                    ].filter(Boolean).join("\n\n"),
-                },
-            ]
-            const toolList = tools(!!c.recapChannel)
+            if (!c) return await fail("What it was asked to look at is gone.")
+            if (c.kind === "triage" && c.messages.length === 0) return await fail("The messages were deleted.")
+            const messages = prompt(c, Date.now())
+            const toolList = tools(c.kind === "meetingFollowUp" && !!c.recapChannel, c.kind === "triage")
             const proposals: Proposal[] = []
             let note: string | undefined
             let steps = 0
@@ -160,7 +202,7 @@ export const run = internalAction({
                         case "propose_task": {
                             const title = str("title")?.trim()
                             if (!title) { result = "A title is needed."; break }
-                            proposals.push({ type: "task", title, assigneeId: str("assignee_member_id"), dueDate: str("due_date"), priority: str("priority") })
+                            proposals.push({ type: "task", title, assigneeId: str("assignee_member_id"), dueDate: str("due_date"), priority: str("priority"), sourceMessageId: str("source_message_id") })
                             result = "Noted."
                             break
                         }

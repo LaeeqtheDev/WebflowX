@@ -358,12 +358,15 @@ const schema = defineSchema({
     // AI agents a workspace has switched on. They act for the admin who set them up.
     agents: defineTable({
         workspaceId: v.id("workspaces"),
-        kind: v.literal("meetingFollowUp"),
+        // meetingFollowUp: tasks + recap after a meeting; triage: turns requests in chat into tasks
+        kind: v.union(v.literal("meetingFollowUp"), v.literal("triage")),
         enabled: v.boolean(),
         // "suggest": proposals wait for someone to approve them; "act": they are carried out straight away
         mode: v.union(v.literal("suggest"), v.literal("act")),
         // where the agent posts its recap (none = no recap)
         channelId: v.optional(v.id("channels")),
+        // triage: the public channels it watches
+        channelIds: v.optional(v.array(v.id("channels"))),
         createdBy: v.id("members"),
         updatedAt: v.number(),
     }).index("by_workspace_kind", ["workspaceId", "kind"]),
@@ -373,6 +376,9 @@ const schema = defineSchema({
         workspaceId: v.id("workspaces"),
         agentId: v.id("agents"),
         meetingId: v.optional(v.id("meetings")),
+        // triage: the channel and the messages it was asked to look at (gathered for a minute, then read together)
+        channelId: v.optional(v.id("channels")),
+        messageIds: v.optional(v.array(v.id("messages"))),
         // who set it off (the person whose summary triggered it, or who pressed "run")
         startedBy: v.id("members"),
         status: v.union(
@@ -387,6 +393,8 @@ const schema = defineSchema({
                 assigneeId: v.optional(v.id("members")),
                 dueDate: v.optional(v.number()),
                 priority: v.union(v.literal("urgent"), v.literal("high"), v.literal("medium"), v.literal("low")),
+                // triage: the chat message it came from (the agent replies under it)
+                sourceMessageId: v.optional(v.id("messages")),
                 // set once carried out
                 taskId: v.optional(v.id("tasks")),
             }),
@@ -406,7 +414,8 @@ const schema = defineSchema({
         finishedAt: v.optional(v.number()),
     })
         .index("by_workspace_id", ["workspaceId"])
-        .index("by_meeting_id", ["meetingId"]),
+        .index("by_meeting_id", ["meetingId"])
+        .index("by_channel_status", ["channelId", "status"]),
 
     aiSummaryLog: defineTable({
         workspaceId: v.id("workspaces"),

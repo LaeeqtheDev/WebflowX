@@ -1,13 +1,29 @@
 "use client"
 import { useState } from "react"
 import { useMutation, useQuery } from "convex/react"
-import { Bot, Loader2, ShieldCheck, Zap } from "lucide-react"
+import { Bot, Check, Inbox, Loader2, ShieldCheck, Zap } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "../../../convex/_generated/api"
 import type { Id } from "../../../convex/_generated/dataModel"
 import { friendlyError } from "@/hooks/use-limit-handler"
 import { cn } from "@/lib/utils"
 import { AgentRunCard, StatusPill, type AgentRunView } from "./agent-run"
+
+type Kind = "meetingFollowUp" | "triage"
+type AgentSettings = { enabled: boolean; mode: "suggest" | "act"; channelId: string | null; channelIds: string[] }
+type Channel = { _id: string; name: string; isPrivate?: boolean }
+export type SaveArgs = { kind: Kind; enabled: boolean; mode: "suggest" | "act"; channelId: Id<"channels"> | null; channelIds: Id<"channels">[] }
+
+export type OverviewData = {
+    canManage: boolean
+    canDecide: boolean
+    agents: Record<Kind, AgentSettings | null>
+    usage: { used: number; limit: number }
+    runs: AgentRunView[]
+}
+
+const MAX_WATCHED = 10
+const OFF: AgentSettings = { enabled: false, mode: "suggest", channelId: null, channelIds: [] }
 
 const when = (ms: number) => {
     const mins = Math.round((Date.now() - ms) / 60000)
@@ -25,48 +41,84 @@ const Switch = ({ on, onChange, label, disabled }: { on: boolean; onChange: (v: 
     </button>
 )
 
-// Settings › Agents: switch the follow-up agent on, choose how much it may do on its own, and see what it did.
+// Settings › Agents: switch agents on, choose how much they may do on their own, and see what they did.
 export const AgentsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces"> }) => {
     const data = useQuery(api.agents.overview, { workspaceId })
     const channels = useQuery(api.channels.get, { workspaceId })
     const configure = useMutation(api.agents.configure)
     if (data === undefined) return <div className="flex justify-center py-10"><Loader2 className="size-5 animate-spin text-brand" /></div>
     if (data === null) return <p className="text-sm text-ink/60">You don&apos;t have access to agents in this workspace.</p>
-    return <AgentsPanelView data={data as OverviewData} channels={channels ?? []} onSave={(next) => configure({ workspaceId, ...next })} />
+    return <AgentsPanelView data={data as unknown as OverviewData} channels={channels ?? []} onSave={(next) => configure({ workspaceId, ...next })} />
 }
 
-export type OverviewData = {
-    canManage: boolean
-    canDecide: boolean
-    agent: { enabled: boolean; mode: "suggest" | "act"; channelId: string | null } | null
-    usage: { used: number; limit: number }
-    runs: AgentRunView[]
-}
-type Settings = { enabled: boolean; mode: "suggest" | "act"; channelId: Id<"channels"> | null }
+const ModePicker = ({ value, disabled, onChange }: { value: "suggest" | "act"; disabled: boolean; onChange: (m: "suggest" | "act") => void }) => (
+    <fieldset>
+        <legend className="mb-2 text-xs font-semibold text-ink/70">How much can it do on its own?</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+            {([
+                ["suggest", ShieldCheck, "Suggest, we approve", "Proposals wait for someone who manages tasks to approve them."],
+                ["act", Zap, "Act on its own", "Tasks are added straight away. You can still edit or delete them."],
+            ] as const).map(([mode, Icon, title, blurb]) => (
+                <button key={mode} type="button" disabled={disabled} onClick={() => onChange(mode)} aria-pressed={value === mode}
+                    className={cn("flex items-start gap-2.5 rounded-xl border p-3 text-left transition-colors disabled:opacity-60", value === mode ? "border-brand bg-brand/5 ring-2 ring-brand/15" : "border-plum/12 hover:bg-cream-deep")}>
+                    <Icon className={cn("mt-0.5 size-4 shrink-0", value === mode ? "text-brand" : "text-ink/60")} aria-hidden="true" />
+                    <span><span className="block text-sm font-semibold text-ink">{title}</span><span className="mt-0.5 block text-xs leading-relaxed text-ink/60">{blurb}</span></span>
+                </button>
+            ))}
+        </div>
+    </fieldset>
+)
+
+const AgentCard = ({ icon: Icon, title, blurb, settings, canManage, saving, onToggle, children }: {
+    icon: typeof Bot; title: string; blurb: string; settings: AgentSettings; canManage: boolean; saving: boolean
+    onToggle: (on: boolean) => void; children?: React.ReactNode
+}) => (
+    <div className={cn("rounded-2xl border p-4 sm:p-5", settings.enabled ? "border-brand/30 bg-brand/[0.03]" : "border-plum/12 bg-surface")}>
+        <div className="flex items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-plum text-white dark:bg-white/10"><Icon className="size-5" aria-hidden="true" /></span>
+            <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold tracking-tight text-ink">{title}</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-ink/60">{blurb}</p>
+            </div>
+            <Switch on={settings.enabled} disabled={!canManage || saving} onChange={onToggle} label={title} />
+        </div>
+        {children && <div className="mt-4 flex flex-col gap-4 border-t border-plum/10 pt-4">{children}</div>}
+    </div>
+)
 
 // The panel itself, given its data (kept apart from the queries so it can be shown with sample data).
-export const AgentsPanelView = ({ data, channels, onSave }: {
-    data: OverviewData
-    channels: { _id: string; name: string; isPrivate?: boolean }[]
-    onSave: (next: Settings) => Promise<unknown>
-}) => {
-    const [saving, setSaving] = useState(false)
+export const AgentsPanelView = ({ data, channels, onSave }: { data: OverviewData; channels: Channel[]; onSave: (next: SaveArgs) => Promise<unknown> }) => {
+    const [saving, setSaving] = useState<Kind | null>(null)
     const [open, setOpen] = useState<string | null>(null)
+    // triage can be switched on only once channels are picked, so the picks are held here first
+    const [draftWatch, setDraftWatch] = useState<string[] | null>(null)
+    const followUp = data.agents.meetingFollowUp ?? OFF
+    const triage = data.agents.triage ?? OFF
+    const watch = draftWatch ?? triage.channelIds
+    const publicChannels = channels.filter((c) => !c.isPrivate)
+    const disabled = !data.canManage
 
-    const agent = data.agent ?? { enabled: false, mode: "suggest" as const, channelId: null }
-    const save = async (next: Partial<typeof agent>) => {
-        const merged = { ...agent, ...next }
-        setSaving(true)
+    const save = async (kind: Kind, next: Partial<AgentSettings>, message?: string) => {
+        const cur = kind === "triage" ? { ...triage, channelIds: watch } : followUp
+        const merged = { ...cur, ...next }
+        setSaving(kind)
         try {
-            await onSave({ enabled: merged.enabled, mode: merged.mode, channelId: (merged.channelId as Id<"channels"> | null) ?? null })
-            if (next.enabled !== undefined) toast.success(next.enabled ? "Follow-up agent is on" : "Follow-up agent is off")
+            await onSave({ kind, enabled: merged.enabled, mode: merged.mode, channelId: (merged.channelId as Id<"channels"> | null) ?? null, channelIds: merged.channelIds as Id<"channels">[] })
+            if (kind === "triage") setDraftWatch(null)
+            if (message) toast.success(message)
         } catch (e) {
             toast.error(friendlyError(e, "Couldn't save"))
         } finally {
-            setSaving(false)
+            setSaving(null)
         }
     }
-    const publicChannels = channels.filter((c) => !c.isPrivate)
+    const toggleWatch = (id: string) => {
+        const next = watch.includes(id) ? watch.filter((c) => c !== id) : [...watch, id]
+        if (next.length > MAX_WATCHED) { toast.info(`The agent can watch up to ${MAX_WATCHED} channels`); return }
+        setDraftWatch(next)
+        // once it's on, changes save straight away (but it can't be left watching nothing)
+        if (triage.enabled && next.length > 0) void save("triage", { channelIds: next })
+    }
     const { used, limit } = data.usage
     const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0
 
@@ -77,45 +129,59 @@ export const AgentsPanelView = ({ data, channels, onSave }: {
                 <p className="mt-1 text-sm text-ink/60">AI teammates that do the follow-up work for you. They act with the permissions of the admin who turns them on, and every action is logged.</p>
             </div>
 
-            <div className={cn("rounded-2xl border p-4 sm:p-5", agent.enabled ? "border-brand/30 bg-brand/[0.03]" : "border-plum/12 bg-surface")}>
-                <div className="flex items-start gap-3">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-plum text-white dark:bg-white/10"><Bot className="size-5" aria-hidden="true" /></span>
-                    <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold tracking-tight text-ink">Meeting follow-up agent</p>
-                        <p className="mt-0.5 text-xs leading-relaxed text-ink/60">After a meeting&apos;s AI summary, it turns the action items into tasks for the right people, with due dates when they were said, and posts a short recap.</p>
-                    </div>
-                    <Switch on={agent.enabled} disabled={!data.canManage || saving} onChange={(v) => save({ enabled: v })} label="Meeting follow-up agent" />
-                </div>
-
-                {agent.enabled && (
-                    <div className="mt-4 flex flex-col gap-4 border-t border-plum/10 pt-4">
-                        <fieldset>
-                            <legend className="mb-2 text-xs font-semibold text-ink/70">How much can it do on its own?</legend>
-                            <div className="grid gap-2 sm:grid-cols-2">
-                                {([
-                                    ["suggest", ShieldCheck, "Suggest, we approve", "Proposals wait for someone who manages tasks to approve them."],
-                                    ["act", Zap, "Act on its own", "Tasks and the recap are added straight away. You can still edit or delete them."],
-                                ] as const).map(([mode, Icon, title, blurb]) => (
-                                    <button key={mode} type="button" disabled={!data.canManage || saving} onClick={() => save({ mode })} aria-pressed={agent.mode === mode}
-                                        className={cn("flex items-start gap-2.5 rounded-xl border p-3 text-left transition-colors disabled:opacity-60", agent.mode === mode ? "border-brand bg-brand/5 ring-2 ring-brand/15" : "border-plum/12 hover:bg-cream-deep")}>
-                                        <Icon className={cn("mt-0.5 size-4 shrink-0", agent.mode === mode ? "text-brand" : "text-ink/60")} aria-hidden="true" />
-                                        <span><span className="block text-sm font-semibold text-ink">{title}</span><span className="mt-0.5 block text-xs leading-relaxed text-ink/60">{blurb}</span></span>
-                                    </button>
-                                ))}
-                            </div>
-                        </fieldset>
+            <AgentCard icon={Bot} title="Meeting follow-up agent" settings={followUp} canManage={data.canManage} saving={saving === "meetingFollowUp"}
+                blurb="After a meeting's AI summary, it turns the action items into tasks for the right people, with due dates when they were said, and posts a short recap."
+                onToggle={(on) => save("meetingFollowUp", { enabled: on }, on ? "Follow-up agent is on" : "Follow-up agent is off")}>
+                {followUp.enabled && (
+                    <>
+                        <ModePicker value={followUp.mode} disabled={disabled || !!saving} onChange={(mode) => save("meetingFollowUp", { mode })} />
                         <label className="flex flex-col gap-1.5">
                             <span className="text-xs font-semibold text-ink/70">Post the recap in</span>
-                            <select value={agent.channelId ?? ""} disabled={!data.canManage || saving} onChange={(e) => save({ channelId: (e.target.value || null) as Id<"channels"> | null })}
+                            <select value={followUp.channelId ?? ""} disabled={disabled || !!saving} onChange={(e) => save("meetingFollowUp", { channelId: e.target.value || null })}
                                 className="h-9 rounded-lg border border-plum/15 bg-surface px-2.5 text-sm text-ink focus:border-brand focus:outline-none">
                                 <option value="">Don&apos;t post a recap</option>
                                 {publicChannels.map((c) => <option key={c._id} value={c._id}># {c.name}</option>)}
                             </select>
                         </label>
-                    </div>
+                    </>
                 )}
-                {!data.canManage && <p className="mt-3 text-xs text-ink/60">Only the owner and admins can change agents.</p>}
-            </div>
+            </AgentCard>
+
+            <AgentCard icon={Inbox} title="Chat triage agent" settings={triage} canManage={data.canManage} saving={saving === "triage"}
+                blurb="Watches the channels you pick. When someone asks for something (“can someone fix the checkout bug?”), it makes a task for the right person and replies in the thread."
+                onToggle={(on) => {
+                    if (on && watch.length === 0) { setDraftWatch([]); toast.info("Pick the channels it should watch first"); return }
+                    void save("triage", { enabled: on }, on ? "Triage agent is on" : "Triage agent is off")
+                }}>
+                {(triage.enabled || draftWatch !== null) && (
+                    <>
+                        <div>
+                            <p className="mb-2 text-xs font-semibold text-ink/70">Channels it watches <span className="font-normal text-ink/60">({watch.length}/{MAX_WATCHED}, public channels only)</span></p>
+                            <div className="flex flex-wrap gap-1.5">
+                                {publicChannels.map((c) => {
+                                    const on = watch.includes(c._id)
+                                    return (
+                                        <button key={c._id} type="button" disabled={disabled || !!saving} aria-pressed={on} onClick={() => toggleWatch(c._id)}
+                                            className={cn("inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors disabled:opacity-60", on ? "border-brand bg-brand/10 text-orange-ink" : "border-plum/15 text-ink/70 hover:bg-cream-deep")}>
+                                            {on && <Check className="size-3" aria-hidden="true" />}# {c.name}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                            {!triage.enabled && (
+                                <button type="button" disabled={disabled || !!saving || watch.length === 0} onClick={() => save("triage", { enabled: true }, "Triage agent is on")}
+                                    className="mt-3 inline-flex h-8 items-center gap-1.5 rounded-lg bg-brand px-3 text-xs font-semibold text-white hover:bg-brand-hover disabled:opacity-50">
+                                    Turn on for {watch.length} channel{watch.length === 1 ? "" : "s"}
+                                </button>
+                            )}
+                        </div>
+                        {triage.enabled && <ModePicker value={triage.mode} disabled={disabled || !!saving} onChange={(mode) => save("triage", { mode })} />}
+                        <p className="text-[11px] leading-relaxed text-ink/60">It waits a minute after a request so a burst of messages is read together. Only messages that look like requests count towards your agent runs.</p>
+                    </>
+                )}
+            </AgentCard>
+
+            {!data.canManage && <p className="-mt-2 text-xs text-ink/60">Only the owner and admins can change agents.</p>}
 
             <div className="rounded-xl border border-plum/12 bg-surface p-4">
                 <div className="flex items-center justify-between text-xs">
@@ -129,7 +195,7 @@ export const AgentsPanelView = ({ data, channels, onSave }: {
                 <p className="mb-2 text-xs font-semibold text-ink/70">Recent work</p>
                 {data.runs.length === 0 ? (
                     <p className="rounded-xl border border-dashed border-plum/15 px-4 py-6 text-center text-sm text-ink/60">
-                        {agent.enabled ? "Nothing yet. It starts after the next meeting with an AI summary." : "Turn the agent on to see its work here."}
+                        {followUp.enabled || triage.enabled ? "Nothing yet. Their work shows up here." : "Turn an agent on to see its work here."}
                     </p>
                 ) : (
                     <ul className="flex flex-col gap-2">
@@ -137,8 +203,13 @@ export const AgentsPanelView = ({ data, channels, onSave }: {
                             <li key={r._id} className="rounded-xl border border-plum/12 bg-surface">
                                 <button type="button" onClick={() => setOpen(open === r._id ? null : r._id)} aria-expanded={open === r._id}
                                     className="flex w-full items-center gap-3 px-3.5 py-3 text-left">
+                                    <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-lg", r.kind === "triage" ? "bg-brand/12 text-orange-ink" : "bg-plum/10 text-plum dark:bg-white/10 dark:text-white/80")}>
+                                        {r.kind === "triage" ? <Inbox className="size-3.5" aria-hidden="true" /> : <Bot className="size-3.5" aria-hidden="true" />}
+                                    </span>
                                     <span className="min-w-0 flex-1">
-                                        <span className="block truncate text-sm font-medium text-ink">{r.meetingTitle ?? "Deleted meeting"}</span>
+                                        <span className="block truncate text-sm font-medium text-ink">
+                                            {r.kind === "triage" ? `Requests in #${r.channelName ?? "deleted channel"}` : r.meetingTitle ?? "Deleted meeting"}
+                                        </span>
                                         <span className="block text-[11px] text-ink/60">{when(r._creationTime)} · {r.actions.length} item{r.actions.length === 1 ? "" : "s"}</span>
                                     </span>
                                     <StatusPill status={r.status} />
