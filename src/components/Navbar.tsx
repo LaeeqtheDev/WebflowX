@@ -7,6 +7,7 @@ import { ChevronDown, Menu, X } from "lucide-react";
 import { COMPARISONS, FEATURES, USE_CASES } from "@/lib/marketing-content";
 
 const menuItems = [
+  { label: "Agents", href: "#agents" },
   { label: "Merger", href: "#merger" },
   { label: "Journey", href: "#timeline" },
   { label: "Team", href: "#team" },

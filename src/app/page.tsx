@@ -9,6 +9,7 @@ import FeaturesSection from '@/components/Features'
 import Footer from '@/components/Footer'
 import SecuritySection from '@/components/landing/Security'
 import PagesDatabases from '@/components/landing/PagesDatabases'
+import AgentsSection from '@/components/landing/Agents'
 const FAQSection = dynamic(() => import('@/components/FAQ').then(m => m.FAQSection))
 const NewsletterSignup = dynamic(() => import('@/components/newslettersignup').then(m => m.NewsletterSignup))
 const PricingSection = dynamic(() => import('@/components/pricing'))
@@ -27,7 +28,7 @@ const jsonLd = {
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',
       description:
-        'Team chat, tasks, real-time documents and spreadsheets, video meetings with live transcripts and AI summaries, with roles and permissions, in one workspace.',
+        'Team chat, tasks, real-time documents and spreadsheets, video meetings with live transcripts and AI summaries, and AI agents that turn meetings and chat requests into tasks, with roles and permissions, in one workspace.',
       publisher: { '@type': 'Organization', name: 'North Foundry' },
       offers: PLANS.map((p) => ({ '@type': 'Offer', name: p.name, price: p.price, priceCurrency: 'USD', description: p.blurb, url: `${SITE_URL}/#pricing` })),
     },
@@ -61,6 +62,7 @@ const page = () => {
       <Navbar />
       <Hero />
       <FeaturesSection />
+      <AgentsSection />
       <WhyChooseUs />
       <PagesDatabases />
       <SecuritySection />

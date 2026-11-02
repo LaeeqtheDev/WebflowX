@@ -253,6 +253,8 @@ export const SITE_FAQS: Faq[] = [
   { q: "Is pricing per seat?", a: "No. Plans are priced per workspace, with member limits that rise with the plan." },
   { q: "Does WebflowX support video calls?", a: "Yes. Host meetings in your workspace, follow a live transcript and get an AI summary with action items afterwards." },
   { q: "Can I export my data?", a: "Yes. Anyone can download their own data, and owners and admins can export the workspace." },
+  { q: "What can WebflowX's AI agents do?", a: "Four things, each switched on by an admin: turn a meeting's action items into tasks, turn requests in chosen channels into tasks, post a daily standup, and answer @agent questions in chat from your workspace's messages, tasks and meetings." },
+  { q: "Can the AI agents see everything in my workspace?", a: "No. @agent only searches the channels, tasks and meetings the person asking can open, and never direct messages. Agents act with the permissions of the person asking or the admin who switched them on, and they can be set to suggest work for approval instead of acting on their own." },
 ]
 
 export type ChangelogEntry = { date: string; title: string; points: string[] }
