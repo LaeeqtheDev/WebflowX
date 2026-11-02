@@ -474,7 +474,7 @@ const Editor = ({
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z,.mp3,.mp4,.mov,.avi,.json,.xml,.html,.css,.js,.ts,.py,.java,.c,.cpp,.md"
             />
 
-            {/* 👇 outer wrapper with relative for menu positioning */}
+            {/* outer wrapper with relative for menu positioning */}
             <div ref={wrapperRef} className="relative">
                 {/* @mention picker */}
                 {mention && mentionMatches.length > 0 && (
@@ -565,13 +565,13 @@ const Editor = ({
                                       >
                                           <div
                                               className={cn(
-                                                  "size-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0",
+                                                  "size-8 rounded-lg flex items-center justify-center shrink-0",
                                                   selectedSlashItem === i
                                                       ? "bg-brand text-white"
                                                       : "bg-cream text-plum"
                                               )}
                                           >
-                                              {cmd.icon}
+                                              <cmd.icon className="size-4" aria-hidden />
                                           </div>
                                           <div>
                                               <p className="text-sm font-medium">{cmd.label}</p>
@@ -595,13 +595,13 @@ const Editor = ({
                                       >
                                           <div
                                               className={cn(
-                                                  "size-8 rounded-lg flex items-center justify-center text-sm shrink-0",
+                                                  "size-8 rounded-lg flex items-center justify-center shrink-0",
                                                   selectedSlashItem === i
                                                       ? "bg-brand text-white"
-                                                      : "bg-cream"
+                                                      : "bg-cream text-orange-ink"
                                               )}
                                           >
-                                              {cmd.icon}
+                                              <cmd.icon className="size-4" aria-hidden />
                                           </div>
                                           <div>
                                               <p className="text-sm font-medium">{cmd.label}</p>

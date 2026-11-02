@@ -45,7 +45,10 @@ describe("historyCutoff", () => {
   it("hides old messages only on the Free plan", () => {
     const cutoff = historyCutoff("free")!
     const days = (Date.now() - cutoff) / 86_400_000
-    expect(Math.round(days)).toBe(HISTORY_DAYS_FREE)
+    expect(Math.floor(days)).toBe(HISTORY_DAYS_FREE)
+    // stable within a day, so "load more" cursors for message lists stay valid
+    expect(historyCutoff("free")).toBe(cutoff)
+    expect(cutoff % (24 * 60 * 60 * 1000)).toBe(0)
     expect(historyCutoff("startup")).toBeNull()
     expect(historyCutoff(undefined)).not.toBeNull()
   })

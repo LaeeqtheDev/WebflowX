@@ -1,6 +1,7 @@
 import type { MutableRefObject } from "react";
 import type Quill from "quill";
 import type { Delta, Op } from "quill/core";
+import { Briefcase, Code, Heading1, Heading2, Languages, List, ListCollapse, ListOrdered, Maximize2, Minimize2, Smile, Sparkles, SpellCheck } from "lucide-react";
 
 export type EditorValue = {
     image: File | null;
@@ -29,7 +30,7 @@ export const FORMATTING_COMMANDS = [
     {
         label: "Heading 1",
         description: "Large heading",
-        icon: "H1",
+        icon: Heading1,
         type: "format" as const,
         handler: (quill: Quill, index: number) => {
             quill.deleteText(index - 1, 1);
@@ -40,7 +41,7 @@ export const FORMATTING_COMMANDS = [
     {
         label: "Heading 2",
         description: "Medium heading",
-        icon: "H2",
+        icon: Heading2,
         type: "format" as const,
         handler: (quill: Quill, index: number) => {
             quill.deleteText(index - 1, 1);
@@ -49,9 +50,9 @@ export const FORMATTING_COMMANDS = [
         },
     },
     {
-        label: "Bullet List",
+        label: "Bullet list",
         description: "Unordered list",
-        icon: "•",
+        icon: List,
         type: "format" as const,
         handler: (quill: Quill, index: number) => {
             quill.deleteText(index - 1, 1);
@@ -60,9 +61,9 @@ export const FORMATTING_COMMANDS = [
         },
     },
     {
-        label: "Numbered List",
+        label: "Numbered list",
         description: "Ordered list",
-        icon: "1.",
+        icon: ListOrdered,
         type: "format" as const,
         handler: (quill: Quill, index: number) => {
             quill.deleteText(index - 1, 1);
@@ -71,9 +72,9 @@ export const FORMATTING_COMMANDS = [
         },
     },
     {
-        label: "Code Block",
+        label: "Code block",
         description: "Code snippet",
-        icon: "<>",
+        icon: Code,
         type: "format" as const,
         handler: (quill: Quill, index: number) => {
             quill.deleteText(index - 1, 1);
@@ -85,51 +86,51 @@ export const FORMATTING_COMMANDS = [
 
 export const AI_COMMANDS = [
     {
-        label: "Improve Writing",
+        label: "Improve writing",
         description: "Polish and enhance",
-        icon: "✨",
+        icon: Sparkles,
         command: "improve",
     },
     {
-        label: "Fix Grammar",
+        label: "Fix grammar",
         description: "Fix errors",
-        icon: "🔧",
+        icon: SpellCheck,
         command: "grammar",
     },
     {
-        label: "Make Shorter",
+        label: "Make shorter",
         description: "Condense text",
-        icon: "📉",
+        icon: Minimize2,
         command: "shorter",
     },
     {
-        label: "Make Longer",
+        label: "Make longer",
         description: "Expand text",
-        icon: "📈",
+        icon: Maximize2,
         command: "longer",
     },
     {
-        label: "Make Formal",
+        label: "Make formal",
         description: "Professional tone",
-        icon: "👔",
+        icon: Briefcase,
         command: "formal",
     },
     {
-        label: "Make Casual",
+        label: "Make casual",
         description: "Friendly tone",
-        icon: "😊",
+        icon: Smile,
         command: "casual",
     },
     {
         label: "Summarize",
         description: "Summarize text",
-        icon: "📝",
+        icon: ListCollapse,
         command: "summarize",
     },
     {
         label: "Translate to English",
         description: "Translate any language",
-        icon: "🌍",
+        icon: Languages,
         command: "translate",
     },
 ];

@@ -35,8 +35,8 @@ export const PRIORITY_COLORS: Record<Priority, string> = {
 }
 
 export const PRIORITY_LABELS: Record<Priority, string> = {
-    urgent: "🔴 Urgent",
-    high: "🟠 High",
-    medium: "🟡 Medium",
-    low: "🔵 Low",
+    urgent: "Urgent",
+    high: "High",
+    medium: "Medium",
+    low: "Low",
 }

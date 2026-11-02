@@ -245,13 +245,87 @@ export const search = internalQuery({
             const tasks = await ctx.db.query("tasks").withIndex("by_workspace_id", (s) => s.eq("workspaceId", run.workspaceId)).order("desc").take(1_000)
             const ranked = tasks.map((t) => ({ t, n: hits(`${t.title} ${t.description ?? ""}`) })).filter((x) => x.n > 0).sort((a, b) => b.n - a.n).slice(0, 10)
             return await Promise.all(ranked.map(async ({ t }) => ({
-                title: t.title, status: t.status.replace("_", " "), owner: await nameOf(t.assigneeId), due: t.dueDate ? when(t.dueDate) : null, priority: t.priority,
+                task_id: t._id, title: t.title, status: t.status.replace("_", " "), owner: await nameOf(t.assigneeId), due: t.dueDate ? when(t.dueDate) : null, priority: t.priority,
             })))
         }
         const meetings = await ctx.db.query("meetings").withIndex("by_workspace_started", (s) => s.eq("workspaceId", run.workspaceId)).order("desc").take(150)
         const visible = meetings.filter((m) => !m.deletedAt && (m.kind !== "oneToOne" || m.createdBy === asker._id || m.inviteeId === asker._id))
         const ranked = visible.map((m) => ({ m, n: hits(`${m.title} ${m.summary ?? ""}`) })).filter((x) => x.n > 0).sort((a, b) => b.n - a.n).slice(0, 5)
         return ranked.map(({ m }) => ({ title: m.title, date: when(m.startedAt), summary: (m.summary ?? "").slice(0, 900) }))
+    },
+})
+
+// "What's on my plate?": the asker's open tasks, overdue first, then by due date.
+export const myTasks = internalQuery({
+    args: { runId: v.id("agentRuns") },
+    handler: async (ctx, args) => {
+        const run = await ctx.db.get(args.runId)
+        const asker = run ? await ctx.db.get(run.startedBy) : null
+        if (!run || !asker) return []
+        const rows = await ctx.db.query("tasks").withIndex("by_assignee_id", (q) => q.eq("assigneeId", asker._id)).take(300)
+        const now = Date.now()
+        return rows
+            .filter((t) => t.workspaceId === run.workspaceId && t.status !== "done")
+            .sort((x, y) => (x.dueDate ?? Infinity) - (y.dueDate ?? Infinity))
+            .slice(0, 25)
+            .map((t) => ({
+                task_id: t._id, title: t.title, status: t.status.replace("_", " "), priority: t.priority,
+                due: t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : null, overdue: !!t.dueDate && t.dueDate < now - 86_400_000 / 2,
+            }))
+    },
+})
+
+// "Catch me up": the messages someone missed in a channel since their last visit (or the last day), for a private
+// summary. Counts as one agent run; nothing is posted.
+export const startCatchUp = internalMutation({
+    args: { channelId: v.id("channels"), userId: v.id("users") },
+    handler: async (ctx, args) => {
+        const channel = await ctx.db.get(args.channelId)
+        if (!channel || !(await canViewChannel(ctx, channel._id, args.userId))) throw new ConvexError("Channel not found")
+        const member = await findMember(ctx, channel.workspaceId, args.userId)
+        if (!member || member.role === "guest") throw new ConvexError("Catch me up isn't available to guests")
+        if (!assistantOn(await agentFor(ctx, channel.workspaceId, "assistant"))) throw new ConvexError("An admin has switched off the chat agent in this workspace")
+        if (!(await consume(ctx, `agent-ask:${args.userId}`, MAX_ASKS_PER_HOUR, 60 * 60_000))) throw new ConvexError("You've asked the agent a lot this hour. Try again a little later.")
+        const { allowed, limit, plan } = await monthlyCheck(ctx, channel.workspaceId)
+        if (!allowed) throw new ConvexError(`LIMIT_REACHED:agentRuns:${limit}:${plan}`)
+        const read = await ctx.db.query("channelReads").withIndex("by_member_channel", (q) => q.eq("memberId", member._id).eq("channelId", channel._id)).unique()
+        const since = Math.min(read?.lastReadAt ?? Infinity, Date.now() - 86_400_000)
+        const workspace = await ctx.db.get(channel.workspaceId)
+        const floor = Math.max(since, historyCutoff(workspace?.plan) ?? 0)
+        const rows = await ctx.db.query("messages")
+            .withIndex("by_channel_id_parent_message_id_conversation_id", (q) => q.eq("channelId", channel._id))
+            .order("desc").take(400)
+        const recent = rows.filter((m) => m._creationTime > floor && !m.agent).slice(0, 150).reverse()
+        const names = new Map<string, string>()
+        const lines = []
+        for (const m of recent) {
+            const key = String(m.memberId)
+            if (!names.has(key)) {
+                const mm = await ctx.db.get(m.memberId)
+                names.set(key, (mm ? (await ctx.db.get(mm.userId))?.name : null) ?? m.integrationName ?? "Someone")
+            }
+            const text = deltaToText(m.body).trim()
+            if (text) lines.push({ at: m._creationTime, name: names.get(key)!, text: text.slice(0, 600), reply: !!m.parentMessagesId })
+        }
+        let agent = await agentFor(ctx, channel.workspaceId, "assistant")
+        if (!agent) {
+            const id = await ctx.db.insert("agents", { workspaceId: channel.workspaceId, kind: "assistant", enabled: true, mode: "act", createdBy: member._id, updatedAt: Date.now() })
+            agent = await ctx.db.get(id)
+        }
+        const runId = await ctx.db.insert("agentRuns", {
+            workspaceId: channel.workspaceId, agentId: agent!._id, channelId: channel._id, startedBy: member._id, status: "running", actions: [],
+        })
+        const me = (await ctx.db.get(member.userId))?.name ?? "you"
+        return { runId, channel: channel.name, me, since: read?.lastReadAt ?? null, lines }
+    },
+})
+
+export const finishCatchUp = internalMutation({
+    args: { runId: v.id("agentRuns"), note: v.string() },
+    handler: async (ctx, args) => {
+        const run = await ctx.db.get(args.runId)
+        if (run && run.status === "running") await ctx.db.patch(run._id, { status: "done", note: args.note.slice(0, 300), finishedAt: Date.now() })
+        return null
     },
 })
 
@@ -276,6 +350,7 @@ const describeRun = async (ctx: QueryCtx, run: Doc<"agentRuns">) => {
                 source: src ? { text: snippetOf(src.body, 140), author: (await nameOf(src.memberId)) ?? "Someone" } : null,
             }
         }
+        if (a.type === "update") return { ...a, assigneeName: await nameOf(a.assigneeId) }
         const ch = await ctx.db.get(a.channelId)
         return { ...a, channelName: ch?.name ?? "deleted channel" }
     }))
@@ -615,10 +690,10 @@ export const plainStandup = (f: Facts) => {
     const part = (title: string, rows: Facts["done"]) => (rows.length ? [`${title}`, ...rows.slice(0, 8).map(item), rows.length > 8 ? `• and ${rows.length - 8} more` : ""].filter(Boolean).join("\n") : "")
     return [
         "Good morning. Here's where things stand:",
-        part(`✅ Done in the last day (${f.done.length})`, f.done),
-        part(`📅 Due today (${f.dueToday.length})`, f.dueToday),
-        part(`⚠️ Overdue (${f.overdue.length})`, f.overdue),
-        part(`👀 Waiting for review (${f.inReview.length})`, f.inReview),
+        part(`Done in the last day (${f.done.length})`, f.done),
+        part(`Due today (${f.dueToday.length})`, f.dueToday),
+        part(`Overdue (${f.overdue.length})`, f.overdue),
+        part(`Waiting for review (${f.inReview.length})`, f.inReview),
     ].filter(Boolean).join("\n\n")
 }
 export const isQuiet = (f: Facts) => !f.done.length && !f.dueToday.length && !f.overdue.length && !f.added.length && !f.inReview.length && !f.chat.length
@@ -638,6 +713,29 @@ const apply = async (ctx: MutationCtx, run: Doc<"agentRuns">, agent: Doc<"agents
     const meeting = run.meetingId ? await ctx.db.get(run.meetingId) : null
     const done: Action[] = []
     for (const a of actions) {
+        if (a.type === "update") {
+            // same rules as the task board: admins change anything; members only the status of their own tasks
+            const task = await ctx.db.get(a.taskId)
+            if (!task || !actor || task.workspaceId !== run.workspaceId) { done.push(a); continue }
+            const own = task.assigneeId === actor._id || task.createdBy === actor._id
+            const patch: Partial<Doc<"tasks">> = {}
+            if (a.status && (actorCanAssign || own)) patch.status = a.status
+            if (actorCanAssign || (own && a.assigneeId === actor._id)) {
+                if (a.assigneeId) patch.assigneeId = a.assigneeId
+            }
+            if (actorCanAssign) {
+                if (a.dueDate) patch.dueDate = a.dueDate
+                if (a.priority) patch.priority = a.priority
+            }
+            if (Object.keys(patch).length === 0) { done.push({ ...a, applied: false }); continue }
+            await ctx.db.patch(task._id, { ...patch, updatedAt: Date.now() })
+            if (patch.assigneeId && patch.assigneeId !== task.assigneeId && patch.assigneeId !== actor._id) {
+                await notify(ctx, { workspaceId: run.workspaceId, recipientId: patch.assigneeId, senderId: actor._id, type: "task_assigned", taskId: task._id, body: task.title, read: false })
+            }
+            if (patch.status === "done" && task.status !== "done") await emit(ctx, run.workspaceId, "task.completed", { id: task._id, title: task.title, priority: task.priority })
+            done.push({ ...a, applied: true })
+            continue
+        }
         if (a.type === "task") {
             const assignee = a.assigneeId ? await ctx.db.get(a.assigneeId) : null
             let assigneeId = assignee && assignee.workspaceId === run.workspaceId ? assignee._id : undefined
@@ -857,7 +955,17 @@ const proposal = v.union(
         sourceMessageId: v.optional(v.string()),
     }),
     v.object({ type: v.literal("recap"), text: v.string() }),
+    v.object({
+        type: v.literal("update"),
+        taskId: v.string(),
+        status: v.optional(v.string()),
+        assigneeId: v.optional(v.string()),
+        dueDate: v.optional(v.string()),
+        priority: v.optional(v.string()),
+    }),
 )
+const STATUSES = ["backlog", "todo", "in_progress", "in_review", "done"] as const
+const isStatus = (s?: string): s is (typeof STATUSES)[number] => !!s && (STATUSES as readonly string[]).includes(s)
 
 const PRIORITIES = ["urgent", "high", "medium", "low"] as const
 const isPriority = (p?: string): p is (typeof PRIORITIES)[number] => !!p && (PRIORITIES as readonly string[]).includes(p)
@@ -917,11 +1025,31 @@ export const finishRun = internalMutation({
                     id: `t${n}`, type: "task", title, assigneeId, dueDate: parseDue(p.dueDate),
                     priority: isPriority(p.priority) ? p.priority : "medium", ...(sourceMessageId ? { sourceMessageId } : {}),
                 })
-            } else if (assistant && run.channelId && run.messageIds?.[0] && !actions.some((a) => a.type === "recap")) {
+            } else if (p.type === "update") {
+                // only the chat agent changes existing tasks, at most 10 per question, each task once
+                if (!assistant || actions.filter((a) => a.type === "update").length >= 10) continue
+                const id = ctx.db.normalizeId("tasks", p.taskId)
+                const task = id ? await ctx.db.get(id) : null
+                if (!task || task.workspaceId !== run.workspaceId || actions.some((a) => a.type === "update" && a.taskId === task._id)) continue
+                let assigneeId: Id<"members"> | undefined
+                if (p.assigneeId) {
+                    const mid = ctx.db.normalizeId("members", p.assigneeId)
+                    const m = mid ? await ctx.db.get(mid) : null
+                    if (m && m.workspaceId === run.workspaceId && m.role !== "guest") assigneeId = m._id
+                }
+                const change = {
+                    status: isStatus(p.status) ? p.status : undefined,
+                    assigneeId,
+                    dueDate: parseDue(p.dueDate),
+                    priority: isPriority(p.priority) ? p.priority : undefined,
+                }
+                if (Object.values(change).every((x) => x === undefined)) continue
+                actions.push({ id: `u${n}`, type: "update", taskId: task._id, title: task.title, ...change })
+            } else if (p.type === "recap" && assistant && run.channelId && run.messageIds?.[0] && !actions.some((a) => a.type === "recap")) {
                 const question = await ctx.db.get(run.messageIds[0])
                 const text = p.text.trim().slice(0, MAX_RECAP)
                 if (question && text) actions.push({ id: `r${n}`, type: "recap", channelId: run.channelId, parentMessageId: question.parentMessagesId ?? question._id, text })
-            } else if (!triage && !assistant && agent.channelId && !actions.some((a) => a.type === "recap")) {
+            } else if (p.type === "recap" && !triage && !assistant && agent.channelId && !actions.some((a) => a.type === "recap")) {
                 const text = p.text.trim().slice(0, MAX_RECAP)
                 if (text) actions.push({ id: `r${n}`, type: "recap", channelId: agent.channelId, text })
             }

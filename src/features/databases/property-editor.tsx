@@ -158,7 +158,7 @@ export const PropertyDialog = ({ open, onOpenChange, ctx, propId }: { open: bool
             <div className="space-y-2">
               <Label htmlFor="prop-rel">Related database</Label>
               <select id="prop-rel" className={sel} value={draft.relation?.databaseId ?? ""} onChange={(e) => setDraft({ ...draft, relation: { databaseId: e.target.value, many: draft.relation?.many ?? true } })}>
-                {ctx.databases.map((d) => <option key={d._id} value={d._id}>{d.icon ?? "🗃️"} {d.title || "Untitled"}{d._id === ctx.docId ? " (this one)" : ""}</option>)}
+                {ctx.databases.map((d) => <option key={d._id} value={d._id}>{d.icon ? `${d.icon} ` : ""}{d.title || "Untitled"}{d._id === ctx.docId ? " (this one)" : ""}</option>)}
               </select>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={draft.relation?.many !== false} onChange={(e) => setDraft({ ...draft, relation: { databaseId: draft.relation?.databaseId ?? ctx.docId, many: e.target.checked } })} /> Allow linking several rows</label>
             </div>

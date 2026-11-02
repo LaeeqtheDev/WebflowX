@@ -169,7 +169,7 @@ describe("follow-up agent", () => {
     const run = (await ctx.t.run((c) => c.db.query("agentRuns").collect()))[0]
     expect(run.status).toBe("done")
     expect(run.note).toBe("Added 2 tasks and a recap.")
-    expect(run.actions.every((a) => (a.type === "task" ? !!a.taskId : !!a.messageId))).toBe(true)
+    expect(run.actions.every((a) => (a.type === "task" ? !!a.taskId : a.type === "recap" ? !!a.messageId : !!a.applied))).toBe(true)
     // 3 model calls at 1,000 tokens in and 100 out each, priced as gpt-oss-120b
     expect(run).toMatchObject({ model: "openai/gpt-oss-120b", tokensIn: 3_000, tokensOut: 300 })
     expect(run.costUsd).toBeCloseTo((3_000 * 0.15 + 300 * 0.6) / 1e6, 8)
@@ -507,6 +507,44 @@ describe("@agent in chat", () => {
     asUser(ctx.t, user).mutation(api.messages.create, { workspaceId: ctx.ids.ws, channelId: extra.channelId ?? ctx.ids.general, parentMessageId: extra.parentMessageId, body: delta(text) })
   const agentReplies = () => ctx.t.run((c) => c.db.query("messages").collect()).then((m) => m.filter((x) => x.agent))
   const settle = () => ctx.t.finishAllScheduledFunctions(vi.runAllTimers)
+
+  it("changes existing tasks when asked, with the asker's permissions", async () => {
+    const { t, ids } = ctx
+    const [mine, avas] = await t.run(async (c) => [
+      await c.db.insert("tasks", { title: "Send the launch email", status: "todo", priority: "medium", workspaceId: ids.ws, assigneeId: ids.devM, createdBy: ids.ownerM }),
+      await c.db.insert("tasks", { title: "Publish the pricing page", status: "todo", priority: "medium", workspaceId: ids.ws, assigneeId: ids.avaM, createdBy: ids.ownerM }),
+    ])
+    // Dev (a member) marks his own task done and tries to change Ava's
+    fakeModel(
+      [call("list_my_tasks", {})],
+      [call("update_task", { task_id: mine, status: "done" }), call("update_task", { task_id: avas, status: "done", due_date: nextFriday() }, 1)],
+      [call("answer", { text: "Marked it done." })],
+      [call("finish", { note: "ok" })],
+    )
+    await post(ids.dev, "@agent mark my launch email task done, and Ava's pricing page too")
+    await settle()
+    const after = await t.run(async (c) => [await c.db.get(mine), await c.db.get(avas)])
+    expect(after[0]?.status).toBe("done")
+    // not his task and he isn't an admin: left alone
+    expect(after[1]?.status).toBe("todo")
+    expect(after[1]?.dueDate).toBeUndefined()
+    const run = (await t.run((c) => c.db.query("agentRuns").collect())).at(-1)!
+    expect(run.actions.filter((a) => a.type === "update").map((a) => a.type === "update" && a.applied)).toEqual([true, false])
+    expect(await agentReplies()).toHaveLength(1)
+  })
+
+  it("Catch me up gathers only what the reader can see, and counts one run", async () => {
+    const { t, ids } = ctx
+    await post(ids.ava, "We decided to ship on Friday")
+    await post(ids.owner, "Dev, can you check the invoices?")
+    const got = await t.mutation(internal.agents.startCatchUp, { channelId: ids.general, userId: ids.dev })
+    expect(got.lines.map((l) => l.text)).toEqual(["We decided to ship on Friday", "Dev, can you check the invoices?"])
+    expect(got.me).toBe("Dev Patel")
+    // a locked channel he isn't in
+    await expect(t.mutation(internal.agents.startCatchUp, { channelId: ids.locked, userId: ids.dev })).rejects.toThrow(/not found/)
+    const runs = await t.run((c) => c.db.query("agentRuns").collect())
+    expect(runs.filter((r) => r.status === "running")).toHaveLength(1)
+  })
 
   it("spots @agent but not email addresses or other words", () => {
     expect(mentionsAgent("@agent what did we decide?")).toBe(true)

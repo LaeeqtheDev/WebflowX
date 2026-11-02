@@ -88,8 +88,12 @@ export const PLANS = {
 
 // Free workspaces keep (but only show) the last 90 days of messages. Upgrading brings the rest back.
 export const HISTORY_DAYS_FREE = 90
+// Rounded down to the start of the (UTC) day. Paginated message lists put the cutoff in their index range, and
+// Convex only accepts a "load more" cursor for the exact same range: a cutoff that moved every millisecond made
+// every page after the first fail with "InvalidCursor". Now it only changes once a day.
+const DAY_MS = 24 * 60 * 60 * 1000
 export const historyCutoff = (plan?: string): number | null =>
-    getPlan(plan) === "free" ? Date.now() - HISTORY_DAYS_FREE * 24 * 60 * 60 * 1000 : null
+    getPlan(plan) === "free" ? Math.floor((Date.now() - HISTORY_DAYS_FREE * DAY_MS) / DAY_MS) * DAY_MS : null
 
 export const getPlan = (plan?: string): Plan => {
     if (plan === "startup" || plan === "growth" || plan === "enterprise") return plan

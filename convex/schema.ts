@@ -426,6 +426,19 @@ const schema = defineSchema({
                 parentMessageId: v.optional(v.id("messages")),
                 messageId: v.optional(v.id("messages")),
             }),
+            // @agent changing an existing task ("mark the checkout fix done", "move it to Friday")
+            v.object({
+                id: v.string(),
+                type: v.literal("update"),
+                taskId: v.id("tasks"),
+                title: v.string(),
+                status: v.optional(v.union(v.literal("backlog"), v.literal("todo"), v.literal("in_progress"), v.literal("in_review"), v.literal("done"))),
+                assigneeId: v.optional(v.id("members")),
+                dueDate: v.optional(v.number()),
+                priority: v.optional(v.union(v.literal("urgent"), v.literal("high"), v.literal("medium"), v.literal("low"))),
+                // set once carried out
+                applied: v.optional(v.boolean()),
+            }),
         )),
         // the agent's own one-line note on what it did
         note: v.optional(v.string()),

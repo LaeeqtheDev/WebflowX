@@ -430,7 +430,7 @@ export function githubMessage(event: string, p: any): string | null {
     const who: string = p?.sender?.login ?? "Someone"
     switch (event) {
         case "ping":
-            return delta([`✅ GitHub is connected to ${repo}`])
+            return delta([`GitHub is connected to ${repo}`])
         case "push": {
             if (p.deleted || !String(p.ref ?? "").startsWith("refs/heads/")) return null
             const branch = String(p.ref).replace("refs/heads/", "")
