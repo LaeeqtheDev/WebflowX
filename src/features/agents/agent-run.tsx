@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 import { useMutation, useQuery } from "convex/react"
-import { Bot, Check, CircleAlert, ListChecks, Loader2, MessageSquareText, Play, X } from "lucide-react"
+import { Bot, Check, CircleAlert, ListChecks, Loader2, MessageSquareText, PencilLine, Play, X } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "../../../convex/_generated/api"
 import type { Id } from "../../../convex/_generated/dataModel"
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 type RunAction =
     | { id: string; type: "task"; title: string; assigneeName: string | null; dueDate?: number; priority: string; taskId?: string; source?: { text: string; author: string } | null }
     | { id: string; type: "recap"; text: string; channelName: string; messageId?: string }
+    | { id: string; type: "update"; title: string; status?: string; assigneeName: string | null; dueDate?: number; priority?: string; applied?: boolean }
 
 export type AgentRunView = {
     _id: Id<"agentRuns">
@@ -107,6 +108,17 @@ export const AgentRunCard = ({ run, canDecide, compact }: { run: AgentRunView; c
                                     )}
                                 </span>
                             </>
+                        ) : a.type === "update" ? (
+                            <>
+                                <PencilLine className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden="true" />
+                                <span className="min-w-0 flex-1">
+                                    <span className="block text-sm font-medium text-ink">Changed: {a.title}</span>
+                                    <span className="mt-1 block text-[11px] text-ink/60">
+                                        {[a.status && `status → ${a.status.replace("_", " ")}`, a.assigneeName && `owner → ${a.assigneeName}`, due(a.dueDate) && `due → ${due(a.dueDate)}`, a.priority && `priority → ${a.priority}`].filter(Boolean).join(" · ")}
+                                        {a.applied === false && " (not allowed for this person, nothing changed)"}
+                                    </span>
+                                </span>
+                            </>
                         ) : (
                             <>
                                 <MessageSquareText className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden="true" />
@@ -120,7 +132,7 @@ export const AgentRunCard = ({ run, canDecide, compact }: { run: AgentRunView; c
                             <li key={a.id}>
                                 {reviewing && canDecide ? (
                                     <label className={cn("flex cursor-pointer items-start gap-3 rounded-xl border px-3 py-2.5 transition-colors", on ? "border-brand/35 bg-brand/5" : "border-plum/12 bg-surface opacity-70")}>
-                                        <input type="checkbox" checked={on} aria-label={a.type === "task" ? `Keep task ${a.title}` : "Keep the recap"}
+                                        <input type="checkbox" checked={on} aria-label={a.type === "recap" ? "Keep the recap" : `Keep ${a.title}`}
                                             onChange={() => setPicked((s) => { const n = new Set(s); if (n.has(a.id)) n.delete(a.id); else n.add(a.id); return n })}
                                             className="mt-1 size-4 shrink-0 accent-brand" />
                                         {body}
@@ -128,7 +140,7 @@ export const AgentRunCard = ({ run, canDecide, compact }: { run: AgentRunView; c
                                 ) : (
                                     <div className="flex items-start gap-3 rounded-xl border border-plum/12 bg-surface px-3 py-2.5">
                                         {body}
-                                        {(a.type === "task" ? a.taskId : a.messageId) && <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" aria-label="Added" />}
+                                        {(a.type === "task" ? a.taskId : a.type === "recap" ? a.messageId : a.applied) && <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" aria-label="Added" />}
                                     </div>
                                 )}
                             </li>

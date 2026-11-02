@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import Link from "next/link";
 import { ArrowRight, BellRing, CalendarDays, FileText, MessagesSquare, Search, UserRoundPlus, Video, Webhook } from "lucide-react";
-import { MOTION_OK, whenGsap } from "./landing/gsap";
 import { Heading, Label, Reveal } from "./landing/ui";
 import { ChatPane, DocPane, PaneFrame, ScaledFrame, TasksPane } from "./landing/mock";
 import { wrap } from "./landing/tokens";
@@ -23,7 +22,9 @@ function Cell({
   className = "",
   visualH,
   children,
+  delay = 0,
 }: {
+  delay?: number;
   tone: Tone;
   title: string;
   body: string;
@@ -33,13 +34,13 @@ function Cell({
 }) {
   const t = tones[tone];
   return (
-    <div className={`bento-cell flex flex-col overflow-hidden rounded-3xl p-7 ${t.box} ${className}`}>
+    <Reveal variant="scale" delay={delay} className={`h-full ${className}`}><div className={`lp-lift flex h-full flex-col overflow-hidden rounded-3xl p-7 ${t.box}`}>
       <h3 className={`lp-h text-2xl ${t.title}`}>{title}</h3>
       <p className={`mt-2 max-w-sm text-[15px] leading-relaxed ${t.body}`}>{body}</p>
       {children && (
         <div className={`-mx-7 -mb-7 mt-7 overflow-hidden px-7 ${visualH ?? "h-[260px]"}`}>{children}</div>
       )}
-    </div>
+    </div></Reveal>
   );
 }
 
@@ -55,46 +56,11 @@ const small = [
 ];
 
 const NewFeatures = () => {
-  const root = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const el = root.current;
-    if (!el) return;
-    return whenGsap(({ gsap }) => {
-    const mm = gsap.matchMedia();
-    mm.add(MOTION_OK, () => {
-      const q = gsap.utils.selector(el);
-      q(".bento-cell").forEach((cell) => {
-        const s = gsap.utils.selector(cell);
-        const items = s(".m-card, .m-line, .m-msg");
-        gsap.set(items, { opacity: 0, y: 12 });
-        gsap.fromTo(
-          cell,
-          { y: 40, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.8,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: cell,
-              start: "top 88%",
-              once: true,
-              onEnter: () =>
-                gsap.to(items, { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, delay: 0.3, ease: "power2.out" }),
-            },
-          }
-        );
-      });
-    });
-    return () => mm.revert();
-    }, el);
-  }, []);
 
   return (
-    <section ref={root} id="features" className="w-full bg-[#efe8e3] py-24 md:py-32">
+    <section id="features" className="w-full bg-[#efe8e3] py-24 md:py-32">
       <div className={wrap}>
-        <Reveal>
+        <Reveal variant="blur">
           <Label>Product</Label>
           <Heading className="mt-5 max-w-3xl">Everything your team works in, in one app.</Heading>
           <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-[#1b1017]/70">
@@ -111,14 +77,14 @@ const NewFeatures = () => {
               </PaneFrame>
             </ScaledFrame>
           </Cell>
-          <Cell tone="plum" title="Tasks next to the conversation" body="A board with sprints, priorities, owners and comments, so work agreed in chat lands somewhere." visualH="h-[190px] sm:h-[240px]">
+          <Cell delay={120} tone="plum" title="Tasks next to the conversation" body="A board with sprints, priorities, owners and comments, so work agreed in chat lands somewhere." visualH="h-[190px] sm:h-[240px]">
             <ScaledFrame w={680} h={440}>
               <PaneFrame>
                 <TasksPane />
               </PaneFrame>
             </ScaledFrame>
           </Cell>
-          <Cell tone="white" title="Docs and spreadsheets" body="Write and edit together in real time, with live cursors so you see who is where." visualH="h-[190px] sm:h-[240px]">
+          <Cell delay={240} tone="white" title="Docs and spreadsheets" body="Write and edit together in real time, with live cursors so you see who is where." visualH="h-[190px] sm:h-[240px]">
             <ScaledFrame w={680} h={440}>
               <PaneFrame>
                 <DocPane />
@@ -134,9 +100,9 @@ const NewFeatures = () => {
           </Link>
         </div>
         <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {small.map(({ icon: Icon, t, b, items }) => (
-            <Reveal key={t}>
-              <div className="h-full rounded-2xl border border-[#381d2a]/10 bg-[#f7f2ee] p-4 sm:rounded-3xl sm:p-6">
+          {small.map(({ icon: Icon, t, b, items }, i) => (
+            <Reveal key={t} delay={(i % 4) * 70} className="h-full">
+              <div className="lp-lift h-full rounded-2xl border border-[#381d2a]/10 bg-[#f7f2ee] p-4 sm:rounded-3xl sm:p-6">
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#381d2a] text-[#ff5018] sm:h-10 sm:w-10">
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>

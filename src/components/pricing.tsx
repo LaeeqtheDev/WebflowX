@@ -45,7 +45,7 @@ const cards = [
 const PricingSection = () => (
   <section id="pricing" className="w-full bg-[#f7f2ee] py-24 md:py-32">
     <div className={wrap}>
-      <Reveal>
+      <Reveal variant="blur">
         <Label>Pricing</Label>
         <Heading className="mt-5 max-w-3xl">One flat price for the whole team. Not per seat.</Heading>
         <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-[#1b1017]/70">
@@ -54,10 +54,11 @@ const PricingSection = () => (
       </Reveal>
       <Reveal delay={80}>
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {cards.map((p) => {
+          {cards.map((p, i) => {
             const hot = !!p.popular;
             return (
-              <div key={p.name} className={`relative flex flex-col rounded-3xl p-7 ${hot ? "order-first sm:order-none " : ""}${hot ? "bg-[#381d2a] text-white shadow-2xl shadow-[#381d2a]/25 lg:-my-3 lg:py-10" : "border border-[#381d2a]/12 bg-white text-[#1b1017]"}`}>
+              <Reveal key={p.name} delay={i * 110} variant="scale" className={`h-full ${hot ? "order-first sm:order-none" : ""}`}>
+              <div className={`relative flex h-full flex-col rounded-3xl p-7 ${hot ? "lp-shine " : "lp-lift "}${hot ? "bg-[#381d2a] text-white shadow-2xl shadow-[#381d2a]/25 lg:-my-3 lg:py-10" : "border border-[#381d2a]/12 bg-white text-[#1b1017]"}`}>
                 {hot && <span className="absolute -top-3 left-7 rounded-full bg-[#ff5018] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">Most popular</span>}
                 <p className={`lp-label ${hot ? "text-white/65" : "text-[#381d2a]/60"}`}>{p.name}</p>
                 <p className="lp-h mt-4 text-5xl">{p.price}</p>
@@ -86,6 +87,7 @@ const PricingSection = () => (
                   </a>
                 )}
               </div>
+              </Reveal>
             );
           })}
         </div>

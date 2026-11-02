@@ -1,5 +1,5 @@
 import React from "react";
-import { AtSign, Bot, Check, Inbox, ListChecks, ScrollText, ShieldCheck, Sparkles, Sun, ToggleRight } from "lucide-react";
+import { AlertTriangle, AtSign, Bot, CalendarClock, Check, CheckCircle2, Inbox, ListChecks, MessageCircle, ScrollText, ShieldCheck, Sparkles, Sun, ToggleRight } from "lucide-react";
 import { Heading, Label, Reveal } from "./ui";
 import { wrap } from "./tokens";
 
@@ -40,6 +40,10 @@ const Task = ({ t, who, due }: { t: string; who: string; due?: string }) => (
   </li>
 );
 
+const StandupRow = ({ icon: Icon, tone, children }: { icon: typeof Check; tone: string; children: React.ReactNode }) => (
+  <span className="flex items-start gap-1.5"><Icon className={`mt-[3px] h-3.5 w-3.5 shrink-0 ${tone}`} aria-hidden="true" />{children}</span>
+);
+
 const agents = [
   {
     icon: AtSign,
@@ -47,7 +51,7 @@ const agents = [
     b: "Type @agent in any channel or thread. It searches your chat, tasks and meetings, answers in the thread and says where it found it. Ask it to summarise a thread or turn it into tasks.",
     pane: (
       <Pane>
-        <div className="space-y-3">
+        <div className="lp-seq space-y-3">
           <Line face={<Face c="#10b981" l="A" />} name="Ava"><span className="font-semibold text-[#ff8a63]">@agent</span> what did we decide about the launch date?</Line>
           <div className="ml-4 border-l border-white/10 pl-4">
             <Line face={<AgentFace />} name="WebflowX Agent" agent>
@@ -66,7 +70,7 @@ const agents = [
     pane: (
       <Pane>
         <p className="text-[11px] font-semibold uppercase tracking-wide text-white/45">Weekly launch sync · 3 tasks</p>
-        <ul className="mt-2.5 space-y-1.5">
+        <ul className="lp-seq mt-2.5 space-y-1.5">
           <Task t="Send the launch email" who="Dev" due="Fri" />
           <Task t="Publish the pricing page" who="Ava" due="Thu" />
           <Task t="Review the FAQ" who="Maya" />
@@ -81,7 +85,7 @@ const agents = [
     b: "The triage agent watches the channels you choose. When someone asks for something, it makes a task for the right person and replies in the thread, so nothing asked in chat gets lost.",
     pane: (
       <Pane>
-        <div className="space-y-3">
+        <div className="lp-seq space-y-3">
           <Line face={<Face c="#8b5cf6" l="M" />} name="Maya">Can someone fix the checkout button on mobile? Customers can&apos;t pay.</Line>
           <div className="ml-4 border-l border-white/10 pl-4">
             <Line face={<AgentFace />} name="Triage agent" agent>
@@ -99,11 +103,13 @@ const agents = [
     pane: (
       <Pane>
         <Line face={<AgentFace />} name="Standup agent" agent>
-          <span className="block">Morning team ☀️ Here&apos;s where things stand.</span>
-          <span className="mt-1.5 block">✅ Done: onboarding emails (Ava), invoice export (Dev)</span>
-          <span className="block">📅 Due today: launch email (Dev)</span>
-          <span className="block">⚠️ Overdue: FAQ review (no owner)</span>
-          <span className="block">💬 Dev is waiting on the Stripe keys</span>
+          <span className="block">Morning team. Here&apos;s where things stand.</span>
+          <span className="lp-seq mt-1.5 block space-y-1">
+            <StandupRow icon={CheckCircle2} tone="text-emerald-400">Done: onboarding emails (Ava), invoice export (Dev)</StandupRow>
+            <StandupRow icon={CalendarClock} tone="text-[#ff8a63]">Due today: launch email (Dev)</StandupRow>
+            <StandupRow icon={AlertTriangle} tone="text-amber-300">Overdue: FAQ review (no owner)</StandupRow>
+            <StandupRow icon={MessageCircle} tone="text-sky-300">Dev is waiting on the Stripe keys</StandupRow>
+          </span>
         </Line>
       </Pane>
     ),
@@ -119,10 +125,11 @@ const guardrails = [
 
 export default function AgentsSection() {
   return (
-    <section id="agents" className="w-full bg-[#2a1420] py-24 text-white md:py-32">
-      <div className={wrap}>
+    <section id="agents" className="relative w-full overflow-hidden bg-[#2a1420] py-24 text-white md:py-32">
+      <div aria-hidden="true" className="lp-glow" />
+      <div className={`${wrap} relative`}>
         <div className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end">
-          <Reveal>
+          <Reveal variant="blur">
             <Label dark>AI agents</Label>
             <Heading dark className="mt-5 max-w-3xl">Teammates that do the follow-up for you.</Heading>
           </Reveal>
@@ -136,8 +143,8 @@ export default function AgentsSection() {
 
         <div className="mt-14 grid gap-4 md:grid-cols-2">
           {agents.map(({ icon: Icon, t, b, pane }, i) => (
-            <Reveal key={t} delay={(i % 2) * 80}>
-              <div className="flex h-full flex-col rounded-3xl border border-white/10 bg-[#381d2a] p-6 sm:p-7">
+            <Reveal key={t} delay={(i % 2) * 120} variant="scale" className="h-full">
+              <div className="lp-lift flex h-full flex-col rounded-3xl border border-white/10 bg-[#381d2a]/90 p-6 backdrop-blur-sm hover:border-[#ff5018]/40 sm:p-7">
                 <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2a1420] text-[#ff5018]">
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
@@ -151,8 +158,8 @@ export default function AgentsSection() {
 
         <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {guardrails.map(({ icon: Icon, t, b }, i) => (
-            <Reveal key={t} delay={i * 60}>
-              <div className="h-full rounded-2xl border border-white/10 p-4 sm:p-5">
+            <Reveal key={t} delay={i * 90} className="h-full">
+              <div className="lp-lift h-full rounded-2xl border border-white/10 bg-white/[0.02] p-4 hover:border-white/20 sm:p-5">
                 <Icon className="h-5 w-5 text-[#ff5018]" aria-hidden="true" />
                 <p className="mt-3 text-[15px] font-semibold tracking-tight">{t}</p>
                 <p className="mt-1 text-[12.5px] leading-relaxed text-white/65 sm:text-[13.5px]">{b}</p>

@@ -353,7 +353,7 @@ function SidePanel({
                 <div className="flex min-h-0 flex-1 flex-col">
                     <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
                         {chatMessages.length === 0 && (
-                            <p className="mt-10 text-center text-sm text-white/45">No messages yet. Say hi 👋</p>
+                            <p className="mt-10 text-center text-sm text-white/45">No messages yet. Say hi.</p>
                         )}
                         {chatMessages.map((m, i) => {
                             const mine = m.from?.isLocal
@@ -410,7 +410,7 @@ function RecordButton({ title }: { title: string }) {
     useEffect(() => {
         if (recording !== wasRecording.current) {
             wasRecording.current = recording
-            void send(recording ? "🔴 Started recording this call" : "⏹ Stopped recording").catch(() => {})
+            void send(recording ? "Recording started. The host is saving this call to their computer." : "Recording stopped.").catch(() => {})
         }
     }, [recording, send])
     const toggle = async () => {

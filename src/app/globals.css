@@ -254,6 +254,54 @@ body,
   50%, 100% { opacity: 0; }
 }
 
+/* Scroll reveals (see Reveal in components/landing/ui.tsx). Only opacity, transform and filter move. */
+.lp-rv { --rv-d: 0ms; }
+.lp-rv-wait { opacity: 0; transform: translate3d(0, 32px, 0); }
+.lp-rv-wait[data-rv="scale"] { transform: translate3d(0, 24px, 0) scale(0.96); }
+.lp-rv-wait[data-rv="blur"] { transform: translate3d(0, 18px, 0); filter: blur(10px); }
+.lp-rv-wait[data-rv="left"] { transform: translate3d(-32px, 0, 0); }
+.lp-rv-wait.lp-rv-in {
+  opacity: 1; transform: none; filter: none;
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1) var(--rv-d), transform 1s cubic-bezier(0.22, 1, 0.36, 1) var(--rv-d), filter 0.9s ease var(--rv-d);
+}
+/* children marked .lp-seq play in one after another once their block is revealed */
+.lp-rv-wait .lp-seq > * { opacity: 0; transform: translate3d(0, 10px, 0); }
+.lp-rv-wait.lp-rv-in .lp-seq > * { animation: lp-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.lp-rv-wait.lp-rv-in .lp-seq > *:nth-child(1) { animation-delay: calc(var(--rv-d) + 0.35s); }
+.lp-rv-wait.lp-rv-in .lp-seq > *:nth-child(2) { animation-delay: calc(var(--rv-d) + 0.6s); }
+.lp-rv-wait.lp-rv-in .lp-seq > *:nth-child(3) { animation-delay: calc(var(--rv-d) + 0.85s); }
+.lp-rv-wait.lp-rv-in .lp-seq > *:nth-child(4) { animation-delay: calc(var(--rv-d) + 1.1s); }
+.lp-rv-wait.lp-rv-in .lp-seq > *:nth-child(5) { animation-delay: calc(var(--rv-d) + 1.35s); }
+.lp-rv-wait.lp-rv-in .lp-seq > *:nth-child(n + 6) { animation-delay: calc(var(--rv-d) + 1.6s); }
+@keyframes lp-pop { from { opacity: 0; transform: translate3d(0, 10px, 0); } to { opacity: 1; transform: none; } }
+
+/* Cards lift a little under the pointer */
+.lp-lift { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease; }
+@media (hover: hover) { .lp-lift:hover { transform: translate3d(0, -4px, 0); box-shadow: 0 24px 50px -28px rgba(56, 29, 42, 0.45); } }
+
+/* Endless logo strip */
+.lp-marquee { mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.lp-marquee-track { display: flex; width: max-content; animation: lp-marquee 40s linear infinite; }
+.lp-marquee:hover .lp-marquee-track { animation-play-state: paused; }
+@keyframes lp-marquee { to { transform: translate3d(-50%, 0, 0); } }
+
+/* Slow drifting glow behind dark sections and the closing call to action */
+.lp-glow { position: absolute; inset: -20%; pointer-events: none; background: radial-gradient(40% 40% at 30% 30%, rgba(255, 80, 24, 0.22), transparent 70%), radial-gradient(35% 35% at 75% 70%, rgba(255, 138, 99, 0.16), transparent 70%); animation: lp-drift 18s ease-in-out infinite alternate; will-change: transform; }
+@keyframes lp-drift { from { transform: translate3d(-4%, -3%, 0) scale(1); } to { transform: translate3d(4%, 3%, 0) scale(1.08); } }
+
+/* Shine running round the most popular plan */
+.lp-shine { position: relative; isolation: isolate; }
+.lp-shine::before { content: ""; position: absolute; inset: -2px; padding: 2px; border-radius: calc(1.5rem + 2px); pointer-events: none; -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; background: conic-gradient(from var(--lp-a, 0deg), #ff5018, #ff8a63 25%, #381d2a 50%, #ff8a63 75%, #ff5018); animation: lp-spin 6s linear infinite; }
+@property --lp-a { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+@keyframes lp-spin { to { --lp-a: 360deg; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-rv-wait { opacity: 1 !important; transform: none !important; filter: none !important; }
+  .lp-rv-wait .lp-seq > * { opacity: 1; transform: none; animation: none !important; }
+  .lp-marquee-track, .lp-glow, .lp-shine::before { animation: none; }
+  .lp-lift:hover { transform: none; }
+}
+
 /* Brand scrollbars: thin orange thumb on a transparent track, everywhere in the app */
 * {
   scrollbar-width: thin;

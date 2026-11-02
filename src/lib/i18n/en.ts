@@ -79,7 +79,7 @@ export const en = {
   "guide.s1.t": "This is your workspace",
   "guide.s1.b": "Channels on the left are where your team talks. Type a message below and press Enter. It's real, so your team will see it.",
   "guide.s2.t": "Type / for AI",
-  "guide.s2.b": "In any message box, type / to open AI actions and formatting, like Improve Writing.",
+  "guide.s2.b": "In any message box, type / to open AI actions and formatting, like Improve writing.",
   "guide.s5.t": "Track work as tasks",
   "guide.s5.b": "Tasks have a status, priority, assignee and due date. Add your first one here.",
   "guide.s6.t": "Write a page",

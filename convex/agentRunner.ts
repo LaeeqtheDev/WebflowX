@@ -1,5 +1,8 @@
 import { v } from "convex/values"
-import { internalAction } from "./_generated/server"
+import { action, internalAction } from "./_generated/server"
+import { ConvexError } from "convex/values"
+import { auth } from "./auth"
+import type { Id } from "./_generated/dataModel"
 import { internal } from "./_generated/api"
 
 // The agents' loop: the model reads a meeting (follow-up agent) or new channel messages (triage agent),
@@ -36,6 +39,7 @@ type Facts = {
 type Proposal =
     | { type: "task"; title: string; assigneeId?: string; dueDate?: string; priority?: string; sourceMessageId?: string }
     | { type: "recap"; text: string }
+    | { type: "update"; taskId: string; status?: string; assigneeId?: string; dueDate?: string; priority?: string }
 
 const standupTools = [
     {
@@ -72,6 +76,17 @@ const assistantTools = (canAssign: boolean) => [
             due_date: { type: "string", description: "YYYY-MM-DD, only if a date or day was given" },
             priority: { type: "string", enum: ["urgent", "high", "medium", "low"] },
         }, ["title"]),
+    fn("list_my_tasks", "The open tasks assigned to the person asking (with task ids), overdue and soonest due first. Use for 'what's on my plate', 'what's due', 'what am I late on'.", {}, []),
+    fn("update_task", canAssign
+        ? "Change an existing task the person asked you to change: status, owner, due date or priority. Get the task_id from search_tasks or list_my_tasks first. One call per task."
+        : "Change an existing task the person asked you to change. This person can only change the status of tasks assigned to or created by them, or take a task themselves. Get the task_id from search_tasks or list_my_tasks first.",
+        {
+            task_id: { type: "string" },
+            status: { type: "string", enum: ["backlog", "todo", "in_progress", "in_review", "done"] },
+            assignee_member_id: { type: "string" },
+            due_date: { type: "string", description: "YYYY-MM-DD" },
+            priority: { type: "string", enum: ["urgent", "high", "medium", "low"] },
+        }, ["task_id"]),
     fn("answer", "Post your reply in the thread. Plain text, short: a direct answer first, then up to 5 bullet lines (•). Say where facts came from (#channel, meeting name, task).", { text: { type: "string" } }, ["text"]),
     fn("finish", "Call once you have answered.", { note: { type: "string" } }, ["note"]),
 ]
@@ -149,7 +164,8 @@ const chat = async (key: string, messages: Msg[], toolList: unknown[], usage: Us
         const res = await fetch(GROQ_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-            body: JSON.stringify({ model, messages, tools: toolList, tool_choice: "auto", temperature: 0.2, max_tokens: 1_200 }),
+            // an empty tool list is rejected by the API, so plain completions send none
+            body: JSON.stringify({ model, messages, ...(toolList.length ? { tools: toolList, tool_choice: "auto" } : {}), temperature: 0.2, max_tokens: 1_200 }),
         })
         if (res.ok) {
             const data = await res.json()
@@ -180,6 +196,8 @@ const prompt = (c: Context, now: number): Msg[] => {
                     "Rules:",
                     "- Base answers on the conversation and on what the search tools return. If you can't find it, say so plainly. Never invent facts, numbers or decisions.",
                     "- Search before answering questions about past decisions, work or meetings. Try different keywords if the first search finds nothing.",
+                    "- You can change existing tasks when asked (\"mark the checkout fix done\", \"move my survey task to Friday\", \"give the FAQ review to Ava\"): find it with search_tasks or list_my_tasks, then update_task. Never change tasks nobody asked about.",
+                    "- For \"what's on my plate / what's due / what am I late on\", use list_my_tasks and answer with the most urgent first.",
                     "- Only create tasks when they ask for tasks (\"make tasks from this\", \"remind Dev to…\", \"add a task…\"). Use member ids for owners.",
                     c.asker.canAssign ? "- They can assign tasks to anyone." : `- They can only assign tasks to themselves (member id ${c.asker.id}); leave other people's tasks unassigned and mention who it's for.`,
                     "- Due dates only when a day or date was given; work them out from today's date.",
@@ -209,7 +227,7 @@ const prompt = (c: Context, now: number): Msg[] => {
                     "- Open with one friendly line. Then short sections, only the ones that have something in them: Done, Due today, Overdue or stuck, Worth knowing.",
                     "- Bullet lines start with •. Name the owner after each task. Keep it under 18 lines in total.",
                     "- 'Worth knowing' is at most 3 bullets from chat: decisions, blockers, or something someone is waiting on. Skip small talk. Never invent anything that isn't in the data.",
-                    "- Plain text only, no markdown headings or bold. A few simple emoji are fine.",
+                    "- Plain text only, no markdown headings or bold, and no emoji.",
                     "- Call post_standup once, then finish.",
                 ].join("\n"),
             },
@@ -358,6 +376,18 @@ export const run = internalAction({
                             result = "Will be created."
                             break
                         }
+                        case "list_my_tasks": {
+                            const mine: unknown[] = await ctx.runQuery(internal.agents.myTasks, { runId: args.runId })
+                            result = mine.length ? JSON.stringify(mine).slice(0, 5_000) : "They have no open tasks."
+                            break
+                        }
+                        case "update_task": {
+                            const taskId = str("task_id")?.trim()
+                            if (!taskId) { result = "A task_id is needed (find it with search_tasks or list_my_tasks)."; break }
+                            proposals.push({ type: "update", taskId, status: str("status"), assigneeId: str("assignee_member_id"), dueDate: str("due_date"), priority: str("priority") })
+                            result = "Will be changed if they're allowed to."
+                            break
+                        }
                         case "answer":
                         case "post_standup":
                         case "post_recap": {
@@ -380,7 +410,9 @@ export const run = internalAction({
             // the person asking always hears back, even if the model forgot to answer
             if (c.kind === "assistant" && !proposals.some((p) => p.type === "recap")) {
                 const made = proposals.filter((p) => p.type === "task").length
-                proposals.push({ type: "recap", text: made ? `Done. I added ${made} task${made === 1 ? "" : "s"} to the board.` : "Sorry, I couldn't find an answer to that in this workspace." })
+                const changed = proposals.filter((p) => p.type === "update").length
+                const parts = [made && `added ${made} task${made === 1 ? "" : "s"}`, changed && `updated ${changed} task${changed === 1 ? "" : "s"}`].filter(Boolean)
+                proposals.push({ type: "recap", text: parts.length ? `Done. I ${parts.join(" and ")}.` : "Sorry, I couldn't find an answer to that in this workspace." })
             }
             await record()
             await ctx.runMutation(internal.agents.finishRun, { runId: args.runId, proposals, note, steps })
@@ -400,6 +432,47 @@ export const run = internalAction({
                 return null
             }
             return await fail(why)
+        }
+    },
+})
+
+// "Catch me up" in a channel: a private summary of what the reader missed. One plain completion (no tools),
+// counted as an agent run; the text goes back to the person only.
+export const catchUp = action({
+    args: { channelId: v.id("channels") },
+    handler: async (ctx, args): Promise<{ summary: string; count: number }> => {
+        const userId = await auth.getUserId(ctx)
+        if (!userId) throw new ConvexError("Please sign in")
+        const key = process.env.GROQ_API_KEY
+        if (!key) throw new ConvexError("The AI isn't set up yet (GROQ_API_KEY on the Convex deployment).")
+        const got: { runId: Id<"agentRuns">; channel: string; me: string; since: number | null; lines: { at: number; name: string; text: string; reply: boolean }[] } =
+            await ctx.runMutation(internal.agents.startCatchUp, { channelId: args.channelId, userId })
+        if (got.lines.length === 0) {
+            await ctx.runMutation(internal.agents.finishCatchUp, { runId: got.runId, note: "Nothing new to catch up on." })
+            return { summary: "You're all caught up. Nothing new here since your last visit.", count: 0 }
+        }
+        const usage: Usage = { model: null, tokensIn: 0, tokensOut: 0 }
+        try {
+            const reply = await chat(key, [
+                {
+                    role: "system",
+                    content: [
+                        `You catch ${got.me} up on what they missed in #${got.channel}, a channel in their team workspace.`,
+                        "Write plain text, no markdown headings, no emoji. Start with one sentence on the gist.",
+                        "Then up to three short groups, only the ones with something in them, each a label line followed by bullet lines starting with •:",
+                        "Decisions — what was agreed. For you — anything asking or mentioning " + got.me + ". Open questions — asked but not answered.",
+                        "Name who said what. Never invent anything. Keep it under 14 lines.",
+                    ].join("\n"),
+                },
+                { role: "user", content: got.lines.map((l) => `[${clock(l.at)}]${l.reply ? " (thread reply)" : ""} ${l.name}: ${l.text}`).join("\n").slice(0, 24_000) },
+            ], [], usage)
+            const summary = reply?.content?.trim() || "I couldn't summarise that just now."
+            if (usage.model) await ctx.runMutation(internal.agents.recordUsage, { runId: got.runId, model: usage.model, tokensIn: usage.tokensIn, tokensOut: usage.tokensOut, costUsd: costOf(usage.model, usage.tokensIn, usage.tokensOut) })
+            await ctx.runMutation(internal.agents.finishCatchUp, { runId: got.runId, note: `Caught someone up on ${got.lines.length} messages in #${got.channel}.` })
+            return { summary, count: got.lines.length }
+        } catch (e) {
+            await ctx.runMutation(internal.agents.failRun, { runId: got.runId, error: e instanceof Error ? e.message : "The AI didn't answer" })
+            throw new ConvexError("The AI service didn't answer. Try again in a minute.")
         }
     },
 })

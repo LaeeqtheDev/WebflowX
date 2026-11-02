@@ -22,6 +22,7 @@ import { errMsg } from "@/lib/errors"
 import { ChannelIcon, cleanChannelName } from "./channel-icon"
 import { useConfirm } from "../../hooks/use-confirm"
 import { PinnedMessages } from "@/features/marks/pinned-messages"
+import { CatchUp } from "@/features/agents/catch-up"
 
 interface HeaderProps {
     title: string;
@@ -240,7 +241,10 @@ export const Header = ({ title }: HeaderProps) => {
                     </div>
                 </DialogContent>
             </Dialog>
-            <PinnedMessages channelId={channelId} />
+            <div className="flex items-center gap-1">
+                {!perms.isGuest && <CatchUp channelId={channelId} />}
+                <PinnedMessages channelId={channelId} />
+            </div>
         </div>
     )
 }

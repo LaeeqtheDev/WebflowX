@@ -15,14 +15,14 @@ export default function HowItWorks() {
   return (
     <section id="how" className="w-full bg-[#f7f2ee] py-24 md:py-32">
       <div className={wrap}>
-        <Reveal>
+        <Reveal variant="blur">
           <Label>How it works</Label>
           <Heading className="mt-5 max-w-3xl">Running by this afternoon.</Heading>
         </Reveal>
         <ol className="mt-14 grid gap-4 md:grid-cols-3">
           {steps.map(({ icon: Icon, n, t, b }, i) => (
-            <Reveal key={n} delay={i * 80}>
-              <li className="relative h-full rounded-3xl border border-[#381d2a]/12 bg-white p-7">
+            <Reveal key={n} delay={i * 140} variant="scale" className="h-full">
+              <li className="lp-lift relative h-full rounded-3xl border border-[#381d2a]/12 bg-white p-7">
                 {/* arrow to the next step on wide screens */}
                 {i < steps.length - 1 && (
                   <span aria-hidden="true" className="absolute -right-[13px] top-1/2 z-10 hidden h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-[#381d2a]/12 bg-[#f7f2ee] text-[#ff5018] md:flex">

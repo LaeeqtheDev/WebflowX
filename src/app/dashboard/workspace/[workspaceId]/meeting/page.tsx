@@ -157,13 +157,13 @@ export default function MeetingPage() {
                 if (selectedChannelId) {
                     const meetingUrl = `${window.location.origin}/dashboard/workspace/${workspaceId}/meeting`
                     const headline = scheduledFor
-                        ? `📅 ${currentUserName} scheduled a meeting: "${meetingTitle}" for ${format(scheduledFor, "EEE d MMM, h:mm a")}\n`
-                        : `🎥 ${currentUserName} started a meeting: "${meetingTitle}"\n`
+                        ? `${currentUserName} scheduled a meeting: "${meetingTitle}" for ${format(scheduledFor, "EEE d MMM, h:mm a")}\n`
+                        : `${currentUserName} started a meeting: "${meetingTitle}"\n`
                     const body = JSON.stringify({
                         ops: [
                             { insert: headline },
                             { insert: scheduledFor ? "Open the meetings page to join when it starts:\n" : "Click below to join:\n" },
-                            { attributes: { link: meetingUrl }, insert: scheduledFor ? "🔗 Meetings" : "🔗 Join meeting" },
+                            { attributes: { link: meetingUrl }, insert: scheduledFor ? "Open Meetings" : "Join the meeting" },
                             { insert: "\n" }
                         ]
                     })

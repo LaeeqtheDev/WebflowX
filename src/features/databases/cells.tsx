@@ -48,7 +48,7 @@ const Avatar = ({ name, image }: { name: string; image?: string }) =>
 
 export const CellValue = ({ prop, row, ctx }: { prop: Prop; row: Row; ctx: DbCtx }) => {
   const v = ctx.comp.valueOf(row, prop.id)
-  if (isErr(v)) return <span className="text-xs text-destructive" title={v.__error}>⚠ {v.__error}</span>
+  if (isErr(v)) return <span className="text-xs text-destructive" title={v.__error}>{v.__error}</span>
   if (v === undefined || v === null || v === "" || (Array.isArray(v) && !v.length && prop.type !== "rollup")) {
     return prop.type === "checkbox" ? <Box checked={false} /> : null
   }

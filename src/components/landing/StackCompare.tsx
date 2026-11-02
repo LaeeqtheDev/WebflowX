@@ -51,7 +51,7 @@ export default function StackCompare() {
   return (
     <section id="compare" className="w-full bg-white py-24 md:py-32">
       <div className={wrap}>
-        <Reveal>
+        <Reveal variant="blur">
           <Label>WebflowX vs. the usual stack</Label>
           <Heading className="mt-5 max-w-4xl">Slack, Notion, Zoom and Google Docs. Or one workspace.</Heading>
           <p className="mt-5 max-w-2xl text-[17px] leading-relaxed text-[#1b1017]/70">
@@ -62,7 +62,7 @@ export default function StackCompare() {
 
         <div className="mt-14 grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           {/* the stack */}
-          <Reveal>
+          <Reveal variant="left" className="h-full">
             <div className="h-full rounded-3xl border border-[#381d2a]/12 bg-[#f7f2ee] p-6 sm:p-8">
               <label htmlFor="stack-people" className="flex items-baseline justify-between text-sm text-[#1b1017]/70">
                 <span>People on your team</span>
@@ -105,8 +105,10 @@ export default function StackCompare() {
           </Reveal>
 
           {/* WebflowX */}
-          <Reveal delay={80}>
-            <div className="flex h-full flex-col rounded-3xl bg-[#381d2a] p-6 text-white sm:p-8">
+          <Reveal delay={150} variant="scale" className="h-full">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-3xl bg-[#381d2a] p-6 text-white sm:p-8">
+              <div aria-hidden="true" className="lp-glow opacity-60" />
+              <div className="relative flex h-full flex-col">
               <p className="text-xs font-semibold uppercase tracking-wide text-white/55">WebflowX {plan.name}</p>
               <p className="lp-h mt-2 text-5xl tabular-nums">{plan.price === 0 ? "$0" : whole(plan.price)}<span className="text-base font-medium text-white/55"> /month in total</span></p>
               <p className="mt-1 text-sm text-white/65">
@@ -138,6 +140,7 @@ export default function StackCompare() {
                 <Link href="/auth?mode=signup" className="inline-flex items-center gap-2 rounded-lg bg-[#ff5018] px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-[#ff6a3a]">
                   Start free <ArrowRight className="h-4 w-4" />
                 </Link>
+              </div>
               </div>
             </div>
           </Reveal>
