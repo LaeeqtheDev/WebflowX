@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, MousePointer2 } from "lucide-react";
 import { MOTION_OK, prefersReducedMotion, whenGsap, type ScrollTrigger } from "./landing/gsap";
@@ -150,50 +149,54 @@ const Hero = () => {
       <div className="relative mx-auto flex max-w-[1240px] flex-col items-center px-5 pt-28 sm:px-8 lg:pt-24">
         <div className="h-head flex flex-col items-center text-center">
           <a
-            href="#merger"
+            href="#agents"
             onClick={(e) => {
               e.preventDefault();
-              document.querySelector("#merger")?.scrollIntoView({ behavior: "smooth" });
+              document.querySelector("#agents")?.scrollIntoView({ behavior: "smooth" });
             }}
             className="h-fade h-pill group inline-flex items-center gap-2.5 rounded-full border border-white/15 bg-white/5 py-1.5 pl-2 pr-4 text-[13px] text-white/80 backdrop-blur transition-colors hover:bg-white/10"
           >
-            <Image src="/northfoundry-logo.png" alt="" width={20} height={20} className="h-5 w-5 rounded" />
-            WebflowX is joining North Foundry
+            <span className="rounded-full bg-[#ff5018] px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">New</span>
+            AI agents that do the follow-up for you
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </a>
 
           <h1 className="lp-h mt-7 max-w-4xl text-[2.8rem] sm:text-6xl lg:text-[5rem]">
             <span className="h-line block overflow-hidden pb-1">
-              <span className="block">Where teams talk,</span>
+              <span className="block">Your team talks.</span>
             </span>
             <span className="h-line block overflow-hidden pb-2">
               <span className="block">
-                plan and <span className="text-[#ff5018]">ship.</span>
+                Agents do the <span className="text-[#ff5018]">follow-up.</span>
               </span>
             </span>
           </h1>
 
           <p className="h-fade mt-5 max-w-xl text-lg leading-relaxed text-white/65">
-            Channels and direct messages, a tasks board, real-time documents, spreadsheets and databases, and video
-            meetings with live transcripts and AI summaries, all in one workspace with roles and
-            permissions you control.
+            Chat, tasks, live docs and video meetings in one workspace, with AI agents that turn meetings and
+            chat requests into assigned tasks, post your standup and answer &ldquo;@agent, what did we decide?&rdquo;
+            One flat price per workspace, not per seat.
           </p>
 
           <div className="h-fade mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/auth"
+              href="/auth?mode=signup"
               className="inline-flex items-center gap-2 rounded-lg bg-[#ff5018] px-6 py-3.5 text-[15px] font-semibold text-white shadow-[0_8px_30px_-8px_rgba(255,80,24,0.7)] transition-colors hover:bg-[#ff6a3a]"
             >
               Start free <ArrowRight className="h-4 w-4" />
             </Link>
             <a
-              href="#pricing"
+              href="#agents"
+              onClick={(e) => {
+                e.preventDefault();
+                document.querySelector("#agents")?.scrollIntoView({ behavior: "smooth" });
+              }}
               className="rounded-lg border border-white/20 px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-white/10"
             >
-              See plans
+              See the agents
             </a>
           </div>
-          <p className="h-fade mt-5 text-sm text-white/45">Free plan available. Works on desktop and phones. Built by North Foundry.</p>
+          <p className="h-fade mt-5 text-sm text-white/45">Free plan, no card needed. Set up in a minute. Built by North Foundry.</p>
         </div>
 
         <div className="h-stage relative mt-10 w-full max-w-[1120px] lg:mt-12" style={{ perspective: 1800 }}>

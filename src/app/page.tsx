@@ -10,6 +10,8 @@ import Footer from '@/components/Footer'
 import SecuritySection from '@/components/landing/Security'
 import PagesDatabases from '@/components/landing/PagesDatabases'
 import AgentsSection from '@/components/landing/Agents'
+import FinalCta from '@/components/landing/FinalCta'
+const FlatPrice = dynamic(() => import('@/components/landing/FlatPrice'))
 const FAQSection = dynamic(() => import('@/components/FAQ').then(m => m.FAQSection))
 const NewsletterSignup = dynamic(() => import('@/components/newslettersignup').then(m => m.NewsletterSignup))
 const PricingSection = dynamic(() => import('@/components/pricing'))
@@ -70,8 +72,10 @@ const page = () => {
       <TimelineDemo />
       <AppleCardsCarouselDemo />
       <TestimonialSection16 />
+      <FlatPrice />
       <PricingSection />
       <FAQSection />
+      <FinalCta />
       <NewsletterSignup />
       <Footer />
     </main>
