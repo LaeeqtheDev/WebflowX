@@ -86,4 +86,6 @@ export const de: Record<Key, string> = {
   "guide.s8.b": "Starte direkt im Workspace einen Anruf, mit Live-Transkription und KI-Zusammenfassung.",
   "guide.s11.t": "Suchen, einladen, fertig",
   "guide.s11.b": "Drücke überall Strg oder ⌘ + K, um Nachrichten, Aufgaben und Seiten zu durchsuchen. Lade dann dein Team über das Workspace-Menü ein, und es kann losgehen.",
+  "guide.sagents.t": "Lass Agenten das Nachfassen übernehmen",
+  "guide.sagents.b": "Agenten machen aus Meetings und Chat-Anfragen Aufgaben, posten ein tägliches Standup und beantworten @agent-Fragen. Probier es hier mit einem Beispiel-Meeting aus.",
 }

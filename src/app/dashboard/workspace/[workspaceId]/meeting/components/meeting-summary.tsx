@@ -118,6 +118,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                     description: `From meeting "${meeting.title}" (${format(meeting.startedAt, "MMM d, yyyy")})`,
                     status: "todo",
                     priority: "medium",
+                    sourceMeetingId: meeting._id,
                 })
             }
             toast.success(`${chosen.length} task${chosen.length > 1 ? "s" : ""} created`)
@@ -182,7 +183,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
             })
             
             setEditedSummary(data.summary)
-            toast.success("AI summary generated!")
+            toast.success("AI summary ready")
             setShowTranscriptDialog(false)
             setManualTranscript("")
         } catch (e: unknown) {
@@ -327,7 +328,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                             ) : (
                                 <>
                                     <FileText className="size-3 mr-1.5" />
-                                    Add Transcript & Generate Summary
+                                    Add transcript and generate summary
                                 </>
                             )}
                         </Button>
@@ -410,7 +411,7 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-[17px] font-semibold tracking-tight">
                             <FileText className="size-5 text-brand" />
-                            Add Meeting Transcript
+                            Add meeting transcript
                         </DialogTitle>
                         <DialogDescription>
                             Paste or type the meeting transcript below. The AI will analyze it and generate a summary.
@@ -458,7 +459,7 @@ Example:
                                     ) : (
                                         <>
                                             <Sparkles className="size-3 mr-1.5" />
-                                            Generate Summary
+                                            Generate summary
                                         </>
                                     )}
                                 </Button>

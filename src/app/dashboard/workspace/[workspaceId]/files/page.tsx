@@ -58,7 +58,7 @@ const FilesPage = () => {
             {preview && <AttachmentPreview open onOpenChange={(o) => !o && setPreview(null)} url={preview.url} name={preview.name} type={preview.type} />}
             <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-plum/12 px-4 py-2.5">
                 <Files className="size-5 text-brand" />
-                <h1 className="text-lg font-semibold tracking-tight text-ink">Files</h1>
+                <h1 className="text-[17px] font-semibold leading-none tracking-tight text-ink">Files</h1>
                 <div className="relative ml-auto w-full sm:w-72">
                     <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink/45" />
                     <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by file name" aria-label="Search files by name" className="h-10 pl-9" />

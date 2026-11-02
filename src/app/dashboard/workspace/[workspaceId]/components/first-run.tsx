@@ -121,6 +121,8 @@ const readDismissed = (workspaceId: string) => {
     try { return window.localStorage.getItem(storageKey(workspaceId)) === "1" } catch { return false }
 }
 
+const STEPS = 4
+
 export const useGetStarted = () => {
     const workspaceId = useWorkspaceId()
     const perms = usePermissions()
@@ -132,14 +134,16 @@ export const useGetStarted = () => {
     const channels = useQuery(api.channels.get, enabled ? { workspaceId } : "skip")
     const docs = useQuery(api.docs.get, enabled ? { workspaceId } : "skip")
     const meetings = useQuery(api.meetings.get, enabled ? { workspaceId } : "skip")
+    const agents = useQuery(api.agents.overview, enabled ? { workspaceId } : "skip")
 
-    const loaded = members !== undefined && channels !== undefined && docs !== undefined && meetings !== undefined
+    const loaded = members !== undefined && channels !== undefined && docs !== undefined && meetings !== undefined && agents !== undefined
     const steps = {
         invite: (members?.length ?? 0) > 1,
         channel: (channels?.length ?? 0) > 1,
         build: (docs?.length ?? 0) > 0 || (meetings?.length ?? 0) > 0,
+        agents: Object.values(agents?.agents ?? {}).some((a) => a?.enabled),
     }
-    const doneCount = Number(steps.invite) + Number(steps.channel) + Number(steps.build)
+    const doneCount = Number(steps.invite) + Number(steps.channel) + Number(steps.build) + Number(steps.agents)
 
     const dismiss = useCallback(() => {
         try { window.localStorage.setItem(storageKey(workspaceId), "1") } catch { /* storage unavailable: hide for this session only */ }
@@ -148,7 +152,7 @@ export const useGetStarted = () => {
 
     // `ready` = we know whether to show it; `show` = admin, not dismissed, not finished
     const ready = !perms.isLoading && (!enabled || loaded)
-    return { ready, show: ready && enabled && doneCount < 3, steps, doneCount, dismiss }
+    return { ready, show: ready && enabled && doneCount < STEPS, steps, doneCount, dismiss }
 }
 
 const Step = ({ done, title, children }: { done: boolean; title: string; children: React.ReactNode }) => (
@@ -189,7 +193,7 @@ export const GetStartedCard = () => {
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <h2 className="text-lg font-semibold tracking-tight text-ink">Get started</h2>
-                    <p className="mt-0.5 text-[13px] text-ink/65">{doneCount} of 3 done</p>
+                    <p className="mt-0.5 text-[13px] text-ink/65">{doneCount} of {STEPS} done</p>
                 </div>
                 <button
                     type="button"
@@ -201,7 +205,7 @@ export const GetStartedCard = () => {
                 </button>
             </div>
             <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-plum/10" aria-hidden>
-                <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${(doneCount / 3) * 100}%` }} />
+                <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${(doneCount / STEPS) * 100}%` }} />
             </div>
             <ul className="mt-3 flex flex-col gap-2">
                 <Step done={steps.invite} title="Invite a teammate">
@@ -213,6 +217,9 @@ export const GetStartedCard = () => {
                 <Step done={steps.build} title="Start a meeting or create a doc">
                     <button type="button" className={pill} onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}>Doc</button>
                     <button type="button" className={pill} onClick={() => router.push(`/dashboard/workspace/${workspaceId}/meeting`)}>Meeting</button>
+                </Step>
+                <Step done={steps.agents} title="Switch on an AI agent">
+                    <button type="button" className={pill} onClick={() => router.push(`/dashboard/workspace/${workspaceId}/agents`)}>Agents</button>
                 </Step>
             </ul>
         </section>

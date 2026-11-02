@@ -136,6 +136,34 @@ export default function DocPage() {
     const esc = (str: string) =>
         str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 
+    // Markdown or HTML copy of the page, built from what's on screen (minus other people's carets)
+    const handleDownload = async (kind: "md" | "html") => {
+        const live = document.querySelector(".ProseMirror")
+        if (!live) return toast.error("Nothing to download")
+        const content = live.cloneNode(true) as HTMLElement
+        content.querySelectorAll(".collab-caret, .ProseMirror-gapcursor, .ProseMirror-trailingBreak").forEach((n) => n.remove())
+        const title = doc?.title?.trim() || "Untitled"
+        let body: string
+        if (kind === "md") {
+            const { default: TurndownService } = await import("turndown")
+            const td = new TurndownService({ headingStyle: "atx", bulletListMarker: "-", codeBlockStyle: "fenced" })
+            // checklists keep their ticks
+            td.addRule("taskItem", {
+                filter: (node) => node.nodeName === "LI" && node.getAttribute("data-type") === "taskItem",
+                replacement: (text, node) => `- [${(node as HTMLElement).getAttribute("data-checked") === "true" ? "x" : " "}] ${text.trim()}\n`,
+            })
+            body = `# ${title}\n\n${td.turndown(content.innerHTML)}\n`
+        } else {
+            body = `<!doctype html>\n<html><head><meta charset="utf-8"><title>${esc(title)}</title></head><body>\n<h1>${esc(title)}</h1>\n${content.innerHTML}\n</body></html>\n`
+        }
+        const blob = new Blob([body], { type: kind === "md" ? "text/markdown" : "text/html" })
+        const a = document.createElement("a")
+        a.href = URL.createObjectURL(blob)
+        a.download = `${title.replace(/[\\/:*?"<>|]+/g, "-").slice(0, 80)}.${kind}`
+        a.click()
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+    }
+
     const handleDownloadPdf = () => {
         const live = document.querySelector(".ProseMirror")
         if (!live) return toast.error("Nothing to download")
@@ -216,7 +244,7 @@ export default function DocPage() {
                 channelId: shareChannelId as Id<"channels">,
                 body,
             })
-            toast.success("Shared to channel!")
+            toast.success("Shared to the channel")
             setShowShareDialog(false)
             setShareChannelId("")
         } catch (e) {
@@ -246,7 +274,7 @@ export default function DocPage() {
                     className="bg-brand hover:bg-brand-hover text-white rounded-lg font-semibold"
                     onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}
                 >
-                    <ArrowLeft className="size-4 mr-1" /> Back to Docs
+                    <ArrowLeft className="size-4 mr-1" /> Back to docs
                 </Button>
             </div>
         )
@@ -330,11 +358,15 @@ export default function DocPage() {
                                 </DropdownMenuItem>
                             )}
                             {doc.type !== "database" && (
-                                <DropdownMenuItem onClick={handleDownloadPdf}><Download className="mr-2 size-3.5" /> Download as PDF</DropdownMenuItem>
+                                <>
+                                    <DropdownMenuItem onClick={handleDownloadPdf}><Download className="mr-2 size-3.5" /> Download as PDF</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => void handleDownload("md")}><Download className="mr-2 size-3.5" /> Download as Markdown</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => void handleDownload("html")}><Download className="mr-2 size-3.5" /> Download as HTML</DropdownMenuItem>
+                                </>
                             )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => router.push(`/dashboard/workspace/${workspaceId}/docs`)}>
-                                <ArrowLeft className="mr-2 size-3.5" /> All pages
+                                <ArrowLeft className="mr-2 size-3.5" /> All docs
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

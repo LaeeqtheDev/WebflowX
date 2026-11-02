@@ -18,7 +18,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from "sonner"
 import { errorMessage } from "@/lib/error-message"
 import { cn } from "@/lib/utils"
-import { format } from "date-fns"
 import { Plus, Loader, LayoutGrid, List, Trash2, Zap } from "lucide-react"
 import { useAssignToMe } from "@/features/tasks/use-assign-to-me-task"
 import { useGetSprints } from "@/features/tasks/use-get-sprints"
@@ -53,6 +52,9 @@ export default function TasksPage() {
     const [selectedTask, setSelectedTask] = useState<Task | null>(null)
     const [filterStatus, setFilterStatus] = useState<Status | "all">("all")
     const [filterAssignee, setFilterAssignee] = useState("all")
+    // drag a card to another column to change its status
+    const [dragId, setDragId] = useState<string | null>(null)
+    const [dropCol, setDropCol] = useState<Status | null>(null)
     const [sprintFilter, setSprintFilter] = useState("all")
 
     const isAdmin = perms.can("manageContent")
@@ -157,19 +159,27 @@ export default function TasksPage() {
                         <Select value={filterStatus} onValueChange={v => setFilterStatus(v as Status | "all")}>
                             <SelectTrigger aria-label="Filter by status" className="h-8 text-xs w-36 rounded-lg border-plum/15"><SelectValue placeholder="All statuses" /></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Statuses</SelectItem>
+                                <SelectItem value="all">All statuses</SelectItem>
                                 {STATUSES.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
                             </SelectContent>
                         </Select>
                         <Select value={filterAssignee} onValueChange={setFilterAssignee}>
                             <SelectTrigger aria-label="Filter by assignee" className="h-8 text-xs w-36 rounded-lg border-plum/15"><SelectValue placeholder="All members" /></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Members</SelectItem>
+                                <SelectItem value="all">All members</SelectItem>
                                 {safeMembers.map(m => <SelectItem key={m._id} value={m._id}>{m.user.name ?? "Unknown"}</SelectItem>)}
                             </SelectContent>
                         </Select>
+                        {currentMember && (
+                            <button type="button" aria-pressed={filterAssignee === currentMember._id}
+                                onClick={() => setFilterAssignee(filterAssignee === currentMember._id ? "all" : currentMember._id)}
+                                className={cn("h-8 max-md:h-10 rounded-lg border px-3 text-xs font-semibold transition-colors",
+                                    filterAssignee === currentMember._id ? "border-brand bg-brand/10 text-orange-ink" : "border-plum/15 text-ink/70 hover:bg-cream-deep")}>
+                                My tasks
+                            </button>
+                        )}
                         <Button onClick={() => setShowCreate(true)} className="bg-brand hover:bg-brand-hover text-white h-8 max-md:h-10 text-xs rounded-lg font-semibold">
-                            <Plus className="size-4 mr-1" /> New Task
+                            <Plus className="size-4 mr-1" /> New task
                         </Button>
                     </div>
                 </div>
@@ -184,7 +194,16 @@ export default function TasksPage() {
                             {STATUSES.map(status => {
                                 const colTasks = tasksByStatus[status]
                                 return (
-                                    <div key={status} className="w-72 flex flex-col gap-3 bg-cream rounded-xl p-3">
+                                    <div key={status}
+                                        onDragOver={(e) => { if (dragId) { e.preventDefault(); setDropCol(status) } }}
+                                        onDragLeave={() => setDropCol((c) => (c === status ? null : c))}
+                                        onDrop={(e) => {
+                                            e.preventDefault()
+                                            const t = (tasks ?? []).find((x) => x._id === dragId)
+                                            if (t && t.status !== status) handleUpdate(t._id, { status })
+                                            setDragId(null); setDropCol(null)
+                                        }}
+                                        className={cn("w-72 flex flex-col gap-3 bg-cream rounded-xl p-3 transition-shadow", dropCol === status && "ring-2 ring-brand/50")}>
                                         <div className="px-1 flex items-center justify-between">
                                             <span className="flex items-center gap-2 text-[13px] font-semibold tracking-tight text-ink">
                                                 <span className={cn("size-2 rounded-full", STATUS_DOT[status])} />
@@ -194,6 +213,10 @@ export default function TasksPage() {
                                         </div>
                                         <div className="flex flex-col gap-2 overflow-y-auto flex-1 pb-2">
                                             {colTasks.map(task => (
+                                                <div key={task._id} draggable
+                                                    onDragStart={(e) => { setDragId(task._id); e.dataTransfer.effectAllowed = "move" }}
+                                                    onDragEnd={() => { setDragId(null); setDropCol(null) }}
+                                                    className={cn("cursor-grab active:cursor-grabbing", dragId === task._id && "opacity-50")}>
                                                 <TaskCard
                                                     key={task._id}
                                                     task={task}
@@ -205,6 +228,7 @@ export default function TasksPage() {
                                                     onAssignToMe={handleAssignToMe}
                                                     onOpen={setSelectedTask}
                                                 />
+                                                </div>
                                             ))}
                                             {colTasks.length === 0 && (
                                                 <div className="text-xs text-ink/65 text-center py-6 border border-dashed border-plum/15 rounded-lg">No tasks</div>
@@ -226,7 +250,7 @@ export default function TasksPage() {
                                         <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink/70">Priority</th>
                                         <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink/70">Assignee</th>
                                         <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink/70">Sprint</th>
-                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink/70">Due Date</th>
+                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink/70">Due date</th>
                                         <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink/70">Points</th>
                                         <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink/70">Labels</th>
                                         {isAdmin && <th className="px-4 py-2.5" />}

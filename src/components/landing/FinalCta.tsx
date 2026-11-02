@@ -4,7 +4,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { Reveal } from "./ui";
 import { wrap } from "./tokens";
 
-const points = ["Free plan, no card needed", "Set up in about a minute", "AI agents included in every plan", "Cancel or export any time"];
+const points = ["Free plan, no card needed", "14-day trial of any paid plan", "AI agents included in every plan", "Cancel or export any time"];
 
 // The last push before the footer: one clear ask.
 export default function FinalCta() {

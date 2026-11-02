@@ -90,7 +90,7 @@ export default function DocsPage() {
                         <FileText className="size-4 text-brand" />
                     </div>
                     <div>
-                        <h1 className="tracking-tight text-[17px] font-semibold leading-none text-ink">Pages</h1>
+                        <h1 className="tracking-tight text-[17px] font-semibold leading-none text-ink">Docs</h1>
                         <p className="text-[11px] text-ink/60 mt-1 leading-none">
                             {docs?.length ?? 0} page{docs?.length !== 1 ? "s" : ""}
                         </p>

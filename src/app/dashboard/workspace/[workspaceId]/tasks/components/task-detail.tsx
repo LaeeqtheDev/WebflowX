@@ -10,7 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { formatDistanceToNow } from "date-fns"
-import { Trash2, MessageSquare, X, Send, Zap, Star, UserPlus, CircleDot, Flag, User, Calendar, Plus, AlertTriangle } from "lucide-react"
+import { Trash2, MessageSquare, X, Send, Zap, Star, UserPlus, CircleDot, Flag, User, Calendar, Plus, AlertTriangle, Video } from "lucide-react"
+import Link from "next/link"
+import { useQuery } from "convex/react"
+import { api } from "../../../../../../../convex/_generated/api"
+import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { STATUS_LABELS, STATUSES, PRIORITIES } from "@/features/tasks/constants"
 import { PRIORITY_TEXT, STATUS_PILL } from "./task-styles"
 import { Task, Member, Sprint } from "@/features/tasks/types"
@@ -105,6 +109,7 @@ export const TaskDetail = ({
                         {activeSprint && <span className="flex items-center gap-1 text-orange-ink"><Zap className="size-3" /> {activeSprint.name}</span>}
                         {isOverdue && <span className="flex items-center gap-1 text-red-600 dark:text-red-400"><AlertTriangle className="size-3" /> Overdue</span>}
                     </div>
+                    <TaskSource taskId={task._id} />
                     {isAdmin ? (
                         <input aria-label="Task title" key={`${task._id}:${task.title}`} defaultValue={task.title} maxLength={200}
                             onBlur={(e) => {
@@ -314,5 +319,22 @@ export const TaskDetail = ({
                 </div>
             </DialogContent>
         </Dialog>
+    )
+}
+
+// "Came from": a link back to the meeting or message a task was made from (by a person or an agent).
+const TaskSource = ({ taskId }: { taskId: Id<"tasks"> }) => {
+    const source = useQuery(api.tasks.sourceOf, { id: taskId })
+    const workspaceId = useWorkspaceId()
+    if (!source) return null
+    const base = `/dashboard/workspace/${workspaceId}`
+    const href = source.kind === "meeting"
+        ? `${base}/meeting?meeting=${source.meetingId}`
+        : `${base}/channel/${source.channelId}?message=${source.messageId}`
+    return (
+        <Link href={href} className="mb-2 inline-flex max-w-full items-center gap-1.5 rounded-md bg-cream-soft px-2 py-1 text-[12px] font-medium text-orange-ink ring-1 ring-plum/10 transition-colors hover:bg-cream">
+            {source.kind === "meeting" ? <Video className="size-3.5 shrink-0" /> : <MessageSquare className="size-3.5 shrink-0" />}
+            <span className="truncate">Came from {source.kind === "meeting" ? `the meeting “${source.title}”` : `a message in #${source.channelName}`}</span>
+        </Link>
     )
 }

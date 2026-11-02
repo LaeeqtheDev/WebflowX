@@ -50,7 +50,7 @@ export const get = query({
             .withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId))
             .order("desc")
             .take(capFor(limits.meetings))
-        const meetings = recentMeetings.filter((m) => m.startedAt >= startOfMonth)
+        const meetings = recentMeetings.filter((m) => m.startedAt >= startOfMonth && !m.sample)
         const aiSummaries = await ctx.db.query("aiSummaryLog")
             .withIndex("by_workspace_id", (q) =>
                 q.eq("workspaceId", args.workspaceId).gte("_creationTime", startOfMonth)
