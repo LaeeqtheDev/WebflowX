@@ -1,7 +1,10 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useEditor, EditorContent, Extension } from "@tiptap/react"
+import { useEditor, EditorContent, Extension, type Editor } from "@tiptap/react"
+import { useWorkspaceId } from "@/hooks/use-workspace-id"
+import { useGetMembers } from "@/features/members/api/use-get-members"
+import { makeMention, type MentionPerson } from "./doc-mention"
 import { yCursorPlugin, ySyncPluginKey } from "@tiptap/y-tiptap"
 import type { Awareness } from "y-protocols/awareness"
 import { useDocImageUpload } from "./use-doc-image-upload"
@@ -49,6 +52,8 @@ interface DocEditorProps {
     hero?: DocHeroProps & { notes?: string[] }
     // everyone with the page open, you last; the page header shows them as a stack of faces
     onPresenceChange?: (people: DocPerson[]) => void
+    // the live editor, for comments (quoting a selection) and version history (saving and restoring)
+    onEditor?: (editor: Editor | null) => void
 }
 
 // A name tag opens while its owner is moving or typing, then folds down to just their face so it
@@ -146,6 +151,7 @@ export const EditorInner = ({
     lookup,
     hero,
     people,
+    onEditor,
 }: {
     ydoc: Y.Doc
     awareness: Awareness
@@ -161,7 +167,23 @@ export const EditorInner = ({
     lookup: (clientId: number) => ClientInfo | undefined
     hero?: DocHeroProps & { notes?: string[] }
     people: DocPerson[]
+    onEditor?: (editor: Editor | null) => void
 }) => {
+    // @mentions: the people list is read when the menu opens, so it can change without rebuilding the editor
+    const workspaceId = useWorkspaceId()
+    const { data: members } = useGetMembers({ workspaceId })
+    const mentionPeople = useRef<MentionPerson[]>([])
+    useEffect(() => {
+        mentionPeople.current = (members ?? []).filter((m) => m.role !== "guest").map((m) => ({ id: m._id, label: m.user?.name ?? "Member" }))
+    }, [members])
+    const notifyMention = useMutation(api.docExtras.mention)
+    const mentionExt = useMemo(() => makeMention(() => mentionPeople.current, (id) => {
+        if (docId) void notifyMention({ docId, memberId: id as Id<"members"> }).catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), [docId])
+    // version history: a copy is saved now and then while you edit (the server keeps at most one per 10 minutes) and when you leave
+    const saveVersion = useMutation(api.docExtras.saveVersion)
+    const dirty = useRef(false)
     const touch = useMutation(api.docs.touch)
     const touchRow = useMutation(api.databases.touchRow)
     const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -244,6 +266,7 @@ export const EditorInner = ({
             TextStyle,
             Color,
             Callout,
+            ...(rowId ? [] : [mentionExt]),
         ],
         onUpdate: ({ editor: ed, transaction }) => {
             setWords(ed.getText().trim().split(/\s+/).filter(Boolean).length)
@@ -251,6 +274,7 @@ export const EditorInner = ({
             const sync = transaction.getMeta(ySyncPluginKey) as { isChangeOrigin?: boolean; isUndoRedoOperation?: boolean } | undefined
             if (sync?.isChangeOrigin && !sync.isUndoRedoOperation) return
             markTyping()
+            dirty.current = true
             if (touchTimer.current) clearTimeout(touchTimer.current)
             touchTimer.current = setTimeout(() => { (rowId ? touchRow({ rowId }) : docId ? touch({ id: docId }) : Promise.resolve()).catch(() => undefined) }, 4000)
         },
@@ -277,6 +301,21 @@ export const EditorInner = ({
             }
         }
     })
+
+    useEffect(() => {
+        onEditor?.(editor ?? null)
+        return () => onEditor?.(null)
+    }, [editor, onEditor])
+    useEffect(() => {
+        if (!docId || !editor) return
+        const save = () => {
+            if (!dirty.current || editor.isDestroyed) return
+            dirty.current = false
+            void saveVersion({ docId, html: editor.getHTML(), auto: true }).catch(() => {})
+        }
+        const timer = setInterval(save, 60_000)
+        return () => { clearInterval(timer); save() }
+    }, [docId, editor, saveVersion])
 
     useEffect(() => { editorRef.current = editor }, [editor])
 
@@ -360,7 +399,7 @@ export const EditorInner = ({
 }
 
 export const DocEditor = ({
-    docId, rowId, compact, customHtml, template, onTemplateUsed, roomId, userName, userColor, userAvatar, hero, onPresenceChange
+    docId, rowId, compact, customHtml, template, onTemplateUsed, roomId, userName, userColor, userAvatar, hero, onPresenceChange, onEditor
 }: DocEditorProps) => {
     const [provider, setProvider] = useState<LiveblocksYjsProvider | null>(null)
     const [ydoc, setYdoc] = useState<Y.Doc | null>(null)
@@ -523,6 +562,7 @@ export const DocEditor = ({
                 lookup={lookup}
                 hero={compact ? undefined : hero}
                 people={people}
+                onEditor={onEditor}
             />
         </div>
     )

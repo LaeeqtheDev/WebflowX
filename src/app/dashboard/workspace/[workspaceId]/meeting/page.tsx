@@ -35,6 +35,7 @@ const MeetingRoom = dynamic(() => import("./components/meeting-room").then((m) =
     loading: () => <div className="flex h-full items-center justify-center"><Loader className="size-6 animate-spin text-brand" /></div>,
 })
 import { GuestInvite } from "./components/guest-invite"
+import { JoinLink } from "./components/join-link"
 const MeetingSummary = dynamic(() => import("./components/meeting-summary").then((m) => m.MeetingSummary), { ssr: false })
 
 export default function MeetingPage() {
@@ -518,7 +519,10 @@ export default function MeetingPage() {
                                                 )
                                             })()}
                                             {!selectedMeeting.endedAt && selectedMeeting.kind !== "oneToOne" && (perms.can("moderateMeetings") || selectedMeeting.createdBy === currentMember?._id) && (
-                                                <GuestInvite meeting={selectedMeeting} />
+                                                <>
+                                                    <JoinLink meeting={selectedMeeting} />
+                                                    <GuestInvite meeting={selectedMeeting} />
+                                                </>
                                             )}
                                             {!selectedMeeting.endedAt && !isUpcoming(selectedMeeting) && (perms.can("moderateMeetings") || selectedMeeting.createdBy === currentMember?._id) && (
                                                 <Button

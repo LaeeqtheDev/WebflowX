@@ -152,8 +152,15 @@ export const maybeAnswer = async (ctx: MutationCtx, message: Doc<"messages">) =>
     if (!message.channelId || message.integrationName || message.agent) return null
     const text = deltaToText(message.body)
     if (!mentionsAgent(text)) return null
-    const agent = await agentFor(ctx, message.workspaceId, "assistant")
-    if (!agent?.enabled) return null
+    const found = await agentFor(ctx, message.workspaceId, "assistant")
+    if (!assistantOn(found)) return null
+    const asker = await ctx.db.get(message.memberId)
+    if (!asker || asker.role === "guest") return null
+    const agent = found ?? await (async () => {
+        // first @agent in a workspace: create its settings row (acts as the asker, so no admin is needed)
+        const id = await ctx.db.insert("agents", { workspaceId: message.workspaceId, kind: "assistant", enabled: true, mode: "act", createdBy: message.memberId, updatedAt: Date.now() })
+        return (await ctx.db.get(id))!
+    })()
     const member = await ctx.db.get(message.memberId)
     if (!member || member.role === "guest") return null
     // the answer goes under the thread's first message
@@ -181,12 +188,16 @@ export const maybeAnswer = async (ctx: MutationCtx, message: Doc<"messages">) =>
 }
 
 // Lets the chat box offer "@agent" in its mention list only when the workspace has it on.
+// @agent in chat is on unless an admin switched it off: it only ever acts as the person asking, with their permissions.
+const assistantOn = (a: Doc<"agents"> | null) => (a ? a.enabled : true)
+
 export const chatAgentOn = query({
     args: { workspaceId: v.id("workspaces") },
     handler: async (ctx, args) => {
         const member = await signedInMember(ctx, args.workspaceId)
         if (!member) return false
-        return !!(await agentFor(ctx, args.workspaceId, "assistant"))?.enabled
+        if (member.role === "guest") return false
+        return assistantOn(await agentFor(ctx, args.workspaceId, "assistant"))
     },
 })
 
@@ -306,7 +317,7 @@ export const overview = query({
                 meetingFollowUp: settingsOf(await agentFor(ctx, args.workspaceId, "meetingFollowUp")),
                 triage: settingsOf(await agentFor(ctx, args.workspaceId, "triage")),
                 standup: settingsOf(await agentFor(ctx, args.workspaceId, "standup")),
-                assistant: settingsOf(await agentFor(ctx, args.workspaceId, "assistant")),
+                assistant: settingsOf(await agentFor(ctx, args.workspaceId, "assistant")) ?? { enabled: true, mode: "act" as const, channelId: null, channelIds: [], postHour: 9, postTz: "UTC", weekdaysOnly: true },
             },
             usage: {
                 used: month.length, limit, plan,

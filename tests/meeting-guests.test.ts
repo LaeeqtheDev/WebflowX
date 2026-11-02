@@ -53,4 +53,25 @@ describe("guests in meetings", () => {
     const notes = await t.run((c) => c.db.query("notifications").collect())
     expect(notes.some((n) => n.recipientId === ids.clientM && n.type === "meeting_invite")).toBe(true)
   })
+
+  it("a join link works for anyone until the host turns it off or the meeting ends", async () => {
+    const { t, ids } = await setup()
+    await expect(asUser(t, ids.dev).mutation(api.meetings.setPublicLink, { id: ids.meeting, enabled: true })).rejects.toThrow(/host/)
+    const token = await asUser(t, ids.owner).mutation(api.meetings.setPublicLink, { id: ids.meeting, enabled: true })
+    expect(token).toMatch(/^[A-Za-z0-9]{18}$/)
+    // no sign-in needed to read it
+    expect(await t.query(api.meetings.publicInfo, { token: token! })).toMatchObject({ title: "Client review", status: "open", roomName: "room-a" })
+    expect(await t.query(api.meetings.publicInfo, { token: "x".repeat(18) })).toBeNull()
+    // the same link stays the same when switched on again
+    expect(await asUser(t, ids.owner).mutation(api.meetings.setPublicLink, { id: ids.meeting, enabled: true })).toBe(token)
+    // a workspace guest never sees the link
+    await asUser(t, ids.owner).mutation(api.meetings.setGuests, { id: ids.meeting, guestIds: [ids.clientM] })
+    const [seen] = await asUser(t, ids.client).query(api.meetings.get, { workspaceId: ids.ws })
+    expect(seen.publicToken).toBeUndefined()
+    await asUser(t, ids.owner).mutation(api.meetings.setPublicLink, { id: ids.meeting, enabled: false })
+    expect(await t.query(api.meetings.publicInfo, { token: token! })).toBeNull()
+    const again = await asUser(t, ids.owner).mutation(api.meetings.setPublicLink, { id: ids.meeting, enabled: true })
+    await t.run((c) => c.db.patch(ids.meeting, { endedAt: Date.now() }))
+    expect(await t.query(api.meetings.publicInfo, { token: again! })).toMatchObject({ status: "ended", roomName: null })
+  })
 })

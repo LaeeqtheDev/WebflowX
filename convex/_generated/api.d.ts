@@ -25,6 +25,7 @@ import type * as databases from "../databases.js";
 import type * as dbTypes from "../dbTypes.js";
 import type * as demoAvatars from "../demoAvatars.js";
 import type * as demoClean from "../demoClean.js";
+import type * as docExtras from "../docExtras.js";
 import type * as demoFix from "../demoFix.js";
 import type * as demoReset from "../demoReset.js";
 import type * as demoSeedData from "../demoSeedData.js";
@@ -95,6 +96,7 @@ declare const fullApi: ApiFromModules<{
   dbTypes: typeof dbTypes;
   demoAvatars: typeof demoAvatars;
   demoClean: typeof demoClean;
+  docExtras: typeof docExtras;
   demoFix: typeof demoFix;
   demoReset: typeof demoReset;
   demoSeedData: typeof demoSeedData;

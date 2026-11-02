@@ -515,12 +515,23 @@ describe("@agent in chat", () => {
     expect(mentionsAgent("our @agents page")).toBe(false)
   })
 
-  it("does nothing until an admin switches it on", async () => {
+  it("is on by default and stops when an admin switches it off", async () => {
+    const { t, ids } = ctx
+    expect(await asUser(t, ids.dev).query(api.agents.chatAgentOn, { workspaceId: ids.ws })).toBe(true)
+    await asUser(t, ids.owner).mutation(api.agents.configure, { workspaceId: ids.ws, kind: "assistant", enabled: false, mode: "act" })
+    expect(await asUser(t, ids.dev).query(api.agents.chatAgentOn, { workspaceId: ids.ws })).toBe(false)
     const { fetchMock } = fakeModel([call("answer", { text: "hi" })])
     await post(ctx.ids.dev, "@agent hello?")
     await settle()
     expect(fetchMock).not.toHaveBeenCalled()
     expect(await agentReplies()).toHaveLength(0)
+  })
+
+  it("answers out of the box, before anyone has opened the agent settings", async () => {
+    fakeModel([call("answer", { text: "Hello from the agent" })])
+    await post(ctx.ids.dev, "@agent hello?")
+    await settle()
+    expect(await agentReplies()).toHaveLength(1)
   })
 
   it("answers in the thread under the question, using what it found", async () => {

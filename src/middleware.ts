@@ -10,7 +10,7 @@ import { connectSrc } from "@/lib/csp";
 const isPublicPage = createRouteMatcher(["/", "/auth", "/join"])
 
 // legal pages, newsletter confirm/unsubscribe links and invite links are public for everyone, signed in or not
-const isLegal = createRouteMatcher(["/about", "/terms", "/privacy", "/security", "/trust", "/dpa", "/subprocessors", "/templates", "/changelog", "/case-studies(.*)", "/features(.*)", "/use-cases(.*)", "/compare(.*)", "/join/(.*)", "/newsletter/(.*)"])
+const isLegal = createRouteMatcher(["/about", "/m/(.*)", "/terms", "/privacy", "/security", "/trust", "/dpa", "/subprocessors", "/templates", "/changelog", "/case-studies(.*)", "/features(.*)", "/use-cases(.*)", "/compare(.*)", "/join/(.*)", "/newsletter/(.*)"])
 
 const isApi = createRouteMatcher(["/api/(.*)"])
 
@@ -61,6 +61,8 @@ const mw = convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
   if (isInvite) return undefined;
 
   // API routes check auth themselves too, but unauthenticated callers get JSON 401, not a redirect
+  // a meeting join link's token route is for people without an account; it checks the link itself
+  if (request.nextUrl.pathname === "/api/livekit/guest") return undefined;
   if (isApi(request) && !request.nextUrl.pathname.startsWith("/api/auth")) {
     if (!authenticated) {
       return NextResponse.json({ error: "Please sign in again" }, { status: 401 });

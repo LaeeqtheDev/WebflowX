@@ -346,10 +346,13 @@ const schema = defineSchema({
         sample: v.optional(v.boolean()),
         // workspace guests (e.g. clients) the host invited to this meeting; guests see and join only these
         guestIds: v.optional(v.array(v.id("members"))),
+        // a secret join link for people without an account (e.g. a client); unset = no link
+        publicToken: v.optional(v.string()),
     })
         .index("by_workspace_id", ["workspaceId"])
         .index("by_workspace_started", ["workspaceId", "startedAt"])
         .index("by_room_name", ["roomName"])
+        .index("by_public_token", ["publicToken"])
         .index("by_ended_started", ["endedAt", "startedAt"]),
 
     // Each participant's own transcript, merged when the meeting ends
@@ -657,7 +660,9 @@ const schema = defineSchema({
             v.literal("dm_received"),
             v.literal("mention"),
             v.literal("task_due"),
-            v.literal("meeting_invite")
+            v.literal("meeting_invite"),
+            v.literal("doc_comment"),
+            v.literal("doc_mention")
         ),
         read: v.boolean(),
         messageId: v.optional(v.id("messages")),
@@ -666,12 +671,42 @@ const schema = defineSchema({
         meetingId: v.optional(v.id("meetings")),
         channelId: v.optional(v.id("channels")),
         conversationId: v.optional(v.id("conversations")),
+        docId: v.optional(v.id("docs")),
         body: v.optional(v.string()),
     })
         .index("by_recipient", ["recipientId"])
         .index("by_workspace_recipient", ["workspaceId", "recipientId"])
         .index("by_recipient_read", ["recipientId", "read"])
         .index("by_recipient_read_type", ["recipientId", "read", "type"]),
+
+    // When each person last read a channel, for the "New messages" line
+    channelReads: defineTable({
+        memberId: v.id("members"),
+        channelId: v.id("channels"),
+        lastReadAt: v.number(),
+    }).index("by_member_channel", ["memberId", "channelId"]),
+
+    // Comments on a doc, optionally quoting the text they're about; replies point at their parent
+    docComments: defineTable({
+        docId: v.id("docs"),
+        workspaceId: v.id("workspaces"),
+        memberId: v.id("members"),
+        body: v.string(),
+        quote: v.optional(v.string()),
+        parentId: v.optional(v.id("docComments")),
+        resolved: v.optional(v.boolean()),
+        editedAt: v.optional(v.number()),
+    }).index("by_doc", ["docId"]),
+
+    // Saved copies of a doc's content (HTML), made automatically while people edit and on demand
+    docVersions: defineTable({
+        docId: v.id("docs"),
+        workspaceId: v.id("workspaces"),
+        memberId: v.id("members"),
+        title: v.string(),
+        html: v.string(),
+        label: v.optional(v.string()),
+    }).index("by_doc", ["docId"]),
 });
 
 export default schema;

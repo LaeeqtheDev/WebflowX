@@ -63,7 +63,9 @@ export const get = query({
         return await Promise.all(visible.map(async (meeting) => {
             const creator = await ctx.db.get(meeting.createdBy)
             const creatorUser = creator ? await ctx.db.get(creator.userId) : null
-            return { ...meeting, creator: creator ? { ...creator, user: creatorUser } : null }
+            // guests don't see the join link or who else was invited
+            const shown = member.role === "guest" ? { ...meeting, publicToken: undefined, guestIds: undefined } : meeting
+            return { ...shown, creator: creator ? { ...creator, user: creatorUser } : null }
         }))
     }
 })
@@ -433,6 +435,47 @@ export const setGuests = mutation({
             }, { email: false })
         }
         return null
+    },
+})
+
+// A join link for people who don't have an account. Only the host or a moderator can switch it on or off.
+// Turning it off (or the meeting ending) stops the link from working.
+const newToken = () => {
+    const bytes = new Uint8Array(18)
+    crypto.getRandomValues(bytes)
+    return Array.from(bytes, (b) => "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 56]).join("")
+}
+
+export const setPublicLink = mutation({
+    args: { id: v.id("meetings"), enabled: v.boolean() },
+    handler: async (ctx, args) => {
+        const { meeting, member } = await requireMeetingMember(ctx, args.id)
+        if (meeting.kind === "oneToOne") throw new ConvexError("One-to-one calls can't have a join link")
+        if (meeting.endedAt) throw new ConvexError("This meeting has already ended")
+        if (meeting.createdBy !== member._id && !(await can(ctx, member, "moderateMeetings"))) throw new ConvexError("Only the host can share a join link")
+        const token = args.enabled ? meeting.publicToken ?? newToken() : undefined
+        await ctx.db.patch(meeting._id, { publicToken: token })
+        await logAudit(ctx, meeting.workspaceId, member._id, args.enabled ? "meeting.link_on" : "meeting.link_off", meeting.title)
+        return token ?? null
+    },
+})
+
+// What the public join page (and the guest token route) may know: the title, and whether the call is open now.
+export const publicInfo = query({
+    args: { token: v.string() },
+    handler: async (ctx, args) => {
+        if (args.token.length < 16 || args.token.length > 64) return null
+        const meeting = await ctx.db.query("meetings").withIndex("by_public_token", (q) => q.eq("publicToken", args.token)).first()
+        if (!meeting || meeting.deletedAt || meeting.kind === "oneToOne") return null
+        const workspace = await ctx.db.get(meeting.workspaceId)
+        const early = !!meeting.scheduledFor && Date.now() < meeting.scheduledFor - EARLY_JOIN_MS
+        return {
+            title: meeting.title,
+            workspace: workspace?.name ?? "WebflowX",
+            status: meeting.endedAt ? ("ended" as const) : early ? ("early" as const) : ("open" as const),
+            startsAt: meeting.scheduledFor ?? null,
+            roomName: meeting.endedAt || early ? null : meeting.roomName,
+        }
     },
 })
 

@@ -26,7 +26,9 @@ import {
     SelectTrigger, SelectValue
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { FileText, Download, Share2, ArrowLeft, Loader, Star, Plus, MoreHorizontal, ChevronRight, LayoutTemplate } from "lucide-react"
+import { FileText, Download, Share2, ArrowLeft, Loader, Star, Plus, MoreHorizontal, ChevronRight, LayoutTemplate, MessageSquare, History } from "lucide-react"
+import type { Editor } from "@tiptap/react"
+import { DocSidePanel, type SidePanel } from "../components/doc-side-panel"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "../../../../../../../convex/_generated/api"
 import { Id } from "../../../../../../../convex/_generated/dataModel"
@@ -83,6 +85,11 @@ export default function DocPage() {
     const setIcon = useMutation(api.docs.setIcon)
     const saveTemplate = useMutation(api.docs.saveTemplate)
     const [subOpen, setSubOpen] = useState(false)
+    // comments and version history panel
+    const [panel, setPanel] = useState<SidePanel | null>(null)
+    const [editor, setEditor] = useState<Editor | null>(null)
+    const commentRows = useQuery(api.docExtras.comments, docId ? { docId: docId as Id<"docs"> } : "skip")
+    const openComments = (commentRows ?? []).filter((c) => !c.parentId && !c.resolved).length
     const subMounted = useMountOnce(subOpen)
     const [tplOpen, setTplOpen] = useState(false)
     const [tplName, setTplName] = useState("")
@@ -370,6 +377,18 @@ export default function DocPage() {
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
+                    {doc.type !== "database" && (
+                        <>
+                            <Button variant="ghost" size="sm" aria-pressed={panel === "comments"} onClick={() => setPanel(panel === "comments" ? null : "comments")}
+                                className={`h-8 gap-1.5 rounded-lg px-2 text-xs font-semibold sm:px-2.5 ${panel === "comments" ? "bg-brand/10 text-orange-ink" : "text-ink/70 hover:bg-cream-deep"}`}>
+                                <MessageSquare className="size-3.5" /><span className="hidden sm:inline">Comments{openComments ? ` (${openComments})` : ""}</span>
+                            </Button>
+                            <Button variant="ghost" size="sm" aria-label="Version history" aria-pressed={panel === "history"} onClick={() => setPanel(panel === "history" ? null : "history")}
+                                className={`h-8 w-8 rounded-lg p-0 ${panel === "history" ? "bg-brand/10 text-orange-ink" : "text-ink/70 hover:bg-cream-deep"}`}>
+                                <History className="size-4" />
+                            </Button>
+                        </>
+                    )}
                     <DropdownMenu open={showShareDialog} onOpenChange={setShowShareDialog}>
                         <DropdownMenuTrigger asChild>
                             <Button size="sm" aria-label="Share to a channel" className="h-8 gap-1.5 rounded-lg bg-brand px-2.5 text-xs font-semibold text-white hover:bg-brand-hover sm:px-3.5">
@@ -417,7 +436,8 @@ export default function DocPage() {
             )}
 
             {/* Body */}
-            <div className="flex-1 overflow-hidden">
+            <div className="relative flex min-h-0 flex-1 overflow-hidden">
+            <div className="min-w-0 flex-1 overflow-hidden">
                 {doc.type === "database" ? (
                     <DatabaseView docId={doc._id} />
                 ) : tplId && tplHtml === undefined ? (
@@ -435,6 +455,7 @@ export default function DocPage() {
                         userColor={userColor}
                         userAvatar={currentUserAvatar}
                         onPresenceChange={setPeople}
+                        onEditor={setEditor}
                         hero={{
                             title: doc.title,
                             icon: doc.icon ?? null,
@@ -444,6 +465,12 @@ export default function DocPage() {
                         }}
                     />
                 )}
+            </div>
+            {panel && doc.type !== "database" && (
+                <div className="absolute inset-0 z-20 md:static md:inset-auto">
+                    <DocSidePanel docId={doc._id} editor={editor} tab={panel} onTab={setPanel} onClose={() => setPanel(null)} />
+                </div>
+            )}
             </div>
 
             {subMounted && <NewPageDialog open={subOpen} onOpenChange={setSubOpen} parentId={doc._id} />}

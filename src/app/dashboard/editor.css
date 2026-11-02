@@ -294,3 +294,10 @@
 .ql-renderer a[href*="/docs/"]:hover { background: color-mix(in srgb, var(--wfx-accent) 20%, transparent); }
 .dark .ql-editor a[href*="/docs/"], .dark .ql-renderer a[href*="/docs/"] { color: var(--wfx-orange-ink); background: color-mix(in srgb, var(--wfx-accent) 16%, transparent); }
 
+
+/* @mentions in docs */
+.ProseMirror .doc-mention { background: color-mix(in srgb, var(--wfx-accent) 14%, transparent); color: var(--wfx-orange-ink); font-weight: 600; border-radius: 5px; padding: 0 3px; }
+.doc-mention-menu { position: fixed; z-index: 60; min-width: 200px; max-width: 240px; padding: 4px; border-radius: 10px; background: var(--wfx-surface, #fff); color: var(--wfx-ink, #1b1017); border: 1px solid color-mix(in srgb, #381d2a 15%, transparent); box-shadow: 0 12px 32px -12px rgba(0,0,0,.35); }
+.doc-mention-item { display: block; width: 100%; text-align: left; padding: 6px 10px; border-radius: 6px; font-size: 13px; color: inherit; }
+.doc-mention-item.is-active, .doc-mention-item:hover { background: color-mix(in srgb, var(--wfx-accent) 14%, transparent); }
+.doc-mention-empty { padding: 6px 10px; font-size: 13px; opacity: .6; }

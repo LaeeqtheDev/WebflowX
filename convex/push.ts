@@ -112,6 +112,8 @@ export const prepare = internalMutation({
             case "task_comment": title = `${name} commented on your task`; url = `${base}/tasks`; break
             case "task_due": title = "Task due soon"; url = `${base}/tasks`; break
             case "meeting_invite": title = `${name} invited you to a call`; url = `${base}/meeting`; break
+            case "doc_comment": title = `${name} commented on a doc`; url = n.docId ? `${base}/docs/${n.docId}` : `${base}/docs`; break
+            case "doc_mention": title = `${name} mentioned you in a doc`; url = n.docId ? `${base}/docs/${n.docId}` : `${base}/docs`; break
             default: return null
         }
         return {
