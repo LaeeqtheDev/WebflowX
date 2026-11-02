@@ -10,7 +10,7 @@ const PROOF = [
 ];
 
 // Teams using WebflowX, as named by the WebflowX team (Nov 2026). Text only: we don't use anyone's logo without their files and OK.
-const TEAMS = ["Arvex", "Robert and Co Trucking", "Routelane LLC", "North Foundry", "H2O Logistics"];
+const TEAMS = ["Arvex Fleet Solutions", "Robert and Co Trucking", "Routelane LLC", "North Foundry", "H2O Logistics"];
 
 export default function Proof() {
   return (
