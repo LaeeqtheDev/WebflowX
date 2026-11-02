@@ -130,7 +130,20 @@ const weekday = (ms: number) => new Date(ms).toLocaleDateString("en-US", { weekd
 const MODELS = () => [process.env.GROQ_AGENT_MODEL, "openai/gpt-oss-120b", "llama-3.3-70b-versatile"]
     .filter((m, i, all): m is string => !!m && all.indexOf(m) === i)
 
-const chat = async (key: string, messages: Msg[], toolList: unknown[]) => {
+// US dollars per million tokens [input, output]. Estimates for the agents' cost meter:
+// gpt-oss-120b from Groq's published rates (Oct 2026); llama-3.3-70b is sales-priced now, so its last list price.
+export const PRICES: Record<string, [number, number]> = {
+    "openai/gpt-oss-120b": [0.15, 0.6],
+    "llama-3.3-70b-versatile": [0.59, 0.79],
+}
+export const costOf = (model: string, tokensIn: number, tokensOut: number) => {
+    const [i, o] = PRICES[model] ?? PRICES["llama-3.3-70b-versatile"]
+    return (tokensIn * i + tokensOut * o) / 1_000_000
+}
+
+type Usage = { model: string | null; tokensIn: number; tokensOut: number }
+
+const chat = async (key: string, messages: Msg[], toolList: unknown[], usage: Usage) => {
     let last = ""
     for (const model of MODELS()) {
         const res = await fetch(GROQ_URL, {
@@ -140,6 +153,9 @@ const chat = async (key: string, messages: Msg[], toolList: unknown[]) => {
         })
         if (res.ok) {
             const data = await res.json()
+            usage.model = model
+            usage.tokensIn += Number(data.usage?.prompt_tokens) || 0
+            usage.tokensOut += Number(data.usage?.completion_tokens) || 0
             return data.choices?.[0]?.message as { content: string | null; tool_calls?: ToolCall[] } | undefined
         }
         last = `${res.status} ${(await res.text().catch(() => "")).slice(0, 160)}`
@@ -274,7 +290,16 @@ export const run = internalAction({
     handler: async (ctx, args): Promise<null> => {
         const started: boolean = await ctx.runMutation(internal.agents.markRunning, { runId: args.runId })
         if (!started) return null
-        const fail = async (error: string): Promise<null> => { await ctx.runMutation(internal.agents.failRun, { runId: args.runId, error }); return null }
+        const usage: Usage = { model: null, tokensIn: 0, tokensOut: 0 }
+        // whatever happens, what the AI was used for is written down for the cost meter
+        const record = async () => {
+            if (!usage.model) return
+            await ctx.runMutation(internal.agents.recordUsage, {
+                runId: args.runId, model: usage.model, tokensIn: usage.tokensIn, tokensOut: usage.tokensOut,
+                costUsd: costOf(usage.model, usage.tokensIn, usage.tokensOut),
+            })
+        }
+        const fail = async (error: string): Promise<null> => { await record(); await ctx.runMutation(internal.agents.failRun, { runId: args.runId, error }); return null }
         try {
             const key = process.env.GROQ_API_KEY
             if (!key) return await fail("The AI key isn't set up for agents yet (GROQ_API_KEY on the Convex deployment).")
@@ -294,7 +319,7 @@ export const run = internalAction({
             let note: string | undefined
             let steps = 0
             for (; steps < MAX_STEPS && note === undefined; steps++) {
-                const reply = await chat(key, messages, toolList)
+                const reply = await chat(key, messages, toolList, usage)
                 if (!reply) throw new Error("The AI gave no answer")
                 const calls = reply.tool_calls ?? []
                 messages.push({ role: "assistant", content: reply.content ?? null, tool_calls: calls.length ? calls : undefined })
@@ -357,6 +382,7 @@ export const run = internalAction({
                 const made = proposals.filter((p) => p.type === "task").length
                 proposals.push({ type: "recap", text: made ? `Done. I added ${made} task${made === 1 ? "" : "s"} to the board.` : "Sorry, I couldn't find an answer to that in this workspace." })
             }
+            await record()
             await ctx.runMutation(internal.agents.finishRun, { runId: args.runId, proposals, note, steps })
             return null
         } catch (e) {
@@ -364,10 +390,12 @@ export const run = internalAction({
             // the standup still goes out without the AI: a plain list of the same facts
             const c: Context | null = await ctx.runQuery(internal.agents.context, { runId: args.runId }).catch(() => null)
             if (c?.kind === "assistant") {
+                await record()
                 await ctx.runMutation(internal.agents.finishRun, { runId: args.runId, proposals: [{ type: "recap", text: "Sorry, I can't think straight right now (the AI service didn't answer). Try again in a minute." }], note: why, steps: 0 })
                 return null
             }
             if (c?.kind === "standup" && !c.quiet) {
+                await record()
                 await ctx.runMutation(internal.agents.finishRun, { runId: args.runId, proposals: [{ type: "recap", text: c.plain }], note: `Posted the plain version (${why.replace(/\.$/, "")}).`, steps: 0 })
                 return null
             }

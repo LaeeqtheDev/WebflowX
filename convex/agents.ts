@@ -59,10 +59,11 @@ const startOfMonth = () => {
     return new Date(now.getFullYear(), now.getMonth(), 1).getTime()
 }
 
-const runsThisMonth = async (ctx: Ctx, workspaceId: Id<"workspaces">) =>
-    (await ctx.db.query("agentRuns")
+const monthRuns = (ctx: Ctx, workspaceId: Id<"workspaces">) =>
+    ctx.db.query("agentRuns")
         .withIndex("by_workspace_id", (q) => q.eq("workspaceId", workspaceId).gte("_creationTime", startOfMonth()))
-        .take(1_200)).length
+        .take(1_200)
+const runsThisMonth = async (ctx: Ctx, workspaceId: Id<"workspaces">) => (await monthRuns(ctx, workspaceId)).length
 
 // Runs used this month against the plan allowance (all agents share it).
 const monthlyCheck = async (ctx: Ctx, workspaceId: Id<"workspaces">) =>
@@ -179,6 +180,16 @@ export const maybeAnswer = async (ctx: MutationCtx, message: Doc<"messages">) =>
     return runId
 }
 
+// Lets the chat box offer "@agent" in its mention list only when the workspace has it on.
+export const chatAgentOn = query({
+    args: { workspaceId: v.id("workspaces") },
+    handler: async (ctx, args) => {
+        const member = await signedInMember(ctx, args.workspaceId)
+        if (!member) return false
+        return !!(await agentFor(ctx, args.workspaceId, "assistant"))?.enabled
+    },
+})
+
 // The chat agent's search tools. Everything is filtered by what the person who asked can see.
 export const search = internalQuery({
     args: { runId: v.id("agentRuns"), what: v.union(v.literal("messages"), v.literal("tasks"), v.literal("meetings")), query: v.string() },
@@ -286,8 +297,10 @@ export const overview = query({
         if (!member) return null
         const runs = await ctx.db.query("agentRuns").withIndex("by_workspace_id", (q) => q.eq("workspaceId", args.workspaceId)).order("desc").take(20)
         const { limit, plan } = await checkLimit(ctx, args.workspaceId, "agentRuns", 0)
+        const month = await monthRuns(ctx, args.workspaceId)
+        const admin = await isAdmin(ctx, member)
         return {
-            canManage: await isAdmin(ctx, member),
+            canManage: admin,
             canDecide: await can(ctx, member, "manageContent"),
             agents: {
                 meetingFollowUp: settingsOf(await agentFor(ctx, args.workspaceId, "meetingFollowUp")),
@@ -295,7 +308,14 @@ export const overview = query({
                 standup: settingsOf(await agentFor(ctx, args.workspaceId, "standup")),
                 assistant: settingsOf(await agentFor(ctx, args.workspaceId, "assistant")),
             },
-            usage: { used: await runsThisMonth(ctx, args.workspaceId), limit, plan },
+            usage: {
+                used: month.length, limit, plan,
+                // what the AI cost this month (admins only): an estimate from the tokens each run used
+                ...(admin ? {
+                    costUsd: Math.round(month.reduce((sum, r) => sum + (r.costUsd ?? 0), 0) * 100) / 100,
+                    tokens: month.reduce((sum, r) => sum + (r.tokensIn ?? 0) + (r.tokensOut ?? 0), 0),
+                } : {}),
+            },
             runs: await Promise.all(runs.map((r) => describeRun(ctx, r))),
         }
     },
@@ -836,6 +856,21 @@ export const finishRun = internalMutation({
         } else {
             await ctx.db.patch(run._id, { status: "review", actions, note, steps: args.steps })
         }
+        return null
+    },
+})
+
+export const recordUsage = internalMutation({
+    args: { runId: v.id("agentRuns"), model: v.string(), tokensIn: v.number(), tokensOut: v.number(), costUsd: v.number() },
+    handler: async (ctx, args) => {
+        const run = await ctx.db.get(args.runId)
+        if (!run) return null
+        await ctx.db.patch(run._id, {
+            model: args.model,
+            tokensIn: (run.tokensIn ?? 0) + args.tokensIn,
+            tokensOut: (run.tokensOut ?? 0) + args.tokensOut,
+            costUsd: Math.round(((run.costUsd ?? 0) + args.costUsd) * 1e6) / 1e6,
+        })
         return null
     },
 })

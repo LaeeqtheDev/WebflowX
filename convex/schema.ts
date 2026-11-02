@@ -421,6 +421,11 @@ const schema = defineSchema({
         note: v.optional(v.string()),
         error: v.optional(v.string()),
         steps: v.optional(v.number()),
+        // what the run cost: the model used, tokens in/out and the estimated price in US dollars
+        model: v.optional(v.string()),
+        tokensIn: v.optional(v.number()),
+        tokensOut: v.optional(v.number()),
+        costUsd: v.optional(v.number()),
         decidedBy: v.optional(v.id("members")),
         finishedAt: v.optional(v.number()),
     })

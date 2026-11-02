@@ -45,7 +45,7 @@ const fakeModel = (...replies: ReturnType<typeof call>[][]) => {
   const fetchMock = vi.fn(async (_url: string, init: { body: string }) => {
     seen.push(JSON.parse(init.body))
     const tool_calls = replies[Math.min(n++, replies.length - 1)]
-    return new Response(JSON.stringify({ choices: [{ message: { role: "assistant", content: null, tool_calls } }] }), { status: 200 })
+    return new Response(JSON.stringify({ choices: [{ message: { role: "assistant", content: null, tool_calls } }], usage: { prompt_tokens: 1_000, completion_tokens: 100 } }), { status: 200 })
   })
   vi.stubGlobal("fetch", fetchMock)
   return { fetchMock, seen }
@@ -144,6 +144,14 @@ describe("follow-up agent", () => {
     expect(run.status).toBe("done")
     expect(run.note).toBe("Added 2 tasks and a recap.")
     expect(run.actions.every((a) => (a.type === "task" ? !!a.taskId : !!a.messageId))).toBe(true)
+    // 3 model calls at 1,000 tokens in and 100 out each, priced as gpt-oss-120b
+    expect(run).toMatchObject({ model: "openai/gpt-oss-120b", tokensIn: 3_000, tokensOut: 300 })
+    expect(run.costUsd).toBeCloseTo((3_000 * 0.15 + 300 * 0.6) / 1e6, 8)
+    const o = await asUser(ctx.t, ctx.ids.owner).query(api.agents.overview, { workspaceId: ctx.ids.ws })
+    expect(o?.usage.tokens).toBe(3_300)
+    // the cost meter is for admins only
+    const forMember = await asUser(ctx.t, ctx.ids.dev).query(api.agents.overview, { workspaceId: ctx.ids.ws })
+    expect(forMember?.usage).not.toHaveProperty("costUsd")
   })
 
   it("throws away proposals it can't trust: other workspaces' people, duplicates, bad dates, a recap with no channel", async () => {

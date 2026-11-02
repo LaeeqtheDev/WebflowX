@@ -237,6 +237,7 @@ export const Thread = ({messageId, onClose}:ThreadProps) => {
                 innerRef={editorRef}
                 disabled={isPending}
                 placeholder="Reply..."
+                allowAgent={!!channelId}
                 />
 
             </div>

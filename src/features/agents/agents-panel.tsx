@@ -24,7 +24,7 @@ export type OverviewData = {
     canManage: boolean
     canDecide: boolean
     agents: Record<Kind, AgentSettings | null>
-    usage: { used: number; limit: number }
+    usage: { used: number; limit: number; costUsd?: number; tokens?: number }
     runs: AgentRunView[]
 }
 
@@ -280,6 +280,15 @@ export const AgentsPanelView = ({ data, channels, onSave, onPostStandup }: {
                     <span className="tabular-nums text-ink/60">{used} of {limit === -1 ? "unlimited" : limit}</span>
                 </div>
                 {limit > 0 && <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-cream-deep"><div className={cn("h-full rounded-full", pct >= 100 ? "bg-red-500" : "bg-brand")} style={{ width: `${pct}%` }} /></div>}
+                {data.usage.costUsd !== undefined && (
+                    <p className="mt-2.5 flex items-center justify-between text-[11px] text-ink/60">
+                        <span>AI cost this month (estimate, only admins see this)</span>
+                        <span className="tabular-nums font-semibold text-ink/75">
+                            {data.usage.costUsd < 0.01 && (data.usage.tokens ?? 0) > 0 ? "under $0.01" : `$${data.usage.costUsd.toFixed(2)}`}
+                            {(data.usage.tokens ?? 0) > 0 && <span className="font-normal text-ink/60"> · {(data.usage.tokens! / 1000).toFixed(1)}k tokens</span>}
+                        </span>
+                    </p>
+                )}
             </div>
 
             <div>
