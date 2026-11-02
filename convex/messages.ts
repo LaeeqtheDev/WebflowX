@@ -11,7 +11,7 @@ import { throttle } from "./rateLimit";
 import { notify } from "./notifications";
 import { emit } from "./integrations";
 import { historyCutoff } from "./limits";
-import { maybeQueueTriage } from "./agents";
+import { maybeQueueTriage, maybeAnswer } from "./agents";
 
 import {
   extractMentionIds, notifyMentions, populateUser, populateMember, populateReactions, groupReactions, noteReplyAdded, populateThread, getMember, deleteMessageCascade, formerAuthor, authorLabel,
@@ -328,6 +328,11 @@ export const create = mutation({
         if (channelId && !args.parentMessageId) {
             const created = await ctx.db.get(messageId);
             if (created) await maybeQueueTriage(ctx, created);
+        }
+        // "@agent …" in a channel or thread gets an answer from the workspace's agent (if it's switched on)
+        if (channelId) {
+            const created = await ctx.db.get(messageId);
+            if (created) await maybeAnswer(ctx, created);
         }
 
         // outgoing webhooks (locked channels only reach hooks an admin opted in)

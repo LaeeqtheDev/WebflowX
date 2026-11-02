@@ -4,9 +4,9 @@ import { Doc, Id } from "./_generated/dataModel"
 import { internal } from "./_generated/api"
 import { auth } from "./auth"
 import { findMember } from "./access"
-import { assert2fa, can, roleOf } from "./permissions"
-import { checkLimit } from "./limits"
-import { throttle } from "./rateLimit"
+import { assert2fa, can, canViewChannel, roleOf } from "./permissions"
+import { checkLimit, historyCutoff } from "./limits"
+import { consume, throttle } from "./rateLimit"
 import { logAudit } from "./audit"
 import { notify } from "./notifications"
 import { emit, plainToDelta } from "./integrations"
@@ -19,8 +19,8 @@ import { noteReplyAdded } from "./messageHelpers"
 //  - triage: watches chosen channels and turns requests ("can someone fix…") into tasks, replying in the thread
 //  - standup: every morning posts what got done, what's due today and what's overdue, plus anything notable from chat
 
-export type AgentKind = "meetingFollowUp" | "triage" | "standup"
-export const AGENT_NAMES: Record<AgentKind, string> = { meetingFollowUp: "Follow-up agent", triage: "Triage agent", standup: "Standup agent" }
+export type AgentKind = "meetingFollowUp" | "triage" | "standup" | "assistant"
+export const AGENT_NAMES: Record<AgentKind, string> = { meetingFollowUp: "Follow-up agent", triage: "Triage agent", standup: "Standup agent", assistant: "WebflowX Agent" }
 export const AGENT_NAME = AGENT_NAMES.meetingFollowUp
 // most tasks and characters one run may create, whatever the model says
 export const MAX_TASKS_PER_RUN = 12
@@ -32,7 +32,7 @@ export const MAX_WATCHED = 10
 
 type Action = Doc<"agentRuns">["actions"][number]
 type Ctx = QueryCtx | MutationCtx
-const kindV = v.union(v.literal("meetingFollowUp"), v.literal("triage"), v.literal("standup"))
+const kindV = v.union(v.literal("meetingFollowUp"), v.literal("triage"), v.literal("standup"), v.literal("assistant"))
 
 const signedInMember = async (ctx: Ctx, workspaceId: Id<"workspaces">) => {
     const userId = await auth.getUserId(ctx)
@@ -140,6 +140,99 @@ export const maybeQueueTriage = async (ctx: MutationCtx, message: Doc<"messages"
     return runId
 }
 
+// ---------- "@agent" in chat ----------
+
+export const mentionsAgent = (text: string) => /(^|[\s(])@agent\b/i.test(text)
+export const MAX_ASKS_PER_HOUR = 20
+
+// Called after any new channel message (top level or in a thread). "@agent …" gets an answer in the thread,
+// written from what the person asking is allowed to see, and any tasks they asked for, made as them.
+export const maybeAnswer = async (ctx: MutationCtx, message: Doc<"messages">) => {
+    if (!message.channelId || message.integrationName || message.agent) return null
+    const text = deltaToText(message.body)
+    if (!mentionsAgent(text)) return null
+    const agent = await agentFor(ctx, message.workspaceId, "assistant")
+    if (!agent?.enabled) return null
+    const member = await ctx.db.get(message.memberId)
+    if (!member || member.role === "guest") return null
+    // the answer goes under the thread's first message
+    const rootId = message.parentMessagesId ?? message._id
+    const say = async (reply: string) => {
+        const id = await ctx.db.insert("messages", {
+            memberId: member._id, body: plainToDelta(reply), workspaceId: message.workspaceId, channelId: message.channelId,
+            parentMessagesId: rootId, integrationName: AGENT_NAMES.assistant, agent: true,
+        })
+        const row = await ctx.db.get(id)
+        if (row) await noteReplyAdded(ctx, rootId, row)
+        return null
+    }
+    if (!(await consume(ctx, `agent-ask:${member.userId}`, MAX_ASKS_PER_HOUR, 60 * 60_000))) {
+        return await say("You've asked me a lot this hour. Give me a few minutes and ask again.")
+    }
+    const { allowed } = await monthlyCheck(ctx, message.workspaceId)
+    if (!allowed) return await say("This workspace has used this month's agent runs. An admin can upgrade the plan to keep going.")
+    const runId = await ctx.db.insert("agentRuns", {
+        workspaceId: message.workspaceId, agentId: agent._id, channelId: message.channelId, messageIds: [message._id],
+        startedBy: member._id, status: "queued", actions: [],
+    })
+    await ctx.scheduler.runAfter(0, internal.agentRunner.run, { runId })
+    return runId
+}
+
+// The chat agent's search tools. Everything is filtered by what the person who asked can see.
+export const search = internalQuery({
+    args: { runId: v.id("agentRuns"), what: v.union(v.literal("messages"), v.literal("tasks"), v.literal("meetings")), query: v.string() },
+    handler: async (ctx, args) => {
+        const run = await ctx.db.get(args.runId)
+        const asker = run ? await ctx.db.get(run.startedBy) : null
+        if (!run || !asker) return []
+        const q = args.query.trim().slice(0, 200)
+        if (!q) return []
+        const words = q.toLowerCase().split(/\W+/).filter((w) => w.length > 2)
+        const hits = (s: string) => { const t = s.toLowerCase(); return words.filter((w) => t.includes(w)).length }
+        const nameOf = async (memberId?: Id<"members">) => {
+            const m = memberId ? await ctx.db.get(memberId) : null
+            const u = m ? await ctx.db.get(m.userId) : null
+            return u?.name ?? u?.email ?? null
+        }
+        const when = (ms: number) => new Date(ms).toISOString().slice(0, 10)
+
+        if (args.what === "messages") {
+            const workspace = await ctx.db.get(run.workspaceId)
+            const cutoff = historyCutoff(workspace?.plan)
+            const found = await ctx.db.query("messages")
+                .withSearchIndex("search_body", (s) => s.search("body", q).eq("workspaceId", run.workspaceId))
+                .take(40)
+            const seen = new Map<string, string | null>()
+            const out = []
+            for (const m of found) {
+                // channels only (never DMs), only ones the asker can open, within the plan's history
+                if (!m.channelId || (cutoff !== null && m._creationTime < cutoff)) continue
+                if (!seen.has(m.channelId)) {
+                    const ch = await ctx.db.get(m.channelId)
+                    seen.set(m.channelId, ch && (await canViewChannel(ctx, ch._id, asker.userId)) ? ch.name : null)
+                }
+                const channel = seen.get(m.channelId)
+                if (!channel) continue
+                out.push({ channel, author: m.integrationName ?? (await nameOf(m.memberId)) ?? "Someone", date: when(m._creationTime), text: snippetOf(m.body, 300) })
+                if (out.length >= 10) break
+            }
+            return out
+        }
+        if (args.what === "tasks") {
+            const tasks = await ctx.db.query("tasks").withIndex("by_workspace_id", (s) => s.eq("workspaceId", run.workspaceId)).order("desc").take(1_000)
+            const ranked = tasks.map((t) => ({ t, n: hits(`${t.title} ${t.description ?? ""}`) })).filter((x) => x.n > 0).sort((a, b) => b.n - a.n).slice(0, 10)
+            return await Promise.all(ranked.map(async ({ t }) => ({
+                title: t.title, status: t.status.replace("_", " "), owner: await nameOf(t.assigneeId), due: t.dueDate ? when(t.dueDate) : null, priority: t.priority,
+            })))
+        }
+        const meetings = await ctx.db.query("meetings").withIndex("by_workspace_started", (s) => s.eq("workspaceId", run.workspaceId)).order("desc").take(150)
+        const visible = meetings.filter((m) => !m.deletedAt && (m.kind !== "oneToOne" || m.createdBy === asker._id || m.inviteeId === asker._id))
+        const ranked = visible.map((m) => ({ m, n: hits(`${m.title} ${m.summary ?? ""}`) })).filter((x) => x.n > 0).sort((a, b) => b.n - a.n).slice(0, 5)
+        return ranked.map(({ m }) => ({ title: m.title, date: when(m.startedAt), summary: (m.summary ?? "").slice(0, 900) }))
+    },
+})
+
 // ---------- what the screens read ----------
 
 const describeRun = async (ctx: QueryCtx, run: Doc<"agentRuns">) => {
@@ -200,6 +293,7 @@ export const overview = query({
                 meetingFollowUp: settingsOf(await agentFor(ctx, args.workspaceId, "meetingFollowUp")),
                 triage: settingsOf(await agentFor(ctx, args.workspaceId, "triage")),
                 standup: settingsOf(await agentFor(ctx, args.workspaceId, "standup")),
+                assistant: settingsOf(await agentFor(ctx, args.workspaceId, "assistant")),
             },
             usage: { used: await runsThisMonth(ctx, args.workspaceId), limit, plan },
             runs: await Promise.all(runs.map((r) => describeRun(ctx, r))),
@@ -264,8 +358,8 @@ export const configure = mutation({
         const fields = {
             enabled: args.enabled,
             // the standup only posts a report, so there is nothing to approve
-            mode: kind === "standup" ? ("act" as const) : args.mode,
-            channelId: kind !== "triage" ? args.channelId ?? undefined : undefined,
+            mode: kind === "standup" || kind === "assistant" ? ("act" as const) : args.mode,
+            channelId: kind === "meetingFollowUp" || kind === "standup" ? args.channelId ?? undefined : undefined,
             channelIds: kind === "triage" ? channelIds : undefined,
             ...(kind === "standup" ? {
                 postHour: args.postHour ?? existing?.postHour ?? 9,
@@ -435,19 +529,26 @@ export const isQuiet = (f: Facts) => !f.done.length && !f.dueToday.length && !f.
 const due = (ms?: number) => (ms ? new Date(ms).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" }) : null)
 
 const apply = async (ctx: MutationCtx, run: Doc<"agentRuns">, agent: Doc<"agents">, actions: Action[]) => {
-    // the agent acts as the admin who set it up; if they have left, as the person who started the run
-    const actorId = (await ctx.db.get(agent.createdBy)) ? agent.createdBy : run.startedBy
+    // the agent acts as the admin who set it up; if they have left, as the person who started the run.
+    // The chat agent always acts as the person who asked it, with exactly their permissions.
+    const asker = agent.kind === "assistant"
+    const actorId = !asker && (await ctx.db.get(agent.createdBy)) ? agent.createdBy : run.startedBy
+    const actor = await ctx.db.get(actorId)
+    const actorCanAssign = !!actor && (await can(ctx, actor, "manageContent"))
     const name = AGENT_NAMES[agent.kind]
     const meeting = run.meetingId ? await ctx.db.get(run.meetingId) : null
     const done: Action[] = []
     for (const a of actions) {
         if (a.type === "task") {
             const assignee = a.assigneeId ? await ctx.db.get(a.assigneeId) : null
-            const assigneeId = assignee && assignee.workspaceId === run.workspaceId ? assignee._id : undefined
+            let assigneeId = assignee && assignee.workspaceId === run.workspaceId ? assignee._id : undefined
+            // like the task board: only people who manage tasks can hand work to someone else
+            if (asker && assigneeId && assigneeId !== actorId && !actorCanAssign) assigneeId = undefined
             const source = a.sourceMessageId ? await ctx.db.get(a.sourceMessageId) : null
             const channel = source?.channelId ? await ctx.db.get(source.channelId) : null
             const description = meeting
                 ? `From the meeting "${meeting.title}" (added by the ${name.toLowerCase()})`
+                : asker ? `Asked for in chat (added by the ${name})`
                 : source && channel ? `From a message in #${channel.name}: "${snippetOf(source.body, 300)}" (added by the ${name.toLowerCase()})` : undefined
             const taskId = await ctx.db.insert("tasks", {
                 title: a.title,
@@ -469,7 +570,7 @@ const apply = async (ctx: MutationCtx, run: Doc<"agentRuns">, agent: Doc<"agents
                 dueDate: a.dueDate === undefined ? null : new Date(a.dueDate).toISOString().slice(0, 10),
             })
             // triage answers in the thread of the message the task came from, so the asker knows it's handled
-            if (source && channel && !channel.isPrivate && source.workspaceId === run.workspaceId) {
+            if (!asker && source && channel && !channel.isPrivate && source.workspaceId === run.workspaceId) {
                 const who = assignee ? (await ctx.db.get(assignee.userId))?.name ?? "a teammate" : null
                 const text = `Added to the board: ${a.title}${who ? ` → ${who}` : " (no owner yet)"}${due(a.dueDate) ? `, due ${due(a.dueDate)}` : ""}`
                 const replyId = await ctx.db.insert("messages", {
@@ -487,15 +588,23 @@ const apply = async (ctx: MutationCtx, run: Doc<"agentRuns">, agent: Doc<"agents
             done.push({ ...a, assigneeId, taskId })
         } else {
             const channel = await ctx.db.get(a.channelId)
-            if (!channel || channel.workspaceId !== run.workspaceId || channel.isPrivate) continue
+            if (!channel || channel.workspaceId !== run.workspaceId) continue
+            // answers go back into the thread they were asked in, even in a locked channel the asker is part of
+            const parent = a.parentMessageId ? await ctx.db.get(a.parentMessageId) : null
+            if (parent ? parent.channelId !== channel._id : channel.isPrivate) continue
             const messageId = await ctx.db.insert("messages", {
                 memberId: actorId,
                 body: plainToDelta(a.text),
                 workspaceId: run.workspaceId,
                 channelId: channel._id,
+                parentMessagesId: parent?._id,
                 integrationName: name,
                 agent: true,
             })
+            if (parent) {
+                const reply = await ctx.db.get(messageId)
+                if (reply) await noteReplyAdded(ctx, parent._id, reply)
+            }
             done.push({ ...a, messageId })
         }
     }
@@ -547,6 +656,36 @@ export const context = internalQuery({
         const run = await ctx.db.get(args.runId)
         const agent = run ? await ctx.db.get(run.agentId) : null
         if (!run || !agent) return null
+        if (agent.kind === "assistant") {
+            const question = run.messageIds?.[0] ? await ctx.db.get(run.messageIds[0]) : null
+            const channel = run.channelId ? await ctx.db.get(run.channelId) : null
+            const asker = await ctx.db.get(run.startedBy)
+            const askerUser = asker ? await ctx.db.get(asker.userId) : null
+            if (!question || !channel || !asker) return null
+            const nameOf = async (m: Doc<"messages">) => {
+                if (m.integrationName) return m.integrationName
+                const mm = await ctx.db.get(m.memberId)
+                const u = mm ? await ctx.db.get(mm.userId) : null
+                return u?.name ?? "Someone"
+            }
+            // the conversation it was asked in: the whole thread, or the last stretch of the channel
+            const rootId = question.parentMessagesId ?? question._id
+            const root = await ctx.db.get(rootId)
+            const replies = await ctx.db.query("messages").withIndex("by_parent_message_id", (q) => q.eq("parentMessagesId", rootId)).take(60)
+            const around = question.parentMessagesId || replies.length
+                ? [root, ...replies].filter((m): m is Doc<"messages"> => !!m && m._creationTime <= question._creationTime)
+                : (await ctx.db.query("messages").withIndex("by_channel_id", (q) => q.eq("channelId", channel._id)).order("desc").take(60))
+                    .filter((m) => !m.parentMessagesId && m._creationTime <= question._creationTime).slice(0, 25).reverse()
+            const line = async (m: Doc<"messages">) => ({ id: m._id as string, at: m._creationTime, name: await nameOf(m), memberId: m.memberId as string, text: deltaToText(m.body).slice(0, 1_200) })
+            return {
+                kind: "assistant" as const,
+                channel: channel.name,
+                asker: { id: asker._id as string, name: askerUser?.name ?? askerUser?.email ?? "Someone", canAssign: await can(ctx, asker, "manageContent") },
+                question: await line(question),
+                conversation: await Promise.all(around.filter((m) => m._id !== question._id).slice(-40).map(line)),
+                people: await peopleOf(ctx, run.workspaceId),
+            }
+        }
         if (agent.kind === "standup") {
             const channel = agent.channelId ? await ctx.db.get(agent.channelId) : null
             if (!channel) return null
@@ -645,6 +784,7 @@ export const finishRun = internalMutation({
         if (!agent) return null
         const triage = agent.kind === "triage"
         const standup = agent.kind === "standup"
+        const assistant = agent.kind === "assistant"
         const allowedSources = new Set((run.messageIds ?? []).map(String))
         const actions: Action[] = []
         const seen = new Set<string>()
@@ -657,7 +797,7 @@ export const finishRun = internalMutation({
                 const key = title.toLowerCase()
                 if (!title || seen.has(key) || actions.filter((a) => a.type === "task").length >= MAX_TASKS_PER_RUN) continue
                 let sourceMessageId: Id<"messages"> | undefined
-                if (triage) {
+                if (triage && !assistant) {
                     // a triage task must come from one of the messages it was shown
                     const id = p.sourceMessageId && allowedSources.has(p.sourceMessageId) ? ctx.db.normalizeId("messages", p.sourceMessageId) : null
                     if (!id) continue
@@ -676,7 +816,11 @@ export const finishRun = internalMutation({
                     id: `t${n}`, type: "task", title, assigneeId, dueDate: parseDue(p.dueDate),
                     priority: isPriority(p.priority) ? p.priority : "medium", ...(sourceMessageId ? { sourceMessageId } : {}),
                 })
-            } else if (!triage && agent.channelId && !actions.some((a) => a.type === "recap")) {
+            } else if (assistant && run.channelId && run.messageIds?.[0] && !actions.some((a) => a.type === "recap")) {
+                const question = await ctx.db.get(run.messageIds[0])
+                const text = p.text.trim().slice(0, MAX_RECAP)
+                if (question && text) actions.push({ id: `r${n}`, type: "recap", channelId: run.channelId, parentMessageId: question.parentMessagesId ?? question._id, text })
+            } else if (!triage && !assistant && agent.channelId && !actions.some((a) => a.type === "recap")) {
                 const text = p.text.trim().slice(0, MAX_RECAP)
                 if (text) actions.push({ id: `r${n}`, type: "recap", channelId: agent.channelId, text })
             }
@@ -686,7 +830,7 @@ export const finishRun = internalMutation({
             await ctx.db.patch(run._id, { status: "done", actions, note: note ?? (triage ? "No requests that need a task." : standup ? "Nothing to report today." : "Nothing to follow up on."), steps: args.steps, finishedAt: Date.now() })
             return null
         }
-        if (agent.mode === "act" || standup) {
+        if (agent.mode === "act" || standup || assistant) {
             const done = await apply(ctx, run, agent, actions)
             await ctx.db.patch(run._id, { status: "done", actions: done, note, steps: args.steps, finishedAt: Date.now() })
         } else {

@@ -26,6 +26,7 @@ type Context =
     }
     | { kind: "triage"; channel: string; earlier: Line[]; messages: Line[]; people: Person[]; openTasks: string[] }
     | { kind: "standup"; channel: string; facts: Facts; quiet: boolean; plain: string }
+    | { kind: "assistant"; channel: string; asker: { id: string; name: string; canAssign: boolean }; question: Line; conversation: Line[]; people: Person[] }
 type TaskLine = { title: string; who: string | null; due: number | null; priority: string }
 type Facts = {
     today: string
@@ -53,6 +54,26 @@ const standupTools = [
             parameters: { type: "object", properties: { note: { type: "string" } }, required: ["note"] },
         },
     },
+]
+
+const fn = (name: string, description: string, properties: Record<string, unknown>, required: string[]) =>
+    ({ type: "function", function: { name, description, parameters: { type: "object", properties, required } } })
+const assistantTools = (canAssign: boolean) => [
+    fn("search_messages", "Search what was said in the workspace's channels (only ones the person asking can see). Use a few keywords.", { query: { type: "string" } }, ["query"]),
+    fn("search_tasks", "Search tasks on the board by keywords. Returns status, owner and due date.", { query: { type: "string" } }, ["query"]),
+    fn("search_meetings", "Search past meetings by keywords. Returns their AI summaries.", { query: { type: "string" } }, ["query"]),
+    fn("find_member", "Look up workspace members by (part of) their name.", { name: { type: "string" } }, ["name"]),
+    fn("create_task", canAssign
+        ? "Create a task, only when the person asked for tasks to be made. One call per task."
+        : "Create a task, only when the person asked for tasks to be made. One call per task. This person can only assign tasks to themselves.",
+        {
+            title: { type: "string", description: "Short imperative title" },
+            assignee_member_id: { type: "string" },
+            due_date: { type: "string", description: "YYYY-MM-DD, only if a date or day was given" },
+            priority: { type: "string", enum: ["urgent", "high", "medium", "low"] },
+        }, ["title"]),
+    fn("answer", "Post your reply in the thread. Plain text, short: a direct answer first, then up to 5 bullet lines (•). Say where facts came from (#channel, meeting name, task).", { text: { type: "string" } }, ["text"]),
+    fn("finish", "Call once you have answered.", { note: { type: "string" } }, ["note"]),
 ]
 
 const tools = (hasRecap: boolean, triage = false) => [
@@ -134,6 +155,32 @@ const clock = (ms: number) => new Date(ms).toISOString().slice(11, 16)
 const prompt = (c: Context, now: number): Msg[] => {
     const peopleOf = (list: Person[]) => list.slice(0, 60).map((p) => `- ${p.name} (member id: ${p.id})`).join("\n") || "- (none)"
     const openOf = (list: string[]) => list.map((t) => `- ${t}`).join("\n") || "- (none)"
+    if (c.kind === "assistant") {
+        return [
+            {
+                role: "system",
+                content: [
+                    "You are the WebflowX Agent, built into a team workspace. A teammate mentioned you with @agent. Help them like a sharp, friendly colleague.",
+                    "Rules:",
+                    "- Base answers on the conversation and on what the search tools return. If you can't find it, say so plainly. Never invent facts, numbers or decisions.",
+                    "- Search before answering questions about past decisions, work or meetings. Try different keywords if the first search finds nothing.",
+                    "- Only create tasks when they ask for tasks (\"make tasks from this\", \"remind Dev to…\", \"add a task…\"). Use member ids for owners.",
+                    c.asker.canAssign ? "- They can assign tasks to anyone." : `- They can only assign tasks to themselves (member id ${c.asker.id}); leave other people's tasks unassigned and mention who it's for.`,
+                    "- Due dates only when a day or date was given; work them out from today's date.",
+                    "- Always finish by calling answer once (keep it short, plain text, no markdown headings), then finish.",
+                ].join("\n"),
+            },
+            {
+                role: "user",
+                content: [
+                    `Today is ${weekday(now)} ${day(now)} (UTC). You're in #${c.channel}. ${c.asker.name} (member id ${c.asker.id}) asked you.`,
+                    `Workspace members:\n${peopleOf(c.people)}`,
+                    c.conversation.length ? `The conversation so far:\n${c.conversation.map((m) => `[${clock(m.at)}] ${m.name}: ${m.text}`).join("\n")}` : "",
+                    `Their message to you:\n${c.question.text}`,
+                ].filter(Boolean).join("\n\n"),
+            },
+        ]
+    }
     if (c.kind === "standup") {
         const rows = (list: TaskLine[]) => list.map((t) => `- ${t.title}${t.who ? ` (owner: ${t.who})` : " (no owner)"}${t.due ? `, due ${day(t.due)}` : ""}${t.priority === "urgent" || t.priority === "high" ? `, ${t.priority}` : ""}`).join("\n") || "- (none)"
         const f = c.facts
@@ -240,7 +287,9 @@ export const run = internalAction({
                 return null
             }
             const messages = prompt(c, Date.now())
-            const toolList = c.kind === "standup" ? standupTools : tools(c.kind === "meetingFollowUp" && !!c.recapChannel, c.kind === "triage")
+            const toolList = c.kind === "standup" ? standupTools
+                : c.kind === "assistant" ? assistantTools(c.asker.canAssign)
+                : tools(c.kind === "meetingFollowUp" && !!c.recapChannel, c.kind === "triage")
             const proposals: Proposal[] = []
             let note: string | undefined
             let steps = 0
@@ -269,6 +318,22 @@ export const run = internalAction({
                             result = "Noted."
                             break
                         }
+                        case "search_messages":
+                        case "search_tasks":
+                        case "search_meetings": {
+                            const what = call.function.name.slice(7) as "messages" | "tasks" | "meetings"
+                            const found: unknown[] = await ctx.runQuery(internal.agents.search, { runId: args.runId, what, query: str("query") ?? "" })
+                            result = found.length ? JSON.stringify(found).slice(0, 6_000) : "Nothing found."
+                            break
+                        }
+                        case "create_task": {
+                            const title = str("title")?.trim()
+                            if (!title) { result = "A title is needed."; break }
+                            proposals.push({ type: "task", title, assigneeId: str("assignee_member_id"), dueDate: str("due_date"), priority: str("priority") })
+                            result = "Will be created."
+                            break
+                        }
+                        case "answer":
                         case "post_standup":
                         case "post_recap": {
                             const text = str("text")?.trim()
@@ -287,12 +352,21 @@ export const run = internalAction({
                     messages.push({ role: "tool", tool_call_id: call.id, content: result })
                 }
             }
+            // the person asking always hears back, even if the model forgot to answer
+            if (c.kind === "assistant" && !proposals.some((p) => p.type === "recap")) {
+                const made = proposals.filter((p) => p.type === "task").length
+                proposals.push({ type: "recap", text: made ? `Done. I added ${made} task${made === 1 ? "" : "s"} to the board.` : "Sorry, I couldn't find an answer to that in this workspace." })
+            }
             await ctx.runMutation(internal.agents.finishRun, { runId: args.runId, proposals, note, steps })
             return null
         } catch (e) {
             const why = e instanceof Error ? e.message : "The agent stopped unexpectedly"
             // the standup still goes out without the AI: a plain list of the same facts
             const c: Context | null = await ctx.runQuery(internal.agents.context, { runId: args.runId }).catch(() => null)
+            if (c?.kind === "assistant") {
+                await ctx.runMutation(internal.agents.finishRun, { runId: args.runId, proposals: [{ type: "recap", text: "Sorry, I can't think straight right now (the AI service didn't answer). Try again in a minute." }], note: why, steps: 0 })
+                return null
+            }
             if (c?.kind === "standup" && !c.quiet) {
                 await ctx.runMutation(internal.agents.finishRun, { runId: args.runId, proposals: [{ type: "recap", text: c.plain }], note: `Posted the plain version (${why.replace(/\.$/, "")}).`, steps: 0 })
                 return null

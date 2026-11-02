@@ -5,7 +5,7 @@ import { convexTest } from "convex-test"
 import schema from "../convex/schema"
 import { api } from "../convex/_generated/api"
 import type { Id } from "../convex/_generated/dataModel"
-import { parseDue, looksLikeRequest, TRIAGE_DELAY_MS, localNow } from "../convex/agents"
+import { parseDue, looksLikeRequest, TRIAGE_DELAY_MS, localNow, mentionsAgent } from "../convex/agents"
 import { internal } from "../convex/_generated/api"
 
 const modules = import.meta.glob("../convex/**/*.ts")
@@ -456,6 +456,129 @@ describe("daily standup agent", () => {
     await asUser(t, ids.owner).mutation(api.agents.runStandupNow, { workspaceId: ids.ws })
     await t.finishAllScheduledFunctions(vi.runAllTimers)
     expect(await posts()).toHaveLength(1)
+  })
+})
+
+describe("@agent in chat", () => {
+  let ctx: Awaited<ReturnType<typeof setup>>
+  beforeEach(async () => {
+    vi.useFakeTimers()
+    vi.stubEnv("GROQ_API_KEY", "test-key")
+    ctx = await setup()
+  })
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.unstubAllEnvs() })
+
+  const turnOn = () => asUser(ctx.t, ctx.ids.owner).mutation(api.agents.configure, { workspaceId: ctx.ids.ws, kind: "assistant", enabled: true, mode: "suggest" })
+  const post = (user: Id<"users">, text: string, extra: { channelId?: Id<"channels">; parentMessageId?: Id<"messages"> } = {}) =>
+    asUser(ctx.t, user).mutation(api.messages.create, { workspaceId: ctx.ids.ws, channelId: extra.channelId ?? ctx.ids.general, parentMessageId: extra.parentMessageId, body: delta(text) })
+  const agentReplies = () => ctx.t.run((c) => c.db.query("messages").collect()).then((m) => m.filter((x) => x.agent))
+  const settle = () => ctx.t.finishAllScheduledFunctions(vi.runAllTimers)
+
+  it("spots @agent but not email addresses or other words", () => {
+    expect(mentionsAgent("@agent what did we decide?")).toBe(true)
+    expect(mentionsAgent("hey (@Agent) can you help")).toBe(true)
+    expect(mentionsAgent("mail travel@agentur.de")).toBe(false)
+    expect(mentionsAgent("our @agents page")).toBe(false)
+  })
+
+  it("does nothing until an admin switches it on", async () => {
+    const { fetchMock } = fakeModel([call("answer", { text: "hi" })])
+    await post(ctx.ids.dev, "@agent hello?")
+    await settle()
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(await agentReplies()).toHaveLength(0)
+  })
+
+  it("answers in the thread under the question, using what it found", async () => {
+    const { t, ids } = ctx
+    await turnOn()
+    await t.run((c) => c.db.insert("meetings", { workspaceId: ids.ws, roomName: "p", title: "Pricing review", createdBy: ids.ownerM, startedAt: Date.now() - 86_400_000, summary: "Decided: Startup plan stays at $29, Growth goes to $79." }))
+    const { seen } = fakeModel(
+      [call("search_meetings", { query: "pricing" })],
+      [call("answer", { text: "We decided Startup stays at $29 and Growth goes to $79 (Pricing review meeting)." })],
+      [call("finish", { note: "answered" })],
+    )
+    const q = await post(ids.dev, "@agent what did we decide about pricing?")
+    await settle()
+    // the second call to the model carried the search result
+    expect(JSON.stringify(seen[1])).toContain("Growth goes to $79")
+    const replies = await agentReplies()
+    expect(replies).toHaveLength(1)
+    expect(replies[0]).toMatchObject({ parentMessagesId: q, channelId: ids.general, integrationName: "WebflowX Agent" })
+    expect(replies[0].body).toContain("Startup stays at $29")
+    expect((await t.run((c) => c.db.get(q)))?.threadCount).toBe(1)
+  })
+
+  it("asked inside a thread, it reads the thread and answers there", async () => {
+    const { ids } = ctx
+    await turnOn()
+    const root = await post(ids.ava, "Checkout is broken on Safari")
+    await post(ids.owner, "Looks like the new payment script", { parentMessageId: root })
+    const { seen } = fakeModel([call("answer", { text: "Summary: Safari checkout broke after the new payment script." })])
+    await post(ids.dev, "@agent summarise this thread", { parentMessageId: root })
+    await settle()
+    expect(JSON.stringify(seen[0])).toContain("Looks like the new payment script")
+    const replies = await agentReplies()
+    expect(replies[0].parentMessagesId).toBe(root)
+  })
+
+  it("never shows the asker anything from channels they can't open", async () => {
+    const { t, ids } = ctx
+    await turnOn()
+    await t.run((c) => c.db.insert("messages", { body: delta("secret salary plan for the team"), memberId: ids.ownerM, workspaceId: ids.ws, channelId: ids.locked }))
+    await t.run((c) => c.db.insert("messages", { body: delta("public salary bands are on the wiki"), memberId: ids.ownerM, workspaceId: ids.ws, channelId: ids.general }))
+    const { seen } = fakeModel([call("search_messages", { query: "salary" })], [call("answer", { text: "ok" })])
+    await post(ids.dev, "@agent what do we know about salary?")
+    await settle()
+    const toolResult = JSON.stringify(seen[1])
+    expect(toolResult).toContain("public salary bands")
+    expect(toolResult).not.toContain("secret salary plan")
+  })
+
+  it("makes tasks as the person asking, with their permissions", async () => {
+    const { t, ids } = ctx
+    await turnOn()
+    fakeModel([call("create_task", { title: "Send the invoice", assignee_member_id: ids.avaM }), call("answer", { text: "Added it." }, 1)])
+    await post(ids.dev, "@agent add a task for Ava to send the invoice")
+    await settle()
+    let tasks = await t.run((c) => c.db.query("tasks").collect())
+    // a plain member can't assign work to someone else, so it's left unassigned, and it's theirs
+    expect(tasks.map((x) => [x.title, x.assigneeId ?? null, x.createdBy])).toEqual([["Send the invoice", null, ids.devM]])
+
+    fakeModel([call("create_task", { title: "Review the FAQ", assignee_member_id: ids.avaM }), call("answer", { text: "Added it." }, 1)])
+    await post(ids.owner, "@agent add a task for Ava to review the FAQ")
+    await settle()
+    tasks = await t.run((c) => c.db.query("tasks").collect())
+    expect(tasks.find((x) => x.title === "Review the FAQ")?.assigneeId).toBe(ids.avaM)
+  })
+
+  it("always replies, even when the AI is down or forgets to answer", async () => {
+    await turnOn()
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("down", { status: 503 })))
+    await post(ctx.ids.dev, "@agent are you there?")
+    await settle()
+    let replies = await agentReplies()
+    expect(replies[0].body).toContain("Try again in a minute")
+
+    fakeModel([call("finish", { note: "done" })])
+    await post(ctx.ids.dev, "@agent what's the wifi password?")
+    await settle()
+    replies = await agentReplies()
+    expect(replies[1].body).toContain("couldn't find an answer")
+  })
+
+  it("doesn't answer its own replies, and slows down heavy use", async () => {
+    const { t, ids } = ctx
+    await turnOn()
+    fakeModel([call("answer", { text: "Hi! @agent here." })])
+    await post(ids.dev, "@agent hi")
+    await settle()
+    expect(await agentReplies()).toHaveLength(1)
+    expect(await t.run((c) => c.db.query("agentRuns").collect())).toHaveLength(1)
+    await t.run((c) => c.db.insert("rateLimits", { key: `agent-ask:${ids.ava}`, windowStart: Date.now(), count: 20 }))
+    await post(ids.ava, "@agent hi again")
+    const last = (await agentReplies()).pop()!
+    expect(last.body).toContain("a lot this hour")
   })
 })
 

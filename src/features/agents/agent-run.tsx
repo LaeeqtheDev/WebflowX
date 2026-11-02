@@ -16,7 +16,7 @@ type RunAction =
 export type AgentRunView = {
     _id: Id<"agentRuns">
     _creationTime: number
-    kind: "meetingFollowUp" | "triage" | "standup"
+    kind: "meetingFollowUp" | "triage" | "standup" | "assistant"
     channelName: string | null
     status: "queued" | "running" | "review" | "done" | "failed" | "dismissed"
     note: string | null

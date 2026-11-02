@@ -360,7 +360,8 @@ const schema = defineSchema({
         workspaceId: v.id("workspaces"),
         // meetingFollowUp: tasks + recap after a meeting; triage: turns requests in chat into tasks
         // standup: a short morning post of what got done, what's due and what's stuck
-        kind: v.union(v.literal("meetingFollowUp"), v.literal("triage"), v.literal("standup")),
+        // assistant: answers "@agent" questions in chat and makes tasks when asked, as the person asking
+        kind: v.union(v.literal("meetingFollowUp"), v.literal("triage"), v.literal("standup"), v.literal("assistant")),
         enabled: v.boolean(),
         // "suggest": proposals wait for someone to approve them; "act": they are carried out straight away
         mode: v.union(v.literal("suggest"), v.literal("act")),
@@ -411,6 +412,8 @@ const schema = defineSchema({
                 type: v.literal("recap"),
                 channelId: v.id("channels"),
                 text: v.string(),
+                // posted as a thread reply under this message (the assistant's answers)
+                parentMessageId: v.optional(v.id("messages")),
                 messageId: v.optional(v.id("messages")),
             }),
         )),

@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 import { useMutation, useQuery } from "convex/react"
-import { Bot, Check, Inbox, Loader2, Send, ShieldCheck, Sun, Zap } from "lucide-react"
+import { AtSign, Bot, Check, Inbox, Loader2, Send, ShieldCheck, Sun, Zap } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "../../../convex/_generated/api"
 import type { Id } from "../../../convex/_generated/dataModel"
@@ -9,7 +9,7 @@ import { friendlyError } from "@/hooks/use-limit-handler"
 import { cn } from "@/lib/utils"
 import { AgentRunCard, StatusPill, type AgentRunView } from "./agent-run"
 
-type Kind = "meetingFollowUp" | "triage" | "standup"
+type Kind = "meetingFollowUp" | "triage" | "standup" | "assistant"
 type AgentSettings = {
     enabled: boolean; mode: "suggest" | "act"; channelId: string | null; channelIds: string[]
     postHour?: number; postTz?: string; weekdaysOnly?: boolean
@@ -108,6 +108,7 @@ export const AgentsPanelView = ({ data, channels, onSave, onPostStandup }: {
     const followUp = data.agents.meetingFollowUp ?? OFF
     const triage = data.agents.triage ?? OFF
     const standup = data.agents.standup ?? OFF
+    const assistant = data.agents.assistant ?? OFF
     const [draftStandupChannel, setDraftStandupChannel] = useState<string | null>(null)
     const [posting, setPosting] = useState(false)
     const watch = draftWatch ?? triage.channelIds
@@ -150,6 +151,18 @@ export const AgentsPanelView = ({ data, channels, onSave, onPostStandup }: {
                 <h3 className="text-[15px] font-semibold tracking-tight text-ink">Agents</h3>
                 <p className="mt-1 text-sm text-ink/60">AI teammates that do the follow-up work for you. They act with the permissions of the admin who turns them on, and every action is logged.</p>
             </div>
+
+            <AgentCard icon={AtSign} title="Ask the agent in chat" settings={assistant} canManage={data.canManage} saving={saving === "assistant"}
+                blurb="Anyone can type @agent in a channel or thread: “@agent what did we decide about pricing?”, “@agent summarise this thread”, “@agent make tasks from this”. It answers in the thread."
+                onToggle={(on) => save("assistant", { enabled: on }, on ? "@agent is on" : "@agent is off")}>
+                {assistant.enabled && (
+                    <ul className="flex flex-col gap-1.5 text-xs leading-relaxed text-ink/65">
+                        <li className="flex gap-2"><ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-brand" aria-hidden="true" />It only searches channels, tasks and meetings the person asking can see. Never DMs.</li>
+                        <li className="flex gap-2"><ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-brand" aria-hidden="true" />Tasks it makes are created as the person asking, with their permissions.</li>
+                        <li className="flex gap-2"><ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-brand" aria-hidden="true" />Each question is one agent run. One person can ask up to 20 times an hour.</li>
+                    </ul>
+                )}
+            </AgentCard>
 
             <AgentCard icon={Bot} title="Meeting follow-up agent" settings={followUp} canManage={data.canManage} saving={saving === "meetingFollowUp"}
                 blurb="After a meeting's AI summary, it turns the action items into tasks for the right people, with due dates when they were said, and posts a short recap."
@@ -273,7 +286,7 @@ export const AgentsPanelView = ({ data, channels, onSave, onPostStandup }: {
                 <p className="mb-2 text-xs font-semibold text-ink/70">Recent work</p>
                 {data.runs.length === 0 ? (
                     <p className="rounded-xl border border-dashed border-plum/15 px-4 py-6 text-center text-sm text-ink/60">
-                        {followUp.enabled || triage.enabled || standup.enabled ? "Nothing yet. Their work shows up here." : "Turn an agent on to see its work here."}
+                        {followUp.enabled || triage.enabled || standup.enabled || assistant.enabled ? "Nothing yet. Their work shows up here." : "Turn an agent on to see its work here."}
                     </p>
                 ) : (
                     <ul className="flex flex-col gap-2">
@@ -282,12 +295,13 @@ export const AgentsPanelView = ({ data, channels, onSave, onPostStandup }: {
                                 <button type="button" onClick={() => setOpen(open === r._id ? null : r._id)} aria-expanded={open === r._id}
                                     className="flex w-full items-center gap-3 px-3.5 py-3 text-left">
                                     <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-lg", r.kind === "meetingFollowUp" ? "bg-plum/10 text-plum dark:bg-white/10 dark:text-white/80" : "bg-brand/12 text-orange-ink")}>
-                                        {r.kind === "triage" ? <Inbox className="size-3.5" aria-hidden="true" /> : r.kind === "standup" ? <Sun className="size-3.5" aria-hidden="true" /> : <Bot className="size-3.5" aria-hidden="true" />}
+                                        {r.kind === "triage" ? <Inbox className="size-3.5" aria-hidden="true" /> : r.kind === "standup" ? <Sun className="size-3.5" aria-hidden="true" /> : r.kind === "assistant" ? <AtSign className="size-3.5" aria-hidden="true" /> : <Bot className="size-3.5" aria-hidden="true" />}
                                     </span>
                                     <span className="min-w-0 flex-1">
                                         <span className="block truncate text-sm font-medium text-ink">
                                             {r.kind === "triage" ? `Requests in #${r.channelName ?? "deleted channel"}`
                                                 : r.kind === "standup" ? `Standup in #${r.channelName ?? "deleted channel"}`
+                                                : r.kind === "assistant" ? `Question in #${r.channelName ?? "deleted channel"}`
                                                 : r.meetingTitle ?? "Deleted meeting"}
                                         </span>
                                         <span className="block text-[11px] text-ink/60">{when(r._creationTime)} · {r.actions.length} item{r.actions.length === 1 ? "" : "s"}</span>
