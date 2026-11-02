@@ -78,6 +78,7 @@ export const ChatInput = ({ placeholder }: ChatInputProps) => {
                 draftKey={`${workspaceId}:${channelId}`}
                 placeholder={placeholder}
                 allowEveryone
+                allowAgent
                 onSubmit={submit}
                 disabled={isPending}
                 innerRef={editorRef}

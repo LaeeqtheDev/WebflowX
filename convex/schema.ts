@@ -205,6 +205,8 @@ const schema = defineSchema({
         updatedAt: v.optional(v.number()),
         // set when an API key, webhook or GitHub hook posted this; shown in place of the author's name
         integrationName: v.optional(v.string()),
+        // posted by one of the workspace's AI agents (shown with an "Agent" badge)
+        agent: v.optional(v.boolean()),
         // set when the author left or was removed: their name and photo as they were, so the message still reads properly
         removedAuthor: v.optional(v.object({ name: v.string(), image: v.optional(v.string()) })),
         // when a removed author's message is erased (Free plan: 90 days after they left). Unset on paid plans, which keep full history.
@@ -353,6 +355,84 @@ const schema = defineSchema({
     }).index("by_meeting_id", ["meetingId"]),
 
     // One row per AI summary generated, used to enforce plan limits
+    // AI agents a workspace has switched on. They act for the admin who set them up.
+    agents: defineTable({
+        workspaceId: v.id("workspaces"),
+        // meetingFollowUp: tasks + recap after a meeting; triage: turns requests in chat into tasks
+        // standup: a short morning post of what got done, what's due and what's stuck
+        // assistant: answers "@agent" questions in chat and makes tasks when asked, as the person asking
+        kind: v.union(v.literal("meetingFollowUp"), v.literal("triage"), v.literal("standup"), v.literal("assistant")),
+        enabled: v.boolean(),
+        // "suggest": proposals wait for someone to approve them; "act": they are carried out straight away
+        mode: v.union(v.literal("suggest"), v.literal("act")),
+        // where the agent posts its recap (none = no recap)
+        channelId: v.optional(v.id("channels")),
+        // triage: the public channels it watches
+        channelIds: v.optional(v.array(v.id("channels"))),
+        // standup: when to post, in the admin's time zone, and the local day it last posted
+        postHour: v.optional(v.number()),
+        postTz: v.optional(v.string()),
+        weekdaysOnly: v.optional(v.boolean()),
+        lastRunDay: v.optional(v.string()),
+        createdBy: v.id("members"),
+        updatedAt: v.number(),
+    })
+        .index("by_workspace_kind", ["workspaceId", "kind"])
+        .index("by_kind_enabled", ["kind", "enabled"]),
+
+    // One piece of work an agent did. Counted against the plan's monthly agent runs.
+    agentRuns: defineTable({
+        workspaceId: v.id("workspaces"),
+        agentId: v.id("agents"),
+        meetingId: v.optional(v.id("meetings")),
+        // triage: the channel and the messages it was asked to look at (gathered for a minute, then read together)
+        channelId: v.optional(v.id("channels")),
+        messageIds: v.optional(v.array(v.id("messages"))),
+        // who set it off (the person whose summary triggered it, or who pressed "run")
+        startedBy: v.id("members"),
+        status: v.union(
+            v.literal("queued"), v.literal("running"), v.literal("review"),
+            v.literal("done"), v.literal("failed"), v.literal("dismissed"),
+        ),
+        actions: v.array(v.union(
+            v.object({
+                id: v.string(),
+                type: v.literal("task"),
+                title: v.string(),
+                assigneeId: v.optional(v.id("members")),
+                dueDate: v.optional(v.number()),
+                priority: v.union(v.literal("urgent"), v.literal("high"), v.literal("medium"), v.literal("low")),
+                // triage: the chat message it came from (the agent replies under it)
+                sourceMessageId: v.optional(v.id("messages")),
+                // set once carried out
+                taskId: v.optional(v.id("tasks")),
+            }),
+            v.object({
+                id: v.string(),
+                type: v.literal("recap"),
+                channelId: v.id("channels"),
+                text: v.string(),
+                // posted as a thread reply under this message (the assistant's answers)
+                parentMessageId: v.optional(v.id("messages")),
+                messageId: v.optional(v.id("messages")),
+            }),
+        )),
+        // the agent's own one-line note on what it did
+        note: v.optional(v.string()),
+        error: v.optional(v.string()),
+        steps: v.optional(v.number()),
+        // what the run cost: the model used, tokens in/out and the estimated price in US dollars
+        model: v.optional(v.string()),
+        tokensIn: v.optional(v.number()),
+        tokensOut: v.optional(v.number()),
+        costUsd: v.optional(v.number()),
+        decidedBy: v.optional(v.id("members")),
+        finishedAt: v.optional(v.number()),
+    })
+        .index("by_workspace_id", ["workspaceId"])
+        .index("by_meeting_id", ["meetingId"])
+        .index("by_channel_status", ["channelId", "status"]),
+
     aiSummaryLog: defineTable({
         workspaceId: v.id("workspaces"),
         meetingId: v.id("meetings"),

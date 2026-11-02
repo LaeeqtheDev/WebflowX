@@ -12,6 +12,7 @@ import {
     NumberSymbol20Regular,
     DocumentText20Regular,
     Video20Regular,
+    Bot20Regular,
     Notebook20Regular,
     Book20Regular,
     Flash20Regular,
@@ -201,6 +202,7 @@ export const MoreModal = ({ open, onClose, workspaceId: workspaceIdProp, initial
                                 <UsageCard label="Database rows" icon={DocumentText20Regular} current={usage?.usage.dbRows.current ?? 0} limit={usage?.usage.dbRows.limit ?? 0} />
                                 <UsageCard label="Meetings this month" icon={Video20Regular} current={usage?.usage.meetings.current ?? 0} limit={usage?.usage.meetings.limit ?? 0} />
                                 <UsageCard label="AI summaries this month" icon={Video20Regular} current={usage?.usage.aiSummaries.current ?? 0} limit={usage?.usage.aiSummaries.limit ?? 0} />
+                                <UsageCard label="Agent runs this month" icon={Bot20Regular} current={usage?.usage.agentRuns.current ?? 0} limit={usage?.usage.agentRuns.limit ?? 0} />
                                 <UsageCard label="Storage (MB)" icon={Notebook20Regular} current={usage?.usage.storage.current ?? 0} limit={usage?.usage.storage.limit ?? 0} />
                                 <UsageCard label="Workspaces you own" icon={NumberSymbol20Regular} current={usage?.usage.workspaces.current ?? 0} limit={usage?.usage.workspaces.limit ?? 0} />
                                 <UsageCard label="Personal notes" icon={Book20Regular} current={usage?.usage.personalNotes.current ?? 0} limit={usage?.usage.personalNotes.limit ?? 0} />

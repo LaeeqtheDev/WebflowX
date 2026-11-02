@@ -47,6 +47,8 @@ interface MessageProps {
     file?: string | null | undefined;
     fileName?: string | null | undefined;
     isBot?: boolean;
+    // posted by one of the workspace's AI agents
+    isAgent?: boolean;
     fileType?: string | null | undefined;
     fileSize?: number | null | undefined;
     createdAt: Doc<"messages">["_creationTime"];
@@ -79,6 +81,7 @@ const MessageImpl = ({
     fileType,
     fileSize,
     isBot,
+    isAgent,
     isAuthor,
     canModerate,
     memberId,
@@ -311,7 +314,9 @@ const MessageImpl = ({
                                 >
                                     {authorName}
                                 </button>
-                                {isBot && <span className="ml-1.5 rounded bg-plum/10 px-1.5 py-0.5 align-middle text-[10px] font-bold uppercase tracking-wide text-plum dark:bg-white/10 dark:text-white/70">App</span>}
+                                {isBot && (isAgent
+                                    ? <span className="ml-1.5 rounded bg-brand/12 px-1.5 py-0.5 align-middle text-[10px] font-bold uppercase tracking-wide text-orange-ink">Agent</span>
+                                    : <span className="ml-1.5 rounded bg-plum/10 px-1.5 py-0.5 align-middle text-[10px] font-bold uppercase tracking-wide text-plum dark:bg-white/10 dark:text-white/70">App</span>)}
                                 <span>&nbsp;&nbsp;</span>
                                 <Hint label={formatFullTime(new Date(createdAt))}>
                                     <button className="text-xs text-ink/60 hover:underline">

@@ -17,6 +17,8 @@ export interface EditorProps {
     innerRef?: MutableRefObject<Quill | null>;
     variant?: "create" | "update";
     allowEveryone?: boolean;
+    // offer "@agent" in the mention list (channels and channel threads, when the workspace has it on)
+    allowAgent?: boolean;
     // called as the person types (the caller throttles it); used for the "is typing" indicator
     onTyping?: () => void;
     // when set, what is typed is saved on this device under this key and restored after a reload or crash
@@ -141,4 +143,5 @@ export const formatFileSize = (bytes: number) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
-export type MentionMember = { _id: string; special?: string; user?: { name?: string | null; image?: string | null } | null };
+// agent: the workspace's AI agent ("@agent"), inserted as plain text rather than a person mention
+export type MentionMember = { _id: string; special?: string; agent?: boolean; user?: { name?: string | null; image?: string | null } | null };

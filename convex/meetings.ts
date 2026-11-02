@@ -11,6 +11,7 @@ import { checkLimit } from "./limits"
 import { MAX, text } from "./validate"
 import { throttle } from "./rateLimit"
 import { ConvexError } from "convex/values"
+import { maybeAutoRun } from "./agents"
 
 
 export const ONE_TO_ONE_MAX_MINUTES = 15
@@ -372,6 +373,8 @@ export const saveSummary = mutation({
             summary: args.summary,
             transcript: args.transcript,
         })
+        // a fresh AI summary sets the follow-up agent off (once per meeting, if the workspace has it on)
+        await maybeAutoRun(ctx, { ...meeting, summary: args.summary }, member)
         return args.id
     }
 })

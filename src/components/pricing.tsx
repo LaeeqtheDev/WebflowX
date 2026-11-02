@@ -13,6 +13,7 @@ const rows = [
   "Database rows",
   "Meetings / month",
   "AI summaries / month",
+  "Agent runs / month",
   "File storage",
   "Message history",
   "Guests",
@@ -23,10 +24,10 @@ const rows = [
 ];
 
 const plans = [
-  { name: "Free", price: "$0", v: ["1", "10", "5", "10", "20", "20", "500", "5", "2", "250 MB", "90 days", "None", "None", "None", "None", "None"] },
-  { name: "Startup", price: "$29", v: ["3", "25", "20", "50", "100", "100", "5,000", "20", "10", "5 GB", "Unlimited", "5", "3", "5", "None", "None"] },
-  { name: "Growth", price: "$79", v: ["10", "100", "50", "Unlimited", "Unlimited", "500", "50,000", "50", "30", "50 GB", "Unlimited", "25", "10", "20", "10", "5"] },
-  { name: "Enterprise", price: "$249", v: ["Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "200", "150", "1 TB", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited"] },
+  { name: "Free", price: "$0", v: ["1", "10", "5", "10", "20", "20", "500", "5", "2", "5", "250 MB", "90 days", "None", "None", "None", "None", "None"] },
+  { name: "Startup", price: "$29", v: ["3", "25", "20", "50", "100", "100", "5,000", "20", "10", "50", "5 GB", "Unlimited", "5", "3", "5", "None", "None"] },
+  { name: "Growth", price: "$79", v: ["10", "100", "50", "Unlimited", "Unlimited", "500", "50,000", "50", "30", "200", "50 GB", "Unlimited", "25", "10", "20", "10", "5"] },
+  { name: "Enterprise", price: "$249", v: ["Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "200", "150", "1,000", "1 TB", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited"] },
 ];
 
 const PricingSection = () => (
@@ -36,7 +37,7 @@ const PricingSection = () => (
         <Label>Pricing</Label>
         <Heading className="mt-5 max-w-3xl">Four plans. Clear limits.</Heading>
         <p className="mt-5 max-w-lg text-[17px] leading-relaxed text-[#1b1017]/70">
-          Pick the limits that fit your team. Free keeps the last 90 days of messages visible; paid plans keep everything. Limits and storage apply per workspace (the number of workspaces is per owner); meetings and AI summaries reset each month. Upgrade, change or cancel any time from workspace settings. Payments are handled by Stripe. Prices are in US dollars and exclude tax.
+          Pick the limits that fit your team. Free keeps the last 90 days of messages visible; paid plans keep everything. Limits and storage apply per workspace (the number of workspaces is per owner); meetings, AI summaries and agent runs reset each month. Upgrade, change or cancel any time from workspace settings. Payments are handled by Stripe. Prices are in US dollars and exclude tax.
         </p>
       </Reveal>
       <Reveal delay={80}>
@@ -95,6 +96,12 @@ const PricingSection = () => (
               <p className="font-semibold">AI summaries</p>
               <p className="mt-2 text-[15px] leading-relaxed text-[#1b1017]/70">
                 Each summary runs a model over the full transcript. The provider charges for every request, so the allowance is a count per month. The writing help in the editor (improve, shorten, fix grammar) is not counted as a summary.
+              </p>
+            </div>
+            <div className="sm:col-span-2">
+              <p className="font-semibold">Agent runs</p>
+              <p className="mt-2 text-[15px] leading-relaxed text-[#1b1017]/70">
+                One run is one piece of agent work: following up on a meeting, reading a minute of requests in a watched channel, writing the morning standup or answering one @agent question. Each run calls an AI model, so the allowance is a count per month. Chat messages that don&apos;t look like requests are never sent to the model and don&apos;t count.
               </p>
             </div>
             <div className="sm:col-span-2 rounded-xl bg-white p-6 text-[15px] leading-relaxed text-[#1b1017]/75 ring-1 ring-[#381d2a]/10">

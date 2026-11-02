@@ -10,6 +10,8 @@ import {
 import Quill, { type QuillOptions } from "quill";
 import { loadDraft, saveDraft, type DraftOps } from "@/lib/network";
 import "./mention-blot";
+import { useQuery } from "convex/react";
+import { api } from "../../../../../../convex/_generated/api";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useGetMembers } from "@/features/members/api/use-get-members";
@@ -51,6 +53,7 @@ const Editor = ({
     innerRef,
     variant = "create",
     allowEveryone = false,
+    allowAgent = false,
     onTyping,
     draftKey,
 }: EditorProps) => {
@@ -69,6 +72,7 @@ const Editor = ({
     const { data: members } = useGetMembers({ workspaceId });
     const perms = usePermissions();
     const canPingEveryone = allowEveryone && perms.can("mentionEveryone");
+    const agentOn = useQuery(api.agents.chatAgentOn, allowAgent ? { workspaceId } : "skip") === true;
     const [mention, setMention] = useState<{ query: string; start: number } | null>(null);
     const [mentionSel, setMentionSel] = useState(0);
     const mentionRef = useRef<{ query: string; start: number } | null>(null);
@@ -93,7 +97,11 @@ const Editor = ({
                 return an - bn;
             })
             .slice(0, 50) as MentionMember[];
-        return [...specials, ...people];
+        // the AI agent sits first while what's typed could still be "agent"
+        const agent: MentionMember[] = agentOn && "agent".startsWith(q)
+            ? [{ _id: "agent", agent: true, special: "Ask the WebflowX Agent", user: { name: "agent" } }]
+            : [];
+        return [...agent, ...specials, ...people];
     })();
 
     // keep the highlighted person in view when arrowing through a long list
@@ -170,6 +178,14 @@ const Editor = ({
         const cursor = quill.getSelection()?.index ?? m.start + 1 + m.query.length;
         const label = `@${member.user?.name ?? "member"}`;
         quill.deleteText(m.start, cursor - m.start, "user");
+        // the agent isn't a person: it's plain "@agent" text, which the server picks up
+        if (member.agent) {
+            quill.insertText(m.start, "@agent ", { mention: false }, "user");
+            quill.setSelection(m.start + 7, 0, "user");
+            updateMention(null);
+            quill.focus();
+            return;
+        }
         quill.insertText(m.start, label, { mention: member._id }, "user");
         quill.insertText(m.start + label.length, " ", { mention: false }, "user");
         quill.setSelection(m.start + label.length + 1, 0, "user");
@@ -480,12 +496,14 @@ const Editor = ({
                                     mentionSel === i && "bg-cream"
                                 )}
                             >
-                                <Avatar className="size-7 rounded-md">
+                                {m.agent ? (
+                                    <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-brand text-white"><Sparkles className="size-3.5" aria-hidden="true" /></span>
+                                ) : <Avatar className="size-7 rounded-md">
                                     <AvatarImage className="rounded-md" src={m.user?.image ?? undefined} />
                                     <AvatarFallback className="rounded-md bg-brand text-xs font-semibold text-white">
                                         {(m.user?.name ?? "?").charAt(0).toUpperCase()}
                                     </AvatarFallback>
-                                </Avatar>
+                                </Avatar>}
                                 <span className="truncate text-sm font-medium">{m.user?.name}</span>
                                 {m.special && <span className="truncate text-xs text-ink/65">{m.special}</span>}
                             </button>

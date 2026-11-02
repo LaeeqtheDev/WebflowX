@@ -56,6 +56,11 @@ export const get = query({
                 q.eq("workspaceId", args.workspaceId).gte("_creationTime", startOfMonth)
             )
             .take(capFor(limits.aiSummaries))
+        const agentRuns = await ctx.db.query("agentRuns")
+            .withIndex("by_workspace_id", (q) =>
+                q.eq("workspaceId", args.workspaceId).gte("_creationTime", startOfMonth)
+            )
+            .take(capFor(limits.agentRuns))
         const ownedWorkspaces = await ctx.db.query("workspaces")
             .withIndex("by_user_id", (q) => q.eq("userId", userId))
             .take(100)
@@ -83,6 +88,7 @@ export const get = query({
                 dbRows: { current: dbRowCount, limit: limits.dbRows },
                 meetings: { current: meetings.length, limit: limits.meetings },
                 aiSummaries: { current: aiSummaries.length, limit: limits.aiSummaries },
+                agentRuns: { current: agentRuns.length, limit: limits.agentRuns },
                 // megabytes of uploaded files
                 storage: { current: Math.round(((workspace.storageBytes ?? 0) / (1024 * 1024)) * 10) / 10, limit: limits.storageMb },
                 workspaces: {

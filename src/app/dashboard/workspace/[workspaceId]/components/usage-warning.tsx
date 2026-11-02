@@ -13,6 +13,7 @@ const LABELS: Record<string, string> = {
     dbRows: "database rows",
     meetings: "meetings this month",
     aiSummaries: "AI summaries this month",
+    agentRuns: "agent runs this month",
     personalNotes: "personal notes",
     workspaceNotes: "workspace notes",
 }

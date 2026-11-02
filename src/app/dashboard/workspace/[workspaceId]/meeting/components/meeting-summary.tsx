@@ -27,6 +27,7 @@ import { toast } from "sonner"
 import { api } from "../../../../../../../convex/_generated/api"
 import { Id } from "../../../../../../../convex/_generated/dataModel"
 import { Textarea } from "@/components/ui/textarea"
+import { MeetingAgentBlock } from "@/features/agents/agent-run"
 import {
     Dialog,
     DialogContent,
@@ -332,6 +333,11 @@ export const MeetingSummary = ({ meeting }: MeetingSummaryProps) => {
                         </Button>
                     </div>
                 ) : null}
+
+                {/* What the follow-up agent proposed or did (shown when the workspace has it) */}
+                {meeting.endedAt && (
+                    <MeetingAgentBlock meetingId={meeting._id} hasSummary={!!meeting.summary && meeting.summary !== "No transcript was captured for this meeting."} />
+                )}
 
                 {/* Transcript toggle */}
                 {meeting.transcript && meeting.transcript.length > 0 && (
