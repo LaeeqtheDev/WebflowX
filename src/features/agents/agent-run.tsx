@@ -16,7 +16,7 @@ type RunAction =
 export type AgentRunView = {
     _id: Id<"agentRuns">
     _creationTime: number
-    kind: "meetingFollowUp" | "triage"
+    kind: "meetingFollowUp" | "triage" | "standup"
     channelName: string | null
     status: "queued" | "running" | "review" | "done" | "failed" | "dismissed"
     note: string | null
@@ -111,7 +111,7 @@ export const AgentRunCard = ({ run, canDecide, compact }: { run: AgentRunView; c
                             <>
                                 <MessageSquareText className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden="true" />
                                 <span className="min-w-0 flex-1">
-                                    <span className="block text-sm font-medium text-ink">Recap in #{a.channelName}</span>
+                                    <span className="block text-sm font-medium text-ink">Post in #{a.channelName}</span>
                                     <span className="mt-1 block whitespace-pre-wrap text-xs leading-relaxed text-ink/65 line-clamp-4">{a.text}</span>
                                 </span>
                             </>

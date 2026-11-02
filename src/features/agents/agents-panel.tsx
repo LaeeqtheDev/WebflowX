@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 import { useMutation, useQuery } from "convex/react"
-import { Bot, Check, Inbox, Loader2, ShieldCheck, Zap } from "lucide-react"
+import { Bot, Check, Inbox, Loader2, Send, ShieldCheck, Sun, Zap } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "../../../convex/_generated/api"
 import type { Id } from "../../../convex/_generated/dataModel"
@@ -9,10 +9,16 @@ import { friendlyError } from "@/hooks/use-limit-handler"
 import { cn } from "@/lib/utils"
 import { AgentRunCard, StatusPill, type AgentRunView } from "./agent-run"
 
-type Kind = "meetingFollowUp" | "triage"
-type AgentSettings = { enabled: boolean; mode: "suggest" | "act"; channelId: string | null; channelIds: string[] }
+type Kind = "meetingFollowUp" | "triage" | "standup"
+type AgentSettings = {
+    enabled: boolean; mode: "suggest" | "act"; channelId: string | null; channelIds: string[]
+    postHour?: number; postTz?: string; weekdaysOnly?: boolean
+}
 type Channel = { _id: string; name: string; isPrivate?: boolean }
-export type SaveArgs = { kind: Kind; enabled: boolean; mode: "suggest" | "act"; channelId: Id<"channels"> | null; channelIds: Id<"channels">[] }
+export type SaveArgs = {
+    kind: Kind; enabled: boolean; mode: "suggest" | "act"; channelId: Id<"channels"> | null; channelIds: Id<"channels">[]
+    postHour?: number; postTz?: string; weekdaysOnly?: boolean
+}
 
 export type OverviewData = {
     canManage: boolean
@@ -46,9 +52,10 @@ export const AgentsPanel = ({ workspaceId }: { workspaceId: Id<"workspaces"> }) 
     const data = useQuery(api.agents.overview, { workspaceId })
     const channels = useQuery(api.channels.get, { workspaceId })
     const configure = useMutation(api.agents.configure)
+    const postNow = useMutation(api.agents.runStandupNow)
     if (data === undefined) return <div className="flex justify-center py-10"><Loader2 className="size-5 animate-spin text-brand" /></div>
     if (data === null) return <p className="text-sm text-ink/60">You don&apos;t have access to agents in this workspace.</p>
-    return <AgentsPanelView data={data as unknown as OverviewData} channels={channels ?? []} onSave={(next) => configure({ workspaceId, ...next })} />
+    return <AgentsPanelView data={data as unknown as OverviewData} channels={channels ?? []} onSave={(next) => configure({ workspaceId, ...next })} onPostStandup={() => postNow({ workspaceId })} />
 }
 
 const ModePicker = ({ value, disabled, onChange }: { value: "suggest" | "act"; disabled: boolean; onChange: (m: "suggest" | "act") => void }) => (
@@ -87,23 +94,38 @@ const AgentCard = ({ icon: Icon, title, blurb, settings, canManage, saving, onTo
 )
 
 // The panel itself, given its data (kept apart from the queries so it can be shown with sample data).
-export const AgentsPanelView = ({ data, channels, onSave }: { data: OverviewData; channels: Channel[]; onSave: (next: SaveArgs) => Promise<unknown> }) => {
+// the browser's own time zone, used when the standup is first set up
+const localTz = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" } catch { return "UTC" } }
+const hourLabel = (h: number) => new Date(Date.UTC(2026, 0, 1, h)).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" })
+
+export const AgentsPanelView = ({ data, channels, onSave, onPostStandup }: {
+    data: OverviewData; channels: Channel[]; onSave: (next: SaveArgs) => Promise<unknown>; onPostStandup?: () => Promise<unknown>
+}) => {
     const [saving, setSaving] = useState<Kind | null>(null)
     const [open, setOpen] = useState<string | null>(null)
     // triage can be switched on only once channels are picked, so the picks are held here first
     const [draftWatch, setDraftWatch] = useState<string[] | null>(null)
     const followUp = data.agents.meetingFollowUp ?? OFF
     const triage = data.agents.triage ?? OFF
+    const standup = data.agents.standup ?? OFF
+    const [draftStandupChannel, setDraftStandupChannel] = useState<string | null>(null)
+    const [posting, setPosting] = useState(false)
     const watch = draftWatch ?? triage.channelIds
     const publicChannels = channels.filter((c) => !c.isPrivate)
     const disabled = !data.canManage
 
     const save = async (kind: Kind, next: Partial<AgentSettings>, message?: string) => {
-        const cur = kind === "triage" ? { ...triage, channelIds: watch } : followUp
+        const cur = kind === "triage" ? { ...triage, channelIds: watch }
+            : kind === "standup" ? { ...standup, channelId: draftStandupChannel ?? standup.channelId, postTz: standup.enabled ? standup.postTz : localTz() }
+            : followUp
         const merged = { ...cur, ...next }
         setSaving(kind)
         try {
-            await onSave({ kind, enabled: merged.enabled, mode: merged.mode, channelId: (merged.channelId as Id<"channels"> | null) ?? null, channelIds: merged.channelIds as Id<"channels">[] })
+            await onSave({
+                kind, enabled: merged.enabled, mode: merged.mode, channelId: (merged.channelId as Id<"channels"> | null) ?? null, channelIds: merged.channelIds as Id<"channels">[],
+                ...(kind === "standup" ? { postHour: merged.postHour ?? 9, postTz: merged.postTz ?? localTz(), weekdaysOnly: merged.weekdaysOnly ?? true } : {}),
+            })
+            if (kind === "standup") setDraftStandupChannel(null)
             if (kind === "triage") setDraftWatch(null)
             if (message) toast.success(message)
         } catch (e) {
@@ -181,6 +203,62 @@ export const AgentsPanelView = ({ data, channels, onSave }: { data: OverviewData
                 )}
             </AgentCard>
 
+            <AgentCard icon={Sun} title="Daily standup agent" settings={standup} canManage={data.canManage} saving={saving === "standup"}
+                blurb="Every morning it posts what got done, what's due today and what's overdue, plus any blockers people mentioned in chat. Quiet days are skipped."
+                onToggle={(on) => {
+                    const channel = draftStandupChannel ?? standup.channelId
+                    if (on && !channel) { setDraftStandupChannel(publicChannels[0]?._id ?? ""); toast.info("Pick the channel it posts in"); return }
+                    void save("standup", { enabled: on }, on ? "Standup agent is on" : "Standup agent is off")
+                }}>
+                {(standup.enabled || draftStandupChannel !== null) && (
+                    <>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <label className="flex flex-col gap-1.5">
+                                <span className="text-xs font-semibold text-ink/70">Post in</span>
+                                <select value={draftStandupChannel ?? standup.channelId ?? ""} disabled={disabled || !!saving}
+                                    onChange={(e) => { if (standup.enabled) { if (e.target.value) void save("standup", { channelId: e.target.value }) } else setDraftStandupChannel(e.target.value) }}
+                                    className="h-9 rounded-lg border border-plum/15 bg-surface px-2.5 text-sm text-ink focus:border-brand focus:outline-none">
+                                    {!standup.enabled && <option value="">Pick a channel</option>}
+                                    {publicChannels.map((c) => <option key={c._id} value={c._id}># {c.name}</option>)}
+                                </select>
+                            </label>
+                            <label className="flex flex-col gap-1.5">
+                                <span className="text-xs font-semibold text-ink/70">Every morning at</span>
+                                <select value={standup.postHour ?? 9} disabled={disabled || !!saving || !standup.enabled} onChange={(e) => save("standup", { postHour: Number(e.target.value) })}
+                                    className="h-9 rounded-lg border border-plum/15 bg-surface px-2.5 text-sm text-ink focus:border-brand focus:outline-none">
+                                    {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{hourLabel(h)}</option>)}
+                                </select>
+                            </label>
+                        </div>
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <label className="flex items-center gap-2 text-sm text-ink/80">
+                                <input type="checkbox" className="size-4 accent-brand" checked={standup.weekdaysOnly ?? true} disabled={disabled || !!saving || !standup.enabled}
+                                    onChange={(e) => save("standup", { weekdaysOnly: e.target.checked })} />
+                                Weekdays only
+                            </label>
+                            <span className="text-[11px] text-ink/60">Time zone: {(standup.enabled ? standup.postTz : localTz())?.replace(/_/g, " ")}</span>
+                        </div>
+                        {standup.enabled ? (
+                            onPostStandup && (
+                                <button type="button" disabled={disabled || posting} onClick={async () => {
+                                    setPosting(true)
+                                    try { await onPostStandup(); toast.success("Writing today's standup. It'll appear in the channel in a moment.") }
+                                    catch (e) { toast.error(friendlyError(e, "Couldn't post the standup")) } finally { setPosting(false) }
+                                }}
+                                    className="inline-flex h-8 w-fit items-center gap-1.5 rounded-lg border border-plum/15 px-3 text-xs font-semibold text-ink/80 hover:bg-cream-deep disabled:opacity-50">
+                                    {posting ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />} Post one now
+                                </button>
+                            )
+                        ) : (
+                            <button type="button" disabled={disabled || !!saving || !draftStandupChannel} onClick={() => save("standup", { enabled: true }, "Standup agent is on")}
+                                className="inline-flex h-8 w-fit items-center gap-1.5 rounded-lg bg-brand px-3 text-xs font-semibold text-white hover:bg-brand-hover disabled:opacity-50">
+                                Turn on
+                            </button>
+                        )}
+                    </>
+                )}
+            </AgentCard>
+
             {!data.canManage && <p className="-mt-2 text-xs text-ink/60">Only the owner and admins can change agents.</p>}
 
             <div className="rounded-xl border border-plum/12 bg-surface p-4">
@@ -195,7 +273,7 @@ export const AgentsPanelView = ({ data, channels, onSave }: { data: OverviewData
                 <p className="mb-2 text-xs font-semibold text-ink/70">Recent work</p>
                 {data.runs.length === 0 ? (
                     <p className="rounded-xl border border-dashed border-plum/15 px-4 py-6 text-center text-sm text-ink/60">
-                        {followUp.enabled || triage.enabled ? "Nothing yet. Their work shows up here." : "Turn an agent on to see its work here."}
+                        {followUp.enabled || triage.enabled || standup.enabled ? "Nothing yet. Their work shows up here." : "Turn an agent on to see its work here."}
                     </p>
                 ) : (
                     <ul className="flex flex-col gap-2">
@@ -203,12 +281,14 @@ export const AgentsPanelView = ({ data, channels, onSave }: { data: OverviewData
                             <li key={r._id} className="rounded-xl border border-plum/12 bg-surface">
                                 <button type="button" onClick={() => setOpen(open === r._id ? null : r._id)} aria-expanded={open === r._id}
                                     className="flex w-full items-center gap-3 px-3.5 py-3 text-left">
-                                    <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-lg", r.kind === "triage" ? "bg-brand/12 text-orange-ink" : "bg-plum/10 text-plum dark:bg-white/10 dark:text-white/80")}>
-                                        {r.kind === "triage" ? <Inbox className="size-3.5" aria-hidden="true" /> : <Bot className="size-3.5" aria-hidden="true" />}
+                                    <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-lg", r.kind === "meetingFollowUp" ? "bg-plum/10 text-plum dark:bg-white/10 dark:text-white/80" : "bg-brand/12 text-orange-ink")}>
+                                        {r.kind === "triage" ? <Inbox className="size-3.5" aria-hidden="true" /> : r.kind === "standup" ? <Sun className="size-3.5" aria-hidden="true" /> : <Bot className="size-3.5" aria-hidden="true" />}
                                     </span>
                                     <span className="min-w-0 flex-1">
                                         <span className="block truncate text-sm font-medium text-ink">
-                                            {r.kind === "triage" ? `Requests in #${r.channelName ?? "deleted channel"}` : r.meetingTitle ?? "Deleted meeting"}
+                                            {r.kind === "triage" ? `Requests in #${r.channelName ?? "deleted channel"}`
+                                                : r.kind === "standup" ? `Standup in #${r.channelName ?? "deleted channel"}`
+                                                : r.meetingTitle ?? "Deleted meeting"}
                                         </span>
                                         <span className="block text-[11px] text-ink/60">{when(r._creationTime)} · {r.actions.length} item{r.actions.length === 1 ? "" : "s"}</span>
                                     </span>

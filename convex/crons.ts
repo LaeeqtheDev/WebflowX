@@ -35,4 +35,7 @@ crons.interval("empty old trash", { hours: 24 }, internal.docs.purgeExpired)
 // Messages and reactions from people who left a Free workspace are erased 90 days after they left.
 crons.interval("erase expired content of removed members", { hours: 24 }, internal.retention.purgeExpired)
 
+// Agents that post on a schedule (the daily standup) check every hour whether it's their time.
+crons.hourly("scheduled agents", { minuteUTC: 1 }, internal.agents.standupTick, {})
+
 export default crons

@@ -5,7 +5,8 @@ import { convexTest } from "convex-test"
 import schema from "../convex/schema"
 import { api } from "../convex/_generated/api"
 import type { Id } from "../convex/_generated/dataModel"
-import { parseDue, looksLikeRequest, TRIAGE_DELAY_MS } from "../convex/agents"
+import { parseDue, looksLikeRequest, TRIAGE_DELAY_MS, localNow } from "../convex/agents"
+import { internal } from "../convex/_generated/api"
 
 const modules = import.meta.glob("../convex/**/*.ts")
 const asUser = (t: ReturnType<typeof convexTest>, id: Id<"users">) => t.withIdentity({ subject: `${id}|session` })
@@ -86,7 +87,7 @@ describe("follow-up agent", () => {
     await expect(asUser(t, ids.owner).mutation(api.agents.configure, { workspaceId: ids.ws, enabled: true, mode: "suggest", channelId: ids.locked })).rejects.toThrow(/public channel/)
     await turnOn("suggest")
     const o = await asUser(t, ids.owner).query(api.agents.overview, { workspaceId: ids.ws })
-    expect(o?.agents.meetingFollowUp).toEqual({ enabled: true, mode: "suggest", channelId: ids.general, channelIds: [] })
+    expect(o?.agents.meetingFollowUp).toMatchObject({ enabled: true, mode: "suggest", channelId: ids.general, channelIds: [] })
     expect(o?.agents.triage).toBeNull()
   })
 
@@ -343,6 +344,118 @@ describe("chat triage agent", () => {
 
   it("waits a minute before reading", () => {
     expect(TRIAGE_DELAY_MS).toBe(60_000)
+  })
+})
+
+describe("daily standup agent", () => {
+  let ctx: Awaited<ReturnType<typeof setup>>
+  // Tuesday 3 Nov 2026, 09:01 in Karachi
+  const TUE_9AM_PKT = new Date("2026-11-03T04:01:00Z")
+  beforeEach(async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(TUE_9AM_PKT)
+    vi.stubEnv("GROQ_API_KEY", "test-key")
+    ctx = await setup()
+  })
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.unstubAllEnvs() })
+
+  const turnOn = (extra: { postHour?: number; weekdaysOnly?: boolean } = {}) =>
+    asUser(ctx.t, ctx.ids.owner).mutation(api.agents.configure, {
+      workspaceId: ctx.ids.ws, kind: "standup", enabled: true, mode: "suggest", channelId: ctx.ids.general, postHour: 9, postTz: "Asia/Karachi", ...extra,
+    })
+  const seedWork = () => ctx.t.run(async (c) => {
+    const { ws, ownerM, devM, avaM, general } = ctx.ids
+    const noon = (d: string) => Date.parse(`${d}T12:00:00Z`)
+    await c.db.insert("tasks", { title: "Ship the onboarding emails", status: "done", priority: "medium", workspaceId: ws, createdBy: ownerM, assigneeId: avaM, updatedAt: Date.now() - 3_600_000 })
+    await c.db.insert("tasks", { title: "Send the launch email", status: "todo", priority: "high", workspaceId: ws, createdBy: ownerM, assigneeId: devM, dueDate: noon("2026-11-03") })
+    await c.db.insert("tasks", { title: "Fix the invoice export", status: "in_progress", priority: "medium", workspaceId: ws, createdBy: ownerM, dueDate: noon("2026-10-30") })
+    await c.db.insert("tasks", { title: "Old finished thing", status: "done", priority: "low", workspaceId: ws, createdBy: ownerM, updatedAt: Date.now() - 5 * 86_400_000 })
+    await c.db.insert("messages", { body: JSON.stringify({ ops: [{ insert: "Blocked on the Stripe keys, waiting for the LLC papers\n" }] }), memberId: devM, workspaceId: ws, channelId: general })
+  })
+  const runs = () => ctx.t.run((c) => c.db.query("agentRuns").collect())
+  const posts = () => ctx.t.run((c) => c.db.query("messages").collect()).then((m) => m.filter((x) => x.agent))
+
+  it("works out the local day and hour", () => {
+    expect(localNow(TUE_9AM_PKT.getTime(), "Asia/Karachi")).toEqual({ day: "2026-11-03", hour: 9, weekday: 2 })
+    expect(localNow(TUE_9AM_PKT.getTime(), "America/New_York")).toEqual({ day: "2026-11-02", hour: 23, weekday: 1 })
+  })
+
+  it("needs a channel, a real time zone and a sane hour, and never waits for approval", async () => {
+    const { t, ids } = ctx
+    const base = { workspaceId: ids.ws, kind: "standup" as const, enabled: true, mode: "suggest" as const }
+    await expect(asUser(t, ids.owner).mutation(api.agents.configure, { ...base, channelId: null })).rejects.toThrow(/channel/)
+    await expect(asUser(t, ids.owner).mutation(api.agents.configure, { ...base, channelId: ids.general, postTz: "Mars/Olympus" })).rejects.toThrow(/time zone/)
+    await expect(asUser(t, ids.owner).mutation(api.agents.configure, { ...base, channelId: ids.general, postHour: 25 })).rejects.toThrow(/hour/)
+    await expect(asUser(t, ids.dev).mutation(api.agents.configure, { ...base, channelId: ids.general })).rejects.toThrow(/owner and admins/)
+    await turnOn()
+    const o = await asUser(t, ids.owner).query(api.agents.overview, { workspaceId: ids.ws })
+    expect(o?.agents.standup).toMatchObject({ enabled: true, mode: "act", postHour: 9, postTz: "Asia/Karachi", weekdaysOnly: true })
+  })
+
+  it("posts once at its local hour with what got done, what's due and what's overdue", async () => {
+    await turnOn()
+    await seedWork()
+    const { seen } = fakeModel([call("post_standup", { text: "Morning team ☀️\n• Done: onboarding emails (Ava)" })], [call("finish", { note: "Posted." })])
+    expect(await ctx.t.mutation(internal.agents.standupTick, {})).toBe(1)
+    await ctx.t.finishAllScheduledFunctions(vi.runAllTimers)
+    const prompt = JSON.stringify(seen[0])
+    expect(prompt).toContain("Ship the onboarding emails")
+    expect(prompt).toMatch(/Due today:[^]*Send the launch email/)
+    expect(prompt).toMatch(/Overdue:[^]*Fix the invoice export/)
+    expect(prompt).toContain("Blocked on the Stripe keys")
+    expect(prompt).not.toContain("Old finished thing")
+    const p = await posts()
+    expect(p).toHaveLength(1)
+    expect(p[0]).toMatchObject({ channelId: ctx.ids.general, integrationName: "Standup agent" })
+    expect(p[0].body).toContain("Morning team")
+    // the next hourly check the same day does nothing
+    expect(await ctx.t.mutation(internal.agents.standupTick, {})).toBe(0)
+    expect(await runs()).toHaveLength(1)
+  })
+
+  it("waits for its hour, and skips weekends unless told not to", async () => {
+    await turnOn({ postHour: 10 })
+    expect(await ctx.t.mutation(internal.agents.standupTick, {})).toBe(0)
+    vi.setSystemTime(new Date("2026-11-07T04:01:00Z")) // Saturday 09:01 in Karachi
+    await turnOn()
+    expect(await ctx.t.mutation(internal.agents.standupTick, {})).toBe(0)
+    await turnOn({ weekdaysOnly: false })
+    expect(await ctx.t.mutation(internal.agents.standupTick, {})).toBe(1)
+  })
+
+  it("stays quiet on a day when nothing happened, without calling the AI", async () => {
+    await turnOn()
+    const { fetchMock } = fakeModel([call("post_standup", { text: "hi" })])
+    await ctx.t.mutation(internal.agents.standupTick, {})
+    await ctx.t.finishAllScheduledFunctions(vi.runAllTimers)
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(await posts()).toHaveLength(0)
+    expect((await runs())[0]).toMatchObject({ status: "done" })
+  })
+
+  it("still posts a plain standup when the AI can't be reached", async () => {
+    await turnOn()
+    await seedWork()
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("down", { status: 503 })))
+    await ctx.t.mutation(internal.agents.standupTick, {})
+    await ctx.t.finishAllScheduledFunctions(vi.runAllTimers)
+    const p = await posts()
+    expect(p).toHaveLength(1)
+    expect(p[0].body).toContain("Send the launch email (Dev Patel)")
+    expect(p[0].body).toContain("Overdue (1)")
+    expect((await runs())[0].note).toMatch(/plain version/)
+  })
+
+  it("can be posted by hand by an admin to try it out", async () => {
+    const { t, ids } = ctx
+    await expect(asUser(t, ids.owner).mutation(api.agents.runStandupNow, { workspaceId: ids.ws })).rejects.toThrow(/Turn the standup agent on/)
+    await turnOn()
+    await expect(asUser(t, ids.dev).mutation(api.agents.runStandupNow, { workspaceId: ids.ws })).rejects.toThrow(/owner and admins/)
+    await seedWork()
+    fakeModel([call("post_standup", { text: "Morning!" })], [call("finish", { note: "ok" })])
+    await asUser(t, ids.owner).mutation(api.agents.runStandupNow, { workspaceId: ids.ws })
+    await t.finishAllScheduledFunctions(vi.runAllTimers)
+    expect(await posts()).toHaveLength(1)
   })
 })
 

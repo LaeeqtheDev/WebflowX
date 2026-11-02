@@ -17,9 +17,10 @@ import { noteReplyAdded } from "./messageHelpers"
 // nothing they propose touches the workspace until someone approves it.
 //  - meetingFollowUp: after a meeting's AI summary, turns the action items into tasks and posts a recap
 //  - triage: watches chosen channels and turns requests ("can someone fix…") into tasks, replying in the thread
+//  - standup: every morning posts what got done, what's due today and what's overdue, plus anything notable from chat
 
-export type AgentKind = "meetingFollowUp" | "triage"
-export const AGENT_NAMES: Record<AgentKind, string> = { meetingFollowUp: "Follow-up agent", triage: "Triage agent" }
+export type AgentKind = "meetingFollowUp" | "triage" | "standup"
+export const AGENT_NAMES: Record<AgentKind, string> = { meetingFollowUp: "Follow-up agent", triage: "Triage agent", standup: "Standup agent" }
 export const AGENT_NAME = AGENT_NAMES.meetingFollowUp
 // most tasks and characters one run may create, whatever the model says
 export const MAX_TASKS_PER_RUN = 12
@@ -31,7 +32,7 @@ export const MAX_WATCHED = 10
 
 type Action = Doc<"agentRuns">["actions"][number]
 type Ctx = QueryCtx | MutationCtx
-const kindV = v.union(v.literal("meetingFollowUp"), v.literal("triage"))
+const kindV = v.union(v.literal("meetingFollowUp"), v.literal("triage"), v.literal("standup"))
 
 const signedInMember = async (ctx: Ctx, workspaceId: Id<"workspaces">) => {
     const userId = await auth.getUserId(ctx)
@@ -180,7 +181,10 @@ const describeRun = async (ctx: QueryCtx, run: Doc<"agentRuns">) => {
 }
 
 const settingsOf = (a: Doc<"agents"> | null) =>
-    a ? { enabled: a.enabled, mode: a.mode, channelId: a.channelId ?? null, channelIds: a.channelIds ?? [] } : null
+    a ? {
+        enabled: a.enabled, mode: a.mode, channelId: a.channelId ?? null, channelIds: a.channelIds ?? [],
+        postHour: a.postHour ?? 9, postTz: a.postTz ?? "UTC", weekdaysOnly: a.weekdaysOnly ?? true,
+    } : null
 
 export const overview = query({
     args: { workspaceId: v.id("workspaces") },
@@ -195,6 +199,7 @@ export const overview = query({
             agents: {
                 meetingFollowUp: settingsOf(await agentFor(ctx, args.workspaceId, "meetingFollowUp")),
                 triage: settingsOf(await agentFor(ctx, args.workspaceId, "triage")),
+                standup: settingsOf(await agentFor(ctx, args.workspaceId, "standup")),
             },
             usage: { used: await runsThisMonth(ctx, args.workspaceId), limit, plan },
             runs: await Promise.all(runs.map((r) => describeRun(ctx, r))),
@@ -231,6 +236,9 @@ export const configure = mutation({
         mode: v.union(v.literal("suggest"), v.literal("act")),
         channelId: v.optional(v.union(v.id("channels"), v.null())),
         channelIds: v.optional(v.array(v.id("channels"))),
+        postHour: v.optional(v.number()),
+        postTz: v.optional(v.string()),
+        weekdaysOnly: v.optional(v.boolean()),
     },
     handler: async (ctx, args) => {
         const kind = args.kind ?? "meetingFollowUp"
@@ -246,19 +254,30 @@ export const configure = mutation({
         if (channelIds.length > MAX_WATCHED) throw new ConvexError(`The agent can watch up to ${MAX_WATCHED} channels`)
         for (const id of channelIds) await publicChannel(id, "The agent only watches public channels")
         if (kind === "triage" && args.enabled && channelIds.length === 0) throw new ConvexError("Pick at least one channel for the agent to watch")
+        if (kind === "standup") {
+            if (args.enabled && !args.channelId) throw new ConvexError("Pick the channel the standup goes to")
+            if (args.postHour !== undefined && (!Number.isInteger(args.postHour) || args.postHour < 0 || args.postHour > 23)) throw new ConvexError("Pick an hour between 0 and 23")
+            if (args.postTz !== undefined && !validTz(args.postTz)) throw new ConvexError("Unknown time zone")
+        }
 
         const existing = await agentFor(ctx, args.workspaceId, kind)
         const fields = {
             enabled: args.enabled,
-            mode: args.mode,
-            channelId: kind === "meetingFollowUp" ? args.channelId ?? undefined : undefined,
+            // the standup only posts a report, so there is nothing to approve
+            mode: kind === "standup" ? ("act" as const) : args.mode,
+            channelId: kind !== "triage" ? args.channelId ?? undefined : undefined,
             channelIds: kind === "triage" ? channelIds : undefined,
+            ...(kind === "standup" ? {
+                postHour: args.postHour ?? existing?.postHour ?? 9,
+                postTz: args.postTz ?? existing?.postTz ?? "UTC",
+                weekdaysOnly: args.weekdaysOnly ?? existing?.weekdaysOnly ?? true,
+            } : {}),
             updatedAt: Date.now(),
         }
         if (existing) await ctx.db.patch(existing._id, { ...fields, createdBy: member._id })
         else await ctx.db.insert("agents", { workspaceId: args.workspaceId, kind, createdBy: member._id, ...fields })
         await logAudit(ctx, args.workspaceId, member._id, args.enabled ? "agent.enabled" : "agent.disabled",
-            `${AGENT_NAMES[kind]}: ${args.mode === "act" ? "acts on its own" : "suggests, people approve"}`)
+            kind === "standup" ? `${AGENT_NAMES[kind]}: ${fields.postHour}:00 ${fields.postTz}` : `${AGENT_NAMES[kind]}: ${fields.mode === "act" ? "acts on its own" : "suggests, people approve"}`)
         return null
     },
 })
@@ -285,6 +304,131 @@ export const runForMeeting = mutation({
         return await enqueue(ctx, agent, meeting, member._id)
     },
 })
+
+// ---------- the daily standup ----------
+
+export const validTz = (tz: string) => {
+    try { new Intl.DateTimeFormat("en-US", { timeZone: tz }); return tz.length < 64 } catch { return false }
+}
+
+// The local date, hour and weekday somewhere, e.g. { day: "2026-11-03", hour: 9, weekday: 2 } (0 = Sunday).
+export const localNow = (ms: number, tz: string) => {
+    const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+        timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23", weekday: "short",
+    }).formatToParts(new Date(ms)).map((p) => [p.type, p.value]))
+    const weekday = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(parts.weekday)
+    return { day: `${parts.year}-${parts.month}-${parts.day}`, hour: Number(parts.hour) % 24, weekday }
+}
+
+const startStandup = async (ctx: MutationCtx, agent: Doc<"agents">, startedBy: Id<"members">) => {
+    const runId = await ctx.db.insert("agentRuns", {
+        workspaceId: agent.workspaceId, agentId: agent._id, channelId: agent.channelId, startedBy, status: "queued", actions: [],
+    })
+    await ctx.scheduler.runAfter(0, internal.agentRunner.run, { runId })
+    return runId
+}
+
+// Hourly: every standup agent whose local posting hour has come posts once that day.
+export const standupTick = internalMutation({
+    args: {},
+    handler: async (ctx) => {
+        const agents = await ctx.db.query("agents").withIndex("by_kind_enabled", (q) => q.eq("kind", "standup").eq("enabled", true)).take(2_000)
+        let started = 0
+        for (const agent of agents) {
+            if (!agent.channelId) continue
+            const now = localNow(Date.now(), agent.postTz ?? "UTC")
+            if (now.hour !== (agent.postHour ?? 9) || agent.lastRunDay === now.day) continue
+            if ((agent.weekdaysOnly ?? true) && (now.weekday === 0 || now.weekday === 6)) continue
+            await ctx.db.patch(agent._id, { lastRunDay: now.day })
+            const { allowed } = await monthlyCheck(ctx, agent.workspaceId)
+            if (!allowed) continue
+            await startStandup(ctx, agent, agent.createdBy)
+            started++
+        }
+        return started
+    },
+})
+
+// "Post one now" from Settings › Agents, to see what it looks like.
+export const runStandupNow = mutation({
+    args: { workspaceId: v.id("workspaces") },
+    handler: async (ctx, args) => {
+        const userId = await auth.getUserId(ctx)
+        const member = await signedInMember(ctx, args.workspaceId)
+        if (!userId || !member || !(await isAdmin(ctx, member))) throw new ConvexError("Only the owner and admins can run the standup by hand")
+        const agent = await agentFor(ctx, args.workspaceId, "standup")
+        if (!agent?.enabled || !agent.channelId) throw new ConvexError("Turn the standup agent on and pick its channel first")
+        await throttle(ctx, userId, "agent-standup", 5, 60 * 60_000, "running the standup")
+        const { allowed, limit, plan } = await monthlyCheck(ctx, args.workspaceId)
+        if (!allowed) throw new ConvexError(`LIMIT_REACHED:agentRuns:${limit}:${plan}`)
+        return await startStandup(ctx, agent, member._id)
+    },
+})
+
+// The facts the standup is written from. Also turned into a plain post when the AI can't be reached.
+const DAY_MS = 86_400_000
+const standupFacts = async (ctx: QueryCtx, workspaceId: Id<"workspaces">, tz: string) => {
+    const now = Date.now()
+    const since = now - DAY_MS
+    const local = localNow(now, tz)
+    const nameCache = new Map<string, string>()
+    const nameOf = async (memberId?: Id<"members">) => {
+        if (!memberId) return null
+        if (!nameCache.has(memberId)) {
+            const m = await ctx.db.get(memberId)
+            const u = m ? await ctx.db.get(m.userId) : null
+            nameCache.set(memberId, u?.name ?? u?.email ?? "Someone")
+        }
+        return nameCache.get(memberId)!
+    }
+    const tasks = await ctx.db.query("tasks").withIndex("by_workspace_id", (q) => q.eq("workspaceId", workspaceId)).order("desc").take(1_000)
+    const line = async (t: Doc<"tasks">) => ({ title: t.title, who: await nameOf(t.assigneeId), due: t.dueDate ?? null, priority: t.priority })
+    // "due today" means today's date where the team is (task due dates are stored as noon UTC of the day)
+    const todayKey = local.day
+    const dueKey = (ms: number) => new Date(ms).toISOString().slice(0, 10)
+    const open = tasks.filter((t) => t.status !== "done")
+    const done = tasks.filter((t) => t.status === "done" && (t.updatedAt ?? t._creationTime) >= since)
+    const dueToday = open.filter((t) => t.dueDate !== undefined && dueKey(t.dueDate) === todayKey)
+    const overdue = open.filter((t) => t.dueDate !== undefined && dueKey(t.dueDate) < todayKey)
+    const added = open.filter((t) => t._creationTime >= since)
+    const inReview = open.filter((t) => t.status === "in_review")
+    // what was said in public channels over the last day (newest first, capped)
+    const channels = (await ctx.db.query("channels").withIndex("byWorkspaceId", (q) => q.eq("workspaceId", workspaceId)).take(100)).filter((c) => !c.isPrivate)
+    const chat: { channel: string; who: string; text: string }[] = []
+    for (const c of channels) {
+        const recent = await ctx.db.query("messages").withIndex("by_channel_id", (q) => q.eq("channelId", c._id)).order("desc").take(40)
+        for (const m of recent) {
+            if (m._creationTime < since || m.agent || m.integrationName) continue
+            const text = deltaToText(m.body).trim()
+            if (text) chat.push({ channel: c.name, who: (await nameOf(m.memberId)) ?? "Someone", text: text.slice(0, 200) })
+        }
+        if (chat.length >= 80) break
+    }
+    return {
+        today: todayKey,
+        done: await Promise.all(done.slice(0, 25).map(line)),
+        dueToday: await Promise.all(dueToday.slice(0, 25).map(line)),
+        overdue: await Promise.all(overdue.slice(0, 15).map(line)),
+        added: await Promise.all(added.slice(0, 15).map(line)),
+        inReview: await Promise.all(inReview.slice(0, 15).map(line)),
+        chat: chat.slice(0, 80),
+    }
+}
+type Facts = Awaited<ReturnType<typeof standupFacts>>
+
+// The no-AI version: still useful, just less chatty.
+export const plainStandup = (f: Facts) => {
+    const item = (t: Facts["done"][number]) => `• ${t.title}${t.who ? ` (${t.who})` : ""}`
+    const part = (title: string, rows: Facts["done"]) => (rows.length ? [`${title}`, ...rows.slice(0, 8).map(item), rows.length > 8 ? `• and ${rows.length - 8} more` : ""].filter(Boolean).join("\n") : "")
+    return [
+        "Good morning. Here's where things stand:",
+        part(`✅ Done in the last day (${f.done.length})`, f.done),
+        part(`📅 Due today (${f.dueToday.length})`, f.dueToday),
+        part(`⚠️ Overdue (${f.overdue.length})`, f.overdue),
+        part(`👀 Waiting for review (${f.inReview.length})`, f.inReview),
+    ].filter(Boolean).join("\n\n")
+}
+export const isQuiet = (f: Facts) => !f.done.length && !f.dueToday.length && !f.overdue.length && !f.added.length && !f.inReview.length && !f.chat.length
 
 // ---------- carrying out what an agent proposed ----------
 
@@ -403,6 +547,12 @@ export const context = internalQuery({
         const run = await ctx.db.get(args.runId)
         const agent = run ? await ctx.db.get(run.agentId) : null
         if (!run || !agent) return null
+        if (agent.kind === "standup") {
+            const channel = agent.channelId ? await ctx.db.get(agent.channelId) : null
+            if (!channel) return null
+            const facts = await standupFacts(ctx, run.workspaceId, agent.postTz ?? "UTC")
+            return { kind: "standup" as const, channel: channel.name, facts, quiet: isQuiet(facts), plain: plainStandup(facts) }
+        }
         if (agent.kind === "triage") {
             const channel = run.channelId ? await ctx.db.get(run.channelId) : null
             if (!channel) return null
@@ -494,6 +644,7 @@ export const finishRun = internalMutation({
         const agent = await ctx.db.get(run.agentId)
         if (!agent) return null
         const triage = agent.kind === "triage"
+        const standup = agent.kind === "standup"
         const allowedSources = new Set((run.messageIds ?? []).map(String))
         const actions: Action[] = []
         const seen = new Set<string>()
@@ -501,6 +652,7 @@ export const finishRun = internalMutation({
         for (const p of args.proposals) {
             n++
             if (p.type === "task") {
+                if (standup) continue
                 const title = p.title.trim().replace(/\s+/g, " ").slice(0, MAX.taskTitle)
                 const key = title.toLowerCase()
                 if (!title || seen.has(key) || actions.filter((a) => a.type === "task").length >= MAX_TASKS_PER_RUN) continue
@@ -531,10 +683,10 @@ export const finishRun = internalMutation({
         }
         const note = args.note?.trim().slice(0, 300) || undefined
         if (actions.length === 0) {
-            await ctx.db.patch(run._id, { status: "done", actions, note: note ?? (triage ? "No requests that need a task." : "Nothing to follow up on."), steps: args.steps, finishedAt: Date.now() })
+            await ctx.db.patch(run._id, { status: "done", actions, note: note ?? (triage ? "No requests that need a task." : standup ? "Nothing to report today." : "Nothing to follow up on."), steps: args.steps, finishedAt: Date.now() })
             return null
         }
-        if (agent.mode === "act") {
+        if (agent.mode === "act" || standup) {
             const done = await apply(ctx, run, agent, actions)
             await ctx.db.patch(run._id, { status: "done", actions: done, note, steps: args.steps, finishedAt: Date.now() })
         } else {

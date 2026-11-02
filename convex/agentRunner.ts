@@ -25,9 +25,35 @@ type Context =
         recapChannel: string | null
     }
     | { kind: "triage"; channel: string; earlier: Line[]; messages: Line[]; people: Person[]; openTasks: string[] }
+    | { kind: "standup"; channel: string; facts: Facts; quiet: boolean; plain: string }
+type TaskLine = { title: string; who: string | null; due: number | null; priority: string }
+type Facts = {
+    today: string
+    done: TaskLine[]; dueToday: TaskLine[]; overdue: TaskLine[]; added: TaskLine[]; inReview: TaskLine[]
+    chat: { channel: string; who: string; text: string }[]
+}
 type Proposal =
     | { type: "task"; title: string; assigneeId?: string; dueDate?: string; priority?: string; sourceMessageId?: string }
     | { type: "recap"; text: string }
+
+const standupTools = [
+    {
+        type: "function",
+        function: {
+            name: "post_standup",
+            description: "Post the morning standup. Plain text with short sections and bullet lines (•). At most 18 lines.",
+            parameters: { type: "object", properties: { text: { type: "string" } }, required: ["text"] },
+        },
+    },
+    {
+        type: "function",
+        function: {
+            name: "finish",
+            description: "Call once you are done, with one sentence on what you did.",
+            parameters: { type: "object", properties: { note: { type: "string" } }, required: ["note"] },
+        },
+    },
+]
 
 const tools = (hasRecap: boolean, triage = false) => [
     {
@@ -106,9 +132,40 @@ const clock = (ms: number) => new Date(ms).toISOString().slice(11, 16)
 
 // What the model is told, per agent.
 const prompt = (c: Context, now: number): Msg[] => {
-    const people = c.people.slice(0, 60).map((p) => `- ${p.name} (member id: ${p.id})`).join("\n") || "- (none)"
-    const open = c.openTasks.map((t) => `- ${t}`).join("\n") || "- (none)"
+    const peopleOf = (list: Person[]) => list.slice(0, 60).map((p) => `- ${p.name} (member id: ${p.id})`).join("\n") || "- (none)"
+    const openOf = (list: string[]) => list.map((t) => `- ${t}`).join("\n") || "- (none)"
+    if (c.kind === "standup") {
+        const rows = (list: TaskLine[]) => list.map((t) => `- ${t.title}${t.who ? ` (owner: ${t.who})` : " (no owner)"}${t.due ? `, due ${day(t.due)}` : ""}${t.priority === "urgent" || t.priority === "high" ? `, ${t.priority}` : ""}`).join("\n") || "- (none)"
+        const f = c.facts
+        return [
+            {
+                role: "system",
+                content: [
+                    `You are the standup agent inside WebflowX, a team workspace. Each morning you post a short standup in #${c.channel} so the team starts the day knowing where things stand.`,
+                    "Rules:",
+                    "- Open with one friendly line. Then short sections, only the ones that have something in them: Done, Due today, Overdue or stuck, Worth knowing.",
+                    "- Bullet lines start with •. Name the owner after each task. Keep it under 18 lines in total.",
+                    "- 'Worth knowing' is at most 3 bullets from chat: decisions, blockers, or something someone is waiting on. Skip small talk. Never invent anything that isn't in the data.",
+                    "- Plain text only, no markdown headings or bold. A few simple emoji are fine.",
+                    "- Call post_standup once, then finish.",
+                ].join("\n"),
+            },
+            {
+                role: "user",
+                content: [
+                    `Today is ${f.today} where the team is.`,
+                    `Done in the last day:\n${rows(f.done)}`,
+                    `Due today:\n${rows(f.dueToday)}`,
+                    `Overdue:\n${rows(f.overdue)}`,
+                    `Waiting for review:\n${rows(f.inReview)}`,
+                    `New tasks in the last day:\n${rows(f.added)}`,
+                    `Chat in public channels over the last day (newest first):\n${f.chat.map((m) => `#${m.channel} ${m.who}: ${m.text}`).join("\n") || "- (none)"}`,
+                ].join("\n\n"),
+            },
+        ]
+    }
     if (c.kind === "triage") {
+        const people = peopleOf(c.people), open = openOf(c.openTasks)
         return [
             {
                 role: "system",
@@ -135,6 +192,7 @@ const prompt = (c: Context, now: number): Msg[] => {
             },
         ]
     }
+    const people = peopleOf(c.people), open = openOf(c.openTasks)
     return [
         {
             role: "system",
@@ -176,8 +234,13 @@ export const run = internalAction({
             const c: Context | null = await ctx.runQuery(internal.agents.context, { runId: args.runId })
             if (!c) return await fail("What it was asked to look at is gone.")
             if (c.kind === "triage" && c.messages.length === 0) return await fail("The messages were deleted.")
+            // a standup with nothing to say doesn't post (and doesn't call the AI)
+            if (c.kind === "standup" && c.quiet) {
+                await ctx.runMutation(internal.agents.finishRun, { runId: args.runId, proposals: [], note: "Nothing happened in the last day, so no standup was posted.", steps: 0 })
+                return null
+            }
             const messages = prompt(c, Date.now())
-            const toolList = tools(c.kind === "meetingFollowUp" && !!c.recapChannel, c.kind === "triage")
+            const toolList = c.kind === "standup" ? standupTools : tools(c.kind === "meetingFollowUp" && !!c.recapChannel, c.kind === "triage")
             const proposals: Proposal[] = []
             let note: string | undefined
             let steps = 0
@@ -195,7 +258,7 @@ export const run = internalAction({
                     switch (call.function.name) {
                         case "find_member": {
                             const q = (str("name") ?? "").toLowerCase().trim()
-                            const hits = q ? c.people.filter((p) => p.name.toLowerCase().includes(q)).slice(0, 5) : []
+                            const hits = q && c.kind !== "standup" ? c.people.filter((p) => p.name.toLowerCase().includes(q)).slice(0, 5) : []
                             result = hits.length ? JSON.stringify(hits) : "No member with that name."
                             break
                         }
@@ -206,6 +269,7 @@ export const run = internalAction({
                             result = "Noted."
                             break
                         }
+                        case "post_standup":
                         case "post_recap": {
                             const text = str("text")?.trim()
                             if (!text) { result = "The recap is empty."; break }
@@ -226,7 +290,14 @@ export const run = internalAction({
             await ctx.runMutation(internal.agents.finishRun, { runId: args.runId, proposals, note, steps })
             return null
         } catch (e) {
-            return await fail(e instanceof Error ? e.message : "The agent stopped unexpectedly")
+            const why = e instanceof Error ? e.message : "The agent stopped unexpectedly"
+            // the standup still goes out without the AI: a plain list of the same facts
+            const c: Context | null = await ctx.runQuery(internal.agents.context, { runId: args.runId }).catch(() => null)
+            if (c?.kind === "standup" && !c.quiet) {
+                await ctx.runMutation(internal.agents.finishRun, { runId: args.runId, proposals: [{ type: "recap", text: c.plain }], note: `Posted the plain version (${why.replace(/\.$/, "")}).`, steps: 0 })
+                return null
+            }
+            return await fail(why)
         }
     },
 })

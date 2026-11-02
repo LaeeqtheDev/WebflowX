@@ -359,7 +359,8 @@ const schema = defineSchema({
     agents: defineTable({
         workspaceId: v.id("workspaces"),
         // meetingFollowUp: tasks + recap after a meeting; triage: turns requests in chat into tasks
-        kind: v.union(v.literal("meetingFollowUp"), v.literal("triage")),
+        // standup: a short morning post of what got done, what's due and what's stuck
+        kind: v.union(v.literal("meetingFollowUp"), v.literal("triage"), v.literal("standup")),
         enabled: v.boolean(),
         // "suggest": proposals wait for someone to approve them; "act": they are carried out straight away
         mode: v.union(v.literal("suggest"), v.literal("act")),
@@ -367,9 +368,16 @@ const schema = defineSchema({
         channelId: v.optional(v.id("channels")),
         // triage: the public channels it watches
         channelIds: v.optional(v.array(v.id("channels"))),
+        // standup: when to post, in the admin's time zone, and the local day it last posted
+        postHour: v.optional(v.number()),
+        postTz: v.optional(v.string()),
+        weekdaysOnly: v.optional(v.boolean()),
+        lastRunDay: v.optional(v.string()),
         createdBy: v.id("members"),
         updatedAt: v.number(),
-    }).index("by_workspace_kind", ["workspaceId", "kind"]),
+    })
+        .index("by_workspace_kind", ["workspaceId", "kind"])
+        .index("by_kind_enabled", ["kind", "enabled"]),
 
     // One piece of work an agent did. Counted against the plan's monthly agent runs.
     agentRuns: defineTable({
