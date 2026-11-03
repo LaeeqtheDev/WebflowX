@@ -40,7 +40,7 @@ const when = (ms: number) => {
     return new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric" })
 }
 
-const Switch = ({ on, onChange, label, disabled }: { on: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) => (
+export const Switch = ({ on, onChange, label, disabled }: { on: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) => (
     <button type="button" role="switch" aria-checked={on} aria-label={label} disabled={disabled} onClick={() => onChange(!on)}
         className={cn("relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50", on ? "bg-brand" : "bg-cream-deep2")}>
         <span className={cn("absolute top-0.5 size-5 rounded-full bg-white shadow transition-[left]", on ? "left-[22px]" : "left-0.5")} />
@@ -194,7 +194,7 @@ export const AgentsPanelView = ({ data, channels, onSave, onPostStandup, onTrySa
                     <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand text-white"><Zap className="size-5" /></span>
                     <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold tracking-tight text-ink">See an agent work in 30 seconds</p>
-                        <p className="mt-0.5 text-[13px] text-ink/65">Run the follow-up agent on a made-up meeting. It suggests tasks for people in this workspace, and nothing is created until you approve. Uses one agent run; the sample doesn&apos;t count as a meeting.</p>
+                        <p className="mt-0.5 text-[13px] text-ink/65">Run the follow-up agent on a made-up meeting. It suggests tasks for people in this workspace, and nothing is created until you approve. Free: it doesn&apos;t use an agent run or count as a meeting (3 tries a month).</p>
                     </div>
                     <button type="button" onClick={runSample} disabled={trying}
                         className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-brand px-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:opacity-60">

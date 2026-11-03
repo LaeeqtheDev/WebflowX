@@ -38,7 +38,7 @@ export default function Proof() {
       <ul className={`${wrap} grid grid-cols-3 gap-x-6 gap-y-7`}>
         {PROOF.map((p) => (
           <li key={p.l} className="md:border-l md:border-white/10 md:pl-6 md:first:border-l-0 md:first:pl-0">
-            <p className="lp-h bg-gradient-to-br from-white to-[#ffb699] bg-clip-text text-3xl text-transparent sm:text-[2.6rem]">
+            <p className="lp-h bg-gradient-to-br from-white to-[#ffb699] bg-clip-text text-[1.7rem] text-transparent sm:text-[2.6rem]">
               <CountUp value={p.n} />
             </p>
             <p className="mt-1.5 text-sm leading-snug text-white/65">{p.l}</p>

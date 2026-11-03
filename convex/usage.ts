@@ -61,6 +61,7 @@ export const get = query({
                 q.eq("workspaceId", args.workspaceId).gte("_creationTime", startOfMonth)
             )
             .take(capFor(limits.agentRuns))
+            .then((rows) => rows.filter((r) => !r.sample))
         const ownedWorkspaces = await ctx.db.query("workspaces")
             .withIndex("by_user_id", (q) => q.eq("userId", userId))
             .take(100)

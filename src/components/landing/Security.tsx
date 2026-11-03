@@ -16,7 +16,7 @@ const points = [
 
 export default function SecuritySection() {
   return (
-    <section id="security" className="w-full bg-white py-20 md:py-24">
+    <section id="security" className="w-full bg-white py-14 md:py-24">
       <div className={wrap}>
         <div className="grid gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
           <Reveal>

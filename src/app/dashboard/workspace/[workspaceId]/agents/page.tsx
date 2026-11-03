@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
 import { PageHeader } from "@/components/app/page-header"
 import { AgentsPanel } from "@/features/agents/agents-panel"
+import { AutomationsPanel } from "@/features/agents/automations-panel"
 
 // Agents get their own screen in the sidebar: the product's headline feature shouldn't live only inside Settings.
 const AgentsPage = () => {
@@ -16,6 +17,7 @@ const AgentsPage = () => {
             <div className="min-h-0 flex-1 overflow-y-auto">
                 <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-6">
                     <AgentsPanel wide workspaceId={workspaceId} onSampleReady={(id) => router.push(`/dashboard/workspace/${workspaceId}/meeting?meeting=${id}`)} />
+                    <div className="mt-6"><AutomationsPanel workspaceId={workspaceId} /></div>
                 </div>
             </div>
         </div>

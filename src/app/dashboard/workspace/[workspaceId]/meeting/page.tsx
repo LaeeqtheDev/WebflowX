@@ -555,7 +555,14 @@ export default function MeetingPage() {
                                                 <p className="mt-1">Everyone in the workspace, and any guests you invite, can join from 10 minutes before the start. The transcript and summary appear here afterwards.</p>
                                             </div>
                                         </div>
-                                    ) : (
+                                    ) : null}
+                                    {isUpcoming(selectedMeeting) && selectedMeeting.prep && (
+                                        <div className="mt-3 rounded-xl border border-brand/25 bg-brand/[0.04] p-4">
+                                            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-orange-ink"><Sparkles className="size-3.5" /> Prep brief</p>
+                                            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink/80">{selectedMeeting.prep}</p>
+                                        </div>
+                                    )}
+                                    {isUpcoming(selectedMeeting) ? null : (
                                         <MeetingSummary meeting={selectedMeeting} />
                                     )}
                                 </div>

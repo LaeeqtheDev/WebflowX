@@ -47,7 +47,7 @@ function SubscribeForm() {
           placeholder="you@company.com"
           aria-describedby="newsletter-status"
           aria-invalid={state.kind === "error"}
-          className="h-12 min-w-0 flex-1 rounded-md border border-[#381d2a]/20 bg-white px-4 text-[15px] text-[#1b1017] placeholder:text-[#1b1017]/45 focus:border-[#ff5018] focus:outline-none focus:ring-2 focus:ring-[#ff5018]/30"
+          className="h-12 min-h-12 w-full min-w-0 shrink-0 rounded-lg sm:w-auto sm:flex-1 border border-[#381d2a]/20 bg-white px-4 text-[15px] text-[#1b1017] placeholder:text-[#1b1017]/45 focus:border-[#ff5018] focus:outline-none focus:ring-2 focus:ring-[#ff5018]/30"
         />
         <button
           type="submit"

@@ -9,7 +9,7 @@ const points = ["Free plan, no card needed", "14-day trial of any paid plan", "A
 // The last push before the footer: one clear ask.
 export default function FinalCta() {
   return (
-    <section className="w-full bg-[#f7f2ee] py-20 md:py-28">
+    <section className="w-full bg-[#f7f2ee] py-14 md:py-28">
       <div className={wrap}>
         <Reveal variant="scale">
           <div className="relative overflow-hidden rounded-[2rem] bg-[#381d2a] px-6 py-14 text-center text-white sm:px-12 md:py-20">

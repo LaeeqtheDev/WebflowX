@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 import { useMutation, useQuery } from "convex/react"
-import { Bot, Check, CircleAlert, ListChecks, Loader2, MessageSquareText, PencilLine, Play, X } from "lucide-react"
+import { Bot, CalendarClock, Check, CircleAlert, FileText, ListChecks, Loader2, MessageSquareText, PencilLine, Play, X } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "../../../convex/_generated/api"
 import type { Id } from "../../../convex/_generated/dataModel"
@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils"
 type RunAction =
     | { id: string; type: "task"; title: string; assigneeName: string | null; dueDate?: number; priority: string; taskId?: string; source?: { text: string; author: string } | null }
     | { id: string; type: "recap"; text: string; channelName: string; messageId?: string }
+    | { id: string; type: "meeting"; title: string; startsAt: number; meetingId?: string }
+    | { id: string; type: "doc"; title: string; html: string; docId?: string }
     | { id: string; type: "update"; title: string; status?: string; assigneeName: string | null; dueDate?: number; priority?: string; applied?: boolean }
 
 export type AgentRunView = {
@@ -119,6 +121,22 @@ export const AgentRunCard = ({ run, canDecide, compact }: { run: AgentRunView; c
                                     </span>
                                 </span>
                             </>
+                        ) : a.type === "meeting" ? (
+                            <>
+                                <CalendarClock className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden="true" />
+                                <span className="min-w-0 flex-1">
+                                    <span className="block text-sm font-medium text-ink">Meeting: {a.title}</span>
+                                    <span className="mt-1 block text-[11px] text-ink/60">{new Date(a.startsAt).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+                                </span>
+                            </>
+                        ) : a.type === "doc" ? (
+                            <>
+                                <FileText className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden="true" />
+                                <span className="min-w-0 flex-1">
+                                    <span className="block text-sm font-medium text-ink">Doc: {a.title}</span>
+                                    <span className="mt-1 block text-[11px] text-ink/60 line-clamp-2">{a.html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}</span>
+                                </span>
+                            </>
                         ) : (
                             <>
                                 <MessageSquareText className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden="true" />
@@ -140,7 +158,7 @@ export const AgentRunCard = ({ run, canDecide, compact }: { run: AgentRunView; c
                                 ) : (
                                     <div className="flex items-start gap-3 rounded-xl border border-plum/12 bg-surface px-3 py-2.5">
                                         {body}
-                                        {(a.type === "task" ? a.taskId : a.type === "recap" ? a.messageId : a.applied) && <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" aria-label="Added" />}
+                                        {(a.type === "task" ? a.taskId : a.type === "recap" ? a.messageId : a.type === "meeting" ? a.meetingId : a.type === "doc" ? a.docId : a.applied) && <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" aria-label="Added" />}
                                     </div>
                                 )}
                             </li>

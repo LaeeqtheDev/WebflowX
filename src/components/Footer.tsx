@@ -13,9 +13,9 @@ export default function Footer() {
   return (
     <footer className="w-full bg-[#381d2a] text-white/60">
       <div className={`${wrap} py-16`}>
-        <div className="grid gap-12 md:grid-cols-6">
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-3">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-6 md:gap-12">
+          <div className="col-span-2">
+            <div className="flex flex-wrap items-center gap-3">
               <Image src="/logo.png" alt="" width={32} height={32} className="h-8 w-8 rounded-lg" />
               <span className="text-lg font-semibold text-white">WebflowX</span>
               <span className="text-xl text-white/40">&times;</span>

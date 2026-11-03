@@ -1,3 +1,4 @@
+import { isOn } from "./automations"
 import { v } from "convex/values"
 import { mutation, query, internalMutation, MutationCtx } from "./_generated/server"
 import { Id, Doc } from "./_generated/dataModel"
@@ -381,6 +382,11 @@ export const saveSummary = mutation({
         })
         // a fresh AI summary sets the follow-up agent off (once per meeting, if the workspace has it on)
         await maybeAutoRun(ctx, { ...meeting, summary: args.summary }, member)
+        await ctx.scheduler.runAfter(0, internal.knowledge.refresh, { kind: "meeting", id: args.id })
+        // Decisions log (an automation admins can switch off): pull out what was decided
+        if (meeting.kind !== "oneToOne" && !meeting.sample && args.summary.trim().length > 40 && (await isOn(ctx, meeting.workspaceId, "decisionsLog"))) {
+            await ctx.scheduler.runAfter(0, internal.decisions.extract, { meetingId: args.id })
+        }
         return args.id
     }
 })

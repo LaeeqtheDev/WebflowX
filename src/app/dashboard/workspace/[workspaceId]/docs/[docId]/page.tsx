@@ -114,6 +114,10 @@ export default function DocPage() {
     const [shareChannelId, setShareChannelId] = useState("")
 
     const doc = docs?.find(d => d._id === docId)
+    // a page @agent drafted fills itself once, the first time someone opens it
+    const seedHtml = !tplId ? doc?.seedHtml : undefined
+    const clearSeed = useMutation(api.docs.clearSeed)
+    const seedUsed = useCallback(() => { void clearSeed({ id: docId as Id<"docs"> }).catch(() => {}) }, [clearSeed, docId])
     const currentUserName = members?.find(m => m._id === currentMember?._id)?.user.name ?? "Anonymous"
     const currentUserAvatar = members?.find(m => m._id === currentMember?._id)?.user.image ?? ""
     const userColor = USER_COLORS[
@@ -446,9 +450,9 @@ export default function DocPage() {
                     <DocEditor
                         key={doc._id}
                         docId={doc._id}
-                        template={template}
-                        customHtml={tplHtml}
-                        onTemplateUsed={clearTemplate}
+                        template={seedHtml ? "custom" : template}
+                        customHtml={seedHtml ?? tplHtml}
+                        onTemplateUsed={seedHtml ? seedUsed : clearTemplate}
                         roomId={doc.liveblocksRoomId}
                         userId={currentMember._id}
                         userName={currentUserName}

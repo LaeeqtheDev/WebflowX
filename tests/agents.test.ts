@@ -5,7 +5,7 @@ import { convexTest } from "convex-test"
 import schema from "../convex/schema"
 import { api } from "../convex/_generated/api"
 import type { Id } from "../convex/_generated/dataModel"
-import { parseDue, looksLikeRequest, TRIAGE_DELAY_MS, localNow, mentionsAgent } from "../convex/agents"
+import { parseDue, looksLikeRequest, TRIAGE_DELAY_MS, localNow, mentionsAgent, markdownToHtml } from "../convex/agents"
 import { internal } from "../convex/_generated/api"
 
 const modules = import.meta.glob("../convex/**/*.ts")
@@ -47,8 +47,11 @@ const fakeModel = (...replies: ReturnType<typeof call>[][]) => {
     const tool_calls = replies[Math.min(n++, replies.length - 1)]
     return new Response(JSON.stringify({ choices: [{ message: { role: "assistant", content: null, tool_calls } }], usage: { prompt_tokens: 1_000, completion_tokens: 100 } }), { status: 200 })
   })
-  vi.stubGlobal("fetch", fetchMock)
-  return { fetchMock, seen }
+  // the Decisions log's extraction call (after every saved summary) is answered separately, so call counts stay about the agent
+  const decisionsMock = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { role: "assistant", content: "- We launch on Friday." } }], usage: { prompt_tokens: 300, completion_tokens: 20 } }), { status: 200 }))
+  vi.stubGlobal("fetch", (url: string, init: { body: string }) =>
+    String(JSON.parse(init.body).messages?.[0]?.content ?? "").startsWith("List the decisions") ? decisionsMock() : fetchMock(url, init))
+  return { fetchMock, seen, decisionsMock }
 }
 
 const SUMMARY = "📌 Action Items\n- Dev sends the launch email by Friday\n- Ava publishes the pricing page"
@@ -110,7 +113,9 @@ describe("follow-up agent", () => {
     expect(view?.run?.status).toBe("review")
     const after = await asUser(t, ids.owner).query(api.usage.get, { workspaceId: ids.ws })
     expect(after?.usage.meetings.current).toBe(before?.usage.meetings.current)
-    expect(after?.usage.agentRuns.current).toBe((before?.usage.agentRuns.current ?? 0) + 1)
+    // the sample is free: it doesn't use up the plan's agent runs either
+    expect(after?.usage.agentRuns.current).toBe(before?.usage.agentRuns.current)
+    expect((await asUser(t, ids.owner).query(api.agents.overview, { workspaceId: ids.ws }))?.usage.used).toBe(0)
   })
 
   it("does nothing after a summary when the workspace hasn't switched it on", async () => {
@@ -169,7 +174,7 @@ describe("follow-up agent", () => {
     const run = (await ctx.t.run((c) => c.db.query("agentRuns").collect()))[0]
     expect(run.status).toBe("done")
     expect(run.note).toBe("Added 2 tasks and a recap.")
-    expect(run.actions.every((a) => (a.type === "task" ? !!a.taskId : a.type === "recap" ? !!a.messageId : !!a.applied))).toBe(true)
+    expect(run.actions.every((a) => (a.type === "task" ? !!a.taskId : a.type === "recap" ? !!a.messageId : a.type === "update" ? !!a.applied : true))).toBe(true)
     // 3 model calls at 1,000 tokens in and 100 out each, priced as gpt-oss-120b
     expect(run).toMatchObject({ model: "openai/gpt-oss-120b", tokensIn: 3_000, tokensOut: 300 })
     expect(run.costUsd).toBeCloseTo((3_000 * 0.15 + 300 * 0.6) / 1e6, 8)
@@ -684,5 +689,159 @@ describe("parseDue", () => {
     expect(parseDue("2001-01-01")).toBeUndefined()
     expect(parseDue("next friday")).toBeUndefined()
     expect(parseDue(undefined)).toBeUndefined()
+  })
+})
+
+describe("memory, daily budget, Ask panel and automations", () => {
+  let ctx: Awaited<ReturnType<typeof setup>>
+  beforeEach(async () => {
+    vi.useFakeTimers()
+    vi.stubEnv("GROQ_API_KEY", "test-key")
+    ctx = await setup()
+  })
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.unstubAllEnvs() })
+
+  const post = (user: Id<"users">, text: string, channelId = ctx.ids.general) =>
+    asUser(ctx.t, user).mutation(api.messages.create, { workspaceId: ctx.ids.ws, channelId, body: delta(text) })
+  const settle = () => ctx.t.finishAllScheduledFunctions(vi.runAllTimers)
+  const index = () => ctx.t.mutation(internal.knowledge.indexTick, {})
+
+  it("searches only what the asker can see", async () => {
+    const { t, ids } = ctx
+    await post(ids.owner, "The invoice budget was approved for leaders", ids.locked)
+    await post(ids.ava, "Invoice deadline is Friday")
+    await index()
+    const dev = await t.query(internal.knowledge.textSearch, { memberId: ids.devM, query: "invoice" })
+    expect(dev.map((h) => h.text)).toEqual(["Ava Chen: Invoice deadline is Friday"])
+    const owner = await t.query(internal.knowledge.textSearch, { memberId: ids.ownerM, query: "invoice" })
+    expect(owner).toHaveLength(2)
+    // nobody outside the workspace finds anything
+    expect(await t.query(internal.knowledge.textSearch, { memberId: ids.outsiderM, query: "invoice" })).toEqual([])
+  })
+
+  it("answers with a plain note instead of calling the AI once today's allowance is spent", async () => {
+    const { t, ids } = ctx
+    await t.run((c) => c.db.insert("aiUsage", { day: new Date().toISOString().slice(0, 10), model: "openai/gpt-oss-120b", tokens: 179_000, calls: 90 }))
+    const { fetchMock } = fakeModel([call("answer", { text: "hi" })])
+    await post(ids.dev, "@agent what did we decide about pricing?")
+    await settle()
+    expect(fetchMock).not.toHaveBeenCalled()
+    const replies = (await t.run((c) => c.db.query("messages").collect())).filter((m) => m.agent)
+    expect(replies.map((m) => JSON.parse(m.body).ops[0].insert)[0]).toMatch(/today's AI limit/)
+  })
+
+  it("Ask WebflowX answers privately with clickable sources and counts one run", async () => {
+    const { t, ids } = ctx
+    await post(ids.ava, "We decided to ship the launch on Friday")
+    await index()
+    fakeModel([call("answer", { text: "You're shipping on Friday [1]." })])
+    const threadId = await asUser(t, ids.dev).mutation(api.ask.send, { workspaceId: ids.ws, text: "When do we ship the launch?" })
+    await settle()
+    const msgs = await asUser(t, ids.dev).query(api.ask.messages, { threadId })
+    expect(msgs.map((m) => m.role)).toEqual(["user", "assistant"])
+    expect(msgs[1]).toMatchObject({ status: "done", text: "You're shipping on Friday [1]." })
+    expect(msgs[1].sources).toEqual([expect.objectContaining({ n: 1, kind: "message", channelId: ids.general })])
+    expect(msgs[1].steps[0]).toBe("Searching the workspace")
+    // private: nobody else can read it
+    expect(await asUser(t, ids.ava).query(api.ask.messages, { threadId })).toEqual([])
+    const runs = await t.run((c) => c.db.query("agentRuns").collect())
+    expect(runs.map((r) => r.status)).toEqual(["done"])
+    // guests can't ask
+    await t.run((c) => c.db.patch(ids.avaM, { role: "guest" }))
+    await expect(asUser(t, ids.ava).mutation(api.ask.send, { workspaceId: ids.ws, text: "hi" })).rejects.toThrow(/guests/)
+  })
+
+  it("@agent makes subtasks, schedules meetings and drafts docs as the asker", async () => {
+    const { t, ids } = ctx
+    const parent = await t.run((c) => c.db.insert("tasks", { title: "Launch", status: "todo", priority: "medium", workspaceId: ids.ws, createdBy: ids.ownerM }))
+    const startsAt = new Date(Date.now() + 2 * 86_400_000).toISOString()
+    fakeModel(
+      [call("create_task", { title: "Write the launch email", parent_task_id: parent }),
+       call("schedule_meeting", { title: "Launch review", starts_at: startsAt }, 1),
+       call("draft_doc", { title: "Launch plan", markdown: "# Plan\n- [ ] Email\n- Ship **Friday**\n<script>alert(1)</script>" }, 2)],
+      [call("answer", { text: "Done." })],
+      [call("finish", { note: "ok" })],
+    )
+    await post(ids.owner, "@agent break the launch into tasks, set up a review in two days and write the plan as a doc")
+    await settle()
+    const [tasks, meetings, docs] = await t.run(async (c) => [
+      await c.db.query("tasks").collect(), await c.db.query("meetings").collect(), await c.db.query("docs").collect(),
+    ] as const)
+    expect(tasks.find((x) => x.title === "Write the launch email")?.parentTaskId).toBe(parent)
+    expect(meetings.find((m) => m.title === "Launch review")).toMatchObject({ scheduledFor: Date.parse(startsAt), kind: "workspace", createdBy: ids.ownerM })
+    const doc = docs.find((d) => d.title === "Launch plan")!
+    expect(doc.seedHtml).toContain("<h1>Plan</h1>")
+    expect(doc.seedHtml).toContain('data-type="taskItem"')
+    expect(doc.seedHtml).not.toContain("<script>")
+    // opening it once clears the draft
+    await asUser(t, ids.owner).mutation(api.docs.clearSeed, { id: doc._id })
+    expect((await t.run((c) => c.db.get(doc._id)))?.seedHtml).toBeUndefined()
+  })
+
+  it("turns simple Markdown into safe editor HTML", () => {
+    expect(markdownToHtml("## Hi <b>\n1. one\n2. two")).toBe("<h2>Hi &lt;b&gt;</h2><ol><li><p>one</p></li><li><p>two</p></li></ol>")
+  })
+
+  it("pulls decisions out of a saved summary", async () => {
+    const { t, ids } = ctx
+    const { decisionsMock } = fakeModel([call("finish", { note: "ok" })])
+    await asUser(t, ids.owner).mutation(api.meetings.saveSummary, { id: ids.meeting, summary: SUMMARY + "\nWe agreed to launch on Friday." })
+    await settle()
+    expect(decisionsMock).toHaveBeenCalledTimes(1)
+    const list = await asUser(t, ids.dev).query(api.decisions.list, { workspaceId: ids.ws })
+    expect(list.map((d) => [d.text, d.meetingTitle])).toEqual([["We launch on Friday.", "Weekly launch sync"]])
+    // and they become searchable
+    expect((await t.query(internal.knowledge.textSearch, { memberId: ids.devM, query: "launch Friday", kind: "decision" }))).toHaveLength(1)
+  })
+
+  it("nudges overdue tasks and missing summaries once, without AI", async () => {
+    const { t, ids } = ctx
+    const { fetchMock } = fakeModel([])
+    const dueDay = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()) - 3 * 86_400_000
+    await t.run(async (c) => {
+      await c.db.insert("tasks", { title: "Send invoices", status: "todo", priority: "medium", workspaceId: ids.ws, assigneeId: ids.devM, createdBy: ids.ownerM, dueDate: dueDay })
+      await c.db.patch(ids.meeting, { endedAt: Date.now() - 2 * 3_600_000 })
+    })
+    await t.mutation(internal.automations.hourly, {})
+    await t.mutation(internal.automations.hourly, {})
+    const notes = await t.run((c) => c.db.query("notifications").collect())
+    const nudges = notes.filter((n) => n.type === "agent_nudge")
+    expect(nudges.map((n) => [n.recipientId, n.body?.slice(0, 20)]).sort()).toEqual([
+      [ids.devM, "Overdue: Send invoic"],
+      [ids.ownerM, "“Weekly launch sync”"],
+    ].sort())
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("only admins change automations; unanswered questions stay off until switched on", async () => {
+    const { t, ids } = ctx
+    await post(ids.ava, "Does anyone know where the brand files are?")
+    vi.advanceTimersByTime(25 * 3_600_000)
+    await t.mutation(internal.automations.hourly, {})
+    const agentMsgs = () => t.run((c) => c.db.query("messages").collect()).then((m) => m.filter((x) => x.agent))
+    expect(await agentMsgs()).toHaveLength(0)
+    await expect(asUser(t, ids.dev).mutation(api.automations.configure, { workspaceId: ids.ws, key: "unansweredQuestions", enabled: true })).rejects.toThrow(/admins/)
+    await asUser(t, ids.owner).mutation(api.automations.configure, { workspaceId: ids.ws, key: "unansweredQuestions", enabled: true })
+    await t.mutation(internal.automations.hourly, {})
+    await t.mutation(internal.automations.hourly, {})
+    const replies = await agentMsgs()
+    expect(replies).toHaveLength(1)
+    expect(replies[0].parentMessagesId).toBeDefined()
+    // the weekly digest needs a channel
+    await expect(asUser(t, ids.owner).mutation(api.automations.configure, { workspaceId: ids.ws, key: "weeklyDigest", enabled: true })).rejects.toThrow(/channel/)
+  })
+
+  it("writes a prep brief before a scheduled meeting from last time's decisions and open tasks", async () => {
+    const { t, ids } = ctx
+    const soon = Date.now() + 30 * 60_000
+    const next = await t.run(async (c) => {
+      await c.db.insert("decisions", { workspaceId: ids.ws, meetingId: ids.meeting, text: "Launch on Friday" })
+      await c.db.insert("tasks", { title: "Publish pricing", status: "todo", priority: "medium", workspaceId: ids.ws, assigneeId: ids.avaM, createdBy: ids.ownerM, sourceMeetingId: ids.meeting })
+      return await c.db.insert("meetings", { workspaceId: ids.ws, roomName: "r2", title: "Weekly launch sync", createdBy: ids.ownerM, startedAt: soon, scheduledFor: soon, kind: "workspace", activeMembers: [] })
+    })
+    await t.mutation(internal.automations.prepTick, {})
+    const m = await t.run((c) => c.db.get(next))
+    expect(m?.prep).toContain("Launch on Friday")
+    expect(m?.prep).toContain("Publish pricing (Ava Chen)")
   })
 })

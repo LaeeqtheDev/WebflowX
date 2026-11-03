@@ -114,7 +114,7 @@ export const FAQSection = () => {
   const shown = all ? ranked : ranked.slice(0, FIRST);
 
   return (
-    <section id="faq" className="w-full bg-[#f7f2ee] py-24 md:py-32">
+    <section id="faq" className="w-full bg-[#f7f2ee] py-16 md:py-32">
       <div className="mx-auto grid w-full max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
         <div className="lg:sticky lg:top-28 lg:self-start">
         <Reveal variant="blur">
