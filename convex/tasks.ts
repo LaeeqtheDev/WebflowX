@@ -8,6 +8,7 @@ import { ConvexError } from "convex/values"
 import { MAX, text, cleanLabels } from "./validate"
 import { throttle } from "./rateLimit"
 import { emit } from "./integrations"
+import { internal } from "./_generated/api"
 
 const statusValidator = v.union(
     v.literal("backlog"),
@@ -242,6 +243,9 @@ export const update = mutation({
         } else {
             await ctx.db.patch(args.id, { ...updates, ...emptied, updatedAt: Date.now() })
         }
+        if (updates.title !== undefined || updates.description !== undefined || "description" in emptied) {
+            await ctx.scheduler.runAfter(0, internal.knowledge.refresh, { kind: "task", id: args.id })
+        }
         return args.id
     }
 })
@@ -316,6 +320,10 @@ export const sourceOf = query({
         const member = await ctx.db.query("members")
             .withIndex("byWorkspaceId_user_id", (q) => q.eq("workspaceId", task.workspaceId).eq("userId", userId)).unique()
         if (!member || member.role === "guest") return null
+        if (task.parentTaskId) {
+            const parent = await ctx.db.get(task.parentTaskId)
+            if (parent && parent.workspaceId === task.workspaceId) return { kind: "parent" as const, taskId: parent._id, title: parent.title }
+        }
         if (task.sourceMeetingId) {
             const m = await ctx.db.get(task.sourceMeetingId)
             if (!m || m.deletedAt) return null

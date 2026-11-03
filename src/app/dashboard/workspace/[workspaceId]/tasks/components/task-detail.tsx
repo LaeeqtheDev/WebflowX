@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { formatDistanceToNow } from "date-fns"
-import { Trash2, MessageSquare, X, Send, Zap, Star, UserPlus, CircleDot, Flag, User, Calendar, Plus, AlertTriangle, Video } from "lucide-react"
+import { Trash2, MessageSquare, X, Send, Zap, Star, UserPlus, CircleDot, Flag, User, Calendar, Plus, AlertTriangle, Video, ListTree } from "lucide-react"
 import Link from "next/link"
 import { useQuery } from "convex/react"
 import { api } from "../../../../../../../convex/_generated/api"
@@ -328,13 +328,13 @@ const TaskSource = ({ taskId }: { taskId: Id<"tasks"> }) => {
     const workspaceId = useWorkspaceId()
     if (!source) return null
     const base = `/dashboard/workspace/${workspaceId}`
-    const href = source.kind === "meeting"
-        ? `${base}/meeting?meeting=${source.meetingId}`
+    const href = source.kind === "parent" ? `${base}/tasks?task=${source.taskId}`
+        : source.kind === "meeting" ? `${base}/meeting?meeting=${source.meetingId}`
         : `${base}/channel/${source.channelId}?message=${source.messageId}`
     return (
         <Link href={href} className="mb-2 inline-flex max-w-full items-center gap-1.5 rounded-md bg-cream-soft px-2 py-1 text-[12px] font-medium text-orange-ink ring-1 ring-plum/10 transition-colors hover:bg-cream">
-            {source.kind === "meeting" ? <Video className="size-3.5 shrink-0" /> : <MessageSquare className="size-3.5 shrink-0" />}
-            <span className="truncate">Came from {source.kind === "meeting" ? `the meeting “${source.title}”` : `a message in #${source.channelName}`}</span>
+            {source.kind === "parent" ? <ListTree className="size-3.5 shrink-0" /> : source.kind === "meeting" ? <Video className="size-3.5 shrink-0" /> : <MessageSquare className="size-3.5 shrink-0" />}
+            <span className="truncate">{source.kind === "parent" ? `Part of “${source.title}”` : `Came from ${source.kind === "meeting" ? `the meeting “${source.title}”` : `a message in #${source.channelName}`}`}</span>
         </Link>
     )
 }

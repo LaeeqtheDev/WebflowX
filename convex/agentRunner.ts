@@ -4,6 +4,7 @@ import { ConvexError } from "convex/values"
 import { auth } from "./auth"
 import type { Id } from "./_generated/dataModel"
 import { internal } from "./_generated/api"
+import type { Hit } from "./knowledge"
 
 // The agents' loop: the model reads a meeting (follow-up agent) or new channel messages (triage agent),
 // looks people up, and proposes tasks (and a recap) through tool calls. Nothing it proposes touches the workspace here; agents.finishRun checks every
@@ -12,6 +13,7 @@ import { internal } from "./_generated/api"
 const MAX_STEPS = 8
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
+type Source = { n: number; kind: Hit["kind"]; refId: string; channelId?: string; title: string }
 type Msg =
     | { role: "system" | "user"; content: string }
     | { role: "assistant"; content: string | null; tool_calls?: ToolCall[] }
@@ -37,7 +39,9 @@ type Facts = {
     chat: { channel: string; who: string; text: string }[]
 }
 type Proposal =
-    | { type: "task"; title: string; assigneeId?: string; dueDate?: string; priority?: string; sourceMessageId?: string }
+    | { type: "task"; title: string; assigneeId?: string; dueDate?: string; priority?: string; sourceMessageId?: string; parentTaskId?: string }
+    | { type: "meeting"; title: string; startsAt: string }
+    | { type: "doc"; title: string; markdown: string }
     | { type: "recap"; text: string }
     | { type: "update"; taskId: string; status?: string; assigneeId?: string; dueDate?: string; priority?: string }
 
@@ -75,7 +79,16 @@ const assistantTools = (canAssign: boolean) => [
             assignee_member_id: { type: "string" },
             due_date: { type: "string", description: "YYYY-MM-DD, only if a date or day was given" },
             priority: { type: "string", enum: ["urgent", "high", "medium", "low"] },
+            parent_task_id: { type: "string", description: "Only when breaking an existing task into subtasks: that task's id (from search_tasks or list_my_tasks)" },
         }, ["title"]),
+    fn("schedule_meeting", "Schedule a team meeting, only when asked (\"set up a call with the team Thursday 3pm\"). One per request.", {
+        title: { type: "string" },
+        starts_at: { type: "string", description: "ISO date-time in UTC, e.g. 2026-11-06T15:00:00Z. Work it out from today's date; ask in your answer if no time was given instead of guessing." },
+    }, ["title", "starts_at"]),
+    fn("draft_doc", "Write a doc page, only when asked (\"write this thread up as a doc\", \"draft a launch plan\"). Content in simple Markdown: # headings, - bullets, 1. lists, - [ ] checklists, **bold**. Base it on the thread and what you found; no invented facts.", {
+        title: { type: "string" },
+        markdown: { type: "string" },
+    }, ["title", "markdown"]),
     fn("list_my_tasks", "The open tasks assigned to the person asking (with task ids), overdue and soonest due first. Use for 'what's on my plate', 'what's due', 'what am I late on'.", {}, []),
     fn("update_task", canAssign
         ? "Change an existing task the person asked you to change: status, owner, due date or priority. Get the task_id from search_tasks or list_my_tasks first. One call per task."
@@ -148,6 +161,8 @@ const MODELS = () => [process.env.GROQ_AGENT_MODEL, "openai/gpt-oss-120b", "llam
 // US dollars per million tokens [input, output]. Estimates for the agents' cost meter:
 // gpt-oss-120b from Groq's published rates (Oct 2026); llama-3.3-70b is sales-priced now, so its last list price.
 export const PRICES: Record<string, [number, number]> = {
+    "llama-3.1-8b-instant": [0.05, 0.08],
+    "openai/gpt-oss-20b": [0.075, 0.3],
     "openai/gpt-oss-120b": [0.15, 0.6],
     "llama-3.3-70b-versatile": [0.59, 0.79],
 }
@@ -158,9 +173,12 @@ export const costOf = (model: string, tokensIn: number, tokensOut: number) => {
 
 type Usage = { model: string | null; tokensIn: number; tokensOut: number }
 
-const chat = async (key: string, messages: Msg[], toolList: unknown[], usage: Usage) => {
+// "large" for answers people read; "small" (a fast model with its own free quota) for sorting and extracting.
+const SMALL_MODELS = () => [process.env.GROQ_SMALL_MODEL, "llama-3.1-8b-instant", "openai/gpt-oss-20b"]
+export const chat = async (key: string, messages: Msg[], toolList: unknown[], usage: Usage, tier: "large" | "small" = "large") => {
     let last = ""
-    for (const model of MODELS()) {
+    const list = (tier === "small" ? SMALL_MODELS() : MODELS()).filter((m): m is string => !!m)
+    for (const model of [...new Set(list)]) {
         const res = await fetch(GROQ_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
@@ -194,11 +212,13 @@ const prompt = (c: Context, now: number): Msg[] => {
                 content: [
                     "You are the WebflowX Agent, built into a team workspace. A teammate mentioned you with @agent. Help them like a sharp, friendly colleague.",
                     "Rules:",
+                    "- When you use something from the numbered workspace snippets or search results, cite it like [2]. Only cite what you actually used.",
                     "- Base answers on the conversation and on what the search tools return. If you can't find it, say so plainly. Never invent facts, numbers or decisions.",
                     "- Search before answering questions about past decisions, work or meetings. Try different keywords if the first search finds nothing.",
                     "- You can change existing tasks when asked (\"mark the checkout fix done\", \"move my survey task to Friday\", \"give the FAQ review to Ava\"): find it with search_tasks or list_my_tasks, then update_task. Never change tasks nobody asked about.",
                     "- For \"what's on my plate / what's due / what am I late on\", use list_my_tasks and answer with the most urgent first.",
-                    "- Only create tasks when they ask for tasks (\"make tasks from this\", \"remind Dev to…\", \"add a task…\"). Use member ids for owners.",
+                    "- Only create tasks when they ask for tasks (\"make tasks from this\", \"remind Dev to…\", \"add a task…\"). Use member ids for owners. To break a task into subtasks, find it first and pass its id as parent_task_id.",
+                    "- schedule_meeting and draft_doc only when asked for a meeting or a doc. Tell them in your answer what you scheduled or wrote.",
                     c.asker.canAssign ? "- They can assign tasks to anyone." : `- They can only assign tasks to themselves (member id ${c.asker.id}); leave other people's tasks unassigned and mention who it's for.`,
                     "- Due dates only when a day or date was given; work them out from today's date.",
                     "- Always finish by calling answer once (keep it short, plain text, no markdown headings), then finish.",
@@ -329,7 +349,35 @@ export const run = internalAction({
                 await ctx.runMutation(internal.agents.finishRun, { runId: args.runId, proposals: [], note: "Nothing happened in the last day, so no standup was posted.", steps: 0 })
                 return null
             }
+            // Groq free tier: check today's shared budget first, and fall back to the plain versions when it's spent
+            const tier = c.kind === "triage" ? "small" as const : "large" as const
+            const budget: number = await ctx.runQuery(internal.aiBudget.left, { tier })
+            if (budget < 6_000) {
+                if (c.kind === "standup") {
+                    await ctx.runMutation(internal.agents.finishRun, { runId: args.runId, proposals: [{ type: "recap", text: c.plain }], note: "Posted the plain version (today's AI allowance is used up).", steps: 0 })
+                    return null
+                }
+                if (c.kind === "assistant") {
+                    await ctx.runMutation(internal.agents.finishRun, { runId: args.runId, proposals: [{ type: "recap", text: "I've hit today's AI limit for this workspace's plan, so I can't look into this right now. Ask me again tomorrow." }], note: "Daily AI allowance used up", steps: 0 })
+                    return null
+                }
+                return await fail("Today's AI allowance is used up. Agents pick up again tomorrow.")
+            }
             const messages = prompt(c, Date.now())
+            // @agent gets the best-matching snippets up front (one search, no extra model calls), numbered so it can cite them
+            const sources: Source[] = []
+            const cite = (hits: Hit[]) => hits.map((h) => {
+                let n = sources.findIndex((x) => x.refId === h.refId) + 1
+                if (!n) { sources.push({ n: sources.length + 1, kind: h.kind, refId: h.refId, channelId: h.channelId ?? undefined, title: h.title }); n = sources.length }
+                return { source: n, kind: h.kind, title: h.title, when: new Date(h.at).toISOString().slice(0, 10), text: h.text.slice(0, 600) }
+            })
+            if (c.kind === "assistant") {
+                const q = c.question.text.replace(/@agent\b/gi, " ").trim()
+                const hits: Hit[] = q ? await ctx.runQuery(internal.knowledge.textSearch, { memberId: c.asker.id as Id<"members">, query: q }) : []
+                if (hits.length) {
+                    messages.push({ role: "user", content: `Possibly relevant, from this workspace (cite as [n] when you use one):\n${JSON.stringify(cite(hits.slice(0, 6)))}` })
+                }
+            }
             const toolList = c.kind === "standup" ? standupTools
                 : c.kind === "assistant" ? assistantTools(c.asker.canAssign)
                 : tools(c.kind === "meetingFollowUp" && !!c.recapChannel, c.kind === "triage")
@@ -337,7 +385,7 @@ export const run = internalAction({
             let note: string | undefined
             let steps = 0
             for (; steps < MAX_STEPS && note === undefined; steps++) {
-                const reply = await chat(key, messages, toolList, usage)
+                const reply = await chat(key, messages, toolList, usage, tier)
                 if (!reply) throw new Error("The AI gave no answer")
                 const calls = reply.tool_calls ?? []
                 messages.push({ role: "assistant", content: reply.content ?? null, tool_calls: calls.length ? calls : undefined })
@@ -365,6 +413,11 @@ export const run = internalAction({
                         case "search_tasks":
                         case "search_meetings": {
                             const what = call.function.name.slice(7) as "messages" | "tasks" | "meetings"
+                            // the ranked index first; the older keyword scan when the index has nothing yet
+                            const hits: Hit[] = c.kind === "assistant"
+                                ? await ctx.runQuery(internal.knowledge.textSearch, { memberId: c.asker.id as Id<"members">, query: str("query") ?? "", kind: what === "messages" ? "message" : what === "tasks" ? "task" : "meeting" })
+                                : []
+                            if (hits.length) { result = JSON.stringify(cite(hits.slice(0, 8))).slice(0, 6_000); break }
                             const found: unknown[] = await ctx.runQuery(internal.agents.search, { runId: args.runId, what, query: str("query") ?? "" })
                             result = found.length ? JSON.stringify(found).slice(0, 6_000) : "Nothing found."
                             break
@@ -372,8 +425,23 @@ export const run = internalAction({
                         case "create_task": {
                             const title = str("title")?.trim()
                             if (!title) { result = "A title is needed."; break }
-                            proposals.push({ type: "task", title, assigneeId: str("assignee_member_id"), dueDate: str("due_date"), priority: str("priority") })
+                            proposals.push({ type: "task", title, assigneeId: str("assignee_member_id"), dueDate: str("due_date"), priority: str("priority"), parentTaskId: str("parent_task_id") })
                             result = "Will be created."
+                            break
+                        }
+                        case "schedule_meeting": {
+                            const title = str("title")?.trim(), at = str("starts_at")?.trim()
+                            if (!title || !at || !Number.isFinite(Date.parse(at))) { result = "A title and a valid starts_at are needed."; break }
+                            if (Date.parse(at) < Date.now()) { result = "That time has passed. Pick a future time."; break }
+                            proposals.push({ type: "meeting", title, startsAt: at })
+                            result = "Will be scheduled if they're allowed to."
+                            break
+                        }
+                        case "draft_doc": {
+                            const title = str("title")?.trim(), markdown = str("markdown")?.trim()
+                            if (!title || !markdown) { result = "A title and content are needed."; break }
+                            proposals.push({ type: "doc", title, markdown })
+                            result = "Will be created if they're allowed to."
                             break
                         }
                         case "list_my_tasks": {
@@ -411,8 +479,15 @@ export const run = internalAction({
             if (c.kind === "assistant" && !proposals.some((p) => p.type === "recap")) {
                 const made = proposals.filter((p) => p.type === "task").length
                 const changed = proposals.filter((p) => p.type === "update").length
-                const parts = [made && `added ${made} task${made === 1 ? "" : "s"}`, changed && `updated ${changed} task${changed === 1 ? "" : "s"}`].filter(Boolean)
+                const parts = [made && `added ${made} task${made === 1 ? "" : "s"}`, changed && `updated ${changed} task${changed === 1 ? "" : "s"}`,
+                    proposals.some((p) => p.type === "meeting") && "scheduled the meeting", proposals.some((p) => p.type === "doc") && "drafted the doc"].filter(Boolean)
                 proposals.push({ type: "recap", text: parts.length ? `Done. I ${parts.join(" and ")}.` : "Sorry, I couldn't find an answer to that in this workspace." })
+            }
+            // sources the answer cited go underneath it, so people can check
+            if (c.kind === "assistant" && sources.length) {
+                const answer = proposals.find((p): p is { type: "recap"; text: string } => p.type === "recap")
+                const used = answer ? sources.filter((x) => answer.text.includes(`[${x.n}]`)) : []
+                if (answer && used.length) answer.text = `${answer.text}\n\nSources: ${used.map((x) => `[${x.n}] ${x.title}`).join(" · ")}`
             }
             await record()
             await ctx.runMutation(internal.agents.finishRun, { runId: args.runId, proposals, note, steps })
@@ -452,6 +527,10 @@ export const catchUp = action({
             return { summary: "You're all caught up. Nothing new here since your last visit.", count: 0 }
         }
         const usage: Usage = { model: null, tokensIn: 0, tokensOut: 0 }
+        if ((await ctx.runQuery(internal.aiBudget.left, { tier: "large" })) < 4_000) {
+            await ctx.runMutation(internal.agents.failRun, { runId: got.runId, error: "Daily AI allowance used up" })
+            throw new ConvexError("Today's AI allowance is used up. Catch me up works again tomorrow.")
+        }
         try {
             const reply = await chat(key, [
                 {

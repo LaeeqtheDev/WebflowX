@@ -1,12 +1,13 @@
 import Image from "next/image"
 import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace"
 import { useWorkspaceId } from "@/hooks/use-workspace-id"
-import { Info, Menu, Search } from "lucide-react"
+import { Info, Menu, Search, Sparkles } from "lucide-react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
 import { useMountOnce } from "@/hooks/use-mount-once"
 
+const AskPanel = dynamic(() => import("@/features/ask/ask-panel").then((m) => m.AskPanel), { ssr: false })
 const ToolbarSearch = dynamic(() => import("./toolbar-search").then((m) => m.ToolbarSearch), { ssr: false })
 
 export const Toolbar = ({ onOpenMenu }: { onOpenMenu?: () => void }) => {
@@ -14,6 +15,16 @@ export const Toolbar = ({ onOpenMenu }: { onOpenMenu?: () => void }) => {
   const { data } = useGetWorkspace({ id: workspaceId })
   const [open, setOpen] = useState(false)
   const searchMounted = useMountOnce(open)
+  // Ask WebflowX: a private AI side panel, Ctrl/⌘+J anywhere in the workspace
+  const [askOpen, setAskOpen] = useState(false)
+  const askMounted = useMountOnce(askOpen)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "j") { e.preventDefault(); setAskOpen((o) => !o) }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [])
 
   return (
     <nav className="relative z-10 flex h-14 shrink-0 items-center gap-1 border-b border-white/[0.07] bg-chrome px-2 md:gap-0 md:px-4">
@@ -56,8 +67,19 @@ export const Toolbar = ({ onOpenMenu }: { onOpenMenu?: () => void }) => {
         {searchMounted && <ToolbarSearch open={open} setOpen={setOpen} />}
       </div>
 
-      {/* RIGHT: Help */}
-      <div className="flex items-center justify-end max-md:shrink-0 md:flex-1">
+      {/* RIGHT: Ask + Help */}
+      <div className="flex items-center justify-end gap-1 max-md:shrink-0 md:flex-1">
+        <button
+          type="button"
+          onClick={() => setAskOpen(true)}
+          aria-label="Ask WebflowX (Ctrl or Command + J)"
+          title="Ask WebflowX · Ctrl/⌘ J"
+          className="flex h-10 items-center gap-1.5 rounded-xl px-2.5 text-white/80 transition-all hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70 active:scale-95 md:h-9"
+        >
+          <Sparkles className="size-[18px] text-brand" />
+          <span className="text-[13px] font-medium max-md:hidden">Ask</span>
+        </button>
+        {askMounted && <AskPanel workspaceId={workspaceId} open={askOpen} onOpenChange={setAskOpen} />}
         <a
           href="mailto:support@northfoundry.co"
           aria-label="Help and support: support@northfoundry.co"

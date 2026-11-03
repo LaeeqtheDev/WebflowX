@@ -38,4 +38,11 @@ crons.interval("erase expired content of removed members", { hours: 24 }, intern
 // Agents that post on a schedule (the daily standup) check every hour whether it's their time.
 crons.hourly("scheduled agents", { minuteUTC: 1 }, internal.agents.standupTick, {})
 
+// The agents' search index: adds new messages, meetings, tasks and docs, and fills in older history in batches.
+crons.hourly("automations: reminders", { minuteUTC: 7 }, internal.automations.hourly, {})
+crons.interval("automations: meeting prep", { minutes: 15 }, internal.automations.prepTick, {})
+crons.weekly("automations: weekly digest", { dayOfWeek: "monday", hourUTC: 8, minuteUTC: 13 }, internal.automations.digestTick, {})
+
+crons.interval("agent knowledge index", { minutes: 5 }, internal.knowledge.indexTick, {})
+
 export default crons

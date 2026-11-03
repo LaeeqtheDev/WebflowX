@@ -5,13 +5,15 @@ import { internal } from "./_generated/api"
 import { auth } from "./auth"
 import { findMember } from "./access"
 import { assert2fa, can, canViewChannel, roleOf } from "./permissions"
-import { checkLimit, historyCutoff } from "./limits"
+import { checkLimit, checkLimitLazy, historyCutoff } from "./limits"
+import { countLiveDocs } from "./docs"
 import { consume, throttle } from "./rateLimit"
 import { logAudit } from "./audit"
 import { notify } from "./notifications"
 import { emit, plainToDelta } from "./integrations"
 import { MAX, deltaToText, snippetOf } from "./validate"
 import { noteReplyAdded } from "./messageHelpers"
+import { addUsage } from "./aiBudget"
 
 // AI agents that work inside a workspace. They act for the admin who switched them on, and in "suggest" mode
 // nothing they propose touches the workspace until someone approves it.
@@ -34,7 +36,7 @@ type Action = Doc<"agentRuns">["actions"][number]
 type Ctx = QueryCtx | MutationCtx
 const kindV = v.union(v.literal("meetingFollowUp"), v.literal("triage"), v.literal("standup"), v.literal("assistant"))
 
-const signedInMember = async (ctx: Ctx, workspaceId: Id<"workspaces">) => {
+export const signedInMember = async (ctx: Ctx, workspaceId: Id<"workspaces">) => {
     const userId = await auth.getUserId(ctx)
     if (!userId) return null
     const member = await findMember(ctx, workspaceId, userId)
@@ -44,7 +46,7 @@ const signedInMember = async (ctx: Ctx, workspaceId: Id<"workspaces">) => {
 }
 
 // Turning agents on and off is for the owner and admins: the agent acts with their permissions.
-const isAdmin = async (ctx: Ctx, member: Doc<"members">) => {
+export const isAdmin = async (ctx: Ctx, member: Doc<"members">) => {
     const workspace = await ctx.db.get(member.workspaceId)
     if (!workspace) return false
     const role = roleOf(workspace, member)
@@ -188,6 +190,21 @@ export const maybeAnswer = async (ctx: MutationCtx, message: Doc<"messages">) =>
     })
     await ctx.scheduler.runAfter(0, internal.agentRunner.run, { runId })
     return runId
+}
+
+// A private question to the agent (the Ask panel): same rules as @agent in chat (agent on, hourly limit,
+// month's runs), counted as one run. Returns the run it is recorded under.
+export const startPrivateRun = async (ctx: MutationCtx, member: Doc<"members">) => {
+    let agent = await agentFor(ctx, member.workspaceId, "assistant")
+    if (!assistantOn(agent)) throw new ConvexError("An admin has switched off the agent in this workspace")
+    if (!(await consume(ctx, `agent-ask:${member.userId}`, MAX_ASKS_PER_HOUR, 60 * 60_000))) throw new ConvexError("You've asked the agent a lot this hour. Try again a little later.")
+    const { allowed, limit, plan } = await monthlyCheck(ctx, member.workspaceId)
+    if (!allowed) throw new ConvexError(`LIMIT_REACHED:agentRuns:${limit}:${plan}`)
+    if (!agent) {
+        const id = await ctx.db.insert("agents", { workspaceId: member.workspaceId, kind: "assistant", enabled: true, mode: "act", createdBy: member._id, updatedAt: Date.now() })
+        agent = await ctx.db.get(id)
+    }
+    return await ctx.db.insert("agentRuns", { workspaceId: member.workspaceId, agentId: agent!._id, startedBy: member._id, status: "running", actions: [] })
 }
 
 // Lets the chat box offer "@agent" in its mention list only when the workspace has it on.
@@ -354,6 +371,7 @@ const describeRun = async (ctx: QueryCtx, run: Doc<"agentRuns">) => {
             }
         }
         if (a.type === "update") return { ...a, assigneeName: await nameOf(a.assigneeId) }
+        if (a.type === "meeting" || a.type === "doc") return a
         const ch = await ctx.db.get(a.channelId)
         return { ...a, channelName: ch?.name ?? "deleted channel" }
     }))
@@ -717,6 +735,32 @@ const apply = async (ctx: MutationCtx, run: Doc<"agentRuns">, agent: Doc<"agents
     const meeting = run.meetingId ? await ctx.db.get(run.meetingId) : null
     const done: Action[] = []
     for (const a of actions) {
+        if (a.type === "meeting") {
+            // same rules as the Meetings screen: needs "start meetings", counts against the plan's meetings
+            if (!actor || !(await can(ctx, actor, "startMeetings"))) { done.push(a); continue }
+            const d = new Date(); const startOfMonth = new Date(d.getFullYear(), d.getMonth(), 1).getTime()
+            const existing = await ctx.db.query("meetings").withIndex("by_workspace_started", (q) => q.eq("workspaceId", run.workspaceId).gte("startedAt", startOfMonth))
+                .filter((q) => q.and(q.neq(q.field("kind"), "oneToOne"), q.neq(q.field("sample"), true))).take(2000)
+            if (!(await checkLimit(ctx, run.workspaceId, "meetings", existing.length)).allowed) { done.push(a); continue }
+            const meetingId = await ctx.db.insert("meetings", {
+                workspaceId: run.workspaceId, title: a.title, roomName: `${run.workspaceId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                createdBy: actor._id, startedAt: a.startsAt, scheduledFor: a.startsAt, kind: "workspace", activeMembers: [],
+            })
+            done.push({ ...a, meetingId })
+            continue
+        }
+        if (a.type === "doc") {
+            if (!actor || !(await can(ctx, actor, "createDocs"))) { done.push(a); continue }
+            const { allowed } = await checkLimitLazy(ctx, run.workspaceId, "docs", (cap) => countLiveDocs(ctx, run.workspaceId, cap))
+            if (!allowed) { done.push(a); continue }
+            const docId = await ctx.db.insert("docs", {
+                title: a.title, workspaceId: run.workspaceId, createdBy: actor._id, type: "document",
+                liveblocksRoomId: `${run.workspaceId}-doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                position: Date.now(), seedHtml: a.html,
+            })
+            done.push({ ...a, docId })
+            continue
+        }
         if (a.type === "update") {
             // same rules as the task board: admins change anything; members only the status of their own tasks
             const task = await ctx.db.get(a.taskId)
@@ -762,6 +806,7 @@ const apply = async (ctx: MutationCtx, run: Doc<"agentRuns">, agent: Doc<"agents
                 dueDate: a.dueDate,
                 labels: ["agent"],
                 updatedAt: Date.now(),
+                ...(a.parentTaskId ? { parentTaskId: a.parentTaskId } : {}),
                 sourceMeetingId: meeting?._id,
                 sourceMessageId: source?._id,
             })
@@ -957,8 +1002,11 @@ const proposal = v.union(
         dueDate: v.optional(v.string()),
         priority: v.optional(v.string()),
         sourceMessageId: v.optional(v.string()),
+        parentTaskId: v.optional(v.string()),
     }),
     v.object({ type: v.literal("recap"), text: v.string() }),
+    v.object({ type: v.literal("meeting"), title: v.string(), startsAt: v.string() }),
+    v.object({ type: v.literal("doc"), title: v.string(), markdown: v.string() }),
     v.object({
         type: v.literal("update"),
         taskId: v.string(),
@@ -970,6 +1018,29 @@ const proposal = v.union(
 )
 const STATUSES = ["backlog", "todo", "in_progress", "in_review", "done"] as const
 const isStatus = (s?: string): s is (typeof STATUSES)[number] => !!s && (STATUSES as readonly string[]).includes(s)
+
+const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+const inline = (t: string) => esc(t).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+export const markdownToHtml = (md: string) => {
+    const out: string[] = []
+    let list: "ul" | "ol" | "task" | null = null
+    const close = () => { if (list) out.push(list === "ol" ? "</ol>" : "</ul>"); list = null }
+    for (const raw of md.split("\n")) {
+        const line = raw.trimEnd()
+        let m: RegExpExecArray | null
+        if (!line.trim()) { close(); continue }
+        if ((m = /^(#{1,3})\s+(.*)$/.exec(line))) { close(); out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`); continue }
+        if ((m = /^\s*[-*]\s+\[( |x)\]\s+(.*)$/i.exec(line))) {
+            if (list !== "task") { close(); out.push('<ul data-type="taskList">'); list = "task" }
+            out.push(`<li data-type="taskItem" data-checked="${m[1].toLowerCase() === "x"}"><p>${inline(m[2])}</p></li>`); continue
+        }
+        if ((m = /^\s*[-*•]\s+(.*)$/.exec(line))) { if (list !== "ul") { close(); out.push("<ul>"); list = "ul" } out.push(`<li><p>${inline(m[1])}</p></li>`); continue }
+        if ((m = /^\s*\d+[.)]\s+(.*)$/.exec(line))) { if (list !== "ol") { close(); out.push("<ol>"); list = "ol" } out.push(`<li><p>${inline(m[1])}</p></li>`); continue }
+        close(); out.push(`<p>${inline(line)}</p>`)
+    }
+    close()
+    return out.join("")
+}
 
 const PRIORITIES = ["urgent", "high", "medium", "low"] as const
 const isPriority = (p?: string): p is (typeof PRIORITIES)[number] => !!p && (PRIORITIES as readonly string[]).includes(p)
@@ -1025,10 +1096,29 @@ export const finishRun = internalMutation({
                     const m = id ? await ctx.db.get(id) : null
                     if (m && m.workspaceId === run.workspaceId && m.role !== "guest") assigneeId = m._id
                 }
+                let parentTaskId: Id<"tasks"> | undefined
+                if (assistant && p.parentTaskId) {
+                    const pid = ctx.db.normalizeId("tasks", p.parentTaskId)
+                    const parent = pid ? await ctx.db.get(pid) : null
+                    if (parent && parent.workspaceId === run.workspaceId) parentTaskId = parent._id
+                }
                 actions.push({
+                    ...(parentTaskId ? { parentTaskId } : {}),
                     id: `t${n}`, type: "task", title, assigneeId, dueDate: parseDue(p.dueDate),
                     priority: isPriority(p.priority) ? p.priority : "medium", ...(sourceMessageId ? { sourceMessageId } : {}),
                 })
+            } else if (p.type === "meeting") {
+                if (!assistant || actions.some((a) => a.type === "meeting")) continue
+                const at = Date.parse(p.startsAt)
+                // only the future, within the next 60 days
+                if (!Number.isFinite(at) || at < Date.now() + 60_000 || at > Date.now() + 60 * 86_400_000) continue
+                const title = p.title.trim().replace(/\s+/g, " ").slice(0, MAX.meetingTitle)
+                if (title) actions.push({ id: `m${n}`, type: "meeting", title, startsAt: at })
+            } else if (p.type === "doc") {
+                if (!assistant || actions.some((a) => a.type === "doc")) continue
+                const title = p.title.trim().replace(/\s+/g, " ").slice(0, 120)
+                const html = markdownToHtml(p.markdown.slice(0, 20_000))
+                if (title && html) actions.push({ id: `d${n}`, type: "doc", title, html })
             } else if (p.type === "update") {
                 // only the chat agent changes existing tasks, at most 10 per question, each task once
                 if (!assistant || actions.filter((a) => a.type === "update").length >= 10) continue
@@ -1076,6 +1166,7 @@ export const finishRun = internalMutation({
 export const recordUsage = internalMutation({
     args: { runId: v.id("agentRuns"), model: v.string(), tokensIn: v.number(), tokensOut: v.number(), costUsd: v.number() },
     handler: async (ctx, args) => {
+        await addUsage(ctx, args.model, args.tokensIn + args.tokensOut)
         const run = await ctx.db.get(args.runId)
         if (!run) return null
         await ctx.db.patch(run._id, {

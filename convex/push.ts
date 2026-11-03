@@ -113,6 +113,7 @@ export const prepare = internalMutation({
             case "task_due": title = "Task due soon"; url = `${base}/tasks`; break
             case "meeting_invite": title = `${name} invited you to a call`; url = `${base}/meeting`; break
             case "doc_comment": title = `${name} commented on a doc`; url = n.docId ? `${base}/docs/${n.docId}` : `${base}/docs`; break
+            case "agent_nudge": title = "WebflowX Agent"; url = n.taskId ? `${base}/tasks?task=${n.taskId}` : n.meetingId ? `${base}/meeting?meeting=${n.meetingId}` : channel ? `${base}/channel/${channel._id}` : base; break
             case "doc_mention": title = `${name} mentioned you in a doc`; url = n.docId ? `${base}/docs/${n.docId}` : `${base}/docs`; break
             default: return null
         }

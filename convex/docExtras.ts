@@ -5,6 +5,7 @@ import { auth } from "./auth"
 import { assert2fa, canViewChannel } from "./permissions"
 import { throttle } from "./rateLimit"
 import { notify } from "./notifications"
+import { internal } from "./_generated/api"
 
 // Comments, version history and @mentions for docs, plus the "last read" marker for channels.
 // Docs are open to every non-guest member of the workspace, so the access check is the same everywhere.
@@ -142,6 +143,7 @@ export const saveVersion = mutation({
             docId: doc._id, workspaceId: doc.workspaceId, memberId: member._id, title: doc.title, html: args.html,
             label: args.label?.trim().slice(0, 80) || undefined,
         })
+        await ctx.scheduler.runAfter(0, internal.knowledge.refresh, { kind: "doc", id: doc._id })
         // keep the newest copies only
         const all = await ctx.db.query("docVersions").withIndex("by_doc", (q) => q.eq("docId", args.docId)).order("desc").take(KEEP_VERSIONS + 20)
         for (const old of all.slice(KEEP_VERSIONS)) await ctx.db.delete(old._id)

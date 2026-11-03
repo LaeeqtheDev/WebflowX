@@ -13,7 +13,8 @@ import { api } from "../../../../../../convex/_generated/api"
 import {
     Bell, MessageSquare, Smile, CheckSquare,
     FileText, RefreshCw, Loader, BellOff,
-    CheckCheck, MessagesSquare, AtSign, Video
+    CheckCheck, MessagesSquare, AtSign, Video,
+    Sparkles,
 } from "lucide-react"
 import { Id } from "../../../../../../convex/_generated/dataModel"
 import { useClearAll } from "@/features/notifications/use-clear-all"
@@ -60,6 +61,12 @@ const TYPE_CONFIG = {
         color: "text-plum",
         bg: "bg-cream-deep2",
         label: "commented on a doc"
+    },
+    agent_nudge: {
+        icon: Sparkles,
+        color: "text-orange-ink",
+        bg: "bg-brand/10",
+        label: "has a reminder for you"
     },
     doc_mention: {
         icon: FileText,
@@ -185,6 +192,11 @@ export default function ActivityPage() {
             case "meeting_invite":
                 router.push(`${base}/meeting${notification.meetingId ? `?join=${notification.meetingId}` : ""}`)
                 break
+            case "agent_nudge":
+                if (notification.taskId) router.push(`${base}/tasks?task=${notification.taskId}`)
+                else if (notification.meetingId) router.push(`${base}/meeting?meeting=${notification.meetingId}`)
+                else if (notification.channelId) router.push(`${base}/channel/${notification.channelId}${notification.messageId ? `?message=${notification.messageId}` : ""}`)
+                break
             case "doc_comment":
             case "doc_mention":
                 router.push(`${base}/docs${notification.docId ? `/${notification.docId}` : ""}`)
@@ -306,7 +318,7 @@ export default function ActivityPage() {
                                         <div className="flex items-start justify-between gap-2">
                                             <p className="text-sm leading-snug">
                                                 <span className="font-semibold">
-                                                    {notification.type === "task_due" ? "Reminder:" : (notification.sender?.user?.name ?? "Someone")}
+                                                    {notification.type === "task_due" ? "Reminder:" : notification.type === "agent_nudge" ? "WebflowX Agent" : (notification.sender?.user?.name ?? "Someone")}
                                                 </span>
                                                 {" "}
                                                 <span className="text-ink/60">

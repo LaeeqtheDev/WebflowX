@@ -503,3 +503,19 @@ export const authorizeRoom = query({
         }
     },
 })
+
+// A doc @agent drafted opens with its content once; after the editor has filled it, the draft is dropped
+export const clearSeed = mutation({
+    args: { id: v.id("docs") },
+    handler: async (ctx, args) => {
+        const userId = await auth.getUserId(ctx)
+        const doc = await ctx.db.get(args.id)
+        if (!userId || !doc || doc.seedHtml === undefined) return
+        const member = await ctx.db
+            .query("members")
+            .withIndex("byWorkspaceId_user_id", (q) => q.eq("workspaceId", doc.workspaceId).eq("userId", userId))
+            .unique()
+        if (!member || member.role === "guest") return
+        await ctx.db.patch(args.id, { seedHtml: undefined })
+    },
+})

@@ -294,6 +294,10 @@ const schema = defineSchema({
         // where the task came from, so people (and agents' work) can be traced back
         sourceMeetingId: v.optional(v.id("meetings")),
         sourceMessageId: v.optional(v.id("messages")),
+        // a subtask points at its parent task
+        parentTaskId: v.optional(v.id("tasks")),
+        // the due date an overdue nudge was already sent for
+        overdueNudgedFor: v.optional(v.number()),
     })
         .index("by_workspace_id", ["workspaceId"])
         .index("by_workspace_due", ["workspaceId", "dueDate"])
@@ -348,6 +352,8 @@ const schema = defineSchema({
         guestIds: v.optional(v.array(v.id("members"))),
         // a secret join link for people without an account (e.g. a client); unset = no link
         publicToken: v.optional(v.string()),
+        // the brief written 30 minutes before a scheduled meeting (Meeting prep automation)
+        prep: v.optional(v.string()),
     })
         .index("by_workspace_id", ["workspaceId"])
         .index("by_workspace_started", ["workspaceId", "startedAt"])
@@ -416,6 +422,8 @@ const schema = defineSchema({
                 priority: v.union(v.literal("urgent"), v.literal("high"), v.literal("medium"), v.literal("low")),
                 // triage: the chat message it came from (the agent replies under it)
                 sourceMessageId: v.optional(v.id("messages")),
+                // a subtask of an existing task
+                parentTaskId: v.optional(v.id("tasks")),
                 // set once carried out
                 taskId: v.optional(v.id("tasks")),
             }),
@@ -427,6 +435,22 @@ const schema = defineSchema({
                 // posted as a thread reply under this message (the assistant's answers)
                 parentMessageId: v.optional(v.id("messages")),
                 messageId: v.optional(v.id("messages")),
+            }),
+            // @agent scheduling a workspace meeting
+            v.object({
+                id: v.string(),
+                type: v.literal("meeting"),
+                title: v.string(),
+                startsAt: v.number(),
+                meetingId: v.optional(v.id("meetings")),
+            }),
+            // @agent drafting a doc page (it opens with this content)
+            v.object({
+                id: v.string(),
+                type: v.literal("doc"),
+                title: v.string(),
+                html: v.string(),
+                docId: v.optional(v.id("docs")),
             }),
             // @agent changing an existing task ("mark the checkout fix done", "move it to Friday")
             v.object({
@@ -590,6 +614,8 @@ const schema = defineSchema({
         createdBy: v.id("members"),
         type: v.union(v.literal("document"), v.literal("spreadsheet"), v.literal("database")),
         liveblocksRoomId: v.string(),
+        // HTML the editor starts the page with the first time it's opened (a draft written by @agent)
+        seedHtml: v.optional(v.string()),
         updatedAt: v.optional(v.number()),
         updatedBy: v.optional(v.id("members")),
         // page tree: a page can sit inside another page
@@ -677,7 +703,9 @@ const schema = defineSchema({
             v.literal("task_due"),
             v.literal("meeting_invite"),
             v.literal("doc_comment"),
-            v.literal("doc_mention")
+            v.literal("doc_mention"),
+            // a reminder from an automation (overdue task, unanswered question, missing summary, meeting prep)
+            v.literal("agent_nudge")
         ),
         read: v.boolean(),
         messageId: v.optional(v.id("messages")),
@@ -693,6 +721,80 @@ const schema = defineSchema({
         .index("by_workspace_recipient", ["workspaceId", "recipientId"])
         .index("by_recipient_read", ["recipientId", "read"])
         .index("by_recipient_read_type", ["recipientId", "read", "type"]),
+
+    // ---------- agents: memory, budget, Ask panel, automations ----------
+
+    // What the agents can search: channel messages, meeting summaries, tasks, doc text and decisions, one row each.
+    // Filled by knowledge.indexTick. Permissions are checked again whenever an agent reads a row. DMs are never indexed.
+    knowledge: defineTable({
+        workspaceId: v.id("workspaces"),
+        kind: v.union(v.literal("message"), v.literal("meeting"), v.literal("task"), v.literal("doc"), v.literal("decision")),
+        refId: v.string(),
+        channelId: v.optional(v.id("channels")),
+        title: v.string(),
+        text: v.string(),
+        at: v.number(),
+    })
+        .index("by_ref", ["refId"])
+        .searchIndex("search_text", { searchField: "text", filterFields: ["workspaceId", "kind"] }),
+    knowledgeCursor: defineTable({
+        kind: v.string(),
+        newest: v.number(),
+        oldest: v.optional(v.number()),
+        backfillDone: v.optional(v.boolean()),
+    }).index("by_kind", ["kind"]),
+
+    // AI tokens and calls used per UTC day and model, across every workspace (the Groq free tier limit is per account)
+    aiUsage: defineTable({
+        day: v.string(),
+        model: v.string(),
+        tokens: v.number(),
+        calls: v.number(),
+    }).index("by_day_model", ["day", "model"]),
+
+    // Ask WebflowX: a private chat with the agent
+    askThreads: defineTable({
+        workspaceId: v.id("workspaces"),
+        memberId: v.id("members"),
+        title: v.string(),
+        updatedAt: v.number(),
+    }).index("by_member", ["memberId", "updatedAt"]),
+    askMessages: defineTable({
+        threadId: v.id("askThreads"),
+        role: v.union(v.literal("user"), v.literal("assistant")),
+        text: v.string(),
+        status: v.optional(v.union(v.literal("thinking"), v.literal("done"), v.literal("error"))),
+        steps: v.optional(v.array(v.string())),
+        sources: v.optional(v.array(v.object({
+            n: v.number(),
+            kind: v.union(v.literal("message"), v.literal("meeting"), v.literal("task"), v.literal("doc"), v.literal("decision")),
+            refId: v.string(),
+            channelId: v.optional(v.string()),
+            title: v.string(),
+        }))),
+    }).index("by_thread", ["threadId"]),
+
+    // Automations an admin switched on (overdue nudges, unanswered questions, missing summaries, meeting prep,
+    // decisions log, weekly digest). Missing row = off.
+    automations: defineTable({
+        workspaceId: v.id("workspaces"),
+        key: v.string(),
+        enabled: v.boolean(),
+        channelId: v.optional(v.id("channels")),
+        updatedBy: v.id("members"),
+    }).index("by_workspace_key", ["workspaceId", "key"]).index("by_key_enabled", ["key", "enabled"]),
+    // what an automation already did, so it never repeats itself
+    automationLog: defineTable({
+        key: v.string(),
+        refId: v.string(),
+    }).index("by_key_ref", ["key", "refId"]),
+
+    // Decisions pulled out of meeting summaries (the Decisions log)
+    decisions: defineTable({
+        workspaceId: v.id("workspaces"),
+        meetingId: v.optional(v.id("meetings")),
+        text: v.string(),
+    }).index("by_workspace", ["workspaceId"]).index("by_meeting", ["meetingId"]),
 
     // When each person last read a channel, for the "New messages" line
     channelReads: defineTable({
